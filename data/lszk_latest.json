@@ -1,6 +1,6 @@
 {
-  "fetched_at_utc": "2026-09-14T18:51:13+00:00",
-  "station_last_received_utc": "2026-09-14T18:50:33+00:00",
+  "fetched_at_utc": "2026-09-14T19:01:12+00:00",
+  "station_last_received_utc": "2026-09-14T19:00:36+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
     "windDirection": 281,
@@ -8,19 +8,19 @@
       {
         "date": "2026-09-14",
         "morning": {
-          "weatherCode": 108,
+          "weatherCode": 2,
           "weatherDesc": "",
-          "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/PartlyCloudyNight.png",
+          "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Clear.png",
           "temp": -9,
-          "chanceofrain": 10,
+          "chanceofrain": 6,
           "rainInInches": 0.0
         },
         "afternoon": {
-          "weatherCode": 108,
+          "weatherCode": 2,
           "weatherDesc": "",
-          "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/PartlyCloudyNight.png",
+          "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Clear.png",
           "temp": -9,
-          "chanceofrain": 10,
+          "chanceofrain": 6,
           "rainInInches": 0.0
         },
         "evening": {
@@ -52,18 +52,18 @@
     "temperatureFeelLike": "17",
     "temperature": "17",
     "hiTemp": "26",
-    "hiTempDate": 1789403893266,
+    "hiTempDate": 1789403892704,
     "loTemp": "-68",
-    "loTempDate": 1789355173266,
+    "loTempDate": 1789355172704,
     "wind": "0",
     "gust": "7",
-    "gustAt": 1789374373266,
-    "humidity": "83",
+    "gustAt": 1789374372704,
+    "humidity": "84",
     "rain": "0.8",
     "seasonalRain": "483.6",
     "barometer": "1020.5",
     "barometerTrend": "Steady",
-    "lastReceived": 1789411833000,
+    "lastReceived": 1789412436000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1789411833000,
+    "lastReceived": 1789412436000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
@@ -95,9 +95,9 @@
         "sensorDataTypeId": 14,
         "sensorDataName": "Hum",
         "displayName": "Hum",
-        "reportedValue": 83,
-        "value": 83,
-        "convertedValue": "83",
+        "reportedValue": 84,
+        "value": 84,
+        "convertedValue": "84",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
