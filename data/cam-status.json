@@ -5,18 +5,18 @@
     "source": "origin"
   },
   "https://wsrv.nl/?url=decoral.ch/Kameratoedi.jpg": {
-    "hash": "871c93e423222571b15ae6cc165f875a1798936c",
-    "lastChange": 1789537203000,
+    "hash": "9bf9fd1210fc050d3f18d63c866acb01956ab26d",
+    "lastChange": 1789537503000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=eichi.ch%2F%3Feichi_webcam_image%3Deichi": {
-    "hash": "373792aa81962fa485b120e2d97c2eb4561d2a54",
-    "lastChange": 1789537353000,
+    "hash": "24766b647490e05cf84a73a7f5befed120e43bc7",
+    "lastChange": 1789537656000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=eichi.ch%2F%3Feichi_webcam_image%3Deichi2": {
-    "hash": "3daa8961738c1e73697647549a51ee21f2036f39",
-    "lastChange": 1789537341000,
+    "hash": "cb10f014dc00afafa1b9c2571a46ae71b486acd3",
+    "lastChange": 1789537675000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=fgzo.ch/webcam/images/fgzo.jpg": {
@@ -30,9 +30,9 @@
     "source": "origin"
   },
   "https://wsrv.nl/?url=flugplatz-schaenis.ch/images/webcam/cam_schaenis_high.jpg": {
-    "hash": "02f612e399328c528575b2dc54ecb5f0e8ca81b0",
-    "lastChange": 1789537210000,
-    "source": "origin"
+    "hash": "fabdfc7482bd2cf14455ce79afd0b9379c56594d",
+    "lastChange": 1789537705938,
+    "source": "bot"
   },
   "https://wsrv.nl/?url=images-webcams.windy.com/91/1614073791/current/original/1614073791.jpg": {
     "hash": "9d9abc0daf9b133a2bdded63f12bf3fe872e7001",
@@ -40,8 +40,8 @@
     "source": "origin"
   },
   "https://wsrv.nl/?url=webcam.afbn.ch/H_OSG_017,200_S_KAM_001_Sued.jpg": {
-    "hash": "b6578ff61efa800994e8429c82b7076dbbd087ba",
-    "lastChange": 1789537201000,
+    "hash": "6e4fbfcd9f72d50204aa9fb4a8f8a9c48d7f44d0",
+    "lastChange": 1789537501000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=webcam.hotel-klausenpass.ch/panorama.jpg": {
@@ -60,13 +60,13 @@
     "source": "origin"
   },
   "https://wsrv.nl/?url=www.sky-cam.ch/skiarena/gurschen_N/gurschen_N.jpg": {
-    "hash": "c25ac3810a57024f2341ee423c07e99bd701b13b",
-    "lastChange": 1789537385000,
+    "hash": "a123cbaef7d2a2ac7283bc43e5903a48da4a6931",
+    "lastChange": 1789537686000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=www.tarnolgio.ch/webcam00.jpg": {
-    "hash": "f5f1c2ce2bae7a52bfd1b3ad84eb1f903a5f59c8",
-    "lastChange": 1789536607000,
+    "hash": "1752b539d52d8e28152779a12629cade261cac77",
+    "lastChange": 1789537507000,
     "source": "origin"
   }
 }
