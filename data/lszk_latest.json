@@ -1,6 +1,6 @@
 {
-  "fetched_at_utc": "2026-09-17T06:51:13+00:00",
-  "station_last_received_utc": "2026-09-17T06:50:37+00:00",
+  "fetched_at_utc": "2026-09-17T07:01:13+00:00",
+  "station_last_received_utc": "2026-09-17T07:00:37+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
     "windDirection": 316,
@@ -8,9 +8,9 @@
       {
         "date": "2026-09-17",
         "morning": {
-          "weatherCode": 1,
-          "weatherDesc": "Sunny",
-          "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Sunny.png",
+          "weatherCode": 13,
+          "weatherDesc": "Cloudy",
+          "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Cloudy.png",
           "temp": 16,
           "chanceofrain": 0,
           "rainInInches": 0.0
@@ -35,7 +35,7 @@
           "weatherCode": 14,
           "weatherDesc": "Overcast",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Cloudy.png",
-          "temp": 11,
+          "temp": 9,
           "chanceofrain": 0,
           "rainInInches": 0.0
         }
@@ -52,18 +52,18 @@
     "temperatureFeelLike": "11",
     "temperature": "11",
     "hiTemp": "12",
-    "hiTempDate": 1789596192948,
+    "hiTempDate": 1789596192949,
     "loTemp": "-68",
-    "loTempDate": 1789613592948,
+    "loTempDate": 1789613592949,
     "wind": "0",
     "gust": "3",
-    "gustAt": 1789605912948,
+    "gustAt": 1789605912949,
     "humidity": "96",
     "rain": "0.8",
     "seasonalRain": "493.6",
     "barometer": "1016.6",
     "barometerTrend": "Steady",
-    "lastReceived": 1789627837000,
+    "lastReceived": 1789628437000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1789627837000,
+    "lastReceived": 1789628437000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
@@ -108,9 +108,9 @@
         "sensorDataTypeId": 12,
         "sensorDataName": "Heat Index",
         "displayName": "Heat Index",
-        "reportedValue": 11,
-        "value": 11,
-        "convertedValue": "11",
+        "reportedValue": 12,
+        "value": 12,
+        "convertedValue": "12",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -212,9 +212,9 @@
         "sensorDataTypeId": 10,
         "sensorDataName": "Dew Point",
         "displayName": "Dew Point",
-        "reportedValue": 10,
-        "value": 10,
-        "convertedValue": "10",
+        "reportedValue": 11,
+        "value": 11,
+        "convertedValue": "11",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -290,9 +290,9 @@
         "sensorDataTypeId": 71,
         "sensorDataName": "Wet Bulb",
         "displayName": "Wet Bulb",
-        "reportedValue": 10,
-        "value": 10,
-        "convertedValue": "10",
+        "reportedValue": 11,
+        "value": 11,
+        "convertedValue": "11",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -722,14 +722,14 @@
       {
         "sensorDataName": "Rain",
         "rawValues": {
-          "DAY": 0.8,
           "YEAR": 493.6,
-          "MONTH": 22.2
+          "MONTH": 22.2,
+          "DAY": 0.8
         },
         "convertedValues": {
-          "DAY": "0.8",
           "YEAR": "493.6",
-          "MONTH": "22.2"
+          "MONTH": "22.2",
+          "DAY": "0.8"
         },
         "assocSensorDataTypeId": null,
         "unitLabel": "mm"
@@ -737,14 +737,14 @@
       {
         "sensorDataName": "ET",
         "rawValues": {
-          "DAY": 0.0,
           "YEAR": 0.0,
-          "MONTH": 0.0
+          "MONTH": 0.0,
+          "DAY": 0.0
         },
         "convertedValues": {
-          "DAY": "0.0",
           "YEAR": "0.0",
-          "MONTH": "0.0"
+          "MONTH": "0.0",
+          "DAY": "0.0"
         },
         "assocSensorDataTypeId": null,
         "unitLabel": "mm"
