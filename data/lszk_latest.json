@@ -1,6 +1,6 @@
 {
-  "fetched_at_utc": "2026-09-18T17:31:11+00:00",
-  "station_last_received_utc": "2026-09-18T17:30:15+00:00",
+  "fetched_at_utc": "2026-09-18T17:41:11+00:00",
+  "station_last_received_utc": "2026-09-18T17:40:18+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
     "windDirection": 257,
@@ -49,25 +49,25 @@
     "windUnits": "knots",
     "rainUnits": "mm",
     "tempUnits": "&deg;C",
-    "temperatureFeelLike": "16",
+    "temperatureFeelLike": "15",
     "temperature": "16",
     "hiTemp": "21",
-    "hiTempDate": 1789742891787,
+    "hiTempDate": 1789742891653,
     "loTemp": "-68",
-    "loTempDate": 1789702871787,
+    "loTempDate": 1789702871653,
     "wind": "0",
     "gust": "10",
-    "gustAt": 1789738631787,
-    "humidity": "72",
+    "gustAt": 1789738631653,
+    "humidity": "73",
     "rain": "0.0",
     "seasonalRain": "493.6",
-    "barometer": "1015.4",
+    "barometer": "1015.7",
     "barometerTrend": "Rising Slowly",
-    "lastReceived": 1789752615000,
+    "lastReceived": 1789753218000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
-    "thwIndex": "16",
+    "thwIndex": "15",
     "thswIndex": "0",
     "aqi": null,
     "aqiString": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1789752615000,
+    "lastReceived": 1789753218000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
@@ -95,9 +95,9 @@
         "sensorDataTypeId": 14,
         "sensorDataName": "Hum",
         "displayName": "Hum",
-        "reportedValue": 72,
-        "value": 72,
-        "convertedValue": "72",
+        "reportedValue": 73,
+        "value": 73,
+        "convertedValue": "73",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -225,9 +225,9 @@
         "sensorDataTypeId": 26,
         "sensorDataName": "Barometer",
         "displayName": "Barometer",
-        "reportedValue": 1015.4,
-        "value": 1015.4,
-        "convertedValue": "1015.4",
+        "reportedValue": 1015.7,
+        "value": 1015.7,
+        "convertedValue": "1015.7",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -303,9 +303,9 @@
         "sensorDataTypeId": 13,
         "sensorDataName": "THW Index",
         "displayName": "THW Index",
-        "reportedValue": 16,
-        "value": 16,
-        "convertedValue": "16",
+        "reportedValue": 15,
+        "value": 15,
+        "convertedValue": "15",
         "depthLabel": null,
         "category": "other",
         "assocSensorDataTypeId": null,
@@ -487,8 +487,8 @@
         "sensorDataTypeId": null,
         "sensorDataName": "High Bar",
         "displayName": null,
-        "reportedValue": 1015.4,
-        "value": 1015.4,
+        "reportedValue": 1015.7,
+        "value": 1015.7,
         "convertedValue": null,
         "depthLabel": null,
         "category": null,
@@ -643,8 +643,8 @@
         "sensorDataTypeId": null,
         "sensorDataName": "High Bar Time",
         "displayName": null,
-        "reportedValue": 1921,
-        "value": 1921,
+        "reportedValue": 1940,
+        "value": 1940,
         "convertedValue": null,
         "depthLabel": null,
         "category": null,
@@ -722,14 +722,14 @@
       {
         "sensorDataName": "Rain",
         "rawValues": {
-          "DAY": 0.0,
           "YEAR": 493.6,
-          "MONTH": 22.2
+          "MONTH": 22.2,
+          "DAY": 0.0
         },
         "convertedValues": {
-          "DAY": "0.0",
           "YEAR": "493.6",
-          "MONTH": "22.2"
+          "MONTH": "22.2",
+          "DAY": "0.0"
         },
         "assocSensorDataTypeId": null,
         "unitLabel": "mm"
@@ -737,14 +737,14 @@
       {
         "sensorDataName": "ET",
         "rawValues": {
-          "DAY": 0.0,
           "YEAR": 0.0,
-          "MONTH": 0.0
+          "MONTH": 0.0,
+          "DAY": 0.0
         },
         "convertedValues": {
-          "DAY": "0.0",
           "YEAR": "0.0",
-          "MONTH": "0.0"
+          "MONTH": "0.0",
+          "DAY": "0.0"
         },
         "assocSensorDataTypeId": null,
         "unitLabel": "mm"
