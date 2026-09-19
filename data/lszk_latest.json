@@ -1,6 +1,6 @@
 {
-  "fetched_at_utc": "2026-09-18T23:51:11+00:00",
-  "station_last_received_utc": "2026-09-18T23:50:51+00:00",
+  "fetched_at_utc": "2026-09-19T00:01:12+00:00",
+  "station_last_received_utc": "2026-09-19T00:00:52+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
     "windDirection": 302,
@@ -8,8 +8,8 @@
       {
         "date": "2026-09-19",
         "morning": {
-          "weatherCode": 11,
-          "weatherDesc": "Broken Clouds",
+          "weatherCode": 12,
+          "weatherDesc": "Mostly Cloudy",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Cloudy.png",
           "temp": 17,
           "chanceofrain": 0,
@@ -27,7 +27,7 @@
           "weatherCode": 14,
           "weatherDesc": "Overcast",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Cloudy.png",
-          "temp": 12,
+          "temp": 13,
           "chanceofrain": 0,
           "rainInInches": 0.0
         },
@@ -52,18 +52,18 @@
     "temperatureFeelLike": "11",
     "temperature": "11",
     "hiTemp": "12",
-    "hiTempDate": 1789682411600,
+    "hiTempDate": 1789768812324,
     "loTemp": "11",
-    "loTempDate": 1789688771600,
+    "loTempDate": 1789775412324,
     "wind": "0",
     "gust": "0",
-    "gustAt": 1789948511600,
+    "gustAt": 1790034912324,
     "humidity": "92",
     "rain": "0.0",
     "seasonalRain": "493.6",
     "barometer": "1018.5",
     "barometerTrend": "Rising Slowly",
-    "lastReceived": 1789775451000,
+    "lastReceived": 1789776052000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1789775451000,
+    "lastReceived": 1789776052000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
@@ -552,8 +552,8 @@
         "sensorDataTypeId": null,
         "sensorDataName": "Low Temp Time",
         "displayName": null,
-        "reportedValue": 146,
-        "value": 146,
+        "reportedValue": 150,
+        "value": 150,
         "convertedValue": null,
         "depthLabel": null,
         "category": null,
