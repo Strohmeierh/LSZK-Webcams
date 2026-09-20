@@ -1,5 +1,5 @@
 {
-  "fetched_at_utc": "2026-09-20T10:31:12+00:00",
+  "fetched_at_utc": "2026-09-20T10:41:12+00:00",
   "station_last_received_utc": "2026-09-20T10:23:46+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
@@ -52,12 +52,12 @@
     "temperatureFeelLike": null,
     "temperature": "0",
     "hiTemp": "21",
-    "hiTempDate": 1789897392005,
+    "hiTempDate": 1789897392358,
     "loTemp": "-68",
-    "loTempDate": 1789875672005,
+    "loTempDate": 1789875672358,
     "wind": "0",
     "gust": "8",
-    "gustAt": 1789896792005,
+    "gustAt": 1789896792358,
     "humidity": "0",
     "rain": "0.0",
     "seasonalRain": "0.0",
