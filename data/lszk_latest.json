@@ -1,6 +1,6 @@
 {
-  "fetched_at_utc": "2026-09-20T08:41:11+00:00",
-  "station_last_received_utc": "2026-09-20T08:38:38+00:00",
+  "fetched_at_utc": "2026-09-20T08:51:12+00:00",
+  "station_last_received_utc": "2026-09-20T08:50:47+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
     "windDirection": null,
@@ -52,18 +52,18 @@
     "temperatureFeelLike": null,
     "temperature": "0",
     "hiTemp": "18",
-    "hiTempDate": 1789891271745,
+    "hiTempDate": 1789891272463,
     "loTemp": "-68",
-    "loTempDate": 1789875671745,
+    "loTempDate": 1789875672463,
     "wind": "0",
     "gust": "7",
-    "gustAt": 1789889111745,
+    "gustAt": 1789889112463,
     "humidity": "0",
     "rain": "0.0",
     "seasonalRain": "0.0",
     "barometer": "0",
     "barometerTrend": "",
-    "lastReceived": 1789893518000,
+    "lastReceived": 1789894247000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1789893518000,
+    "lastReceived": 1789894247000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
@@ -723,13 +723,13 @@
         "sensorDataName": "Rain",
         "rawValues": {
           "DAY": 0.0,
-          "YEAR": 0.0,
-          "MONTH": 0.0
+          "MONTH": 0.0,
+          "YEAR": 0.0
         },
         "convertedValues": {
           "DAY": "0.0",
-          "YEAR": "0.0",
-          "MONTH": "0.0"
+          "MONTH": "0.0",
+          "YEAR": "0.0"
         },
         "assocSensorDataTypeId": null,
         "unitLabel": "mm"
@@ -738,13 +738,13 @@
         "sensorDataName": "ET",
         "rawValues": {
           "DAY": 0.0,
-          "YEAR": 0.0,
-          "MONTH": 0.0
+          "MONTH": 0.0,
+          "YEAR": 0.0
         },
         "convertedValues": {
           "DAY": "0.0",
-          "YEAR": "0.0",
-          "MONTH": "0.0"
+          "MONTH": "0.0",
+          "YEAR": "0.0"
         },
         "assocSensorDataTypeId": null,
         "unitLabel": "mm"
