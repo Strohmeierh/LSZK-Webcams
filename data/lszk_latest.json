@@ -1,9 +1,9 @@
 {
-  "fetched_at_utc": "2026-09-24T15:51:15+00:00",
-  "station_last_received_utc": "2026-09-24T15:51:11+00:00",
+  "fetched_at_utc": "2026-09-24T16:01:12+00:00",
+  "station_last_received_utc": "2026-09-24T16:00:14+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
-    "windDirection": 263,
+    "windDirection": 144,
     "forecastOverview": [
       {
         "date": "2026-09-24",
@@ -12,7 +12,7 @@
           "weatherDesc": "",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Cloudy.png",
           "temp": -8,
-          "chanceofrain": 0,
+          "chanceofrain": 3,
           "rainInInches": 0.0
         },
         "afternoon": {
@@ -20,7 +20,7 @@
           "weatherDesc": "",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Cloudy.png",
           "temp": -8,
-          "chanceofrain": 0,
+          "chanceofrain": 3,
           "rainInInches": 0.0
         },
         "evening": {
@@ -52,18 +52,18 @@
     "temperatureFeelLike": "16",
     "temperature": "16",
     "hiTemp": "20",
-    "hiTempDate": 1790249594942,
+    "hiTempDate": 1790249592178,
     "loTemp": "-68",
-    "loTempDate": 1790220434942,
+    "loTempDate": 1790220432178,
     "wind": "0",
     "gust": "12",
-    "gustAt": 1790249534942,
+    "gustAt": 1790249532178,
     "humidity": "72",
     "rain": "0.0",
     "seasonalRain": "493.6",
-    "barometer": "1020.3",
+    "barometer": "1020.4",
     "barometerTrend": "Steady",
-    "lastReceived": 1790265071000,
+    "lastReceived": 1790265614000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1790265071000,
+    "lastReceived": 1790265614000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
@@ -147,9 +147,9 @@
         "sensorDataTypeId": 17,
         "sensorDataName": "Wind Direction",
         "displayName": "Wind Direction",
-        "reportedValue": 263,
-        "value": 263,
-        "convertedValue": "263",
+        "reportedValue": 144,
+        "value": 144,
+        "convertedValue": "144",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -199,9 +199,9 @@
         "sensorDataTypeId": 56,
         "sensorDataName": "10 Min High Wind Speed",
         "displayName": "10 Min High Wind Speed",
-        "reportedValue": 0,
-        "value": 0,
-        "convertedValue": "0",
+        "reportedValue": 3,
+        "value": 3,
+        "convertedValue": "3",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -225,9 +225,9 @@
         "sensorDataTypeId": 26,
         "sensorDataName": "Barometer",
         "displayName": "Barometer",
-        "reportedValue": 1020.3,
-        "value": 1020.3,
-        "convertedValue": "1020.3",
+        "reportedValue": 1020.4,
+        "value": 1020.4,
+        "convertedValue": "1020.4",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -722,14 +722,14 @@
       {
         "sensorDataName": "Rain",
         "rawValues": {
-          "MONTH": 22.2,
           "DAY": 0.0,
-          "YEAR": 493.6
+          "YEAR": 493.6,
+          "MONTH": 22.2
         },
         "convertedValues": {
-          "MONTH": "22.2",
           "DAY": "0.0",
-          "YEAR": "493.6"
+          "YEAR": "493.6",
+          "MONTH": "22.2"
         },
         "assocSensorDataTypeId": null,
         "unitLabel": "mm"
@@ -737,14 +737,14 @@
       {
         "sensorDataName": "ET",
         "rawValues": {
-          "MONTH": 0.0,
           "DAY": 0.0,
-          "YEAR": 0.0
+          "YEAR": 0.0,
+          "MONTH": 0.0
         },
         "convertedValues": {
-          "MONTH": "0.0",
           "DAY": "0.0",
-          "YEAR": "0.0"
+          "YEAR": "0.0",
+          "MONTH": "0.0"
         },
         "assocSensorDataTypeId": null,
         "unitLabel": "mm"
