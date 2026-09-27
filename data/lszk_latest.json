@@ -1,6 +1,6 @@
 {
-  "fetched_at_utc": "2026-09-27T04:51:13+00:00",
-  "station_last_received_utc": "2026-09-27T04:50:55+00:00",
+  "fetched_at_utc": "2026-09-27T05:01:12+00:00",
+  "station_last_received_utc": "2026-09-27T05:00:57+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
     "windDirection": null,
@@ -27,14 +27,14 @@
           "weatherCode": 1,
           "weatherDesc": "Clear",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Clear.png",
-          "temp": 14,
+          "temp": 13,
           "chanceofrain": 0,
           "rainInInches": 0.0
         },
         "night": {
-          "weatherCode": 14,
-          "weatherDesc": "Overcast",
-          "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Cloudy.png",
+          "weatherCode": 1,
+          "weatherDesc": "Clear",
+          "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Clear.png",
           "temp": 10,
           "chanceofrain": 0,
           "rainInInches": 0.0
@@ -52,18 +52,18 @@
     "temperatureFeelLike": null,
     "temperature": "0",
     "hiTemp": "11",
-    "hiTempDate": 1790460133658,
+    "hiTempDate": 1790460131862,
     "loTemp": "-68",
-    "loTempDate": 1790479213658,
+    "loTempDate": 1790479211862,
     "wind": "0",
     "gust": "2",
-    "gustAt": 1790472073658,
+    "gustAt": 1790472071862,
     "humidity": "0",
     "rain": "0.0",
     "seasonalRain": "493.6",
     "barometer": "1018.9",
     "barometerTrend": "Steady",
-    "lastReceived": 1790484655000,
+    "lastReceived": 1790485257000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1790484655000,
+    "lastReceived": 1790485257000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
