@@ -1,6 +1,6 @@
 {
-  "fetched_at_utc": "2026-10-05T05:51:12+00:00",
-  "station_last_received_utc": "2026-10-05T05:50:34+00:00",
+  "fetched_at_utc": "2026-10-05T06:01:12+00:00",
+  "station_last_received_utc": "2026-10-05T06:00:37+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
     "windDirection": null,
@@ -13,7 +13,7 @@
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
           "temp": 16,
           "chanceofrain": 45,
-          "rainInInches": 0.03
+          "rainInInches": 0.02
         },
         "afternoon": {
           "weatherCode": 1,
@@ -52,18 +52,18 @@
     "temperatureFeelLike": null,
     "temperature": "0",
     "hiTemp": "17",
-    "hiTempDate": 1791155652382,
+    "hiTempDate": 1791155652387,
     "loTemp": "-68",
-    "loTempDate": 1791169092382,
+    "loTempDate": 1791169092387,
     "wind": "0",
     "gust": "10",
-    "gustAt": 1791167472382,
+    "gustAt": 1791167472387,
     "humidity": "0",
     "rain": "0.0",
     "seasonalRain": "503.2",
     "barometer": "1022.9",
     "barometerTrend": "Rising Slowly",
-    "lastReceived": 1791179434000,
+    "lastReceived": 1791180037000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1791179434000,
+    "lastReceived": 1791180037000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
