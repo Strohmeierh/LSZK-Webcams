@@ -1,6 +1,6 @@
 {
-  "fetched_at_utc": "2026-10-05T00:01:11+00:00",
-  "station_last_received_utc": "2026-10-05T00:00:35+00:00",
+  "fetched_at_utc": "2026-10-05T00:11:11+00:00",
+  "station_last_received_utc": "2026-10-05T00:10:36+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
     "windDirection": 342,
@@ -52,18 +52,18 @@
     "temperatureFeelLike": "16",
     "temperature": "16",
     "hiTemp": "17",
-    "hiTempDate": 1791155651172,
+    "hiTempDate": 1791155651478,
     "loTemp": "14",
-    "loTempDate": 1791151211172,
+    "loTempDate": 1791151211478,
     "wind": "0",
     "gust": "3",
-    "gustAt": 1791154991172,
+    "gustAt": 1791154991478,
     "humidity": "78",
     "rain": "0.0",
     "seasonalRain": "503.2",
     "barometer": "1022.8",
     "barometerTrend": "Steady",
-    "lastReceived": 1791158435000,
+    "lastReceived": 1791159036000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1791158435000,
+    "lastReceived": 1791159036000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
