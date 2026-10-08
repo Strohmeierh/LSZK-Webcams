@@ -1,6 +1,6 @@
 {
-  "fetched_at_utc": "2026-10-08T00:21:11+00:00",
-  "station_last_received_utc": "2026-10-08T00:20:13+00:00",
+  "fetched_at_utc": "2026-10-08T00:31:11+00:00",
+  "station_last_received_utc": "2026-10-08T00:30:15+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
     "windDirection": 284,
@@ -52,18 +52,18 @@
     "temperatureFeelLike": "12",
     "temperature": "12",
     "hiTemp": "14",
-    "hiTempDate": 1791410411676,
+    "hiTempDate": 1791410411106,
     "loTemp": "12",
-    "loTempDate": 1791418151676,
+    "loTempDate": 1791419231106,
     "wind": "0",
     "gust": "0",
-    "gustAt": 1791676511676,
+    "gustAt": 1791676511106,
     "humidity": "93",
     "rain": "0.0",
     "seasonalRain": "503.2",
     "barometer": "1006.8",
     "barometerTrend": "Steady",
-    "lastReceived": 1791418813000,
+    "lastReceived": 1791419415000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1791418813000,
+    "lastReceived": 1791419415000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
@@ -290,9 +290,9 @@
         "sensorDataTypeId": 71,
         "sensorDataName": "Wet Bulb",
         "displayName": "Wet Bulb",
-        "reportedValue": 12,
-        "value": 12,
-        "convertedValue": "12",
+        "reportedValue": 11,
+        "value": 11,
+        "convertedValue": "11",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -552,8 +552,8 @@
         "sensorDataTypeId": null,
         "sensorDataName": "Low Temp Time",
         "displayName": null,
-        "reportedValue": 209,
-        "value": 209,
+        "reportedValue": 227,
+        "value": 227,
         "convertedValue": null,
         "depthLabel": null,
         "category": null,
@@ -604,8 +604,8 @@
         "sensorDataTypeId": null,
         "sensorDataName": "Low Wind Chill Time",
         "displayName": null,
-        "reportedValue": 158,
-        "value": 158,
+        "reportedValue": 225,
+        "value": 225,
         "convertedValue": null,
         "depthLabel": null,
         "category": null,
@@ -630,8 +630,8 @@
         "sensorDataTypeId": null,
         "sensorDataName": "Low Dew Point Time",
         "displayName": null,
-        "reportedValue": 119,
-        "value": 119,
+        "reportedValue": 227,
+        "value": 227,
         "convertedValue": null,
         "depthLabel": null,
         "category": null,
@@ -722,14 +722,14 @@
       {
         "sensorDataName": "Rain",
         "rawValues": {
-          "YEAR": 503.2,
           "MONTH": 9.6,
-          "DAY": 0.0
+          "DAY": 0.0,
+          "YEAR": 503.2
         },
         "convertedValues": {
-          "YEAR": "503.2",
           "MONTH": "9.6",
-          "DAY": "0.0"
+          "DAY": "0.0",
+          "YEAR": "503.2"
         },
         "assocSensorDataTypeId": null,
         "unitLabel": "mm"
@@ -737,14 +737,14 @@
       {
         "sensorDataName": "ET",
         "rawValues": {
-          "YEAR": 0.0,
           "MONTH": 0.0,
-          "DAY": 0.0
+          "DAY": 0.0,
+          "YEAR": 0.0
         },
         "convertedValues": {
-          "YEAR": "0.0",
           "MONTH": "0.0",
-          "DAY": "0.0"
+          "DAY": "0.0",
+          "YEAR": "0.0"
         },
         "assocSensorDataTypeId": null,
         "unitLabel": "mm"
