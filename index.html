@@ -1621,8 +1621,10 @@
       } else if (closed) {
         chip = 'Platz ' + escHtml(p.status);
       } else {
-        chip = 'Platz · ' + escHtml(p.traffic || p.status || '?') +
-               (p.runway_condition ? ' · ' + escHtml(p.runway_condition) : '');
+        // Pistenzustand in Grossbuchstaben (FGZO schreibt mal „DRY", mal „Dry"), lange Freitexte kürzen
+        var rwy = p.runway_condition ? String(p.runway_condition).toUpperCase() : '';
+        if (rwy.length > 24) rwy = rwy.slice(0, 23) + '…';
+        chip = 'Platz · ' + escHtml(p.traffic || p.status || '?') + (rwy ? ' · ' + escHtml(rwy) : '');
       }
       if (isNew && !failed) chip += ' · <span class="brf-new">neu</span>';
 

@@ -46,11 +46,18 @@ UA = "LSZK-Webcams-Dashboard/1.0 (+https://strohmeierh.github.io/LSZK-Webcams/)"
 
 AMPEL = {"open": "gruen", "open-restricted": "gelb", "closed": "rot"}
 
-# Fixed intro sentence (summer/winter wording) that precedes the actual notice.
-INTRO_RE = re.compile(
-    r"Leuchtorange Pistenf[^\n]*?(?:eingetragen sind\.|markieren die Piste!)\s*",
-    re.IGNORECASE,
-)
+# Fixed intro sentence(s) that precede the actual notice. Summer wording ends with
+# "eingetragen sind.", the winter wording has "markieren die Piste!" followed by the
+# same hangar sentence -- try the long form first, then the short one.
+INTRO_RES = [
+    re.compile(r"Leuchtorange Pistenf[^\n]*?eingetragen sind\.\s*", re.IGNORECASE),
+    re.compile(r"Leuchtorange Pistenf[^\n]*?markieren die Piste!\s*", re.IGNORECASE),
+    # hangar sentence on its own line (if FGZO ever inserts a <br> after "Piste!")
+    re.compile(r"^Flieger nach dem Flug hangarieren[^\n]*?eingetragen sind\.\s*", re.IGNORECASE | re.MULTILINE),
+]
+
+DATA_KEYS = ("ampel", "status", "traffic", "closing", "notice",
+             "runway_line", "runway_condition", "contact", "updated")
 
 
 def now_iso() -> str:
@@ -63,16 +70,21 @@ def fetch_html() -> str:
         return resp.read().decode("utf-8", errors="replace")
 
 
-def text_of(fragment: str) -> str:
-    """Strip tags, decode entities, normalise whitespace (single line)."""
+def text_of(fragment) -> str:
+    """Strip tags, decode entities, normalise whitespace (single line). None-safe."""
+    if not fragment:
+        return ""
     t = re.sub(r"<[^>]+>", " ", fragment)
     t = html.unescape(t).replace("\xa0", " ")
     return re.sub(r"\s+", " ", t).strip()
 
 
-def multiline_text(fragment: str) -> str:
-    """Like text_of but keeps <br>/<p> as line breaks."""
-    t = fragment.replace("\r", "")
+def multiline_text(fragment) -> str:
+    """Like text_of but keeps <br>/<p> as line breaks (raw source newlines are
+    plain whitespace, as in HTML)."""
+    if not fragment:
+        return ""
+    t = re.sub(r"[\r\n]+", " ", fragment)
     t = re.sub(r"<br\s*/?>", "\n", t, flags=re.IGNORECASE)
     t = re.sub(r"</p\s*>", "\n", t, flags=re.IGNORECASE)
     t = re.sub(r"<[^>]+>", "", t)
@@ -113,12 +125,14 @@ def parse(src: str) -> dict:
     closing_raw = first(r'<h2 id="closing-hour">(.*?)</h2>', src, re.IGNORECASE | re.DOTALL)
     main_raw = first(r"<main>(.*?)</main>", src, re.IGNORECASE | re.DOTALL)
 
-    closing = first(r"(\d{1,2}:\d{2})", text_of(closing_raw or "")) or None
+    closing = first(r"(\d{1,2}:\d{2})", text_of(closing_raw)) or None
     upd = re.search(r"(\d{1,2}\.\d{1,2}\.\d{4}),?\s*(\d{1,2}:\d{2})", text_of(updated_raw))
     updated = f"{upd.group(1)}, {upd.group(2)}" if upd else text_of(updated_raw) or None
 
-    notice = multiline_text(main_raw or "")
-    notice = INTRO_RE.sub("", notice).strip()
+    notice = multiline_text(main_raw)
+    for intro_re in INTRO_RES:
+        notice = intro_re.sub("", notice, count=1)
+    notice = notice.strip()
 
     runway_line = None
     runway_condition = None
@@ -159,15 +173,17 @@ def main() -> int:
     prev = load_previous()
     try:
         data = parse(fetch_html())
-    except (urllib.error.URLError, OSError, ValueError) as e:
+    except Exception as e:  # noqa: BLE001 - any failure must end up in the JSON, never a traceback
         record = dict(prev)
         record.update({
             "ok": False,
             "failed_at_utc": now_iso(),
-            "error": str(e)[:200],
+            "error": f"{type(e).__name__}: {e}"[:200],
             "source": URL,
         })
         record.setdefault("fetched_at_utc", None)
+        for key in DATA_KEYS:
+            record.setdefault(key, None)
         write(record)
         print(f"FAILED — {e} (previous content kept)", file=sys.stderr)
         return 1
