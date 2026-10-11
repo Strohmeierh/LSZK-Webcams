@@ -27,6 +27,10 @@ jobs:
           WEATHERLINK_DEVICE_TOKEN: ${{ vars.WEATHERLINK_DEVICE_TOKEN }}
         run: python fetch_weather.py
 
+      - name: Fetch FGZO airfield status (fgzo.ch/status/)
+        continue-on-error: true
+        run: python scripts/fetch_fgzo_status.py
+
       - name: Commit & push if changed
         run: |
           git config user.name  "github-actions[bot]"
