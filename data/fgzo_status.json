@@ -1,0 +1,16 @@
+{
+  "ok": true,
+  "fetched_at_utc": "2026-10-11T10:01:11+00:00",
+  "failed_at_utc": null,
+  "error": null,
+  "source": "https://fgzo.ch/status/",
+  "ampel": "gelb",
+  "status": "OPEN",
+  "traffic": "LOW TRAFFIC",
+  "closing": "18:46",
+  "notice": "Taxiway part EAST closed - part WEST open!\n\nRunway condition LSZK / 11.10.2026 / 0700 LT / SLIPPERY WET",
+  "runway_line": "Runway condition LSZK / 11.10.2026 / 0700 LT / SLIPPERY WET",
+  "runway_condition": "SLIPPERY WET",
+  "contact": "Kontakt: +41 79 265 14 38 / J. Grossmann, allenfalls +41 44 954 12 52 / C-Büro",
+  "updated": "11.10.2026, 07:36"
+}
