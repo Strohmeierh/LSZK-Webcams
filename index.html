@@ -156,6 +156,19 @@
     .brf-item-value { font-size: 0.82rem; color: var(--accent); margin: 3px 0 4px 18px; }
     .brf-item-text { font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; }
     .brf-note { font-size: 0.72rem; color: var(--text-muted); line-height: 1.5; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--card-border); }
+    /* Flugplatzstatus (FGZO): Hinweistext-Box + „neu"-Marker */
+    .brf-notice {
+      white-space: pre-line; font-size: 0.8rem; line-height: 1.5; color: #fca5a5;
+      background: rgba(239, 68, 68, 0.12); border-left: 3px solid #ef4444; border-radius: 0;
+      padding: 6px 10px; margin: 4px 0 6px 18px;
+    }
+    .brf-new {
+      display: inline-block; font-size: 0.66rem; font-weight: 700; line-height: 1; letter-spacing: 0.03em;
+      color: #0f172a; background: var(--accent); border-radius: 999px; padding: 3px 6px; vertical-align: middle;
+    }
+    .brf-src { font-size: 0.72rem; color: var(--text-muted); margin: 4px 0 0 18px; line-height: 1.5; }
+    .brf-src a { color: var(--accent); text-decoration: none; }
+    .brf-src a:hover { text-decoration: underline; }
 
     /* === Wetter-Panel === */
     .wx-panel {
@@ -1563,10 +1576,84 @@
       return '<span class="brf-chip"><span class="brf-dot" style="background:' + color + '"></span>' + label + '</span>';
     }
 
+    function escHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    /* ── Flugplatzstatus FGZO (data/fgzo_status.json, vom Wetter-Job alle 10 min
+       aus fgzo.ch/status/ gelesen). Farbe = Ampel der FGZO, keine eigene Wertung.
+       „neu" = FGZO-Zeitstempel weicht vom zuletzt im Detail-Fenster gesehenen ab. */
+    var FGZO_SEEN_KEY = 'lszk-fgzo-seen';
+    var FGZO_URL = 'https://fgzo.ch/status/';
+
+    function fgzoItem(G, Y, R, N) {
+      var p = briefing.platz;
+      if (p === undefined) return null;                       // noch nicht geladen
+      var hasData = !!(p && p.updated);
+      var ageMin = null;
+      if (hasData && p.fetched_at_utc) {
+        var dF = new Date(p.fetched_at_utc);
+        if (!isNaN(dF.getTime())) ageMin = (Date.now() - dF.getTime()) / 60000;
+      }
+      var failed = !hasData || p.ok === false || ageMin === null || ageMin >= 30;
+      var isNew  = hasData && storeGet(FGZO_SEEN_KEY) !== p.updated;
+      var srcLink = '<a href="' + FGZO_URL + '" target="_blank" rel="noopener">Original auf fgzo.ch ↗</a>';
+      var disclaimer = '<div class="brf-src">Auszug ohne Gewähr. Massgebend sind fgzo.ch, die Flugplatzleitung sowie AIP und NOTAM.</div>';
+
+      if (!hasData) {
+        return {
+          color: N, chip: 'Platz: nicht verfügbar', title: 'Flugplatzstatus Speck (FGZO)',
+          value: 'Status von fgzo.ch zurzeit nicht verfügbar',
+          text:  '<div class="brf-src">' + srcLink + '</div>' + disclaimer
+        };
+      }
+
+      var fetchedZeit = ageMin === null ? '–' : new Date(p.fetched_at_utc).toLocaleString('de-CH', {
+        day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich'
+      });
+      var color = failed ? N : ({ gruen: G, gelb: Y, rot: R })[p.ampel] || N;
+      var closed = /CLOSED|CLSD/i.test(p.status || '');
+      var chip;
+      if (failed) {
+        chip = 'Platz: Daten veraltet';
+      } else if (closed) {
+        chip = 'Platz ' + escHtml(p.status);
+      } else {
+        chip = 'Platz · ' + escHtml(p.traffic || p.status || '?') +
+               (p.runway_condition ? ' · ' + escHtml(p.runway_condition) : '');
+      }
+      if (isNew && !failed) chip += ' · <span class="brf-new">neu</span>';
+
+      var value = escHtml(p.status || '?') +
+        (p.ampel === 'gelb' && !closed ? ' mit Einschränkung' : '') +
+        (p.closing ? ' · Betriebsschluss ' + escHtml(p.closing) + ' LT' : '') +
+        (p.traffic ? ' · ' + escHtml(p.traffic) : '');
+
+      var text = '';
+      if (failed) {
+        text += '<div class="brf-src" style="color:#f87171;">⚠ Letzter erfolgreicher Abruf ' + fetchedZeit +
+                ' – aktueller Stand nur auf fgzo.ch.</div>';
+      }
+      if (p.notice) text += '<div class="brf-notice">' + escHtml(p.notice) + '</div>';
+      if (p.contact) text += '<div class="brf-src" style="color:var(--text);">' + escHtml(p.contact) + '</div>';
+      text += '<div class="brf-src">FGZO aktualisiert: ' + escHtml(p.updated) + ' · abgerufen: ' + fetchedZeit + ' · ' + srcLink + '</div>';
+      text += disclaimer;
+
+      return {
+        color: color, chip: chip,
+        title: 'Flugplatzstatus Speck (FGZO)' + (isNew ? ' <span class="brf-new">neu</span>' : ''),
+        value: value, text: text
+      };
+    }
+
     // Gemeinsame Datenbasis für Chips UND Detail-Modal
     function brfData() {
       var G = '#10b981', Y = '#f59e0b', R = '#ef4444', N = '#64748b';
       var out = [];
+      var platz = fgzoItem(G, Y, R, N);
+      if (platz) out.push(platz);
       if (briefing.thermik !== undefined) {
         var th = briefing.thermik;
         out.push({
@@ -1653,6 +1740,11 @@
         '<div class="brf-item-text" style="padding:10px 0;">Noch keine Daten geladen – einen Moment…</div>';
       m.classList.add('open');
       document.body.style.overflow = 'hidden';
+      // Platzstatus gilt als gesehen, sobald das Detail-Fenster offen war
+      if (briefing.platz && briefing.platz.updated && storeGet(FGZO_SEEN_KEY) !== briefing.platz.updated) {
+        storeSet(FGZO_SEEN_KEY, briefing.platz.updated);
+        renderBriefing();
+      }
     }
     function closeBrfModal() {
       var m = document.getElementById('brf-modal');
@@ -1707,9 +1799,15 @@
       var pSued = fetchQnh('lug');
       var pNord = fetchQnh('sma');
 
-      Promise.all([pStation, pMetar, pSued, pNord]).then(function(results) {
+      // Flugplatzstatus FGZO (vom Job geschrieben, gleiche Kadenz wie Wetter)
+      var pFgzo = fetch('data/fgzo_status.json?t=' + Date.now(), { cache: 'no-store' })
+        .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .catch(function() { return null; });
+
+      Promise.all([pStation, pMetar, pSued, pNord, pFgzo]).then(function(results) {
         _stationData = results[0];
         _metarData   = results[1];
+        briefing.platz = results[4];
         renderAll(el, _stationData, _metarData, { sued: results[2], nord: results[3] });
       });
     }
