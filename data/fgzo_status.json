@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "fetched_at_utc": "2026-10-12T13:11:26+00:00",
+  "fetched_at_utc": "2026-10-12T13:21:13+00:00",
   "failed_at_utc": null,
   "error": null,
   "source": "https://fgzo.ch/status/",
@@ -11,6 +11,6 @@
   "notice": "Taxiway part EAST closed - part WEST open!\n\nRunway condition LSZK / 12.10.2026 / 0730 LT / DRY",
   "runway_line": "Runway condition LSZK / 12.10.2026 / 0730 LT / DRY",
   "runway_condition": "DRY",
-  "contact": "Kontakt: +41 79 406 24 27 / K. Wagner, allenfalls +41 44 954 12 52 / C-Büro",
-  "updated": "12.10.2026, 13:11"
+  "contact": "Kontakt: +41 79 797 02 48 / A. Alvarez, allenfalls +41 44 954 12 52 / C-Büro",
+  "updated": "12.10.2026, 15:12"
 }
