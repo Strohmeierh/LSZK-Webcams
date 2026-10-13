@@ -1,9 +1,9 @@
 {
-  "fetched_at_utc": "2026-10-13T00:21:11+00:00",
-  "station_last_received_utc": "2026-10-13T00:20:37+00:00",
+  "fetched_at_utc": "2026-10-13T00:31:12+00:00",
+  "station_last_received_utc": "2026-10-13T00:30:39+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
-    "windDirection": 325,
+    "windDirection": 324,
     "forecastOverview": [
       {
         "date": "2026-10-13",
@@ -52,18 +52,18 @@
     "temperatureFeelLike": "4",
     "temperature": "4",
     "hiTemp": "5",
-    "hiTempDate": 1791842410753,
+    "hiTempDate": 1791842411970,
     "loTemp": "4",
-    "loTempDate": 1791850690753,
+    "loTempDate": 1791851351970,
     "wind": "0",
     "gust": "0",
-    "gustAt": 1792108510753,
+    "gustAt": 1792108511970,
     "humidity": "95",
     "rain": "0.0",
     "seasonalRain": "536.2",
     "barometer": "1022.5",
     "barometerTrend": "Rising Slowly",
-    "lastReceived": 1791850837000,
+    "lastReceived": 1791851439000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1791850837000,
+    "lastReceived": 1791851439000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
@@ -147,9 +147,9 @@
         "sensorDataTypeId": 17,
         "sensorDataName": "Wind Direction",
         "displayName": "Wind Direction",
-        "reportedValue": 325,
-        "value": 325,
-        "convertedValue": "325",
+        "reportedValue": 324,
+        "value": 324,
+        "convertedValue": "324",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -487,8 +487,8 @@
         "sensorDataTypeId": null,
         "sensorDataName": "High Bar",
         "displayName": null,
-        "reportedValue": 1022.5,
-        "value": 1022.5,
+        "reportedValue": 1022.6,
+        "value": 1022.6,
         "convertedValue": null,
         "depthLabel": null,
         "category": null,
@@ -552,8 +552,8 @@
         "sensorDataTypeId": null,
         "sensorDataName": "Low Temp Time",
         "displayName": null,
-        "reportedValue": 218,
-        "value": 218,
+        "reportedValue": 229,
+        "value": 229,
         "convertedValue": null,
         "depthLabel": null,
         "category": null,
@@ -630,8 +630,8 @@
         "sensorDataTypeId": null,
         "sensorDataName": "Low Dew Point Time",
         "displayName": null,
-        "reportedValue": 49,
-        "value": 49,
+        "reportedValue": 223,
+        "value": 223,
         "convertedValue": null,
         "depthLabel": null,
         "category": null,
@@ -643,8 +643,8 @@
         "sensorDataTypeId": null,
         "sensorDataName": "High Bar Time",
         "displayName": null,
-        "reportedValue": 206,
-        "value": 206,
+        "reportedValue": 226,
+        "value": 226,
         "convertedValue": null,
         "depthLabel": null,
         "category": null,
@@ -722,14 +722,14 @@
       {
         "sensorDataName": "Rain",
         "rawValues": {
+          "YEAR": 536.2,
           "MONTH": 42.6,
-          "DAY": 0.0,
-          "YEAR": 536.2
+          "DAY": 0.0
         },
         "convertedValues": {
+          "YEAR": "536.2",
           "MONTH": "42.6",
-          "DAY": "0.0",
-          "YEAR": "536.2"
+          "DAY": "0.0"
         },
         "assocSensorDataTypeId": null,
         "unitLabel": "mm"
@@ -737,14 +737,14 @@
       {
         "sensorDataName": "ET",
         "rawValues": {
+          "YEAR": 0.0,
           "MONTH": 0.0,
-          "DAY": 0.0,
-          "YEAR": 0.0
+          "DAY": 0.0
         },
         "convertedValues": {
+          "YEAR": "0.0",
           "MONTH": "0.0",
-          "DAY": "0.0",
-          "YEAR": "0.0"
+          "DAY": "0.0"
         },
         "assocSensorDataTypeId": null,
         "unitLabel": "mm"
