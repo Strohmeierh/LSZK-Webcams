@@ -1,1 +1,1 @@
-[{"icaoId":"LSMD","receiptTime":"2026-10-14T20:23:08.392Z","obsTime":1792009200,"reportTime":"2026-10-14T20:20:00.000Z","temp":12,"dewp":11,"wdir":0,"wspd":0,"altim":1030,"qcField":2,"metarType":"METAR","rawOb":"METAR LSMD 142020Z AUTO 00000KT 9999NDV NCD 12/11 Q1030 RMK","lat":47.399,"lon":8.648,"elev":436,"name":"Dübendorf Arpt, ZH, CH","cover":"CLR","clouds":[]}]
+[{"rawOb":"LSMD 142020Z AUTO 00000KT 9999NDV NCD 12/11 Q1030 RMK","reportTime":"2026/10/14 20:20"}]
