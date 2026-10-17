@@ -1,14 +1,14 @@
 {
-  "fetched_at_utc": "2026-10-17T19:51:11+00:00",
-  "station_last_received_utc": "2026-10-17T19:50:38+00:00",
+  "fetched_at_utc": "2026-10-17T20:01:11+00:00",
+  "station_last_received_utc": "2026-10-17T20:00:41+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
-    "windDirection": 307,
+    "windDirection": 319,
     "forecastOverview": [
       {
         "date": "2026-10-17",
         "morning": {
-          "weatherCode": 31,
+          "weatherCode": 32,
           "weatherDesc": "",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
           "temp": -13,
@@ -16,7 +16,7 @@
           "rainInInches": 0.0
         },
         "afternoon": {
-          "weatherCode": 31,
+          "weatherCode": 32,
           "weatherDesc": "",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
           "temp": -13,
@@ -24,19 +24,19 @@
           "rainInInches": 0.0
         },
         "evening": {
+          "weatherCode": 32,
+          "weatherDesc": "Sprinkles",
+          "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
+          "temp": 8,
+          "chanceofrain": 60,
+          "rainInInches": 0.01
+        },
+        "night": {
           "weatherCode": 31,
           "weatherDesc": "Drizzle",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
           "temp": 8,
-          "chanceofrain": 56,
-          "rainInInches": 0.03
-        },
-        "night": {
-          "weatherCode": 14,
-          "weatherDesc": "Overcast",
-          "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Cloudy.png",
-          "temp": 8,
-          "chanceofrain": 14,
+          "chanceofrain": 34,
           "rainInInches": 0.03
         }
       }
@@ -52,18 +52,18 @@
     "temperatureFeelLike": "9",
     "temperature": "9",
     "hiTemp": "14",
-    "hiTempDate": 1792241591291,
+    "hiTempDate": 1792241590987,
     "loTemp": "-68",
-    "loTempDate": 1792204691291,
+    "loTempDate": 1792204690987,
     "wind": "3",
     "gust": "14",
-    "gustAt": 1792244771291,
+    "gustAt": 1792244770987,
     "humidity": "94",
     "rain": "2.8",
     "seasonalRain": "539.8",
     "barometer": "1018.4",
     "barometerTrend": "Steady",
-    "lastReceived": 1792266638000,
+    "lastReceived": 1792267241000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1792266638000,
+    "lastReceived": 1792267241000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
@@ -108,9 +108,9 @@
         "sensorDataTypeId": 12,
         "sensorDataName": "Heat Index",
         "displayName": "Heat Index",
-        "reportedValue": 10,
-        "value": 10,
-        "convertedValue": "10",
+        "reportedValue": 9,
+        "value": 9,
+        "convertedValue": "9",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -121,9 +121,9 @@
         "sensorDataTypeId": 11,
         "sensorDataName": "Wind Chill",
         "displayName": "Wind Chill",
-        "reportedValue": 8,
-        "value": 8,
-        "convertedValue": "8",
+        "reportedValue": 9,
+        "value": 9,
+        "convertedValue": "9",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -147,9 +147,9 @@
         "sensorDataTypeId": 17,
         "sensorDataName": "Wind Direction",
         "displayName": "Wind Direction",
-        "reportedValue": 307,
-        "value": 307,
-        "convertedValue": "307",
+        "reportedValue": 319,
+        "value": 319,
+        "convertedValue": "319",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -199,9 +199,9 @@
         "sensorDataTypeId": 56,
         "sensorDataName": "10 Min High Wind Speed",
         "displayName": "10 Min High Wind Speed",
-        "reportedValue": 6,
-        "value": 6,
-        "convertedValue": "6",
+        "reportedValue": 8,
+        "value": 8,
+        "convertedValue": "8",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
