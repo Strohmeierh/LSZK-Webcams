@@ -1,6 +1,6 @@
 {
-  "fetched_at_utc": "2026-10-17T11:51:10+00:00",
-  "station_last_received_utc": "2026-10-17T11:50:15+00:00",
+  "fetched_at_utc": "2026-10-17T12:01:11+00:00",
+  "station_last_received_utc": "2026-10-17T12:00:18+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
     "windDirection": 261,
@@ -12,7 +12,7 @@
           "weatherDesc": "",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
           "temp": 13,
-          "chanceofrain": 50,
+          "chanceofrain": 54,
           "rainInInches": 0.0
         },
         "afternoon": {
@@ -21,7 +21,7 @@
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
           "temp": 11,
           "chanceofrain": 61,
-          "rainInInches": 0.04
+          "rainInInches": 0.03
         },
         "evening": {
           "weatherCode": 14,
@@ -52,18 +52,18 @@
     "temperatureFeelLike": "13",
     "temperature": "13",
     "hiTemp": "13",
-    "hiTempDate": 1792237330506,
+    "hiTempDate": 1792237811626,
     "loTemp": "-68",
-    "loTempDate": 1792204690506,
+    "loTempDate": 1792204691626,
     "wind": "0",
     "gust": "3",
-    "gustAt": 1792220470506,
+    "gustAt": 1792220471626,
     "humidity": "96",
     "rain": "0.2",
     "seasonalRain": "537.2",
     "barometer": "1016.7",
     "barometerTrend": "Steady",
-    "lastReceived": 1792237815000,
+    "lastReceived": 1792238418000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1792237815000,
+    "lastReceived": 1792238418000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
@@ -199,9 +199,9 @@
         "sensorDataTypeId": 56,
         "sensorDataName": "10 Min High Wind Speed",
         "displayName": "10 Min High Wind Speed",
-        "reportedValue": 1,
-        "value": 1,
-        "convertedValue": "1",
+        "reportedValue": 0,
+        "value": 0,
+        "convertedValue": "0",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -539,8 +539,8 @@
         "sensorDataTypeId": null,
         "sensorDataName": "High Temp Time",
         "displayName": null,
-        "reportedValue": 1342,
-        "value": 1342,
+        "reportedValue": 1350,
+        "value": 1350,
         "convertedValue": null,
         "depthLabel": null,
         "category": null,
@@ -656,8 +656,8 @@
         "sensorDataTypeId": null,
         "sensorDataName": "Low Bar Time",
         "displayName": null,
-        "reportedValue": 1346,
-        "value": 1346,
+        "reportedValue": 1356,
+        "value": 1356,
         "convertedValue": null,
         "depthLabel": null,
         "category": null,
