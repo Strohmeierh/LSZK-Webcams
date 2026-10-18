@@ -1,8 +1,8 @@
 {
-  "ok": false,
-  "fetched_at_utc": "2026-10-18T20:11:12+00:00",
-  "failed_at_utc": "2026-10-18T20:21:32+00:00",
-  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>",
+  "ok": true,
+  "fetched_at_utc": "2026-10-18T20:31:13+00:00",
+  "failed_at_utc": null,
+  "error": null,
   "source": "https://fgzo.ch/status/",
   "ampel": "gelb",
   "status": "OPEN",
