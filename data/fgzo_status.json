@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "fetched_at_utc": "2026-10-19T05:11:12+00:00",
+  "fetched_at_utc": "2026-10-19T05:21:14+00:00",
   "failed_at_utc": null,
   "error": null,
   "source": "https://fgzo.ch/status/",
@@ -8,9 +8,9 @@
   "status": "OPEN",
   "traffic": "LOW TRAFFIC",
   "closing": "18:31",
-  "notice": "Taxiway part EAST closed - part WEST open!\n\nRunway condition LSZK / 18.10.2026 / 1200 LT / WET",
-  "runway_line": "Runway condition LSZK / 18.10.2026 / 1200 LT / WET",
-  "runway_condition": "WET",
-  "contact": "Kontakt: +41 77 460 52 04 / L. Peduzzi, allenfalls +41 44 954 12 52 / C-Büro",
-  "updated": "18.10.2026, 13:40"
+  "notice": "Taxiway part EAST closed - part WEST open!\n\nRunway condition LSZK / 19.10.2026 / 0700 LT / DRY",
+  "runway_line": "Runway condition LSZK / 19.10.2026 / 0700 LT / DRY",
+  "runway_condition": "DRY",
+  "contact": "Kontakt: +41 44 954 12 53 / Office, allenfalls +41 44 954 12 52 / C-Büro",
+  "updated": "19.10.2026, 07:19"
 }
