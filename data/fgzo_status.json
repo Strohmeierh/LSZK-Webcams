@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "fetched_at_utc": "2026-10-20T05:11:13+00:00",
+  "fetched_at_utc": "2026-10-20T05:21:11+00:00",
   "failed_at_utc": null,
   "error": null,
   "source": "https://fgzo.ch/status/",
@@ -8,9 +8,9 @@
   "status": "OPEN",
   "traffic": "LOW TRAFFIC",
   "closing": "18:29",
-  "notice": "Taxiway part EAST closed - part WEST open!\n\nRunway condition LSZK / 19.10.2026 / 0700 LT / DRY",
-  "runway_line": "Runway condition LSZK / 19.10.2026 / 0700 LT / DRY",
+  "notice": "Taxiway part EAST closed - part WEST open!\n\nRunway condition LSZK / 20.10.2026 / 0700 LT / DRY",
+  "runway_line": "Runway condition LSZK / 20.10.2026 / 0700 LT / DRY",
   "runway_condition": "DRY",
-  "contact": "Kontakt: +41 76 397 72 99 / P. Kummer, allenfalls +41 44 954 12 52 / C-Büro",
-  "updated": "19.10.2026, 11:03"
+  "contact": "Kontakt: +41 44 954 12 53 / Office, allenfalls +41 44 954 12 52 / C-Büro",
+  "updated": "20.10.2026, 07:16"
 }
