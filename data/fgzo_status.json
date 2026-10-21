@@ -1,7 +1,7 @@
 {
   "ok": false,
   "fetched_at_utc": "2026-10-21T13:41:14+00:00",
-  "failed_at_utc": "2026-10-21T17:01:34+00:00",
+  "failed_at_utc": "2026-10-21T17:11:33+00:00",
   "error": "URLError: <urlopen error [Errno 101] Network is unreachable>",
   "source": "https://fgzo.ch/status/",
   "ampel": "gelb",
