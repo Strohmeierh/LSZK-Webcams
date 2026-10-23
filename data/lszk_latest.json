@@ -1,5 +1,5 @@
 {
-  "fetched_at_utc": "2026-10-23T14:51:13+00:00",
+  "fetched_at_utc": "2026-10-23T15:01:13+00:00",
   "station_last_received_utc": "2026-10-23T14:44:19+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
@@ -11,15 +11,15 @@
           "weatherCode": 31,
           "weatherDesc": "",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
-          "temp": 12,
+          "temp": -12,
           "chanceofrain": 21,
           "rainInInches": 0.0
         },
         "afternoon": {
           "weatherCode": 31,
-          "weatherDesc": "Drizzle",
+          "weatherDesc": "",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
-          "temp": 12,
+          "temp": -12,
           "chanceofrain": 21,
           "rainInInches": 0.0
         },
@@ -52,12 +52,12 @@
     "temperatureFeelLike": "11",
     "temperature": "13",
     "hiTemp": "14",
-    "hiTempDate": 1792765333357,
+    "hiTempDate": 1792765333435,
     "loTemp": "-68",
-    "loTempDate": 1792722973357,
+    "loTempDate": 1792722973435,
     "wind": "9",
     "gust": "15",
-    "gustAt": 1792766413357,
+    "gustAt": 1792766413435,
     "humidity": "59",
     "rain": "0.2",
     "seasonalRain": "550.0",
@@ -722,13 +722,13 @@
       {
         "sensorDataName": "Rain",
         "rawValues": {
-          "DAY": 0.2,
           "MONTH": 56.4,
+          "DAY": 0.2,
           "YEAR": 550.0
         },
         "convertedValues": {
-          "DAY": "0.2",
           "MONTH": "56.4",
+          "DAY": "0.2",
           "YEAR": "550.0"
         },
         "assocSensorDataTypeId": null,
@@ -737,13 +737,13 @@
       {
         "sensorDataName": "ET",
         "rawValues": {
-          "DAY": 0.0,
           "MONTH": 0.0,
+          "DAY": 0.0,
           "YEAR": 0.0
         },
         "convertedValues": {
-          "DAY": "0.0",
           "MONTH": "0.0",
+          "DAY": "0.0",
           "YEAR": "0.0"
         },
         "assocSensorDataTypeId": null,
