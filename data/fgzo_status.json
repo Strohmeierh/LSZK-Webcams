@@ -1,16 +1,16 @@
 {
-  "ok": false,
-  "fetched_at_utc": "2026-10-24T05:21:12+00:00",
-  "failed_at_utc": "2026-10-24T05:31:11+00:00",
-  "error": "ValueError: bot challenge page received",
+  "ok": true,
+  "fetched_at_utc": "2026-10-24T05:41:14+00:00",
+  "failed_at_utc": null,
+  "error": null,
   "source": "https://fgzo.ch/status/",
   "ampel": "gelb",
   "status": "OPEN",
   "traffic": "LOW TRAFFIC",
   "closing": "18:23",
-  "notice": "Taxiway part EAST closed - part WEST open!\n\nRunway condition LSZK / 23.10.2026 / 0700 LT / DRY",
-  "runway_line": "Runway condition LSZK / 23.10.2026 / 0700 LT / DRY",
-  "runway_condition": "DRY",
-  "contact": "Kontakt: +41 76 397 72 99 / P. Kummer, allenfalls +41 44 954 12 52 / C-Büro",
-  "updated": "23.10.2026, 11:15"
+  "notice": "Taxiway part EAST closed - part WEST open!\n\nRunway condition LSZK / 24.10.2026 / 0700 LT / SLIPPERY WET",
+  "runway_line": "Runway condition LSZK / 24.10.2026 / 0700 LT / SLIPPERY WET",
+  "runway_condition": "SLIPPERY WET",
+  "contact": "Kontakt: +41 79 928 66 44 / L. Marchetti, allenfalls +41 44 954 12 52 / C-Büro",
+  "updated": "24.10.2026, 07:33"
 }
