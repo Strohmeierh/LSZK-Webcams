@@ -1,8 +1,8 @@
 {
-  "ok": true,
+  "ok": false,
   "fetched_at_utc": "2026-10-25T14:01:13+00:00",
-  "failed_at_utc": null,
-  "error": null,
+  "failed_at_utc": "2026-10-25T14:11:13+00:00",
+  "error": "ValueError: bot challenge page received",
   "source": "https://fgzo.ch/status/",
   "ampel": "gruen",
   "status": "OPEN",
