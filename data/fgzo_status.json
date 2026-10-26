@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "fetched_at_utc": "2026-10-26T06:11:12+00:00",
+  "fetched_at_utc": "2026-10-26T06:21:12+00:00",
   "failed_at_utc": null,
   "error": null,
   "source": "https://fgzo.ch/status/",
@@ -8,9 +8,9 @@
   "status": "OPEN",
   "traffic": "LOW TRAFFIC",
   "closing": "17:19",
-  "notice": "Runway condition LSZK / 24.10.2026 / 1600 LT / SLIPPERY WET",
-  "runway_line": "Runway condition LSZK / 24.10.2026 / 1600 LT / SLIPPERY WET",
+  "notice": "Runway condition LSZK / 26.10.2026 / 0700 LT / SLIPPERY WET",
+  "runway_line": "Runway condition LSZK / 26.10.2026 / 0700 LT / SLIPPERY WET",
   "runway_condition": "SLIPPERY WET",
-  "contact": "Kontakt: +41 79 928 66 44 / L. Marchetti, allenfalls +41 44 954 12 52 / C-Büro",
-  "updated": "24.10.2026, 15:58"
+  "contact": "Kontakt: +41 44 954 12 53 / Office, allenfalls +41 44 954 12 52 / C-Büro",
+  "updated": "26.10.2026, 07:16"
 }
