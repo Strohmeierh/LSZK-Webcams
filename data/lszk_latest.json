@@ -1,6 +1,6 @@
 {
-  "fetched_at_utc": "2026-10-28T19:51:12+00:00",
-  "station_last_received_utc": "2026-10-28T19:50:46+00:00",
+  "fetched_at_utc": "2026-10-28T20:01:13+00:00",
+  "station_last_received_utc": "2026-10-28T20:00:50+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
     "windDirection": 298,
@@ -8,19 +8,19 @@
       {
         "date": "2026-10-28",
         "morning": {
-          "weatherCode": 13,
+          "weatherCode": 12,
           "weatherDesc": "",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Cloudy.png",
           "temp": -14,
-          "chanceofrain": 10,
+          "chanceofrain": 9,
           "rainInInches": 0.0
         },
         "afternoon": {
-          "weatherCode": 13,
+          "weatherCode": 12,
           "weatherDesc": "",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Cloudy.png",
           "temp": -14,
-          "chanceofrain": 10,
+          "chanceofrain": 9,
           "rainInInches": 0.0
         },
         "evening": {
@@ -52,18 +52,18 @@
     "temperatureFeelLike": "9",
     "temperature": "9",
     "hiTemp": "11",
-    "hiTempDate": 1793173932729,
+    "hiTempDate": 1793173932829,
     "loTemp": "-68",
-    "loTempDate": 1793154192729,
+    "loTempDate": 1793154192829,
     "wind": "0",
     "gust": "8",
-    "gustAt": 1793182872729,
+    "gustAt": 1793182872829,
     "humidity": "96",
     "rain": "1.2",
     "seasonalRain": "563.6",
     "barometer": "1026.4",
     "barometerTrend": "Steady",
-    "lastReceived": 1793217046000,
+    "lastReceived": 1793217650000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1793217046000,
+    "lastReceived": 1793217650000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
@@ -121,9 +121,9 @@
         "sensorDataTypeId": 11,
         "sensorDataName": "Wind Chill",
         "displayName": "Wind Chill",
-        "reportedValue": 9,
-        "value": 9,
-        "convertedValue": "9",
+        "reportedValue": 8,
+        "value": 8,
+        "convertedValue": "8",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -722,13 +722,13 @@
       {
         "sensorDataName": "Rain",
         "rawValues": {
-          "MONTH": 70.0,
           "DAY": 1.2,
+          "MONTH": 70.0,
           "YEAR": 563.6
         },
         "convertedValues": {
-          "MONTH": "70.0",
           "DAY": "1.2",
+          "MONTH": "70.0",
           "YEAR": "563.6"
         },
         "assocSensorDataTypeId": null,
@@ -737,13 +737,13 @@
       {
         "sensorDataName": "ET",
         "rawValues": {
-          "MONTH": 0.0,
           "DAY": 0.0,
+          "MONTH": 0.0,
           "YEAR": 0.0
         },
         "convertedValues": {
-          "MONTH": "0.0",
           "DAY": "0.0",
+          "MONTH": "0.0",
           "YEAR": "0.0"
         },
         "assocSensorDataTypeId": null,
