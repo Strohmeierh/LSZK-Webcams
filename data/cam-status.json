@@ -5,18 +5,18 @@
     "source": "origin"
   },
   "https://wsrv.nl/?url=decoral.ch/Kameratoedi.jpg": {
-    "hash": "2ca9956cfd32aa29bf6137efef529cd7410e6d47",
-    "lastChange": 1793312702000,
+    "hash": "c2a9f1578596a9fbe83a8e94f9fa441c52cfc5a6",
+    "lastChange": 1793313002000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=eichi.ch%2F%3Feichi_webcam_image%3Deichi": {
-    "hash": "9dc1d643bc900e2a0ab5cb94c4aa30fb4b913a00",
-    "lastChange": 1793312833000,
+    "hash": "b9f45ad656083ca28b66351cea16fcf1d43c9cef",
+    "lastChange": 1793313166000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=eichi.ch%2F%3Feichi_webcam_image%3Deichi2": {
-    "hash": "d8c0cd17f7752f4daae42892ebe97b96f8832dad",
-    "lastChange": 1793312830000,
+    "hash": "cd421ffb8b537762a8258905ed69f1844bd62855",
+    "lastChange": 1793313134000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=fgzo.ch/webcam/images/fgzo.jpg": {
@@ -30,9 +30,9 @@
     "source": "origin"
   },
   "https://wsrv.nl/?url=flugplatz-schaenis.ch/images/webcam/cam_schaenis_high.jpg": {
-    "hash": "7cb168ee50f1a57db315b3573062b5390cdde3ac",
-    "lastChange": 1793312711000,
-    "source": "origin"
+    "hash": "ff5f25e3800c21ea21bc15682614ce2e171cd7ba",
+    "lastChange": 1793313201992,
+    "source": "bot"
   },
   "https://wsrv.nl/?url=images-webcams.windy.com/91/1614073791/current/original/1614073791.jpg": {
     "hash": "5e4db3fa8f77ed4be1ad0317fc4ccb2e8322c10b",
@@ -41,7 +41,7 @@
   },
   "https://wsrv.nl/?url=webcam.afbn.ch/H_OSG_017,200_S_KAM_001_Sued.jpg": {
     "hash": "6c08dcbd18196857b12bf2b0bca8b4572c8c7cfb",
-    "lastChange": 1793312701000,
+    "lastChange": 1793313001000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=webcam.hotel-klausenpass.ch/panorama.jpg": {
@@ -65,8 +65,8 @@
     "source": "origin"
   },
   "https://wsrv.nl/?url=www.tarnolgio.ch/webcam00.jpg": {
-    "hash": "74265405f6725a9df7ec51c527f1088af731e7dc",
-    "lastChange": 1793312107000,
+    "hash": "558507fe89da3f5e2688e60630677ddd819a4d93",
+    "lastChange": 1793313007000,
     "source": "origin"
   }
 }
