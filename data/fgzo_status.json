@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "fetched_at_utc": "2026-10-29T10:01:18+00:00",
+  "fetched_at_utc": "2026-10-29T10:11:12+00:00",
   "failed_at_utc": null,
   "error": null,
   "source": "https://fgzo.ch/status/",
@@ -11,6 +11,6 @@
   "notice": "Runway condition LSZK / 29.10.2026 / 0700 LT / DRY",
   "runway_line": "Runway condition LSZK / 29.10.2026 / 0700 LT / DRY",
   "runway_condition": "DRY",
-  "contact": "Kontakt: +41 44 954 12 53 / Office, allenfalls +41 44 954 12 52 / C-Büro",
-  "updated": "29.10.2026, 07:20"
+  "contact": "Kontakt: +41 76 397 72 99 / P. Kummer, allenfalls +41 44 954 12 52 / C-Büro",
+  "updated": "29.10.2026, 11:07"
 }
