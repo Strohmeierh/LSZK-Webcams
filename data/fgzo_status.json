@@ -1,8 +1,8 @@
 {
-  "ok": true,
+  "ok": false,
   "fetched_at_utc": "2026-10-29T21:11:12+00:00",
-  "failed_at_utc": null,
-  "error": null,
+  "failed_at_utc": "2026-10-29T21:21:21+00:00",
+  "error": "URLError: <urlopen error [Errno -3] Temporary failure in name resolution>",
   "source": "https://fgzo.ch/status/",
   "ampel": "gruen",
   "status": "OPEN",
