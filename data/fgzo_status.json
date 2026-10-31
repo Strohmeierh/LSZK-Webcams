@@ -1,8 +1,8 @@
 {
-  "ok": false,
-  "fetched_at_utc": "2026-10-31T11:51:14+00:00",
-  "failed_at_utc": "2026-10-31T12:01:13+00:00",
-  "error": "ValueError: bot challenge page received",
+  "ok": true,
+  "fetched_at_utc": "2026-10-31T12:11:13+00:00",
+  "failed_at_utc": null,
+  "error": null,
   "source": "https://fgzo.ch/status/",
   "ampel": "gruen",
   "status": "OPEN",
@@ -11,6 +11,6 @@
   "notice": "Runway condition LSZK / 31.10.2026 / 0720 LT / DRY",
   "runway_line": "Runway condition LSZK / 31.10.2026 / 0720 LT / DRY",
   "runway_condition": "DRY",
-  "contact": "Kontakt: +41 79 247 01 88 / R. Wagner, allenfalls +41 44 954 12 52 / C-Büro",
-  "updated": "31.10.2026, 07:36"
+  "contact": "Kontakt: +41 79 928 66 44 / L. Marchetti, allenfalls +41 44 954 12 52 / C-Büro",
+  "updated": "31.10.2026, 12:58"
 }
