@@ -1,16 +1,16 @@
 {
-  "ok": false,
-  "fetched_at_utc": "2026-11-04T05:41:14+00:00",
-  "failed_at_utc": "2026-11-04T06:01:14+00:00",
-  "error": "ValueError: bot challenge page received",
+  "ok": true,
+  "fetched_at_utc": "2026-11-04T06:11:11+00:00",
+  "failed_at_utc": null,
+  "error": null,
   "source": "https://fgzo.ch/status/",
   "ampel": "gruen",
   "status": "OPEN",
   "traffic": "LOW TRAFFIC",
   "closing": "17:06",
-  "notice": "Runway condition LSZK / 03.11.2026 / 0700 LT / DRY",
-  "runway_line": "Runway condition LSZK / 03.11.2026 / 0700 LT / DRY",
+  "notice": "Runway condition LSZK / 04.11.2026 / 0700 LT / DRY",
+  "runway_line": "Runway condition LSZK / 04.11.2026 / 0700 LT / DRY",
   "runway_condition": "DRY",
-  "contact": "Kontakt: +41 79 406 24 27 / K. Wagner, allenfalls +41 44 954 12 52 / C-Büro",
-  "updated": "03.11.2026, 14:00"
+  "contact": "Kontakt: +41 44 954 12 53 / Office, allenfalls +41 44 954 12 52 / C-Büro",
+  "updated": "04.11.2026, 07:08"
 }
