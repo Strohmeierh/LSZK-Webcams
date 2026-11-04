@@ -1,6 +1,6 @@
 {
-  "fetched_at_utc": "2026-11-04T06:51:11+00:00",
-  "station_last_received_utc": "2026-11-04T06:50:41+00:00",
+  "fetched_at_utc": "2026-11-04T07:01:11+00:00",
+  "station_last_received_utc": "2026-11-04T07:00:41+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
     "windDirection": null,
@@ -35,7 +35,7 @@
           "weatherCode": 1,
           "weatherDesc": "Clear",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Clear.png",
-          "temp": -1,
+          "temp": -2,
           "chanceofrain": 2,
           "rainInInches": 0.0
         }
@@ -52,18 +52,18 @@
     "temperatureFeelLike": null,
     "temperature": "0",
     "hiTemp": "4",
-    "hiTempDate": 1793746811256,
+    "hiTempDate": 1793746811490,
     "loTemp": "-68",
-    "loTempDate": 1793754011256,
+    "loTempDate": 1793754011490,
     "wind": "0",
     "gust": "8",
-    "gustAt": 1793753351256,
+    "gustAt": 1793753351490,
     "humidity": "0",
     "rain": "0.0",
     "seasonalRain": "563.6",
     "barometer": "1021.4",
     "barometerTrend": "Steady",
-    "lastReceived": 1793775041000,
+    "lastReceived": 1793775641000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1793775041000,
+    "lastReceived": 1793775641000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
@@ -722,13 +722,13 @@
       {
         "sensorDataName": "Rain",
         "rawValues": {
-          "MONTH": 0.0,
           "DAY": 0.0,
+          "MONTH": 0.0,
           "YEAR": 563.6
         },
         "convertedValues": {
-          "MONTH": "0.0",
           "DAY": "0.0",
+          "MONTH": "0.0",
           "YEAR": "563.6"
         },
         "assocSensorDataTypeId": null,
@@ -737,13 +737,13 @@
       {
         "sensorDataName": "ET",
         "rawValues": {
-          "MONTH": 0.0,
           "DAY": 0.0,
+          "MONTH": 0.0,
           "YEAR": 0.0
         },
         "convertedValues": {
-          "MONTH": "0.0",
           "DAY": "0.0",
+          "MONTH": "0.0",
           "YEAR": "0.0"
         },
         "assocSensorDataTypeId": null,
