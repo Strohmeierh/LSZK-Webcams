@@ -1,6 +1,6 @@
 {
-  "fetched_at_utc": "2026-11-06T17:51:12+00:00",
-  "station_last_received_utc": "2026-11-06T17:50:43+00:00",
+  "fetched_at_utc": "2026-11-06T18:01:11+00:00",
+  "station_last_received_utc": "2026-11-06T18:00:46+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
     "windDirection": 141,
@@ -12,7 +12,7 @@
           "weatherDesc": "",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
           "temp": -14,
-          "chanceofrain": 61,
+          "chanceofrain": 63,
           "rainInInches": 0.0
         },
         "afternoon": {
@@ -20,7 +20,7 @@
           "weatherDesc": "",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
           "temp": -14,
-          "chanceofrain": 61,
+          "chanceofrain": 63,
           "rainInInches": 0.0
         },
         "evening": {
@@ -29,7 +29,7 @@
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
           "temp": 6,
           "chanceofrain": 57,
-          "rainInInches": 0.05
+          "rainInInches": 0.04
         },
         "night": {
           "weatherCode": 32,
@@ -52,18 +52,18 @@
     "temperatureFeelLike": "6",
     "temperature": "6",
     "hiTemp": "8",
-    "hiTempDate": 1793977992686,
+    "hiTempDate": 1793977991400,
     "loTemp": "-68",
-    "loTempDate": 1793930112686,
+    "loTempDate": 1793930111400,
     "wind": "0",
     "gust": "4",
-    "gustAt": 1793979492686,
+    "gustAt": 1793979491400,
     "humidity": "94",
     "rain": "0.0",
     "seasonalRain": "563.6",
-    "barometer": "1021.2",
+    "barometer": "1021.1",
     "barometerTrend": "Steady",
-    "lastReceived": 1793987443000,
+    "lastReceived": 1793988046000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1793987443000,
+    "lastReceived": 1793988046000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
@@ -108,9 +108,9 @@
         "sensorDataTypeId": 12,
         "sensorDataName": "Heat Index",
         "displayName": "Heat Index",
-        "reportedValue": 7,
-        "value": 7,
-        "convertedValue": "7",
+        "reportedValue": 6,
+        "value": 6,
+        "convertedValue": "6",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -121,9 +121,9 @@
         "sensorDataTypeId": 11,
         "sensorDataName": "Wind Chill",
         "displayName": "Wind Chill",
-        "reportedValue": 7,
-        "value": 7,
-        "convertedValue": "7",
+        "reportedValue": 6,
+        "value": 6,
+        "convertedValue": "6",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -225,9 +225,9 @@
         "sensorDataTypeId": 26,
         "sensorDataName": "Barometer",
         "displayName": "Barometer",
-        "reportedValue": 1021.2,
-        "value": 1021.2,
-        "convertedValue": "1021.2",
+        "reportedValue": 1021.1,
+        "value": 1021.1,
+        "convertedValue": "1021.1",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -722,13 +722,13 @@
       {
         "sensorDataName": "Rain",
         "rawValues": {
-          "MONTH": 0.0,
           "DAY": 0.0,
+          "MONTH": 0.0,
           "YEAR": 563.6
         },
         "convertedValues": {
-          "MONTH": "0.0",
           "DAY": "0.0",
+          "MONTH": "0.0",
           "YEAR": "563.6"
         },
         "assocSensorDataTypeId": null,
@@ -737,13 +737,13 @@
       {
         "sensorDataName": "ET",
         "rawValues": {
-          "MONTH": 0.0,
           "DAY": 0.0,
+          "MONTH": 0.0,
           "YEAR": 0.0
         },
         "convertedValues": {
-          "MONTH": "0.0",
           "DAY": "0.0",
+          "MONTH": "0.0",
           "YEAR": "0.0"
         },
         "assocSensorDataTypeId": null,
