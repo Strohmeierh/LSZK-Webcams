@@ -1,6 +1,6 @@
 {
-  "fetched_at_utc": "2026-11-09T06:51:12+00:00",
-  "station_last_received_utc": "2026-11-09T06:50:44+00:00",
+  "fetched_at_utc": "2026-11-09T07:01:12+00:00",
+  "station_last_received_utc": "2026-11-09T07:00:17+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
     "windDirection": null,
@@ -8,36 +8,36 @@
       {
         "date": "2026-11-09",
         "morning": {
-          "weatherCode": 32,
-          "weatherDesc": "Sprinkles",
-          "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
-          "temp": 7,
-          "chanceofrain": 35,
-          "rainInInches": 0.0
-        },
-        "afternoon": {
           "weatherCode": 31,
           "weatherDesc": "Drizzle",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
           "temp": 8,
-          "chanceofrain": 15,
-          "rainInInches": 0.03
+          "chanceofrain": 34,
+          "rainInInches": 0.0
+        },
+        "afternoon": {
+          "weatherCode": 34,
+          "weatherDesc": "A Few Showers",
+          "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
+          "temp": 8,
+          "chanceofrain": 38,
+          "rainInInches": 0.05
         },
         "evening": {
           "weatherCode": 31,
           "weatherDesc": "Drizzle",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
           "temp": 7,
-          "chanceofrain": 25,
-          "rainInInches": 0.02
+          "chanceofrain": 17,
+          "rainInInches": 0.05
         },
         "night": {
           "weatherCode": 37,
           "weatherDesc": "Light Rain",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
           "temp": 7,
-          "chanceofrain": 57,
-          "rainInInches": 0.07
+          "chanceofrain": 53,
+          "rainInInches": 0.06
         }
       }
     ],
@@ -52,18 +52,18 @@
     "temperatureFeelLike": null,
     "temperature": "0",
     "hiTemp": "5",
-    "hiTempDate": 1794183192091,
+    "hiTempDate": 1794183192622,
     "loTemp": "-68",
-    "loTempDate": 1794190212091,
+    "loTempDate": 1794190212622,
     "wind": "0",
     "gust": "0",
-    "gustAt": 1794444912091,
+    "gustAt": 1794444912622,
     "humidity": "0",
     "rain": "0.0",
     "seasonalRain": "565.0",
     "barometer": "1017.3",
-    "barometerTrend": "Steady",
-    "lastReceived": 1794207044000,
+    "barometerTrend": "Falling Slowly",
+    "lastReceived": 1794207617000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1794207044000,
+    "lastReceived": 1794207617000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
@@ -238,9 +238,9 @@
         "sensorDataTypeId": null,
         "sensorDataName": "Bar Trend",
         "displayName": null,
-        "reportedValue": 0,
-        "value": 0,
-        "convertedValue": "Steady",
+        "reportedValue": 236,
+        "value": 236,
+        "convertedValue": "Falling Slowly",
         "depthLabel": null,
         "category": null,
         "assocSensorDataTypeId": null,
@@ -656,8 +656,8 @@
         "sensorDataTypeId": null,
         "sensorDataName": "Low Bar Time",
         "displayName": null,
-        "reportedValue": 748,
-        "value": 748,
+        "reportedValue": 756,
+        "value": 756,
         "convertedValue": null,
         "depthLabel": null,
         "category": null,
@@ -722,13 +722,13 @@
       {
         "sensorDataName": "Rain",
         "rawValues": {
-          "DAY": 0.0,
           "MONTH": 1.4,
+          "DAY": 0.0,
           "YEAR": 565.0
         },
         "convertedValues": {
-          "DAY": "0.0",
           "MONTH": "1.4",
+          "DAY": "0.0",
           "YEAR": "565.0"
         },
         "assocSensorDataTypeId": null,
@@ -737,13 +737,13 @@
       {
         "sensorDataName": "ET",
         "rawValues": {
-          "DAY": 0.0,
           "MONTH": 0.0,
+          "DAY": 0.0,
           "YEAR": 0.0
         },
         "convertedValues": {
-          "DAY": "0.0",
           "MONTH": "0.0",
+          "DAY": "0.0",
           "YEAR": "0.0"
         },
         "assocSensorDataTypeId": null,
