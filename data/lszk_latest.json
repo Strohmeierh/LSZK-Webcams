@@ -1,6 +1,6 @@
 {
-  "fetched_at_utc": "2026-11-09T16:51:11+00:00",
-  "station_last_received_utc": "2026-11-09T16:50:14+00:00",
+  "fetched_at_utc": "2026-11-09T17:01:12+00:00",
+  "station_last_received_utc": "2026-11-09T17:00:21+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
     "windDirection": 322,
@@ -12,7 +12,7 @@
           "weatherDesc": "",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
           "temp": -14,
-          "chanceofrain": 28,
+          "chanceofrain": 32,
           "rainInInches": 0.0
         },
         "afternoon": {
@@ -20,7 +20,7 @@
           "weatherDesc": "",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
           "temp": -14,
-          "chanceofrain": 28,
+          "chanceofrain": 32,
           "rainInInches": 0.0
         },
         "evening": {
@@ -29,7 +29,7 @@
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Cloudy.png",
           "temp": 7,
           "chanceofrain": 0,
-          "rainInInches": 0.01
+          "rainInInches": 0.0
         },
         "night": {
           "weatherCode": 37,
@@ -52,18 +52,18 @@
     "temperatureFeelLike": "8",
     "temperature": "7",
     "hiTemp": "8",
-    "hiTempDate": 1794231131256,
+    "hiTempDate": 1794231131978,
     "loTemp": "-68",
-    "loTempDate": 1794190211256,
+    "loTempDate": 1794190211978,
     "wind": "0",
     "gust": "3",
-    "gustAt": 1794217931256,
+    "gustAt": 1794217931978,
     "humidity": "96",
     "rain": "11.2",
     "seasonalRain": "576.2",
-    "barometer": "1013.4",
+    "barometer": "1013.3",
     "barometerTrend": "Falling Slowly",
-    "lastReceived": 1794243014000,
+    "lastReceived": 1794243621000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1794243014000,
+    "lastReceived": 1794243621000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
@@ -225,9 +225,9 @@
         "sensorDataTypeId": 26,
         "sensorDataName": "Barometer",
         "displayName": "Barometer",
-        "reportedValue": 1013.4,
-        "value": 1013.4,
-        "convertedValue": "1013.4",
+        "reportedValue": 1013.3,
+        "value": 1013.3,
+        "convertedValue": "1013.3",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -251,9 +251,9 @@
         "sensorDataTypeId": 22,
         "sensorDataName": "Rain Rate",
         "displayName": "Rain Rate",
-        "reportedValue": 2.0,
-        "value": 2.0,
-        "convertedValue": "2.0",
+        "reportedValue": 0.8,
+        "value": 0.8,
+        "convertedValue": "0.8",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
