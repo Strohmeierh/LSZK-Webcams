@@ -1,6 +1,6 @@
 {
-  "fetched_at_utc": "2026-11-10T06:51:11+00:00",
-  "station_last_received_utc": "2026-11-10T06:50:56+00:00",
+  "fetched_at_utc": "2026-11-10T07:01:13+00:00",
+  "station_last_received_utc": "2026-11-10T07:00:59+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
     "windDirection": null,
@@ -11,32 +11,32 @@
           "weatherCode": 35,
           "weatherDesc": "Light Showers",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
-          "temp": 11,
-          "chanceofrain": 37,
-          "rainInInches": 0.13
+          "temp": 12,
+          "chanceofrain": 56,
+          "rainInInches": 0.08
         },
         "afternoon": {
           "weatherCode": 31,
           "weatherDesc": "Drizzle",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
-          "temp": 12,
-          "chanceofrain": 21,
+          "temp": 11,
+          "chanceofrain": 24,
           "rainInInches": 0.09
         },
         "evening": {
-          "weatherCode": 14,
-          "weatherDesc": "Overcast",
-          "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Cloudy.png",
-          "temp": 8,
-          "chanceofrain": 9,
-          "rainInInches": 0.0
-        },
-        "night": {
-          "weatherCode": 14,
-          "weatherDesc": "Overcast",
+          "weatherCode": 13,
+          "weatherDesc": "Cloudy",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Cloudy.png",
           "temp": 8,
           "chanceofrain": 0,
+          "rainInInches": 0.0
+        },
+        "night": {
+          "weatherCode": 31,
+          "weatherDesc": "Drizzle",
+          "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
+          "temp": 8,
+          "chanceofrain": 16,
           "rainInInches": 0.0
         }
       }
@@ -52,18 +52,18 @@
     "temperatureFeelLike": null,
     "temperature": "0",
     "hiTemp": "8",
-    "hiTempDate": 1794274031234,
+    "hiTempDate": 1794274032843,
     "loTemp": "-68",
-    "loTempDate": 1794274031234,
+    "loTempDate": 1794274032843,
     "wind": "0",
     "gust": "0",
-    "gustAt": 1794531311234,
+    "gustAt": 1794531312843,
     "humidity": "0",
     "rain": "5.6",
     "seasonalRain": "583.8",
-    "barometer": "1010.2",
+    "barometer": "1010.3",
     "barometerTrend": "Steady",
-    "lastReceived": 1794293456000,
+    "lastReceived": 1794294059000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1794293456000,
+    "lastReceived": 1794294059000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
@@ -225,9 +225,9 @@
         "sensorDataTypeId": 26,
         "sensorDataName": "Barometer",
         "displayName": "Barometer",
-        "reportedValue": 1010.2,
-        "value": 1010.2,
-        "convertedValue": "1010.2",
+        "reportedValue": 1010.3,
+        "value": 1010.3,
+        "convertedValue": "1010.3",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -722,13 +722,13 @@
       {
         "sensorDataName": "Rain",
         "rawValues": {
-          "MONTH": 20.2,
           "DAY": 5.6,
+          "MONTH": 20.2,
           "YEAR": 583.8
         },
         "convertedValues": {
-          "MONTH": "20.2",
           "DAY": "5.6",
+          "MONTH": "20.2",
           "YEAR": "583.8"
         },
         "assocSensorDataTypeId": null,
@@ -737,13 +737,13 @@
       {
         "sensorDataName": "ET",
         "rawValues": {
-          "MONTH": 0.0,
           "DAY": 0.0,
+          "MONTH": 0.0,
           "YEAR": 0.0
         },
         "convertedValues": {
-          "MONTH": "0.0",
           "DAY": "0.0",
+          "MONTH": "0.0",
           "YEAR": "0.0"
         },
         "assocSensorDataTypeId": null,
