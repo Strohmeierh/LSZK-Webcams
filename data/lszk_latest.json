@@ -1,6 +1,6 @@
 {
-  "fetched_at_utc": "2026-11-11T09:01:13+00:00",
-  "station_last_received_utc": "2026-11-11T09:01:03+00:00",
+  "fetched_at_utc": "2026-11-11T09:11:10+00:00",
+  "station_last_received_utc": "2026-11-11T09:11:06+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
     "windDirection": 293,
@@ -52,18 +52,18 @@
     "temperatureFeelLike": "11",
     "temperature": "11",
     "hiTemp": "11",
-    "hiTempDate": 1794387313039,
+    "hiTempDate": 1794388150814,
     "loTemp": "-68",
-    "loTempDate": 1794362293039,
+    "loTempDate": 1794362290814,
     "wind": "0",
     "gust": "3",
-    "gustAt": 1794382153039,
+    "gustAt": 1794382150814,
     "humidity": "97",
     "rain": "0.2",
     "seasonalRain": "585.8",
     "barometer": "1003.8",
     "barometerTrend": "Steady",
-    "lastReceived": 1794387663000,
+    "lastReceived": 1794388266000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1794387663000,
+    "lastReceived": 1794388266000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
@@ -108,9 +108,9 @@
         "sensorDataTypeId": 12,
         "sensorDataName": "Heat Index",
         "displayName": "Heat Index",
-        "reportedValue": 11,
-        "value": 11,
-        "convertedValue": "11",
+        "reportedValue": 12,
+        "value": 12,
+        "convertedValue": "12",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -409,9 +409,9 @@
         "sensorDataTypeId": 152,
         "sensorDataName": "High Heat Index",
         "displayName": null,
-        "reportedValue": 11,
-        "value": 11,
-        "convertedValue": "11",
+        "reportedValue": 12,
+        "value": 12,
+        "convertedValue": "12",
         "depthLabel": null,
         "category": "high",
         "assocSensorDataTypeId": 12,
@@ -539,8 +539,8 @@
         "sensorDataTypeId": null,
         "sensorDataName": "High Temp Time",
         "displayName": null,
-        "reportedValue": 955,
-        "value": 955,
+        "reportedValue": 1009,
+        "value": 1009,
         "convertedValue": null,
         "depthLabel": null,
         "category": null,
@@ -591,8 +591,8 @@
         "sensorDataTypeId": null,
         "sensorDataName": "High Heat Index Time",
         "displayName": null,
-        "reportedValue": 914,
-        "value": 914,
+        "reportedValue": 1009,
+        "value": 1009,
         "convertedValue": null,
         "depthLabel": null,
         "category": null,
@@ -722,13 +722,13 @@
       {
         "sensorDataName": "Rain",
         "rawValues": {
-          "DAY": 0.2,
           "MONTH": 22.2,
+          "DAY": 0.2,
           "YEAR": 585.8
         },
         "convertedValues": {
-          "DAY": "0.2",
           "MONTH": "22.2",
+          "DAY": "0.2",
           "YEAR": "585.8"
         },
         "assocSensorDataTypeId": null,
@@ -737,13 +737,13 @@
       {
         "sensorDataName": "ET",
         "rawValues": {
-          "DAY": 0.0,
           "MONTH": 0.0,
+          "DAY": 0.0,
           "YEAR": 0.0
         },
         "convertedValues": {
-          "DAY": "0.0",
           "MONTH": "0.0",
+          "DAY": "0.0",
           "YEAR": "0.0"
         },
         "assocSensorDataTypeId": null,
