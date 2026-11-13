@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "fetched_at_utc": "2026-11-13T07:11:13+00:00",
+  "fetched_at_utc": "2026-11-13T07:21:12+00:00",
   "failed_at_utc": null,
   "error": null,
   "source": "https://fgzo.ch/status/",
@@ -8,9 +8,9 @@
   "status": "OPEN",
   "traffic": "LOW TRAFFIC",
   "closing": "16:55",
-  "notice": "Rwy 30 & Rwy 12: 1 Takeoff / 1 Landing per pilot\n\nTaxiway closed: Backtrack on Runway, keine Wasserlachen überrollen!\n\nWenden auf der Piste ist untersagt: Nur am Pistenende wenden!\n\nRunway condition LSZK / 12.11.2026 / 0730 LT / SLIPPERY WET",
-  "runway_line": "Runway condition LSZK / 12.11.2026 / 0730 LT / SLIPPERY WET",
+  "notice": "Rwy 30 & Rwy 12: 1 Takeoff / 1 Landing per pilot\n\nTaxiway closed: Backtrack on Runway, keine Wasserlachen überrollen!\n\nWenden auf der Piste ist untersagt: Nur am Pistenende wenden!\n\nRunway condition LSZK / 13.11.2026 / 0730 LT / SLIPPERY WET",
+  "runway_line": "Runway condition LSZK / 13.11.2026 / 0730 LT / SLIPPERY WET",
   "runway_condition": "SLIPPERY WET",
-  "contact": "Kontakt: +41 79 406 24 27 / K. Wagner, allenfalls +41 44 954 12 52 / C-Büro",
-  "updated": "12.11.2026, 11:41"
+  "contact": "Kontakt: +41 44 954 12 53 / Office, allenfalls +41 44 954 12 52 / C-Büro",
+  "updated": "13.11.2026, 08:20"
 }
