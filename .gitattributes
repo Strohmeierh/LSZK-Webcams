@@ -1,0 +1,2 @@
+# Shell scripts run on the Linux runners: always LF
+*.sh text eol=lf

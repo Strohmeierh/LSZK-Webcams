@@ -14,7 +14,11 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
+      # ref: the branch head when the job STARTS (not the commit from dispatch time), so a run
+      # that waited in the queue sees what the previous run pushed (incl. data/ai_status.json)
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
       - uses: actions/setup-python@v5
         with:
@@ -26,14 +30,32 @@ jobs:
       - name: Refresh cam status
         run: python scripts/update_cam_status.py
 
-      - name: Commit status file if changed
+      # KI-Briefing (stündlich bei Tageslicht): erst den Versuch buchen und pushen, dann bezahlen.
+      # Scheitert der Push, läuft der Claude-Aufruf nicht.
+      - name: AI briefing - due?
+        id: ai_check
+        continue-on-error: true
+        run: python scripts/ai_briefing.py --check >> "$GITHUB_OUTPUT"
+
+      - name: AI briefing - reserve attempt
+        id: ai_reserve
+        if: steps.ai_check.outputs.due == 'true'
+        continue-on-error: true
+        run: python scripts/ai_briefing.py --reserve
+
+      - name: Commit status files if changed
+        run: bash scripts/commit_and_push.sh "chore: update cam status [skip ci]" data/cam-status.json data/ai_status.json
+
+      - name: AI briefing (Claude)
+        if: steps.ai_reserve.outcome == 'success'
+        continue-on-error: true
+        timeout-minutes: 15
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          if [[ -n "$(git status --porcelain data/cam-status.json)" ]]; then
-            git config user.name  "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add data/cam-status.json
-            git commit -m "chore: update cam status [skip ci]"
-            git push
-          else
-            echo "No changes."
-          fi
+          pip install --quiet --disable-pip-version-check anthropic==2.3.0
+          python scripts/ai_briefing.py
+
+      - name: Commit AI briefing
+        if: steps.ai_reserve.outcome == 'success'
+        run: bash scripts/commit_and_push.sh "chore: AI briefing [skip ci]" data/ai_status.json
