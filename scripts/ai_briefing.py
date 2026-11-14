@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hourly AI weather briefing for the LSZK dashboard (Claude Opus 5.5 with vision).
+"""AI weather briefing for the LSZK dashboard, three times a day (Claude Opus 5.5 with vision).
 
 Runs as steps of the cam-status workflow (every 5 min via the external pinger):
     python scripts/ai_briefing.py --check    -> prints "due=true|false" (stdlib only, for $GITHUB_OUTPUT)
@@ -7,15 +7,16 @@ Runs as steps of the cam-status workflow (every 5 min via the external pinger):
                                                the workflow pushes this BEFORE the paid call
     python scripts/ai_briefing.py            -> runs the briefing and writes data/ai_status.json
 
-The briefing runs hourly during daylight (sunrise-10 min .. sunset+10 min, Europe/Zurich).
+The briefing runs at three slots per day (Europe/Zurich): SUNRISE_OFFSET_MIN after sunrise, 10:00
+and 15:00. Each slot is attempted at most once; a failed attempt is not repeated.
 The selected webcam images + station / METAR / Foehn index / FGZO status / Open-Meteo
 forecast go to Claude in ONE streamed call; the answer is forced into a fixed JSON schema
 (structured outputs).
 
 Cost safety: each attempt books RESERVE_USD in the monthly total before the call; afterwards the
 reservation is replaced by the reported usage (billed failures included) or kept as the estimate
-when the outcome is unknown (timeout, killed step). Failed attempts back off (25, 50, 100, 200 min),
-at most MAX_ATTEMPTS_PER_DAY attempts run per day, and MONTHLY_BUDGET_USD stops the calls.
+when the outcome is unknown (timeout, killed step). There are no retries: one attempt per slot,
+at most MAX_ATTEMPTS_PER_DAY attempts per day, and MONTHLY_BUDGET_USD stops the calls.
 On any failure the previous briefing is kept and ok=false + error are recorded.
 """
 import base64
@@ -49,10 +50,11 @@ FALLBACK_BETA = "server-side-fallback-2026-07-01"
 PRICE_OPUS_5_5 = (4.0, 20.0, 5.0, 0.2)
 PRICE_OTHER = (5.0, 25.0, 6.25, 0.5)   # refusal fallbacks (Claude Opus 5 / 4.8) and anything unknown
 
-BRIEFING_EVERY_MIN = 55      # hourly cadence (job runs every 5 min)
-RETRY_MIN = 25               # wait after a failed attempt, doubled per further failure (max 8x)
-MAX_ATTEMPTS_PER_DAY = 20
-DAYLIGHT_MARGIN_MIN = 10     # start before sunrise / stop after sunset
+SUNRISE_OFFSET_MIN = 30      # first slot: this long after sunrise (enough light for the valley cams)
+FIXED_SLOTS = ((10, 0), (15, 0))   # further slots, local time Europe/Zurich (hour, minute)
+SLOT_ON_TIME_MIN = 20        # a slot started up to this late counts as on time (5-min job, queueing)
+CATCHUP_MIN_GAP_MIN = 60     # a missed slot is only made up if the next slot is at least this far away
+MAX_ATTEMPTS_PER_DAY = 3     # backstop: one attempt per slot
 MONTHLY_BUDGET_USD = 80.0    # LSZK share of the 200 USD monthly credit
 RESERVE_USD = 0.40           # booked before each call, replaced by the reported cost afterwards
 MIN_IMAGES = 3
@@ -127,7 +129,7 @@ CAM_TITLES = [c["title"] for c in CAMS]
 # ── Prompts ──────────────────────────────────────────────────────────────────
 SYSTEM_BRIEFING = """Du bist der Flugwetter-Assistent des Webcam-Dashboards für den Flugplatz Speck-Fehraltorf (LSZK) im Zürcher Oberland: 47,376 N / 8,762 E, 536 m ü. M., Piste 12/30. Die Leserinnen und Leser sind Motor- und Segelflugpiloten der Flugsportgruppe Zürcher Oberland (FGZO), die sich vor einem Flug in einer Minute ein Bild der Lage machen wollen.
 
-Du erhältst einmal pro Stunde aktuelle Bilder ausgewählter Webcams zwischen dem Platz und der Alpensüdseite, je mit einer Beschreibung der Kamera (Standort, Blickrichtung, sichtbare Landmarken mit Höhen). Dazu kommen Messwerte (Wetterstation am Platz, METAR Dübendorf, Föhn-Index), der Platzstatus der FGZO und eine Modellprognose (Open-Meteo) für die nächsten 12 Stunden. Daraus erstellst du eine Auswertung im vorgegebenen JSON-Schema.
+Du erhältst dreimal täglich (kurz nach Sonnenaufgang, um 10 Uhr und um 15 Uhr) aktuelle Bilder ausgewählter Webcams zwischen dem Platz und der Alpensüdseite, je mit einer Beschreibung der Kamera (Standort, Blickrichtung, sichtbare Landmarken mit Höhen). Dazu kommen Messwerte (Wetterstation am Platz, METAR Dübendorf, Föhn-Index), der Platzstatus der FGZO und eine Modellprognose (Open-Meteo) für die nächsten 12 Stunden. Daraus erstellst du eine Auswertung im vorgegebenen JSON-Schema.
 
 Grundsätze
 - Beobachtung vor Prognose: Was Bilder und Messwerte jetzt zeigen, hat Vorrang. Die Prognose nutzt du nur für die Entwicklung der nächsten Stunden und kennzeichnest sie im Text als Prognose.
@@ -297,15 +299,15 @@ def book(record: dict, now: datetime, usd: float) -> None:
         st[k] = round(max(0.0, float(st.get(k) or 0) + usd), 4)
 
 
-def reserve(record: dict, now: datetime, key: str) -> None:
+def reserve(record: dict, now: datetime, key: str, slot: str) -> None:
     """Books the attempt BEFORE the paid call: if the step is killed or the result is lost,
-    the attempt still counts (backoff, daily limit) and RESERVE_USD stays in the monthly total."""
+    the attempt still counts (slot done, daily limit) and RESERVE_USD stays in the monthly total."""
     st = stats_for(record, now)
     st["attempts_today"] = int(st.get("attempts_today") or 0) + 1
     st["attempts_month"] = int(st.get("attempts_month") or 0) + 1
     st["reserved_usd"] = RESERVE_USD
     book(record, now, RESERVE_USD)
-    record.update(schema_version=1, ok=False, attempted_at_utc=iso(now), reserved_run=key,
+    record.update(schema_version=1, ok=False, attempted_at_utc=iso(now), slot=slot, reserved_run=key,
                   fail_streak=int(record.get("fail_streak") or 0) + 1,
                   error="Versuch läuft oder wurde abgebrochen (kein Ergebnis gespeichert)")
 
@@ -320,27 +322,52 @@ def settle(record: dict, now: datetime, cost) -> None:
 
 
 # ── What is due? (stdlib only - also used by --check) ────────────────────────
+def hhmm(dt: datetime) -> str:
+    return dt.astimezone(TZ).strftime("%H:%M")
+
+
+def slots_for(day: date):
+    """Briefing slots of a local day as [(label, start_utc)], sorted, daylight only; plus sunrise
+    and sunset. Everything is converted to UTC here, so DST days need no special case (aware
+    datetimes with the same tzinfo would be compared in wall time)."""
+    rise, sset = sun_times(day)
+    slots = [("sunrise", rise + timedelta(minutes=SUNRISE_OFFSET_MIN))]
+    for hh, mm in FIXED_SLOTS:
+        local = datetime(day.year, day.month, day.day, hh, mm, tzinfo=TZ)
+        slots.append((f"{hh:02d}:{mm:02d}", local.astimezone(timezone.utc)))
+    return sorted((s for s in slots if rise <= s[1] <= sset), key=lambda s: s[1]), rise, sset
+
+
 def briefing_due(prev: dict, now: datetime):
-    rise, sset = sun_times(now.astimezone(TZ).date())
-    margin = timedelta(minutes=DAYLIGHT_MARGIN_MIN)
-    if not (rise - margin <= now <= sset + margin):
-        return False, "night"
+    """-> (due, reason, slot label or None).
+    The current slot is the latest one that has started. It is done once an attempt was booked at
+    or after its start (attempted_at_utc, set by reserve()) - successful or not, there are no
+    retries. Earlier slots that were missed are dropped. A slot that is more than SLOT_ON_TIME_MIN
+    late is only made up before sunset and if the next slot is at least CATCHUP_MIN_GAP_MIN away."""
+    slots, rise, sset = slots_for(now.astimezone(TZ).date())
+    started = [s for s in slots if s[1] <= now]
+    if not started:
+        first = f"first slot {slots[0][0]} at {hhmm(slots[0][1])}" if slots else "no slot today"
+        return False, f"before the first slot ({first}, sunrise {hhmm(rise)})", None
+    label, start = started[-1]
+    nxt = slots[len(started)] if len(started) < len(slots) else None
+    nxt_txt = f"next slot {nxt[0]} at {hhmm(nxt[1])}" if nxt else "no further slot today"
+    last_try = parse_iso(prev.get("attempted_at_utc"))
+    if last_try and last_try >= start:
+        return False, f"slot {label} ({hhmm(start)}) already attempted at {hhmm(last_try)}, {nxt_txt}", None
+    late = now - start > timedelta(minutes=SLOT_ON_TIME_MIN)
+    if late and now > sset:
+        return False, f"slot {label} ({hhmm(start)}) missed, not made up after sunset ({hhmm(sset)})", None
+    if late and nxt and nxt[1] - now < timedelta(minutes=CATCHUP_MIN_GAP_MIN):
+        return False, (f"slot {label} ({hhmm(start)}) missed, not made up: {nxt_txt} "
+                       f"is less than {CATCHUP_MIN_GAP_MIN} min away"), None
     st = prev.get("stats") or {}
     if st.get("month") == month_key(now) and float(st.get("cost_month_usd") or 0) >= MONTHLY_BUDGET_USD:
-        return False, "monthly budget reached"
+        return False, (f"slot {label} skipped: monthly budget reached "
+                       f"({st.get('cost_month_usd')} of {MONTHLY_BUDGET_USD} USD)"), None
     if st.get("date") == day_key(now) and int(st.get("attempts_today") or 0) >= MAX_ATTEMPTS_PER_DAY:
-        return False, "daily attempt limit reached"
-    last_ok = parse_iso(prev.get("generated_at_utc"))
-    last_try = parse_iso(prev.get("attempted_at_utc"))
-    if prev.get("ok") is False and last_try and (last_ok is None or last_try > last_ok):
-        streak = max(1, int(prev.get("fail_streak") or 1))
-        wait = RETRY_MIN * 2 ** min(streak - 1, 3)
-        if now - last_try < timedelta(minutes=wait):
-            return False, f"waiting {wait} min after failed attempt"
-        return True, "retry after failure"
-    if last_ok and now - last_ok < timedelta(minutes=BRIEFING_EVERY_MIN):
-        return False, "briefing still fresh"
-    return True, "due"
+        return False, f"slot {label} skipped: daily attempt limit reached ({MAX_ATTEMPTS_PER_DAY})", None
+    return True, f"slot {label} due (planned {hhmm(start)}{', made up late' if late else ''}, {nxt_txt})", label
 
 
 # ── Inputs for the briefing ──────────────────────────────────────────────────
@@ -758,24 +785,28 @@ def main(argv) -> int:
     key = run_key()
 
     if "--check" in argv:
-        due, reason = briefing_due(prev, now)
+        due, reason, _ = briefing_due(prev, now)
         print(f"due={'true' if due else 'false'}")
         print(f"briefing: {reason}", file=sys.stderr)
         return 0
 
     if "--reserve" in argv:
-        reserve(record, now, key)
+        due, reason, slot = briefing_due(prev, now)
+        if not due:  # the check step said "due" seconds ago; never book or pay without a due slot
+            print(f"not reserved ({reason})", file=sys.stderr)
+            return 1
+        reserve(record, now, key, slot)
         write_json(record)
-        print(f"attempt reserved (run {key or 'local'}), {RESERVE_USD} USD booked provisionally")
+        print(f"attempt reserved for slot {slot} (run {key or 'local'}), {RESERVE_USD} USD booked provisionally")
         return 0
 
     if not (key and prev.get("reserved_run") == key):
         # no reserve step in this run (e.g. started by hand): check and reserve here
-        due, reason = briefing_due(prev, now)
+        due, reason, slot = briefing_due(prev, now)
         if not due:
             print(f"nothing due ({reason})")
             return 0
-        reserve(record, now, key)
+        reserve(record, now, key, slot)
         write_json(record)
 
     try:
