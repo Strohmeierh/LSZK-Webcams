@@ -16,11 +16,11 @@ jobs:
     steps:
       # ref: the branch head when the job STARTS (not the commit from dispatch time), so a run
       # that waited in the queue sees what the previous run pushed (incl. data/ai_status.json)
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.ref }}
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
