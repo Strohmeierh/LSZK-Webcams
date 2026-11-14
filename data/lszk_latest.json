@@ -1,6 +1,6 @@
 {
-  "fetched_at_utc": "2026-11-14T21:51:16+00:00",
-  "station_last_received_utc": "2026-11-14T21:50:29+00:00",
+  "fetched_at_utc": "2026-11-14T22:01:21+00:00",
+  "station_last_received_utc": "2026-11-14T22:00:32+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
     "windDirection": 303,
@@ -8,27 +8,27 @@
       {
         "date": "2026-11-14",
         "morning": {
-          "weatherCode": 14,
+          "weatherCode": 13,
           "weatherDesc": "",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Cloudy.png",
-          "temp": -19,
-          "chanceofrain": 3,
+          "temp": -28,
+          "chanceofrain": 5,
           "rainInInches": 0.0
         },
         "afternoon": {
-          "weatherCode": 14,
+          "weatherCode": 13,
           "weatherDesc": "",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Cloudy.png",
-          "temp": -19,
-          "chanceofrain": 3,
+          "temp": -28,
+          "chanceofrain": 5,
           "rainInInches": 0.0
         },
         "evening": {
-          "weatherCode": 14,
-          "weatherDesc": "Overcast",
+          "weatherCode": 13,
+          "weatherDesc": "",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Cloudy.png",
-          "temp": -2,
-          "chanceofrain": 3,
+          "temp": -28,
+          "chanceofrain": 5,
           "rainInInches": 0.0
         },
         "night": {
@@ -52,18 +52,18 @@
     "temperatureFeelLike": "-1",
     "temperature": "-1",
     "hiTemp": "7",
-    "hiTempDate": 1794663796561,
+    "hiTempDate": 1794663801306,
     "loTemp": "-68",
-    "loTempDate": 1794621976562,
+    "loTempDate": 1794621981306,
     "wind": "0",
     "gust": "8",
-    "gustAt": 1794666256562,
+    "gustAt": 1794666261306,
     "humidity": "96",
     "rain": "0.2",
     "seasonalRain": "597.0",
     "barometer": "1015.1",
     "barometerTrend": "Falling Slowly",
-    "lastReceived": 1794693029000,
+    "lastReceived": 1794693632000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1794693029000,
+    "lastReceived": 1794693632000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
@@ -656,8 +656,8 @@
         "sensorDataTypeId": null,
         "sensorDataName": "Low Bar Time",
         "displayName": null,
-        "reportedValue": 2250,
-        "value": 2250,
+        "reportedValue": 2300,
+        "value": 2300,
         "convertedValue": null,
         "depthLabel": null,
         "category": null,
