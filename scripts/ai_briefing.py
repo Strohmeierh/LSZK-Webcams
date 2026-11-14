@@ -574,6 +574,15 @@ def forecast_text(session) -> str:
     return "Prognose Open-Meteo für LSZK, nächste 12 Stunden (Lokalzeit):\n" + "\n".join(rows)
 
 
+def safe_text(label: str, fn, *args) -> str:
+    """One broken input must not cost the whole briefing: it is reported as unavailable."""
+    try:
+        return fn(*args)
+    except Exception as e:  # noqa: BLE001
+        print(f"{label}: {type(e).__name__}: {e}", file=sys.stderr)
+        return f"{label}: nicht verfügbar ({type(e).__name__})."
+
+
 # ── Claude call ──────────────────────────────────────────────────────────────
 class BilledError(RuntimeError):
     """The request ran (and is billed) but gave no usable result; carries the usage."""
@@ -608,9 +617,16 @@ def usage_dict(usage, served_by) -> dict:
     return totals
 
 
+# False: no request has reached the API yet, so a failure costs nothing (settle 0).
+# True: a request may have been sent, so the estimate stays unless the usage is known.
+_request_started = False
+
+
 def _final_message(manager):
     """Streams the response to the end. The read timeout then applies between events, and the
     SDK only retries failures before the stream opens (never a generation already running)."""
+    global _request_started
+    _request_started = True  # the stream manager sends the request in __enter__
     with manager as stream:
         return stream.get_final_message(), getattr(stream, "request_id", None)
 
@@ -657,7 +673,8 @@ def failed(record: dict) -> bool:
 
 def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
     """Collects the inputs, calls Claude and fills the record. The attempt must already be
-    reserved (reserve()); this settles the reservation in every outcome."""
+    reserved (reserve()); this settles the reservation in every outcome it handles, anything
+    unexpected is closed by close_attempt() in main()."""
     import requests  # installed by the workflow
 
     session = requests.Session()
@@ -668,11 +685,11 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
     context = "\n\n".join([
         f"Zeitpunkt: {local:%d.%m.%Y %H:%M} Lokalzeit (Europe/Zurich). "
         f'Sonnenaufgang {record["sun"]["rise"]}, Sonnenuntergang {record["sun"]["set"]}.',
-        station_text(load_json(STATION_FILE), now),
-        metar_text(load_json(METAR_FILE), now),
-        foehn_text(session),
-        fgzo_text(load_json(FGZO_FILE)),
-        forecast_text(session),
+        safe_text("Wetterstation am Platz", station_text, load_json(STATION_FILE), now),
+        safe_text("METAR Dübendorf (LSMD)", metar_text, load_json(METAR_FILE), now),
+        safe_text("Föhn-Index", foehn_text, session),
+        safe_text("Platzstatus FGZO", fgzo_text, load_json(FGZO_FILE)),
+        safe_text("Prognose Open-Meteo", forecast_text, session),
     ])
 
     try:
@@ -724,12 +741,15 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
         settle(record, now, 0.0 if 400 <= e.status_code < 500 else None)
         record.update(ok=False, error=f"{type(e).__name__} {e.status_code} {getattr(e, 'type', None)}: {e}"[:300])
         return failed(record)
-    except Exception as e:  # noqa: BLE001 - timeout / broken stream: outcome unknown, keep the estimate
-        settle(record, now, None)
+    except Exception as e:  # noqa: BLE001
+        # timeout / broken stream: outcome unknown, keep the estimate;
+        # failed before anything was sent (e.g. while building the request): nothing to pay
+        settle(record, now, None if _request_started else 0.0)
         record.update(ok=False, error=f"{type(e).__name__}: {e}"[:300])
         return failed(record)
 
     settle(record, now, usage["cost_usd"])
+    record.update(usage=usage, served_by=served_by, request_id=req_id)  # kept even if the rest fails
     b, sky = data.get("briefing") or {}, data.get("himmel") or {}
     by_title = {u["titel"]: u for u in used}
     cams_out, seen = [], set()
@@ -771,6 +791,25 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
           f'{usage["input_tokens"]} in / {usage["output_tokens"]} out tokens, {usage["cost_usd"]} USD, '
           f'month {record["stats"]["cost_month_usd"]} USD')
     return True
+
+
+def close_attempt(record: dict, now: datetime, exc: BaseException) -> bool:
+    """Safety net for anything run_briefing() did not handle: the reserved attempt still ends
+    in a written record that says what happened. settle() is idempotent."""
+    if record.get("ok") is True:  # briefing complete, only the final log line failed
+        print(f"briefing stored, log line failed: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return True
+    open_reservation = float((record.get("stats") or {}).get("reserved_usd") or 0) > 0
+    if not _request_started:
+        phase = "Fehler vor dem API-Aufruf, nichts gesendet"
+        settle(record, now, 0.0)
+    elif open_reservation:
+        phase = "Abbruch während des API-Aufrufs, Kosten geschätzt"
+        settle(record, now, None)
+    else:
+        phase = "Fehler nach dem API-Aufruf, Kosten verbucht"
+    record.update(ok=False, error=f"{phase} ({type(exc).__name__}: {exc})"[:300])
+    return failed(record)
 
 
 def main(argv) -> int:
@@ -820,7 +859,10 @@ def main(argv) -> int:
         write_json(record)
         return failed(record) or 1
 
-    ok = run_briefing(client, anthropic, record, now)
+    try:
+        ok = run_briefing(client, anthropic, record, now)
+    except (Exception, KeyboardInterrupt) as e:  # noqa: BLE001 - SIGINT on step timeout, see close_attempt()
+        ok = close_attempt(record, now, e)
     write_json(record)
     return 0 if ok else 1
 
