@@ -44,7 +44,8 @@ jobs:
         run: python scripts/ai_briefing.py --reserve
 
       - name: Commit status files if changed
-        run: bash scripts/commit_and_push.sh "chore: update cam status [skip ci]" data/cam-status.json data/ai_status.json
+        run: |
+          bash scripts/commit_and_push.sh "chore: update cam status [skip ci]" data/cam-status.json data/ai_status.json
 
       - name: AI briefing (Claude)
         if: steps.ai_reserve.outcome == 'success'
@@ -58,4 +59,5 @@ jobs:
 
       - name: Commit AI briefing
         if: steps.ai_reserve.outcome == 'success'
-        run: bash scripts/commit_and_push.sh "chore: AI briefing [skip ci]" data/ai_status.json
+        run: |
+          bash scripts/commit_and_push.sh "chore: AI briefing [skip ci]" data/ai_status.json
