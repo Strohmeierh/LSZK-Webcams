@@ -1,16 +1,16 @@
 {
   "ok": true,
-  "fetched_at_utc": "2026-11-14T11:51:11+00:00",
+  "fetched_at_utc": "2026-11-14T12:01:12+00:00",
   "failed_at_utc": null,
   "error": null,
   "source": "https://fgzo.ch/status/",
   "ampel": "gruen",
   "status": "OPEN",
-  "traffic": "LOW TRAFFIC",
+  "traffic": "HIGH TRAFFIC",
   "closing": "16:54",
   "notice": "Runway condition LSZK / 14.11.2026 / 0800 LT / DRY",
   "runway_line": "Runway condition LSZK / 14.11.2026 / 0800 LT / DRY",
   "runway_condition": "DRY",
   "contact": "Kontakt: +41 79 265 14 38 / J. Grossmann, allenfalls +41 44 954 12 52 / C-Büro",
-  "updated": "14.11.2026, 09:39"
+  "updated": "14.11.2026, 12:58"
 }
