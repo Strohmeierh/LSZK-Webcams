@@ -30,7 +30,7 @@ jobs:
       - name: Refresh cam status
         run: python scripts/update_cam_status.py
 
-      # KI-Briefing (stündlich bei Tageslicht): erst den Versuch buchen und pushen, dann bezahlen.
+      # KI-Briefing (3x täglich: Sonnenaufgang + 30 min, 10:00, 15:00): erst den Versuch buchen und pushen, dann bezahlen.
       # Scheitert der Push, läuft der Claude-Aufruf nicht.
       - name: AI briefing - due?
         id: ai_check
