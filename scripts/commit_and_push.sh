@@ -25,11 +25,14 @@ fi
 for i in 1 2 3; do
   if git push -q; then exit 0; fi
   echo "Push rejected (attempt $i), rebasing on the latest remote state"
-  # during a rebase "theirs" is this job's own commit: on a conflict in these data files it wins
-  if ! git pull --rebase -X theirs -q origin "$GITHUB_REF_NAME"; then
+  # during a rebase "theirs" is this job's own commit: on a conflict in these data files it wins;
+  # --autostash: an unrelated modified tracked file must not block the rebase
+  if ! git pull --rebase --autostash -X theirs -q origin "$GITHUB_REF_NAME"; then
     git rebase --abort 2>/dev/null || true
     sleep 5
   fi
 done
-echo "Push failed after 3 attempts" >&2
+# the third rebase still needs its push
+if git push -q; then exit 0; fi
+echo "Push failed after 4 attempts" >&2
 exit 1
