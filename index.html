@@ -2441,7 +2441,7 @@
       var metarAvailable = !!m;
 
       if (metarAvailable) {
-        var rawParts = m.rawOb ? m.rawOb.split('RMK')[0] : '';
+        var rawParts = metarBody(m.rawOb);     // Beobachtung ohne Trend und RMK (sonst zählt z. B. «BECMG CAVOK»)
 
         if (m.reportTime) {
           metarZeit = new Date(m.reportTime).toLocaleString('de-CH', {
@@ -2452,7 +2452,7 @@
         }
 
         // Flugregeln
-        var cat = m.fltCat || '–';             // ohne Angabe (Rohtext-Fallback) nicht «VFR» raten
+        var cat = m.fltCat || metarFlightCat(rawParts);   // die API liefert für LSMD kein fltCat
         if (rawParts.includes('CAVOK')) cat = 'VFR';
         var catColor = cat === 'VFR' ? '#10b981' : (cat === 'MVFR' ? '#38bdf8' : (cat === '–' ? '#64748b' : '#ef4444'));
         catHtml = '<div class="wx-stat"><div class="wx-stat-label">Flugregeln</div>' +
@@ -2473,11 +2473,8 @@
             }
           }
         } else if (rawParts) {
-          var visMatch = rawParts.match(/\b(\d{4})\b/);
-          if (visMatch) {
-            var visM = parseInt(visMatch[1]);
-            sichtVal = visM >= 9999 ? '≥&nbsp;10&nbsp;km' : aiThousands(visM) + '&nbsp;m';
-          }
+          var visM = metarVisM(rawParts);
+          if (visM !== null) sichtVal = visM >= 9999 ? '≥&nbsp;10&nbsp;km' : aiThousands(visM) + '&nbsp;m';
         }
         sichtHtml = '<div class="wx-stat"><div class="wx-stat-label">Sicht</div>' +
           '<div class="wx-stat-value" style="white-space: nowrap;">' + sichtVal + '</div></div>';
@@ -2778,9 +2775,38 @@
       return { rise: jdToTime(Jrise), set: jdToTime(Jset) };
     }
 
+    // Nur der Beobachtungsteil des METAR: Trend (TEMPO/BECMG/NOSIG) und RMK sind keine aktuelle Beobachtung
+    function metarBody(raw) {
+      return String(raw || '').split(/\s(?:TEMPO|BECMG|NOSIG|RMK)(?=\s|$)/)[0];
+    }
+    // Sicht in Metern aus dem METAR-Rohtext: «4000», «4000NDV» (AUTO-METAR), «9999»; null ohne Gruppe
+    function metarVisM(raw) {
+      var vm = metarBody(raw).match(/(?:^|\s)(\d{4})(?:NDV)?(?=\s|$)/);
+      return vm ? parseInt(vm[1], 10) : null;
+    }
+    // Flugregel-Kategorie wie bei aviationweather.gov (LIFR/IFR/MVFR/VFR) aus Sicht und Wolkenuntergrenze
+    // (tiefste BKN/OVC/VV-Schicht, ft über Grund). Ohne lesbare Sicht «–» statt geraten.
+    function metarFlightCat(raw) {
+      raw = metarBody(raw);
+      if (/(?:^|\s)CAVOK(?=\s|$)/.test(raw)) return 'VFR';
+      var visM = metarVisM(raw);
+      if (visM === null) return '–';
+      var ceil = null, re = /(?:^|\s)(?:BKN|OVC|VV)(\d{3})/g, c;
+      while ((c = re.exec(raw)) !== null) {
+        var ft = parseInt(c[1], 10) * 100;
+        if (ceil === null || ft < ceil) ceil = ft;
+      }
+      // auf 0,1 SM gerundet: 1600 m = 1 SM, 4800 m = 3 SM, 8000 m = 5 SM wie üblich
+      var sm = visM >= 9999 ? 99 : Math.round(visM / 1609.344 * 10) / 10, cf = ceil === null ? 99999 : ceil;
+      if (cf < 500 || sm < 1) return 'LIFR';
+      if (cf < 1000 || sm < 3) return 'IFR';
+      if (cf <= 3000 || sm <= 5) return 'MVFR';
+      return 'VFR';
+    }
+
     function parsRawMetar(m) {
-      var raw = m.rawOb || '';
-      var r = { rawOb: raw, reportTime: m.reportTime };
+      var raw = metarBody(m.rawOb);           // ohne Trend: Wolken aus TEMPO/BECMG sind keine Beobachtung
+      var r = { rawOb: m.rawOb || '', reportTime: m.reportTime };
 
       var wm = raw.match(/\b(\d{3}|VRB)(\d{2,3})(?:G(\d{2,3}))?KT\b/);
       if (wm) {
