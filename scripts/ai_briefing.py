@@ -170,7 +170,7 @@ Grundsätze
 - Unbrauchbare Bilder (Nacht, schwarzes Bild, Platzhalter oder Fehlermeldung, nasse oder verschmutzte Linse) markierst du mit dem passenden "problem" und stützt dich nicht darauf. Ein gleichmässig graues Bild einer Bergkamera ist dagegen meist eine Beobachtung: Die Kamera steckt in der Wolke, die Basis liegt dort unter der Kamerahöhe (Tag "in_wolke", problem "keins").
 - Tag "flugbetrieb" nur bei Flugzeugen in der Luft oder beim Rollen; abgestellte Flugzeuge zählen nicht.
 - Der Platzstatus der FGZO ist massgebend. Die Zeile «Platz für Flächenflugzeuge» ist verbindlich. Die Leser fliegen Flächenflugzeuge: Ist der Platz nur für Helikopter offen, gilt er als gesperrt; schreibe dann nie «Platz offen». Bestehen Einschränkungen (gesperrte Rollwege, Pistenzustand, Schliessung), erwähnst du sie sinngemäss im Briefing. Den Pistenzustand übernimmst du wörtlich und unübersetzt so, wie ihn fgzo.ch meldet (zum Beispiel «SLIPPERY WET» oder «DRY»). Erfinde keine Einschränkungen und keine NOTAM.
-- Thermik (nur April bis September): Enthält der Kontext den Block «Thermikprognose Alpenraum», sind dessen Zahlen vorgerechnet und verbindlich; rechne nichts neu und erfinde keine Werte für Regionen, die dort fehlen. Es ist eine Modellabschätzung: Kennzeichne sie immer als Prognose. Liegt die Arbeitshöhe unter der Kammhöhe, sagst du das. Gewitterrisiko «mittel» oder «hoch» und starken Höhenwind (zerrissene Thermik, Lee) nennst du ausdrücklich. Ist das Fenster zum Zeitpunkt des Briefings teilweise vorbei, beschreibst du nur den Rest; ist es ganz vorbei, sagst du das in einem Satz. Zeigen die Kamerabilder etwas anderes als die Prognose (zum Beispiel bereits Überentwicklung oder Abschirmung), nennst du den Unterschied. Fehlt der Block, setzt du briefing.thermik auf null und erwähnst Thermik im Alpenraum nicht.
+- Thermik: Enthält der Kontext den Block «Thermikprognose Alpenraum» (er kommt nur an Tagen, an denen das Modell irgendwo nutzbare Thermik erwartet), sind dessen Zahlen vorgerechnet und verbindlich; rechne nichts neu und erfinde keine Werte für Regionen, die dort fehlen. Es ist eine Modellabschätzung: Kennzeichne sie immer als Prognose. Liegt die Arbeitshöhe unter der Kammhöhe, sagst du das. Gewitterrisiko «mittel» oder «hoch» und starken Höhenwind (zerrissene Thermik, Lee) nennst du ausdrücklich. Ist das Fenster zum Zeitpunkt des Briefings teilweise vorbei, beschreibst du nur den Rest; ist es ganz vorbei, sagst du das in einem Satz. Zeigen die Kamerabilder etwas anderes als die Prognose (zum Beispiel bereits Überentwicklung oder Abschirmung), nennst du den Unterschied. Fehlt der Block, setzt du briefing.thermik auf null und erwähnst Thermik im Alpenraum nicht.
 - Keine Empfehlung, ob geflogen werden soll, keine Anrede, keine Sicherheitsfloskeln: Der Haftungshinweis steht bereits auf der Seite.
 
 Sprache und Form
@@ -715,11 +715,11 @@ def forecast_text(h) -> str:
 
 
 # ── Thermikprognose Alpenraum (Open-Meteo, Parcel-Methode wie renderThermik() in index.html) ──
-# Only April to September. The numbers per region are computed here and are binding for the
-# model; it only writes the summary (briefing.thermik). Points sit on valley / terrace height
+# All year, data-driven: fetched for every briefing, but the block (and briefing.thermik) is only
+# used when at least one region has usable thermals. The numbers per region are computed here and
+# are binding for the model; it only writes the summary. Points sit on valley / terrace height
 # where the slopes trigger; the ridge height only goes to the model as context.
-THERMIK_MONATE = (4, 9)      # 1 April to 30 September (local date)
-TH_EXC = 1.5                 # K superadiabatic excess, like the page
+TH_EXC = 1.5                # K superadiabatic excess, like the page
 TH_DALR = 0.0098             # K/m
 TH_LCL_M_PER_K = 125.0       # cumulus base per degree spread (page and prompt use the same value)
 TH_LEVELS = (800, 700, 600, 500)
@@ -743,10 +743,6 @@ THERMIK_URL = ("https://api.open-meteo.com/v1/forecast"
                  "wind_speed_700hPa,wind_direction_700hPa,"
                + ",".join(f"temperature_{p}hPa,geopotential_height_{p}hPa" for p in TH_LEVELS)
                + "&forecast_days=1&wind_speed_unit=kn&timezone=Europe%2FZurich")
-
-
-def thermik_saison(day: date) -> bool:
-    return THERMIK_MONATE[0] <= day.month <= THERMIK_MONATE[1]
 
 
 def fetch_thermik(session, retry: bool = True) -> list:
@@ -1042,8 +1038,9 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
                                    default=(None, "Föhn-Index: nicht verfügbar."))
     hourly = attempt("Prognose Open-Meteo", fetch_forecast, session)
     rain3 = attempt("Regenwahrscheinlichkeit 3 h", rain_next_3h, hourly, now)
-    thermik = (attempt("Thermikprognose", thermik_forecast, session, now, sset, hourly is not None)
-               if thermik_saison(local.date()) else None)
+    thermik = attempt("Thermikprognose", thermik_forecast, session, now, sset, hourly is not None)
+    if thermik and not any(r["nutzbar"] for r in thermik):
+        thermik = None   # all year, data-driven: block and section only when thermals are expected somewhere
     caps = []
     if foehn_idx is not None and foehn_idx >= 4:
         caps.append(f"Föhn-Index {signed(foehn_idx)} hPa")
