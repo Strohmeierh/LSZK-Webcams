@@ -1159,7 +1159,8 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
     headline, text = clip(b.get("headline"), 80), clip(b.get("text"), 1100)
     if platz["flaeche"] == "gesperrt":   # fixed-wing pilots: a closed airfield must be the first thing they read
         if PLATZ_OFFEN_RE.search(headline) or PLATZ_OFFEN_RE.search(text):
-            headline, text = PLATZ_OFFEN_RE.sub("Platz gesperrt", headline), PLATZ_OFFEN_RE.sub("Platz gesperrt", text)
+            headline = clip(PLATZ_OFFEN_RE.sub("Platz gesperrt", headline), 80)
+            text = clip(PLATZ_OFFEN_RE.sub("Platz gesperrt", text), 1100)
             corrections.append("«Platz offen» durch «Platz gesperrt» ersetzt")
         if not headline.lower().startswith("platz gesperrt"):
             headline = clip(f"Platz gesperrt: {headline}" if headline else "Platz gesperrt", 80)

@@ -1920,22 +1920,26 @@
     }
 
     // kind: loading | none | ok | stale; dazu failed (letzter Versuch fehlgeschlagen) und running (läuft gerade)
+    function aiFgzoSperre() {            // aktueller FGZO-Stand (Ampel-Daten, alle 10 min), nur wenn frisch
+      var fz = briefing.platz;
+      if (!fz || typeof fz !== 'object' || fz.ok === false || fz.flaeche !== 'gesperrt') return false;
+      var t = Date.parse(fz.fetched_at_utc);
+      return !isNaN(t) && (Date.now() - t) / 60000 < 30;
+    }
     function aiState() {
-      var d = ai.data, now = new Date();
-      if (d === undefined) return { kind: 'loading' };
-      if (!d) return { kind: 'none' };
+      var d = ai.data, now = new Date(), live = aiFgzoSperre();
+      if (d === undefined) return { kind: 'loading', sperreJetzt: live, sperre: live };
+      if (!d) return { kind: 'none', sperreJetzt: live, sperre: live };
       var b = (d.briefing && typeof d.briefing === 'object' && !Array.isArray(d.briefing)) ? d.briefing : null;
       var st = { kind: 'none', data: d, b: b, gen: aiDate(d.generated_at_utc), tri: aiDate(d.attempted_at_utc),
-                 lage: null, isNew: false, failed: false, running: false };
+                 lage: null, isNew: false, failed: false, running: false,
+                 sperreBriefing: false, sperreJetzt: live, sperre: live };
       if (d.ok === false && st.tri) {
         if ((now - st.tri) / 60000 < AI_RUNNING_MIN) st.running = true; else st.failed = true;
       }
       if (!b || !st.gen) return st;
       st.lage = aiHas(AI_LAGE, b.lage) ? b.lage : null;
       st.sperreBriefing = !!(d.platz && typeof d.platz === 'object' && d.platz.flaeche === 'gesperrt');
-      // aktueller FGZO-Stand (Ampel-Daten, alle 10 min): eine Sperre nach dem Briefing soll ebenfalls sichtbar sein
-      var fz = briefing.platz;
-      st.sperreJetzt = !!(fz && typeof fz === 'object' && fz.ok !== false && fz.flaeche === 'gesperrt');
       st.sperre = st.sperreBriefing || st.sperreJetzt;
       var fresh = (now - st.gen) / 60000 < AI_STALE_MIN && aiDay(st.gen) === aiDay(now);
       st.kind = fresh ? 'ok' : 'stale';
@@ -1960,7 +1964,6 @@
         if (st.kind === 'ok') {
           time = aiHM(st.gen);
           if (st.lage) { dot.style.background = AI_LAGE[st.lage].color; label += ', Lage ' + AI_LAGE[st.lage].label; }
-          if (st.sperre) { dot.style.background = AI_LAGE.schlecht.color; label += ', Platz für Flächenflugzeuge gesperrt'; }
         } else {
           time = aiWhen(st.gen, now);
           dot.classList.add('stale');
@@ -1969,6 +1972,11 @@
         label += ', Stand ' + aiWhen(st.gen, now);
         if (st.failed)  label += ', letzte Aktualisierung fehlgeschlagen';
         if (st.running) label += ', wird gerade aktualisiert';
+      }
+      if (st.sperre && st.kind !== 'loading') {
+        dot.classList.remove('stale');
+        dot.style.background = AI_LAGE.schlecht.color;
+        label += ', Platz für Flächenflugzeuge gesperrt';
       }
       tm.textContent = time;
       if (wn) wn.textContent = st.failed ? '⚠' : '';
@@ -2008,6 +2016,8 @@
       if (st.running) html += '<div class="ai-banner warn">Wird gerade aktualisiert…</div>';
       if (st.kind === 'none') {
         if (st.failed) html += '<div class="ai-banner">Der letzte Versuch' + (st.tri ? ' (' + aiWhen(st.tri, now) + ')' : '') + ' ist fehlgeschlagen.</div>';
+        if (st.sperreJetzt) html += '<div class="ai-lage ai-platz zu">Aktuell laut FGZO: Platz für Flächenflugzeuge gesperrt' +
+          (briefing.platz.flaeche_grund ? ' (' + escHtml(briefing.platz.flaeche_grund) + ')' : '') + '</div>';
         return html + '<div class="ai-text">Noch kein KI-Briefing vorhanden. ' + sched + '</div>';
       }
       var d = st.data, b = st.b;
@@ -2172,6 +2182,7 @@
         _metarData   = results[1];
         briefing.platz = results[3];
         renderAiButton();   // Platzsperre auch zwischen den Briefings am KI-Button zeigen
+        if (aiModalOpen()) renderAiModal();
         renderAll(el, _stationData, _metarData, results[2]);
       });
     }

@@ -64,7 +64,7 @@ DATA_KEYS = ("ampel", "status", "traffic", "closing", "notice",
 # Fixed-wing view (the dashboard users fly aeroplanes): helicopter-only operation counts as
 # closed. FGZO wording 2021-2024: "Nur Helikopter-Betrieb erlaubt!" and "Nur HELI-Betrieb und
 # Flächenflugzeuge mit Ski ... erlaubt!" -- the status word stays OPEN, the ampel is yellow.
-_HELI = r"heli(?:kopter|copter)?(?![a-z])"          # Heli, HELI-Betrieb, Helikopter; not "Heliport"
+_HELI = r"heli(?!port|pad)\w*"      # Heli, Helis, HELI-Betrieb, Helikopterbetrieb, helicopters; not "Heliport"
 HELI_ONLY_RE = re.compile(
     r"(?<!nicht\s)\bnur\s+(?:für\s+)?" + _HELI
     + r"|\bausschliesslich\s+(?:für\s+)?" + _HELI
