@@ -602,9 +602,9 @@ PLATZ_ZU_START_RE = re.compile(r"\s*(?:der\s+)?(?:flug)?platz\s+(?:ist\s+)?(?:f�
                                r"(?:gesperrt|geschlossen)", re.IGNORECASE)
 PLATZ_OFFEN_RE = re.compile(r"\b(?:flug)?platz\s+(?:ist\s+)?offen\b", re.IGNORECASE)
 # Swiss format for heights in the model texts, «1'400 m» (user, 15.11.): only 4-5 digit numbers directly
-# followed by m / Meter(n), also in ranges («1400–2600 m»); hPa, FL, times, years, km, mm, min stay as they are.
+# followed by m / Meter(n) / ft, also in ranges («1400–2600 m»); hPa, FL, times, years, km, mm, min stay as they are.
 SWISS_M_RE = re.compile(r"(?<![\d.,:'’])([1-9]\d?)[.’]?(\d{3})"
-                        r"(?=(?:\s*(?:–|-|bis|und|/)\s*\d{1,2}['.’]?\d{3})*\s*(?:m|Metern?)(?![A-Za-zÄÖÜäöü\d]))")
+                        r"(?=(?:\s*(?:–|-|bis|und|/)\s*\d{1,2}['.’]?\d{3})*\s*(?:m|Metern?|ft)(?![A-Za-zÄÖÜäöü\d]))")
 # words that do not belong in a flight briefing (camera jargon, pressure levels): reported, not changed
 JARGON_RE = re.compile(r"\b(?:un)?scharf|gegenlicht|blendung|linsenreflex|belichtung|overlay|\b(?:850|700)\s*hPa\b",
                        re.IGNORECASE)

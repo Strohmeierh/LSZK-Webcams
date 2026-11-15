@@ -1786,10 +1786,10 @@
       if (briefing.capeMax !== undefined) {
         out.push({
           color: (briefing.hasTs || briefing.capeMax >= 1000) ? R : (briefing.capeMax >= 500 ? Y : G),
-          chip:  briefing.hasTs ? 'Gewitter!' : 'CAPE ' + Math.round(briefing.capeMax),
+          chip:  briefing.hasTs ? 'Gewitter!' : 'CAPE ' + aiThousands(Math.round(briefing.capeMax)),
           title: 'CAPE – Gewitterpotenzial',
-          value: Math.round(briefing.capeMax) + ' J/kg (Maximum der nächsten 12 h)' + (briefing.hasTs ? ' · Gewitter in der Vorhersage!' : ''),
-          text:  'CAPE (Convective Available Potential Energy) ist die Energie, die aufsteigender Luft zur Verfügung steht – gemessen in Joule pro Kilogramm. Hohe Werte = labile Luftmasse: kräftige Thermik, aber auch Risiko von Überentwicklung und Gewittern. Faustregel: unter 500 ruhig · 500–1000 lebhaft, Schauer möglich · über 1000 Gewitterpotenzial – Wetterentwicklung im Auge behalten.'
+          value: aiThousands(Math.round(briefing.capeMax)) + ' J/kg (Maximum der nächsten 12 h)' + (briefing.hasTs ? ' · Gewitter in der Vorhersage!' : ''),
+          text:  "CAPE (Convective Available Potential Energy) ist die Energie, die aufsteigender Luft zur Verfügung steht – gemessen in Joule pro Kilogramm. Hohe Werte = labile Luftmasse: kräftige Thermik, aber auch Risiko von Überentwicklung und Gewittern. Faustregel: unter 500 ruhig · 500–1'000 lebhaft, Schauer möglich · über 1'000 Gewitterpotenzial – Wetterentwicklung im Auge behalten."
         });
       }
       if (briefing.foehnDp !== undefined && briefing.foehnDp !== null) {
@@ -1879,9 +1879,14 @@
         AI_SLOT_LATE_MIN = 30;             // Button zeigt die geplante Zeit, solange das Briefing höchstens so spät kam
     var AI_PLATZ_COLOR = { offen: '#10b981', eingeschraenkt: '#f59e0b', gesperrt: '#ef4444', unbekannt: '#64748b' };
     // Höhen im Schweizer Format «1'400 m» (Wunsch 15.11.); wie SWISS_M_RE in ai_briefing.py, ohne Lookbehind (ältere Safari)
-    var AI_SWISS_M = /(^|[^\d.,:'’])([1-9]\d?)[.’]?(\d{3})(?=(?:\s*(?:–|-|bis|und|\/)\s*\d{1,2}['.’]?\d{3})*\s*(?:m|Metern?)(?![A-Za-zÄÖÜäöü\d]))/g;
+    var AI_SWISS_M = /(^|[^\d.,:'’])([1-9]\d?)[.’]?(\d{3})(?=(?:\s*(?:–|-|bis|und|\/)\s*\d{1,2}['.’]?\d{3})*\s*(?:m|Metern?|ft)(?![A-Za-zÄÖÜäöü\d]))/g;
     function aiSwiss(s) { return String(s == null ? '' : s).replace(AI_SWISS_M, "$1$2'$3"); }
+    // seitenweit genutzt (Wetter-Panel, METAR, Thermik, CAPE): Ganzzahl mit Apostroph, 2700 -> «2'700»
     function aiThousands(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "'"); }
+    // DABS-Höhenband aus dem PDF («5000FT AMSL», «4500m / 14900ft»): nur Zahlen direkt vor FT/M
+    function aiSwissAlt(s) {
+      return String(s == null ? '' : s).replace(/(^|[^\d.,:'’])([1-9]\d{0,2})(\d{3})(?=\s*(?:FT|M)(?![A-Za-zÄÖÜäöü\d]))/gi, "$1$2'$3");
+    }
     function aiMeter(v) {                  // Höhe aus dem Datensatz: 1400 -> «1'400 m ü. M.»
       return (typeof v === 'number' && isFinite(v)) ? aiThousands(Math.round(v)) + ' m ü. M.' : null;
     }
@@ -2032,7 +2037,7 @@
       var hits = Array.isArray(x.treffer) ? x.treffer.filter(function (t) { return t && typeof t === 'object'; }) : [];
       hits.forEach(function (t) {
         var kopf = [str(t.gebiet), str(t.notam)].filter(Boolean).join(' · ') || 'Eintrag';
-        var band = (str(t.unten) || '?') + ' bis ' + (str(t.oben) || '?');
+        var band = aiSwissAlt((str(t.unten) || '?') + ' bis ' + (str(t.oben) || '?'));
         html += '<div class="ai-row"><b>' + escHtml(kopf) + '</b> ' + escHtml(str(t.zeit)) + ' · ' + escHtml(band) +
           (t.unsicher === true ? ' ⚠ <span class="ai-prob">nicht eindeutig lesbar</span>' : '') +
           '<br>' + escHtml(str(t.text)) +
@@ -2245,7 +2250,8 @@
         .then(function(data) {
           if (!data || !data.length) return null;
           var m = data[0];
-          if (!m.temp && m.rawOb) m = parsRawMetar(m);
+          // nur Rohtext-Datensätze neu parsen (Fallback des METAR-Jobs); 0 °C ist ein gültiger Wert
+          if ((m.temp === undefined || m.temp === null) && m.rawOb) m = parsRawMetar(m);
           return m;
         })
         .catch(function() { return null; });
@@ -2384,8 +2390,8 @@
         var densAlt  = Math.round(pressAlt + 118.8 * tempDev);
         var daColor  = densAlt > 5000 ? '#ef4444' : densAlt > 3000 ? '#f59e0b' : '#10b981';
         daHtml = '<div class="wx-stat"><div class="wx-stat-label">Dichtehöhe</div>' +
-          '<div class="wx-stat-value" style="color:' + daColor + '; white-space: nowrap;">' + densAlt + '&nbsp;ft</div>' +
-          '<div class="wx-stat-sub" style="white-space: nowrap;">' + Math.round(densAlt / 3.28084) + '&nbsp;m</div></div>';
+          '<div class="wx-stat-value" style="color:' + daColor + '; white-space: nowrap;">' + aiThousands(densAlt) + '&nbsp;ft</div>' +
+          '<div class="wx-stat-sub" style="white-space: nowrap;">' + aiThousands(Math.round(densAlt / 3.28084)) + '&nbsp;m</div></div>';
       }
 
       // Wolkenbasis-Schätzung (Faustformel: Spread × 122 m über Platz 536 m)
@@ -2394,8 +2400,8 @@
         var baseMsl = Math.round((536 + (temp - dewp) * 122) / 50) * 50;
         var baseFt  = Math.round(baseMsl * 3.28084 / 100) * 100;
         cbHtml = '<div class="wx-stat"><div class="wx-stat-label">Wolkenbasis (Schätzung)</div>' +
-          '<div class="wx-stat-value" style="white-space:nowrap;">' + baseMsl + '&nbsp;m</div>' +
-          '<div class="wx-stat-sub" style="white-space:nowrap;">' + baseFt + '&nbsp;ft (MSL)<br>≈&nbsp;' + (baseMsl - 536) + '&nbsp;m über Platz</div></div>';
+          '<div class="wx-stat-value" style="white-space:nowrap;">' + aiThousands(baseMsl) + '&nbsp;m</div>' +
+          '<div class="wx-stat-sub" style="white-space:nowrap;">' + aiThousands(baseFt) + '&nbsp;ft (MSL)<br>≈&nbsp;' + aiThousands(baseMsl - 536) + '&nbsp;m über Platz</div></div>';
       }
 
       // Föhn-Index-Kachel: METAR-QNH LSZA − LSZH (Süd−Nord über den Alpenkamm), ganze hPa
@@ -2446,9 +2452,9 @@
         }
 
         // Flugregeln
-        var cat = m.fltCat || 'VFR';
+        var cat = m.fltCat || '–';             // ohne Angabe (Rohtext-Fallback) nicht «VFR» raten
         if (rawParts.includes('CAVOK')) cat = 'VFR';
-        var catColor = cat === 'VFR' ? '#10b981' : (cat === 'MVFR' ? '#38bdf8' : '#ef4444');
+        var catColor = cat === 'VFR' ? '#10b981' : (cat === 'MVFR' ? '#38bdf8' : (cat === '–' ? '#64748b' : '#ef4444'));
         catHtml = '<div class="wx-stat"><div class="wx-stat-label">Flugregeln</div>' +
           '<div class="wx-stat-value" style="color:' + catColor + '; white-space: nowrap;">' + cat + '</div></div>';
 
@@ -2463,14 +2469,14 @@
           } else {
             var visSm = parseFloat(vs);
             if (!isNaN(visSm)) {
-              sichtVal = visSm >= 6 ? '≥&nbsp;10&nbsp;km' : Math.round(visSm * 1609) + '&nbsp;m';
+              sichtVal = visSm >= 6 ? '≥&nbsp;10&nbsp;km' : aiThousands(Math.round(visSm * 1609)) + '&nbsp;m';
             }
           }
         } else if (rawParts) {
           var visMatch = rawParts.match(/\b(\d{4})\b/);
           if (visMatch) {
             var visM = parseInt(visMatch[1]);
-            sichtVal = visM >= 9999 ? '≥&nbsp;10&nbsp;km' : visM + '&nbsp;m';
+            sichtVal = visM >= 9999 ? '≥&nbsp;10&nbsp;km' : aiThousands(visM) + '&nbsp;m';
           }
         }
         sichtHtml = '<div class="wx-stat"><div class="wx-stat-label">Sicht</div>' +
@@ -2481,7 +2487,7 @@
         if (m.clouds && m.clouds.length) {
           var wolkenLines = m.clouds.map(function(cl) {
             var txt = coverText[cl.cover] || cl.cover;
-            return '<span style="font-size: 0.78rem; white-space: normal; display: block; line-height: 1.3; margin-bottom: 2px;">' + txt + (cl.base ? ' bei ' + cl.base + '&nbsp;ft (MSL)' : '') + '</span>';
+            return '<span style="font-size: 0.78rem; white-space: normal; display: block; line-height: 1.3; margin-bottom: 2px;">' + txt + (cl.base ? ' bei ' + aiThousands(cl.base) + '&nbsp;ft AGL' : '') + '</span>';   // METAR: Fuss über Grund
           });
           wolkenHtml = '<div class="wx-stat"><div class="wx-stat-label">Wolken</div>' +
             '<div class="wx-stat-sub" style="margin-top:0;">' + wolkenLines.join('') + '</div></div>';
@@ -2799,10 +2805,8 @@
         clouds.push({ cover: cm[1], base: parseInt(cm[2]) * 100 });
       }
       if (clouds.length) r.clouds = clouds;
-
-      var vm = raw.match(/\b(\d{4})\b/);
-      if (vm) r.visib = (parseInt(vm[1]) / 1000).toFixed(1);
-
+      // keine r.visib hier: die Anzeige erwartet dort Statute Miles (API); die Sicht in Metern
+      // liest sie selbst aus dem Rohtext (Zweig «rawParts»)
       return r;
     }
 
@@ -2996,7 +3000,7 @@
         }
       }
 
-      function fmt100(m2) { return Math.round(m2 / 100) * 100; }
+      function fmt100(m2) { return aiThousands(Math.round(m2 / 100) * 100); }   // nur Anzeige: «2'700»
       function tstat(label, val, sub) {
         return '<div class="wx-stat"><div class="wx-stat-label">' + label + '</div>' +
           '<div class="wx-stat-value" style="white-space:nowrap;">' + val + '</div>' +
@@ -3014,7 +3018,7 @@
           blau ? 'Basis läge über Thermik-Top' : 'Cu-Basis ~' + fmt100(best.lcl) + '&nbsp;m MSL');
       }
       if (trigger !== null) {
-        html += tstat('Auslösetemp. (2000&nbsp;m)', trigger.toFixed(1).replace('.', ',') + '&nbsp;°C',
+        html += tstat("Auslösetemp. (2'000&nbsp;m)", trigger.toFixed(1).replace('.', ',') + '&nbsp;°C',
           triggerAb ? 'erreicht ab ca. ' + triggerAb : 'heute voraussichtlich nicht erreicht');
       }
       html += '</div>' +
@@ -3796,6 +3800,7 @@ function isToday(d){return d.getTime()===today.getTime()}
 function isYesterday(d){var y=new Date(today);y.setDate(y.getDate()-1);return d.getTime()===y.getTime()}
 function formatDuration(s){if(!s)return"–";var h=Math.floor(s/3600),m=Math.floor((s%3600)/60);return h?h+":"+pad(m)+" h":m+" min"}
 function formatStart(s){return s?s.replace("h",":"):"?"}
+function tsd(v){var n=Number(v);if(v===null||v===""||!isFinite(n))return esc(v);var a=String(Math.abs(Math.round(n))),o="";while(a.length>3){o="'"+a.slice(-3)+o;a=a.slice(0,-3)}return(n<0?"-":"")+a+o}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]})}
 function buildIgcUrl(date,dev,f){var a=dev.address,s=f.start_tsp-(f.start_delta!==undefined?60*f.start_delta:30),o=f.stop_tsp+(f.stop_delta!==undefined?60*f.stop_delta:30);return"https://flightbook.glidernet.org/api/live/igc/"+a+"/"+s+"/"+o+"?date="+date}
 function buildSeeYouUrl(u){return"https://seeyou.cloud/api/open?igc="+encodeURIComponent(u)}
@@ -3829,7 +3834,7 @@ function render(){
   var flights=filterText?allFlights.filter(function(f){return matchesFilter(devs[f.device]||{})}):allFlights;
   var total=allFlights.length,shown=flights.length;
   var countStr=filterText?'<span class="count">'+shown+'</span> von '+total+' Flügen':total+' Flug'+(total===1?'':'e');
-  meta.innerHTML="<b>"+esc(af.name||ICAO)+"</b>"+(af.elevation?" · "+af.elevation+" m":"")+" · "+countStr+(isToday(currentDate)?" · aktualisiert "+pad(now.getHours())+":"+pad(now.getMinutes()):"");
+  meta.innerHTML="<b>"+esc(af.name||ICAO)+"</b>"+(af.elevation?" · "+tsd(af.elevation)+" m":"")+" · "+countStr+(isToday(currentDate)?" · aktualisiert "+pad(now.getHours())+":"+pad(now.getMinutes()):"");
   if(!allFlights.length){content.className="status";content.textContent="Keine Flüge an diesem Tag.";return}
   if(!flights.length){content.className="status";content.textContent='Keine Flüge passen zum Filter „'+filterText+'".';return}
   flights.sort(function(a,b){return b.start_tsp-a.start_tsp});
@@ -3847,8 +3852,8 @@ function render(){
     var warn=f.warn?' <span class="warn-icon" title="Detektion unsicher">⚠</span>':"";
     var stop=f.stop?(esc(formatStart(f.stop))+stc):'<span class="running">läuft…</span>';
     var dur=f.duration?esc(formatDuration(f.duration)):'<span class="running">'+(f.duration_expected?"≈ "+formatDuration(f.duration_expected):"läuft…")+"</span>";
-    var agl=f.max_height?f.max_height+" m":"–";
-    var msl=f.max_alt?f.max_alt+" m":"–";
+    var agl=f.max_height?tsd(f.max_height)+" m":"–";
+    var msl=f.max_alt?tsd(f.max_alt)+" m":"–";
     var action;
     if(hasIgc(d,f)){
       var url=buildSeeYouUrl(buildIgcUrl(data.date,d,f));
