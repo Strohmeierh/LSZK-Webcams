@@ -5,8 +5,8 @@
     "source": "origin"
   },
   "https://wsrv.nl/?url=decoral.ch/Kameratoedi.jpg": {
-    "hash": "24ad5902500bfe9b06db4ca3d60f63373e51af25",
-    "lastChange": 1794709502000,
+    "hash": "ad5fe99993ee47f2f325990f34748b486ab2309a",
+    "lastChange": 1794709802000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=eichi.ch%2F%3Feichi_webcam_image%3Deichi": {
@@ -15,33 +15,33 @@
     "source": "origin"
   },
   "https://wsrv.nl/?url=eichi.ch%2F%3Feichi_webcam_image%3Deichi2": {
-    "hash": "703ac8f4c3232b0cf28e4263dfd10ce02ebd1346",
-    "lastChange": 1794709672000,
+    "hash": "8bb4666c646a5aed239b3bd4706445918af56222",
+    "lastChange": 1794709945000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=fgzo.ch/webcam/images/fgzo.jpg": {
-    "hash": "1e72cbb25ee8a2042ac90a068398b65cf8435934",
-    "lastChange": 1794709696000,
-    "source": "origin"
+    "hash": "e037b301399b5a67f19c3b702b4d088c7f515676",
+    "lastChange": 1794710009169,
+    "source": "bot"
   },
   "https://wsrv.nl/?url=fgzo.ch/webcam/images/fgzo2.jpg": {
-    "hash": "41f63256914cee665265ff4ea57810fabfdf93cd",
-    "lastChange": 1794709696000,
-    "source": "origin"
+    "hash": "e0424b51535d6aaf5fd874e51e6da635a93d3cba",
+    "lastChange": 1794710009169,
+    "source": "bot"
   },
   "https://wsrv.nl/?url=flugplatz-schaenis.ch/images/webcam/cam_schaenis_high.jpg": {
-    "hash": "86e338e642d16c653a1b634106c3fce73f0ae8a4",
-    "lastChange": 1794709511000,
-    "source": "origin"
+    "hash": "06ea11d156750450994e2422980c951cfd9de983",
+    "lastChange": 1794710009169,
+    "source": "bot"
   },
   "https://wsrv.nl/?url=images-webcams.windy.com/91/1614073791/current/original/1614073791.jpg": {
-    "hash": "d86dcd07abbba6ba4f6358323e20ab9180e7c04c",
-    "lastChange": 1794709292000,
+    "hash": "e64ccba55fabbb4e770ebd410016aa92a36f85de",
+    "lastChange": 1794709892000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=webcam.afbn.ch/H_OSG_017,200_S_KAM_001_Sued.jpg": {
     "hash": "ada4221a78758341765b099ac5cfffc28ad39a65",
-    "lastChange": 1794709501000,
+    "lastChange": 1794709801000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=webcam.hotel-klausenpass.ch/panorama.jpg": {
@@ -55,9 +55,9 @@
     "source": "origin"
   },
   "https://wsrv.nl/?url=www.hotel-grimselpass.ch/webcams/grimsel.jpg": {
-    "hash": "d317dd22b372386ba2b134aa0bdea4981d6cf349",
-    "lastChange": 1794709709000,
-    "source": "origin"
+    "hash": "cdaa9c4763cc7f8919a0286e3c376805e18df788",
+    "lastChange": 1794710009169,
+    "source": "bot"
   },
   "https://wsrv.nl/?url=www.sky-cam.ch/skiarena/gurschen_N/gurschen_N.jpg": {
     "hash": "2890c9cb7bc62b797376c58d20928f2c8f64739c",
@@ -65,8 +65,8 @@
     "source": "origin"
   },
   "https://wsrv.nl/?url=www.tarnolgio.ch/webcam00.jpg": {
-    "hash": "bc1aa8da504c602618c9a7b1c26f0cbbe34ef1f6",
-    "lastChange": 1794708907000,
+    "hash": "a9e821e62f7fdfb54f29a35021e1ea8a77eecbfd",
+    "lastChange": 1794709807000,
     "source": "origin"
   }
 }
