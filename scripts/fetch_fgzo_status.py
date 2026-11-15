@@ -64,7 +64,14 @@ DATA_KEYS = ("ampel", "status", "traffic", "closing", "notice",
 # Fixed-wing view (the dashboard users fly aeroplanes): helicopter-only operation counts as
 # closed. FGZO wording 2021-2024: "Nur Helikopter-Betrieb erlaubt!" and "Nur HELI-Betrieb und
 # Flächenflugzeuge mit Ski ... erlaubt!" -- the status word stays OPEN, the ampel is yellow.
-HELI_ONLY_RE = re.compile(r"\bnur\s+(?:für\s+)?heli|\bheli\w*\s+only\b|\bonly\s+heli", re.IGNORECASE)
+_HELI = r"heli(?:kopter|copter)?(?![a-z])"          # Heli, HELI-Betrieb, Helikopter; not "Heliport"
+HELI_ONLY_RE = re.compile(
+    r"(?<!nicht\s)\bnur\s+(?:für\s+)?" + _HELI
+    + r"|\bausschliesslich\s+(?:für\s+)?" + _HELI
+    + r"|\b" + _HELI + r"[\s-]+only\b|\bonly\s+" + _HELI
+    + r"|\b(?:flug)?platz\b[^.\n]{0,40}?\bfür\s+flächenflug\w*\s+(?:gesperrt|geschlossen)"
+    + r"|\bpiste\b[^.\n]{0,40}?\bfür\s+flächenflug\w*\s+(?:gesperrt|geschlossen)",
+    re.IGNORECASE)
 CLOSED_RE = re.compile(r"CLOSED|CLSD|GESCHLOSSEN", re.IGNORECASE)
 
 
@@ -182,9 +189,10 @@ def parse(src: str) -> dict:
 
 def load_previous() -> dict:
     try:
-        return json.loads(OUT_FILE.read_text(encoding="utf-8"))
+        prev = json.loads(OUT_FILE.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {}
+    return prev if isinstance(prev, dict) else {}   # valid JSON but not an object -> start fresh
 
 
 def write(record: dict) -> None:

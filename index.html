@@ -1930,7 +1930,11 @@
       }
       if (!b || !st.gen) return st;
       st.lage = aiHas(AI_LAGE, b.lage) ? b.lage : null;
-      st.sperre = !!(d.platz && typeof d.platz === 'object' && d.platz.flaeche === 'gesperrt');
+      st.sperreBriefing = !!(d.platz && typeof d.platz === 'object' && d.platz.flaeche === 'gesperrt');
+      // aktueller FGZO-Stand (Ampel-Daten, alle 10 min): eine Sperre nach dem Briefing soll ebenfalls sichtbar sein
+      var fz = briefing.platz;
+      st.sperreJetzt = !!(fz && typeof fz === 'object' && fz.ok !== false && fz.flaeche === 'gesperrt');
+      st.sperre = st.sperreBriefing || st.sperreJetzt;
       var fresh = (now - st.gen) / 60000 < AI_STALE_MIN && aiDay(st.gen) === aiDay(now);
       st.kind = fresh ? 'ok' : 'stale';
       st.isNew = fresh && storeGet(AI_SEEN_KEY) !== String(d.generated_at_utc);
@@ -1995,7 +1999,11 @@
         '<span>' + escHtml(b.headline || '') + '</span></div>';
       var pz = (d.platz && typeof d.platz === 'object' && !Array.isArray(d.platz)) ? d.platz : null;
       if (pz && typeof pz.text === 'string' && pz.text) {
-        html += '<div class="ai-lage ai-platz' + (st.sperre ? ' zu' : '') + '">' + escHtml(pz.text) + '</div>';
+        html += '<div class="ai-lage ai-platz' + (st.sperreBriefing ? ' zu' : '') + '">' + escHtml(pz.text) + '</div>';
+      }
+      if (st.sperreJetzt && !st.sperreBriefing) {
+        html += '<div class="ai-lage ai-platz zu">Aktuell laut FGZO: Platz für Flächenflugzeuge gesperrt' +
+          (briefing.platz.flaeche_grund ? ' (' + escHtml(briefing.platz.flaeche_grund) + ')' : '') + '</div>';
       }
       html += '<div class="ai-lage">Lage für Lokalflüge: <b>' + (lg ? lg.label : '–') + '</b></div>';
       html += '<div class="ai-text">' + escHtml(b.text || '') + '</div>';
@@ -2136,6 +2144,7 @@
         _stationData = results[0];
         _metarData   = results[1];
         briefing.platz = results[3];
+        renderAiButton();   // Platzsperre auch zwischen den Briefings am KI-Button zeigen
         renderAll(el, _stationData, _metarData, results[2]);
       });
     }

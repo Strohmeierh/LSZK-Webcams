@@ -578,6 +578,10 @@ def foehn_index(foehn, now: datetime):
 FLAECHE_TEXT = {"offen": "OFFEN", "eingeschraenkt": "OFFEN MIT EINSCHRÄNKUNGEN",
                 "gesperrt": "GESPERRT", "unbekannt": "UNBEKANNT"}
 PLATZ_UNKNOWN = {"flaeche": "unbekannt", "grund": None, "text": "Platzstatus nicht verfügbar"}
+# safety net when the airfield is closed for fixed-wing: the text must START with the closure
+PLATZ_ZU_START_RE = re.compile(r"\s*(?:der\s+)?(?:flug)?platz\s+(?:ist\s+)?(?:für\s+flächenflugzeuge\s+)?"
+                               r"(?:gesperrt|geschlossen)", re.IGNORECASE)
+PLATZ_OFFEN_RE = re.compile(r"\b(?:flug)?platz\s+(?:ist\s+)?offen\b", re.IGNORECASE)
 
 
 def platz_status(fgzo) -> dict:
@@ -941,10 +945,13 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
         corrections.append("alpen frei -> teilweise (kein brauchbares, freies Bild vom Alpenhauptkamm)")
     headline, text = clip(b.get("headline"), 80), clip(b.get("text"), 900)
     if platz["flaeche"] == "gesperrt":   # fixed-wing pilots: a closed airfield must be the first thing they read
+        if PLATZ_OFFEN_RE.search(headline) or PLATZ_OFFEN_RE.search(text):
+            headline, text = PLATZ_OFFEN_RE.sub("Platz gesperrt", headline), PLATZ_OFFEN_RE.sub("Platz gesperrt", text)
+            corrections.append("«Platz offen» durch «Platz gesperrt» ersetzt")
         if not headline.lower().startswith("platz gesperrt"):
-            headline = clip(f"Platz gesperrt: {headline}", 80)
+            headline = clip(f"Platz gesperrt: {headline}" if headline else "Platz gesperrt", 80)
             corrections.append("headline: «Platz gesperrt» vorangestellt")
-        if not re.search(r"gesperrt|geschlossen", text[:200], re.IGNORECASE):
+        if not PLATZ_ZU_START_RE.match(text):   # an unrelated «gesperrt» further on does not count
             text = clip(f'Platz gesperrt: {platz["grund"] or "siehe fgzo.ch"}. {text}', 900)
             corrections.append("text: Platzsperre vorangestellt")
     for c in corrections:
