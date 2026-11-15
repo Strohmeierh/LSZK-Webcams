@@ -183,7 +183,17 @@
     .top-btn.ai-btn:hover .ai-new { background: var(--bg); color: var(--accent); }
     #ai-modal .brf-modal-card { max-width: 640px; }
     #ai-modal-content { overflow-wrap: anywhere; }
+    .ai-title-wrap { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+    .ai-meta { font-size: 0.75rem; font-weight: 400; color: var(--text-muted); }
+    #ai-modal-close { flex: none; }
     .ai-headline { font-size: 1rem; font-weight: 600; display: flex; gap: 8px; align-items: center; color: var(--text); margin-top: 4px; }
+    /* Platzstatus + Lage hervorgehoben (Wunsch 15.11.); Randfarbe = Platzstatus */
+    .ai-status { margin: 10px 0 2px; padding: 8px 10px; border-left: 3px solid #64748b; background: rgba(148, 163, 184, 0.10); border-radius: 0 6px 6px 0; }
+    .ai-st-row { display: flex; gap: 8px; align-items: baseline; font-size: 0.86rem; font-weight: 600; line-height: 1.45; color: var(--text); }
+    .ai-st-row + .ai-st-row { margin-top: 4px; }
+    .ai-st-row .brf-dot { transform: translateY(1px); }
+    .ai-st-row .ai-muted { font-size: 0.74rem; }
+    .ai-st-row.zu { color: #fca5a5; }
     .ai-lage { font-size: 0.78rem; color: var(--text-muted); margin: 4px 0 0 18px; }
     .ai-lage b { color: var(--text); }
     .ai-platz.zu { color: #fca5a5; font-weight: 600; }
@@ -202,7 +212,6 @@
     .ai-row b { color: var(--text); }
     .ai-row .ai-prob { color: #fcd34d; }
     .ai-cams summary { cursor: pointer; }
-    .ai-foot { margin: 12px 0 0; }
 
     /* === Wetter-Panel === */
     .wx-panel {
@@ -1293,7 +1302,7 @@
   <div class="brf-modal" id="ai-modal" role="dialog" aria-modal="true" aria-labelledby="ai-modal-title">
     <div class="brf-modal-backdrop"></div>
     <div class="brf-modal-card">
-      <h3><span id="ai-modal-title">KI-Briefing</span>
+      <h3><span class="ai-title-wrap"><span id="ai-modal-title">KI-Briefing</span><span class="ai-meta" id="ai-modal-meta"></span></span>
         <button class="lightbox-close" id="ai-modal-close" type="button" aria-label="Schliessen">×</button>
       </h3>
       <div id="ai-modal-content"></div>
@@ -1868,6 +1877,14 @@
        Bei einem Fehlschlag behält die Datei das letzte gute Briefing (ok=false, error, attempted_at_utc). */
     var AI_SEEN_KEY = 'lszk-ai-seen', AI_STALE_MIN = 360, AI_RUNNING_MIN = 10, AI_GREY = '#64748b',
         AI_SLOT_LATE_MIN = 30;             // Button zeigt die geplante Zeit, solange das Briefing höchstens so spät kam
+    var AI_PLATZ_COLOR = { offen: '#10b981', eingeschraenkt: '#f59e0b', gesperrt: '#ef4444', unbekannt: '#64748b' };
+    // Höhen im Schweizer Format «1'400 m» (Wunsch 15.11.); wie SWISS_M_RE in ai_briefing.py, ohne Lookbehind (ältere Safari)
+    var AI_SWISS_M = /(^|[^\d.,:'’])([1-9]\d?)[.’]?(\d{3})(?=(?:\s*(?:–|-|bis|und|\/)\s*\d{1,2}['.’]?\d{3})*\s*(?:m|Metern?)(?![A-Za-zÄÖÜäöü\d]))/g;
+    function aiSwiss(s) { return String(s == null ? '' : s).replace(AI_SWISS_M, "$1$2'$3"); }
+    function aiThousands(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "'"); }
+    function aiMeter(v) {                  // Höhe aus dem Datensatz: 1400 -> «1'400 m ü. M.»
+      return (typeof v === 'number' && isFinite(v)) ? aiThousands(Math.round(v)) + ' m ü. M.' : null;
+    }
     var ai = { data: undefined, loadedAt: 0 };          // undefined = lädt, null = keine Datei
     var AI_LAGE = {
       gut:      { label: 'gut',      color: '#10b981' },
@@ -1883,8 +1900,7 @@
       region:       { platz: 'Platz', zuercher_oberland: 'Zürcher Oberland', voralpen: 'Voralpen', glarner_alpen: 'Glarner Alpen', zentralalpen: 'Zentralalpen', graubuenden: 'Graubünden', alpensuedseite: 'Alpensüdseite' },
       problem:      { nacht: 'Nacht', zu_dunkel: 'zu dunkel', eingefroren: 'Bild eingefroren', linse_nass: 'Linse nass', verschmutzt: 'Linse verschmutzt', fehlbild: 'Fehlbild' },
       thermik_region: { alpstein: 'Alpstein/Churfirsten', mythen: 'Mythen/Muotathal', glarner_alpen: 'Glarner Alpen', urseren: 'Urseren/Gotthard', surselva: 'Surselva', mittelbuenden: 'Mittelbünden/Julier', davos: 'Davos/Flüela' },
-      risiko:       { gering: 'gering', mittel: 'mittel', hoch: 'hoch' },
-      slot:         { sunrise: 'Sonnenaufgang' }
+      risiko:       { gering: 'gering', mittel: 'mittel', hoch: 'hoch' }
     };
     function aiHas(map, k) { return typeof k === 'string' && Object.prototype.hasOwnProperty.call(map, k); }
     function aiMap(map, v) {               // Map-Werte sind feste, HTML-sichere Konstanten
@@ -2034,21 +2050,22 @@
       if (st.kind !== 'ok' || !t || typeof t !== 'object' || Array.isArray(t)) return '';
       var regs = Array.isArray(t.regionen) ? t.regionen : [], rows = '', any = false;
       function hm(s) { return (typeof s === 'string' && /^\d{2}:\d{2}$/.test(s)) ? s : null; }
+      function m(v) { return (typeof v === 'number' && isFinite(v)) ? aiThousands(Math.round(v)) + ' m' : null; }
       Object.keys(AI_MAPS.thermik_region).forEach(function (k) {
         regs.forEach(function (r) {
           if (!r || typeof r !== 'object' || r.region !== k) return;
-          var von = hm(r.von), bis = hm(r.bis), ah = aiNum(r.arbeitshoehe_m, ' m'), ba = aiNum(r.basis_m, ' m'), parts = [];
+          var von = hm(r.von), bis = hm(r.bis), ah = m(r.arbeitshoehe_m), ba = m(r.basis_m), parts = [];
           if (r.nutzbar === true && von && bis && ah) {
             any = true;
             parts.push(von + '–' + bis, 'Arbeitshöhe ≈ ' + ah, r.blau === true ? 'Blauthermik' : (ba ? 'Basis ≈ ' + ba : 'Cumulus'));
           } else parts.push('keine nutzbare Thermik');
           if (aiHas(AI_MAPS.risiko, r.risiko) && r.risiko !== 'gering') parts.push('<span class="ai-prob">Gewitterrisiko ' + AI_MAPS.risiko[r.risiko] + '</span>');
           var w = aiNum(r.wind700_kt, ' kt');
-          if (r.wind_stark === true && w) parts.push('<span class="ai-prob">Wind 3000 m ' + w + ' (zerrissen, Lee)</span>');
+          if (r.wind_stark === true && w) parts.push('<span class="ai-prob">Wind 3' + "'" + '000 m ' + w + ' (zerrissen, Lee)</span>');
           rows += '<div class="ai-row"><b>' + AI_MAPS.thermik_region[k] + '</b> ' + parts.join(' · ') + '</div>';
         });
       });
-      var sum = (typeof t.zusammenfassung === 'string' && t.zusammenfassung) ? '<div class="ai-text ai-small" style="margin:0 0 6px;">' + escHtml(t.zusammenfassung) + '</div>' : '';
+      var sum = (typeof t.zusammenfassung === 'string' && t.zusammenfassung) ? '<div class="ai-text ai-small" style="margin:0 0 6px;">' + escHtml(aiSwiss(t.zusammenfassung)) + '</div>' : '';
       if (!sum && !rows) return '';
       return '<div class="ai-sec">Thermik (Prognose)</div>' + sum + (any ? rows : '') +
         '<div class="ai-text ai-small">Modellabschätzung (Parcel-Methode, Open-Meteo), ersetzt kein Emagramm.</div>';
@@ -2067,31 +2084,45 @@
       var d = st.data, b = st.b;
       var sky = (d.himmel && typeof d.himmel === 'object' && !Array.isArray(d.himmel)) ? d.himmel : {};
       if (st.kind === 'stale') {
-        html += '<div class="ai-banner warn">Stand ' + aiWhen(st.gen, now) + ' – die Lage kann sich inzwischen geändert haben.</div>';
+        html += '<div class="ai-banner warn">Briefing von ' + aiSlotWhen(d, st.gen, now) + ' – die Lage kann sich inzwischen geändert haben.</div>';
       }
       if (st.failed) {
         html += '<div class="ai-banner">Letzte Aktualisierung' + (st.tri ? ' um ' + aiWhen(st.tri, now) : '') +
-          ' fehlgeschlagen; angezeigt wird der Stand von ' + aiWhen(st.gen, now) + '.' +
+          ' fehlgeschlagen; angezeigt wird das Briefing von ' + aiSlotWhen(d, st.gen, now) + '.' +
           (d.error ? '<details><summary>Technische Details</summary>' + escHtml(d.error) + '</details>' : '') + '</div>';
       }
       var lg = st.lage ? AI_LAGE[st.lage] : null;
       html += '<div class="ai-headline"><span class="brf-dot" style="background:' + (st.sperre ? AI_LAGE.schlecht.color : (lg ? lg.color : AI_GREY)) + '"></span>' +
-        '<span>' + escHtml(b.headline || '') + '</span></div>';
+        '<span>' + escHtml(aiSwiss(b.headline || '')) + '</span></div>';
+
+      // Platzstatus und Lage hervorgehoben (Wunsch 15.11.); Farben nur aus festen Maps, nie aus dem Datensatz
       var pz = (d.platz && typeof d.platz === 'object' && !Array.isArray(d.platz)) ? d.platz : null;
+      var pzKey = (pz && aiHas(AI_PLATZ_COLOR, pz.flaeche)) ? pz.flaeche : 'unbekannt';
+      var dot = function (c) { return '<span class="brf-dot" style="background:' + c + '"></span>'; };
+      html += '<div class="ai-status" style="border-left-color:' + ((st.sperreBriefing || st.sperreJetzt) ? AI_PLATZ_COLOR.gesperrt : AI_PLATZ_COLOR[pzKey]) + '">';
       if (pz && typeof pz.text === 'string' && pz.text) {
-        html += '<div class="ai-lage ai-platz' + (st.sperreBriefing ? ' zu' : '') + '">' + escHtml(pz.text) + '</div>';
+        var pm = /^([\s\S]*?)\s*(\(FGZO-Stand[^)]*\))\s*$/.exec(pz.text);
+        html += '<div class="ai-st-row' + (st.sperreBriefing ? ' zu' : '') + '">' + dot(AI_PLATZ_COLOR[st.sperreBriefing ? 'gesperrt' : pzKey]) +
+          '<span>' + escHtml(pm ? pm[1] : pz.text) + (pm ? ' <span class="ai-muted">' + escHtml(pm[2]) + '</span>' : '') + '</span></div>';
       }
       if (st.sperreJetzt && !st.sperreBriefing) {
-        html += '<div class="ai-lage ai-platz zu">Aktuell laut FGZO: Platz für Flächenflugzeuge gesperrt' +
-          (briefing.platz.flaeche_grund ? ' (' + escHtml(briefing.platz.flaeche_grund) + ')' : '') + '</div>';
+        html += '<div class="ai-st-row zu">' + dot(AI_PLATZ_COLOR.gesperrt) + '<span>Aktuell laut FGZO: Platz für Flächenflugzeuge gesperrt' +
+          (briefing.platz.flaeche_grund ? ' (' + escHtml(briefing.platz.flaeche_grund) + ')' : '') + '</span></div>';
       }
-      html += '<div class="ai-lage">Lage für Lokalflüge: <b>' + (lg ? lg.label : '–') + '</b></div>';
-      html += '<div class="ai-text">' + escHtml(b.text || '') + '</div>';
+      html += '<div class="ai-st-row">' + dot(lg ? lg.color : AI_GREY) + '<span>Lage für Lokalflüge: ' + (lg ? lg.label : '–') + '</span></div></div>';
 
-      var basis = aiNum(sky.wolkenbasis_m, ' m ü. M.'), bq = aiMap(AI_MAPS.basis_quelle, sky.basis_quelle);
+      // ältere Datensätze beginnen noch mit der Platzzeile: hier nicht ein zweites Mal zeigen
+      var txt = typeof b.text === 'string' ? b.text : '';
+      if (pz && pz.flaeche !== 'gesperrt' && typeof pz.text === 'string') {
+        var line = pz.text.replace(/\s*\(FGZO-Stand[^)]*\)\s*$/, '');
+        if (line && txt.indexOf(line + '.') === 0) txt = txt.slice(line.length + 1).replace(/^\s+/, '');
+      }
+      html += '<div class="ai-text">' + escHtml(aiSwiss(txt)) + '</div>';
+
+      var basis = aiMeter(sky.wolkenbasis_m), bq = aiMap(AI_MAPS.basis_quelle, sky.basis_quelle);
       var sichtTxt = aiMap(AI_MAPS.sicht, sky.sicht), sk = aiNum(sky.sicht_km, ' km');
-      var nebelTxt = aiMap(AI_MAPS.nebel, sky.nebel), nog = aiNum(sky.nebel_obergrenze_m, ' m');
-      var schnee = aiNum(sky.schneegrenze_m, ' m');
+      var nebelTxt = aiMap(AI_MAPS.nebel, sky.nebel), nog = aiMeter(sky.nebel_obergrenze_m);
+      var schnee = aiMeter(sky.schneegrenze_m);
       var rows = [
         ['Bedeckung',    aiNum(sky.bedeckung_achtel, '/8') || '–'],
         ['Wolkenbasis',  basis ? basis + (bq !== '–' ? ' <span class="ai-muted">(' + bq + ')</span>' : '') : '–'],
@@ -2103,13 +2134,12 @@
       ];
       html += '<div class="ai-sec">Himmel</div><dl class="ai-kv">';
       rows.forEach(function (r) { html += '<div><dt>' + r[0] + '</dt><dd>' + r[1] + '</dd></div>'; });
-      html += '</dl>';
-      if (sky.zusammenfassung) html += '<div class="ai-text ai-small">' + escHtml(sky.zusammenfassung) + '</div>';
+      html += '</dl>';   // himmel.zusammenfassung wird nicht mehr gezeigt: sie wiederholte den Text (Wunsch 15.11.)
 
       var regs = Array.isArray(sky.regionen) ? sky.regionen : [], regHtml = '';
       Object.keys(AI_MAPS.region).forEach(function (k) {
         regs.forEach(function (r) {
-          if (r && r.region === k && r.zustand) regHtml += '<div class="ai-row"><b>' + AI_MAPS.region[k] + '</b> ' + escHtml(r.zustand) + '</div>';
+          if (r && r.region === k && r.zustand) regHtml += '<div class="ai-row"><b>' + AI_MAPS.region[k] + '</b> ' + escHtml(aiSwiss(r.zustand)) + '</div>';
         });
       });
       if (regHtml) html += '<div class="ai-sec">Regionen</div>' + regHtml;
@@ -2123,29 +2153,34 @@
           var p = (k.problem && k.problem !== 'keins') ? aiMap(AI_MAPS.problem, k.problem) : '';
           var age = (typeof k.bildalter_min === 'number' && isFinite(k.bildalter_min))
             ? ' <span class="ai-muted">(Bild ' + Math.round(k.bildalter_min) + ' min alt)</span>' : '';
-          var tags = Array.isArray(k.tags) ? k.tags.filter(function (t) { return typeof t === 'string'; })
+          var tags = Array.isArray(k.tags) ? k.tags.filter(function (t) { return typeof t === 'string' && t !== 'gegenlicht'; })
             .map(function (t) { return escHtml(t.replace(/_/g, ' ')); }).join(', ') : '';
           camHtml += '<div class="ai-row"><b>' + escHtml(k.titel || '') + '</b>' + age +
-            (p ? ' ⚠ <span class="ai-prob">' + p + '</span>' : '') + '<br>' + escHtml(k.satz || '') +
+            (p ? ' ⚠ <span class="ai-prob">' + p + '</span>' : '') + '<br>' + escHtml(aiSwiss(k.satz || '')) +
             (tags ? ' <span class="ai-muted">· ' + tags + '</span>' : '') + '</div>';
         });
         html += '<details class="ai-cams"><summary class="ai-sec">Kameras (' + cams.length + ')</summary>' + camHtml + '</details>';
       }
-
-      var slot = '';
-      if (d.ok === true && typeof d.slot === 'string') {
-        slot = aiHas(AI_MAPS.slot, d.slot) ? AI_MAPS.slot[d.slot] : (/^\d{2}:\d{2}$/.test(d.slot) ? d.slot : '');
-      }
+      return html;   // Zeit des Briefings und nächstes Briefing stehen in der Titelzeile (aiMetaText)
+    }
+    function aiMetaText() {                // hinter «KI-Briefing»: Datum + Briefing-Zeit (10:00, 15:00), nächstes Briefing
+      var st = aiState(), now = new Date(), parts = [];
+      if (st.kind === 'loading') return '';
+      if (st.kind === 'ok' || st.kind === 'stale') parts.push(aiDM(st.gen) + ' ' + aiSlotHM(st.data, st.gen));
       var next = aiNextSlot(now);
-      html += '<div class="brf-src ai-foot">Stand ' + aiDM(st.gen) + ' ' + aiHM(st.gen) + (slot ? ' (Briefing ' + slot + ')' : '') +
-        (next ? ' · nächstes Briefing ' + next : '') + '</div>';
-      return html;
+      if (next) parts.push('nächstes Briefing ' + next);
+      return parts.join(' · ');
     }
     function renderAiModal() {
-      var c = document.getElementById('ai-modal-content');
+      var c = document.getElementById('ai-modal-content'), meta = document.getElementById('ai-modal-meta');
       if (!c) return;
-      try { c.innerHTML = aiModalHtml(); }
-      catch (e) { c.innerHTML = '<div class="ai-text">Das KI-Briefing kann gerade nicht angezeigt werden.</div>'; }
+      try {
+        c.innerHTML = aiModalHtml();
+        if (meta) meta.textContent = aiMetaText();
+      } catch (e) {
+        c.innerHTML = '<div class="ai-text">Das KI-Briefing kann gerade nicht angezeigt werden.</div>';
+        if (meta) meta.textContent = '';
+      }
     }
     function aiModalOpen() {
       var m = document.getElementById('ai-modal');
