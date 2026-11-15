@@ -3833,7 +3833,7 @@ function render(){
   buildTowPairs(allFlights);
   var flights=filterText?allFlights.filter(function(f){return matchesFilter(devs[f.device]||{})}):allFlights;
   var total=allFlights.length,shown=flights.length;
-  var countStr=filterText?'<span class="count">'+shown+'</span> von '+total+' Flügen':total+' Flug'+(total===1?'':'e');
+  var countStr=filterText?'<span class="count">'+shown+'</span> von '+total+' Flügen':total+(total===1?' Flug':' Flüge');
   meta.innerHTML="<b>"+esc(af.name||ICAO)+"</b>"+(af.elevation?" · "+tsd(af.elevation)+" m":"")+" · "+countStr+(isToday(currentDate)?" · aktualisiert "+pad(now.getHours())+":"+pad(now.getMinutes()):"");
   if(!allFlights.length){content.className="status";content.textContent="Keine Flüge an diesem Tag.";return}
   if(!flights.length){content.className="status";content.textContent='Keine Flüge passen zum Filter „'+filterText+'".';return}
