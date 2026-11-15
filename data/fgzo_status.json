@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "fetched_at_utc": "2026-11-15T12:11:21+00:00",
+  "fetched_at_utc": "2026-11-15T12:21:12+00:00",
   "failed_at_utc": null,
   "error": null,
   "source": "https://fgzo.ch/status/",
@@ -12,5 +12,7 @@
   "runway_line": "Runway condition LSZK / 15.11.2026 / 0830 LT / SLIPPERY WET",
   "runway_condition": "SLIPPERY WET",
   "contact": "Kontakt: +41 77 460 52 04 / L. Peduzzi, allenfalls +41 44 954 12 52 / C-Büro",
-  "updated": "15.11.2026, 08:28"
+  "updated": "15.11.2026, 08:28",
+  "flaeche": "offen",
+  "flaeche_grund": null
 }
