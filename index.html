@@ -2015,10 +2015,9 @@
 
       var cams = Array.isArray(d.kameras) ? d.kameras.filter(function (k) { return k && typeof k === 'object'; }) : [];
       if (cams.length) {
-        var probs = 0, camHtml = '';
+        var camHtml = '';
         cams.forEach(function (k) {
           var p = (k.problem && k.problem !== 'keins') ? aiMap(AI_MAPS.problem, k.problem) : '';
-          if (p) probs++;
           var age = (typeof k.bildalter_min === 'number' && isFinite(k.bildalter_min))
             ? ' <span class="ai-muted">(Bild ' + Math.round(k.bildalter_min) + ' min alt)</span>' : '';
           var tags = Array.isArray(k.tags) ? k.tags.filter(function (t) { return typeof t === 'string'; })
@@ -2027,16 +2026,7 @@
             (p ? ' ⚠ <span class="ai-prob">' + p + '</span>' : '') + '<br>' + escHtml(k.satz || '') +
             (tags ? ' <span class="ai-muted">· ' + tags + '</span>' : '') + '</div>';
         });
-        html += '<details class="ai-cams"><summary class="ai-sec">Kameras (' + cams.length + ')' +
-          (probs ? ' · ' + probs + ' mit Problem' : '') + '</summary>' + camHtml + '</details>';
-      }
-
-      // «Nicht ausgewertet» gehört nur bei ok===true sicher zum angezeigten Briefing
-      var inp = (d.ok === true && d.inputs && typeof d.inputs === 'object') ? d.inputs : null;
-      var fehl = (inp && Array.isArray(inp.fehlend)) ? inp.fehlend.filter(function (f) { return f && typeof f === 'object'; }) : [];
-      if (fehl.length) {
-        html += '<div class="ai-sec">Nicht ausgewertet</div>';
-        fehl.forEach(function (f) { html += '<div class="ai-row"><b>' + escHtml(f.titel || '') + '</b> – ' + escHtml(f.grund || '') + '</div>'; });
+        html += '<details class="ai-cams"><summary class="ai-sec">Kameras (' + cams.length + ')</summary>' + camHtml + '</details>';
       }
 
       var slot = '';
