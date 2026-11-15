@@ -1,0 +1,19 @@
+{
+  "stats": {
+    "month": "2026-11",
+    "cost_month_usd": 0.4,
+    "attempts_month": 1,
+    "date": "2026-11-15",
+    "cost_today_usd": 0.4,
+    "attempts_today": 1,
+    "budget_month_usd": 80.0,
+    "reserved_usd": 0.4
+  },
+  "schema_version": 1,
+  "ok": false,
+  "attempted_at_utc": "2026-11-15T07:03:44+00:00",
+  "slot": "sunrise",
+  "reserved_run": "43688186961.1",
+  "fail_streak": 1,
+  "error": "Versuch läuft oder wurde abgebrochen (kein Ergebnis gespeichert)"
+}
