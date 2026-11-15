@@ -1,19 +1,195 @@
 {
   "stats": {
     "month": "2026-11",
-    "cost_month_usd": 0.4,
+    "cost_month_usd": 0.1527,
     "attempts_month": 1,
     "date": "2026-11-15",
-    "cost_today_usd": 0.4,
+    "cost_today_usd": 0.1527,
     "attempts_today": 1,
     "budget_month_usd": 80.0,
-    "reserved_usd": 0.4
+    "reserved_usd": 0.0
   },
   "schema_version": 1,
-  "ok": false,
+  "ok": true,
   "attempted_at_utc": "2026-11-15T07:03:44+00:00",
   "slot": "sunrise",
   "reserved_run": "43688186961.1",
-  "fail_streak": 1,
-  "error": "Versuch läuft oder wurde abgebrochen (kein Ergebnis gespeichert)"
+  "fail_streak": 0,
+  "error": null,
+  "sun": {
+    "rise": "07:29",
+    "set": "16:50"
+  },
+  "inputs": {
+    "kameras": [
+      "Speck – Runway 30",
+      "Speck – Tankstelle",
+      "Bachtel",
+      "Wangen-Lachen – Cam 1",
+      "Rapperswil",
+      "Richtung Tödi",
+      "Klausenpass",
+      "Gotthardpass",
+      "Ambri Tarnolgio"
+    ],
+    "fehlend": [
+      {
+        "titel": "Oberalppass",
+        "grund": "Bild seit 22 Tage unverändert (Kamera eingefroren?)"
+      }
+    ]
+  },
+  "generated_at_utc": "2026-11-15T07:03:49+00:00",
+  "model": "claude-opus-5-5",
+  "served_by": "claude-opus-5-5",
+  "effort": "medium",
+  "request_id": "req_011Ch4HcQaFi4uQWm4Z56eqK",
+  "usage": {
+    "input_tokens": 20134,
+    "output_tokens": 3609,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "attempts": 1,
+    "cost_usd": 0.1527
+  },
+  "briefing": {
+    "headline": "Bedeckt, Basis um 2900 m, Alpen frei, Föhntendenz",
+    "text": "Platz offen, Piste laut FGZO trocken. Am Platz windstill, mehrschichtige Bewölkung um 7/8, Basis der Hauptschicht um 2900 m, einzelne Fetzen um 2400 m; Sicht über 40 km. Glarner und Urner Alpen unter der Decke frei, Neuschnee ab rund 1500 m, in der Leventina Talnebel. Föhn-Index +7,4 hPa: Südföhn wahrscheinlich, laut Prognose auf 3000 m SW 30–35 kt. Prognose: am Vormittag vereinzelt Tropfen möglich, ab etwa 14 Uhr Auflockerung, um 15 Uhr fast wolkenlos.",
+    "lage": "gut"
+  },
+  "himmel": {
+    "bedeckung_achtel": 7,
+    "wolkenbasis_m": 2900,
+    "basis_quelle": "kombiniert",
+    "sicht": "gut",
+    "sicht_km": 50,
+    "nebel": "kein",
+    "nebel_obergrenze_m": null,
+    "alpen": "frei",
+    "schneegrenze_m": 1500,
+    "niederschlag": "kein",
+    "zusammenfassung": "Mittelhohe, mehrschichtige Bewölkung mit Basis um 2900 m über dem Mittelland, darunter sehr gute Sicht bis zu den Alpen. Föhn-Index +7,4 hPa deutet auf Südföhn hin.",
+    "regionen": [
+      {
+        "region": "platz",
+        "zustand": "Bedeckt mit hoher Basis, windstill, Piste trocken, gute Bodensicht."
+      },
+      {
+        "region": "zuercher_oberland",
+        "zustand": "Hügel frei, dunkle Decke deutlich über den Gipfeln, Fernsicht bis zu den Alpen."
+      },
+      {
+        "region": "voralpen",
+        "zustand": "Speer, Mürtschenstock und Hirzli-Kette frei, Bewölkung über den Gipfeln, Neuschnee an den Höhen."
+      },
+      {
+        "region": "glarner_alpen",
+        "zustand": "Tödi frei, aufgelockerte Bewölkung mit Lücken, Neuschnee an den Flanken ab etwa 1500 m."
+      },
+      {
+        "region": "zentralalpen",
+        "zustand": "Klausengebiet frei mit Neuschnee, Wolken an der Uri-Rotstock-Gruppe; Gotthard ohne verwertbares Bild."
+      },
+      {
+        "region": "alpensuedseite",
+        "zustand": "Bedeckt, Gipfel der Campo-Tencia-Gruppe frei, Talnebel in der Leventina bis etwa 1200 m."
+      }
+    ]
+  },
+  "kameras": [
+    {
+      "titel": "Speck – Runway 30",
+      "key": "https://wsrv.nl/?url=fgzo.ch/webcam/images/fgzo.jpg",
+      "bildalter_min": 0,
+      "satz": "Graue, geschlossene Wolkendecke weit über den Baumwipfeln, Piste trocken, leichter Dunst im Westen.",
+      "tags": [
+        "bedeckt",
+        "dunst"
+      ],
+      "problem": "keins"
+    },
+    {
+      "titel": "Speck – Tankstelle",
+      "key": "https://wsrv.nl/?url=fgzo.ch/webcam/images/fgzo2.jpg",
+      "bildalter_min": 0,
+      "satz": "Bedeckter Himmel, Oberland-Hügel bis Bachtel klar sichtbar, Windsack hängt schlaff, Vorfeld trocken.",
+      "tags": [
+        "bedeckt"
+      ],
+      "problem": "keins"
+    },
+    {
+      "titel": "Bachtel",
+      "key": "https://wsrv.nl/?url=bachtel.it-wms.com/panorama1_raw.jpg",
+      "bildalter_min": 29,
+      "satz": "Dunkle Wolkendecke über dem Mittelland, Säntis bis Glärnisch verschneit und frei, Morgenrot im Osten.",
+      "tags": [
+        "bedeckt",
+        "schnee"
+      ],
+      "problem": "keins"
+    },
+    {
+      "titel": "Wangen-Lachen – Cam 1",
+      "key": "cam1",
+      "bildalter_min": 4,
+      "satz": "Bedeckt mit hoher Basis, Speer und Berge am Obersee frei, Sonne tief im Osten, Vorfeld trocken.",
+      "tags": [
+        "bedeckt",
+        "gegenlicht"
+      ],
+      "problem": "keins"
+    },
+    {
+      "titel": "Rapperswil",
+      "key": "https://wsrv.nl/?url=images-webcams.windy.com/91/1614073791/current/original/1614073791.jpg",
+      "bildalter_min": 9,
+      "satz": "Gegenlicht bei Sonnenaufgang, Mürtschenstock und Flumserberge frei und verschneit, See ruhig.",
+      "tags": [
+        "gegenlicht",
+        "schnee"
+      ],
+      "problem": "keins"
+    },
+    {
+      "titel": "Richtung Tödi",
+      "key": "https://wsrv.nl/?url=decoral.ch/Kameratoedi.jpg",
+      "bildalter_min": 4,
+      "satz": "Tödi frei, aufgelockerte Bewölkung mit Lücken, Neuschnee an den oberen Talflanken.",
+      "tags": [
+        "schnee"
+      ],
+      "problem": "keins"
+    },
+    {
+      "titel": "Klausenpass",
+      "key": "https://wsrv.nl/?url=webcam.hotel-klausenpass.ch/panorama.jpg",
+      "bildalter_min": 4,
+      "satz": "Gipfel frei mit Neuschnee bis unter Kamerahöhe, Wolken an der Uri-Rotstock-Gruppe im Hintergrund.",
+      "tags": [
+        "schnee"
+      ],
+      "problem": "keins"
+    },
+    {
+      "titel": "Gotthardpass",
+      "key": "https://wsrv.nl/?url=webcam.afbn.ch/H_OSG_017,200_S_KAM_001_Sued.jpg",
+      "bildalter_min": 4,
+      "satz": "Nur unscharfe graue Flecken ohne Konturen, vermutlich Schnee oder Eis auf der Scheibe.",
+      "tags": [],
+      "problem": "linse_nass"
+    },
+    {
+      "titel": "Ambri Tarnolgio",
+      "key": "https://wsrv.nl/?url=www.tarnolgio.ch/webcam00.jpg",
+      "bildalter_min": 4,
+      "satz": "Bedeckt, verschneite Gipfel frei, Talnebel in der Leventina unterhalb der Kamera.",
+      "tags": [
+        "bedeckt",
+        "nebel",
+        "schnee"
+      ],
+      "problem": "keins"
+    }
+  ]
 }
