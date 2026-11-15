@@ -15,8 +15,12 @@ jobs:
       contents: write
 
     steps:
+      # ref: Stand des Branches beim START des Jobs (nicht beim Dispatch), damit ein
+      # wartender Lauf sieht, was der vorherige gepusht hat
       - name: Repository auschecken
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref }}
 
       - name: METAR LSZK herunterladen
         run: |
@@ -53,11 +57,12 @@ jobs:
           echo "Finaler Inhalt:"
           cat metar-lszk.json
 
+      # Föhn-Index = QNH Lugano-Agno (LSZA) minus QNH Zürich-Kloten (LSZH) aus den METAR
+      # -> data/metar_foehn.json (Seite und KI-Briefing lesen beide diese Datei)
+      - name: METAR LSZH und LSZA für den Föhn-Index
+        continue-on-error: true
+        run: python3 scripts/fetch_metar_foehn.py
+
       - name: Commit und Push
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add metar-lszk.json
-          git diff --staged --quiet && echo "Keine Änderung" || \
-            git commit -m "METAR LSZK: $(date -u '+%Y-%m-%d %H:%M') UTC"
-          git push
+          bash scripts/commit_and_push.sh "METAR LSZK: $(date -u '+%Y-%m-%d %H:%M') UTC" metar-lszk.json data/metar_foehn.json
