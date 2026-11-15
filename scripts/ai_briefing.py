@@ -170,13 +170,15 @@ Grundsätze
 - Unbrauchbare Bilder (Nacht, schwarzes Bild, Platzhalter oder Fehlermeldung, nasse oder verschmutzte Linse) markierst du mit dem passenden "problem" und stützt dich nicht darauf. Ein gleichmässig graues Bild einer Bergkamera ist dagegen meist eine Beobachtung: Die Kamera steckt in der Wolke, die Basis liegt dort unter der Kamerahöhe (Tag "in_wolke", problem "keins").
 - Tag "flugbetrieb" nur bei Flugzeugen in der Luft oder beim Rollen; abgestellte Flugzeuge zählen nicht.
 - Der Platzstatus der FGZO ist massgebend. Die Zeile «Platz für Flächenflugzeuge» ist verbindlich. Die Leser fliegen Flächenflugzeuge: Ist der Platz nur für Helikopter offen, gilt er als gesperrt; schreibe dann nie «Platz offen». Bestehen Einschränkungen (gesperrte Rollwege, Pistenzustand, Schliessung), erwähnst du sie sinngemäss im Briefing. Den Pistenzustand übernimmst du wörtlich und unübersetzt so, wie ihn fgzo.ch meldet (zum Beispiel «SLIPPERY WET» oder «DRY»). Erfinde keine Einschränkungen und keine NOTAM.
+- Thermik (nur April bis September): Enthält der Kontext den Block «Thermikprognose Alpenraum», sind dessen Zahlen vorgerechnet und verbindlich; rechne nichts neu und erfinde keine Werte für Regionen, die dort fehlen. Es ist eine Modellabschätzung: Kennzeichne sie immer als Prognose. Liegt die Arbeitshöhe unter der Kammhöhe, sagst du das. Gewitterrisiko «mittel» oder «hoch» und starken Höhenwind (zerrissene Thermik, Lee) nennst du ausdrücklich. Ist das Fenster zum Zeitpunkt des Briefings teilweise vorbei, beschreibst du nur den Rest; ist es ganz vorbei, sagst du das in einem Satz. Zeigen die Kamerabilder etwas anderes als die Prognose (zum Beispiel bereits Überentwicklung oder Abschirmung), nennst du den Unterschied. Fehlt der Block, setzt du briefing.thermik auf null und erwähnst Thermik im Alpenraum nicht.
 - Keine Empfehlung, ob geflogen werden soll, keine Anrede, keine Sicherheitsfloskeln: Der Haftungshinweis steht bereits auf der Seite.
 
 Sprache und Form
 - Deutsch in Schweizer Rechtschreibung (ss statt ß), sachlich und knapp, in ganzen Sätzen. Fliegerische Fachbegriffe sind erwünscht (Basis, Hochnebel, Bise, Föhn, Thermik, Quellbewölkung).
 - Einheiten: Wind in kt, Höhen in m ü. M., Sicht in km, Temperaturen in °C.
 - briefing.headline: höchstens 60 Zeichen, das Wichtigste zuerst, zum Beispiel «Hochnebel bis 900 m, darüber sonnig» oder «Alpen frei, Basis um 1800 m». Steht bei «Platz für Flächenflugzeuge» GESPERRT, beginnt die Headline mit «Platz gesperrt», zum Beispiel «Platz gesperrt (nur Heli), Hochnebel bis 900 m».
-- briefing.text: 3 bis 5 Sätze, höchstens 700 Zeichen. Der erste Satz nennt immer den Platzstatus in Kurzform, zum Beispiel «Platz offen, LOW TRAFFIC, Betriebsschluss 16:52, Piste SLIPPERY WET.», «Platz gesperrt: nur Helikopterbetrieb.» oder «Platz geschlossen.»; ist der Status unbekannt, sagst du das. Danach weitere Einschränkungen aus dem Hinweistext (falls vorhanden), dann Lage am Platz, Bewölkung, Basis und Sicht, Zustand der Alpen, Entwicklung der nächsten Stunden laut Prognose. Die Regenwahrscheinlichkeit der nächsten 3 Stunden nennst du immer als Zahl in Prozent.
+- briefing.text: 3 bis 5 Sätze, höchstens 700 Zeichen; mit Block «Thermikprognose Alpenraum» kommen am Schluss 1 bis 2 Sätze zur Thermik dazu (dann höchstens 900 Zeichen). Der erste Satz nennt immer den Platzstatus in Kurzform, zum Beispiel «Platz offen, LOW TRAFFIC, Betriebsschluss 16:52, Piste SLIPPERY WET.», «Platz gesperrt: nur Helikopterbetrieb.» oder «Platz geschlossen.»; ist der Status unbekannt, sagst du das. Danach weitere Einschränkungen aus dem Hinweistext (falls vorhanden), dann Lage am Platz, Bewölkung, Basis und Sicht, Zustand der Alpen, Entwicklung der nächsten Stunden laut Prognose. Die Regenwahrscheinlichkeit der nächsten 3 Stunden nennst du immer als Zahl in Prozent.
+- briefing.thermik: 1 bis 2 Sätze, höchstens 300 Zeichen, als Prognose formuliert: wo und wann die Thermik trägt, typische Arbeitshöhe und Basis bzw. Blauthermik, Gewitter- und Windvorbehalt. Kein Wert, der nicht im Block steht.
 - Prognose-Wortwahl: Ab 50 % Regenwahrscheinlichkeit schreibst du «Regen wahrscheinlich», bei 30 bis 49 % «Regen möglich», darunter höchstens «einzelne Tropfen nicht ausgeschlossen». «Wolkenlos» oder «fast wolkenlos» nur bei weniger als 15 % Gesamtbedeckung, bei 15 bis 40 % «leicht bewölkt», bei 40 bis 75 % «aufgelockert» oder «teilweise bewölkt», darüber «stark bewölkt» oder «bedeckt». Sieh die ganze Prognosetabelle durch: Kehrt sich die Entwicklung im Zeitraum wieder um (zum Beispiel erneute Bewölkungszunahme oder Regen ab 17 Uhr), erwähnst du das mit Uhrzeit.
 - himmel.zusammenfassung: 1 bis 2 Sätze. himmel.regionen: je Region ein kurzer Satz, nur für Regionen, zu denen ein brauchbares Bild vorliegt.
 - kameras: jede gezeigte Kamera genau einmal, titel exakt wie angegeben, satz höchstens 120 Zeichen über das, was auf dem Bild zu sehen ist (nicht über die Kamera)."""
@@ -201,10 +203,13 @@ def _obj(props: dict) -> dict:
 BRIEFING_SCHEMA = _obj({
     "briefing": _obj({
         "headline": {"type": "string", "description": "höchstens 60 Zeichen"},
-        "text": {"type": "string", "description": "3 bis 5 Sätze, höchstens 700 Zeichen, mit Regenwahrscheinlichkeit der nächsten 3 h"},
+        "text": {"type": "string", "description": "3 bis 5 Sätze (mit Thermikblock bis 7), höchstens 900 Zeichen, mit Regenwahrscheinlichkeit der nächsten 3 h"},
         "lage": {"type": "string", "enum": ["gut", "maessig", "schlecht"],
                  "description": "Gesamteindruck für Lokalflüge (Sicht, Bewölkung, Föhn, Niederschlag); höchstens maessig "
                                 "bei Föhn-Index ab +4 hPa oder Regenwahrscheinlichkeit ab 50 % in den nächsten 3 h"},
+        "thermik": _nullable({"type": "string",
+                              "description": "1 bis 2 Sätze Thermikprognose Alpenraum; null, wenn der Kontext keinen "
+                                             "Block «Thermikprognose Alpenraum» enthält"}),
     }),
     "himmel": _obj({
         "bedeckung_achtel": _nullable({"type": "integer", "enum": list(range(9)),
@@ -709,6 +714,211 @@ def forecast_text(h) -> str:
     return "Prognose Open-Meteo für LSZK, nächste 12 Stunden (Lokalzeit):\n" + "\n".join(rows)
 
 
+# ── Thermikprognose Alpenraum (Open-Meteo, Parcel-Methode wie renderThermik() in index.html) ──
+# Only April to September. The numbers per region are computed here and are binding for the
+# model; it only writes the summary (briefing.thermik). Points sit on valley / terrace height
+# where the slopes trigger; the ridge height only goes to the model as context.
+THERMIK_MONATE = (4, 9)      # 1 April to 30 September (local date)
+TH_EXC = 1.5                 # K superadiabatic excess, like the page
+TH_DALR = 0.0098             # K/m
+TH_LCL_M_PER_K = 125.0       # cumulus base per degree spread (page and prompt use the same value)
+TH_LEVELS = (800, 700, 600, 500)
+TH_ZIEL_AGL = 1200           # trigger target above the point, m
+TH_CAPE_MITTEL, TH_CAPE_HOCH = 500, 1000   # like the dashboard's Ampel
+TH_WIND_STARK_KT = 25
+THERMIK_POINTS = [
+    {"key": "alpstein", "name": "Alpstein/Churfirsten", "ort": "Wildhaus", "lat": 47.203, "lon": 9.352, "elev": 1100, "kamm": 2200},
+    {"key": "mythen", "name": "Mythen/Muotathal", "ort": "Ibergeregg", "lat": 47.017, "lon": 8.727, "elev": 1400, "kamm": 2000},
+    {"key": "glarner_alpen", "name": "Glarner Alpen", "ort": "Braunwald", "lat": 46.938, "lon": 8.998, "elev": 1300, "kamm": 2700},
+    {"key": "urseren", "name": "Urseren/Gotthard", "ort": "Andermatt", "lat": 46.635, "lon": 8.594, "elev": 1440, "kamm": 2900},
+    {"key": "surselva", "name": "Surselva", "ort": "Disentis", "lat": 46.703, "lon": 8.853, "elev": 1150, "kamm": 2900},
+    {"key": "mittelbuenden", "name": "Mittelbünden/Julier", "ort": "Savognin", "lat": 46.597, "lon": 9.598, "elev": 1200, "kamm": 2900},
+    {"key": "davos", "name": "Davos/Flüela", "ort": "Davos", "lat": 46.800, "lon": 9.830, "elev": 1560, "kamm": 2800},
+]
+THERMIK_URL = ("https://api.open-meteo.com/v1/forecast"
+               "?latitude=" + ",".join(str(p["lat"]) for p in THERMIK_POINTS)
+               + "&longitude=" + ",".join(str(p["lon"]) for p in THERMIK_POINTS)
+               + "&elevation=" + ",".join(str(p["elev"]) for p in THERMIK_POINTS)
+               + "&hourly=temperature_2m,dew_point_2m,cloud_cover,precipitation,weather_code,cape,"
+                 "wind_speed_700hPa,wind_direction_700hPa,"
+               + ",".join(f"temperature_{p}hPa,geopotential_height_{p}hPa" for p in TH_LEVELS)
+               + "&forecast_days=1&wind_speed_unit=kn&timezone=Europe%2FZurich")
+
+
+def thermik_saison(day: date) -> bool:
+    return THERMIK_MONATE[0] <= day.month <= THERMIK_MONATE[1]
+
+
+def fetch_thermik(session, retry: bool = True) -> list:
+    """One multi-point request; the answer is a list in the order of THERMIK_POINTS."""
+    for attempt_no in (1, 2):
+        try:
+            r = session.get(THERMIK_URL, timeout=20, headers={"User-Agent": UA})
+            r.raise_for_status()
+            data = r.json()
+            if not isinstance(data, list) or len(data) != len(THERMIK_POINTS):
+                raise ValueError("unerwartete Antwort (Anzahl Punkte)")
+            return data
+        except Exception as e:  # noqa: BLE001
+            if attempt_no == 2 or not retry:
+                raise
+            print(f"Open-Meteo Thermik attempt 1 failed ({type(e).__name__}: {e}), retrying", file=sys.stderr)
+            time.sleep(3)
+
+
+def _fnum(v):
+    return float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) else None
+
+
+def thermik_calc(h, elev, ziel, end_cap, levels=TH_LEVELS, lcl_k=TH_LCL_M_PER_K, day=None):
+    """Port of renderThermik() (index.html). h: Open-Meteo hourly block, end_cap: last usable
+    hour (decimal, sunset - 1.5 h). Returns None without a usable profile."""
+    if not isinstance(h, dict):
+        return None
+
+    def col(key, i):
+        try:
+            return _fnum(h[key][i])
+        except (KeyError, IndexError, TypeError):
+            return None
+
+    hours = []
+    for i, t in enumerate(h.get("time") or []):
+        t = str(t)
+        if day is not None and t[:10] != day:
+            continue                                  # only today's local hours
+        t0, d0 = col("temperature_2m", i), col("dew_point_2m", i)
+        if t0 is None or not t[11:13].isdigit():
+            continue
+        pts = [(float(elev), t0)]
+        for p in levels:
+            z, tt = col(f"geopotential_height_{p}hPa", i), col(f"temperature_{p}hPa", i)
+            if z is None or tt is None:
+                break                                 # like the page: stop at the first gap
+            if z <= pts[-1][0] + 100:
+                continue                              # level below / at the ground
+            pts.append((z, tt))
+        if len(pts) < 2:
+            continue
+        top = float(elev)
+        for (h1, t1), (h2, t2) in zip(pts, pts[1:]):
+            p1 = (t0 + TH_EXC - TH_DALR * (h1 - elev)) - t1
+            p2 = (t0 + TH_EXC - TH_DALR * (h2 - elev)) - t2
+            if p2 > 0:
+                top = h2
+                continue
+            if p1 <= 0:
+                break
+            top = h1 + (h2 - h1) * (p1 / (p1 - p2))
+            break
+        hours.append({"zeit": t[11:16], "hh": int(t[11:13]), "t0": t0, "top": top,
+                      "lcl": elev + lcl_k * max(0.0, t0 - (d0 if d0 is not None else t0)), "pts": pts,
+                      "cc": col("cloud_cover", i), "pr": col("precipitation", i) or 0.0,
+                      "cape": col("cape", i) or 0.0, "wc": col("weather_code", i),
+                      "ws": col("wind_speed_700hPa", i), "wd": col("wind_direction_700hPa", i)})
+    if not hours:
+        return None
+
+    noon = next((x for x in hours if x["hh"] == 12), hours[min(12, len(hours) - 1)])
+    trigger = None
+    for (z1, t1), (z2, t2) in zip(noon["pts"], noon["pts"][1:]):
+        if z1 <= ziel <= z2:
+            trigger = t1 + (t2 - t1) * (ziel - z1) / (z2 - z1) + TH_DALR * (ziel - elev) - TH_EXC
+            break
+
+    def usable(x):
+        if x["hh"] < 8 or x["hh"] > end_cap:
+            return False
+        if (x["cc"] is not None and x["cc"] >= 85) or x["pr"] >= 0.5:
+            return False
+        return x["t0"] >= trigger if trigger is not None else (x["top"] - elev) >= 400
+
+    nutz = [x for x in hours if usable(x)]
+    tag = [x for x in hours if 8 <= x["hh"] <= 20]
+    cape = max([x["cape"] for x in tag] or [0.0])
+    gewitter = any(x["wc"] is not None and x["wc"] >= 95 for x in tag)
+    risiko = "hoch" if gewitter or cape >= TH_CAPE_HOCH else ("mittel" if cape >= TH_CAPE_MITTEL else "gering")
+    wind = [x for x in (nutz or [x for x in hours if 11 <= x["hh"] <= 17]) if x["ws"] is not None]
+    w = max(wind, key=lambda x: x["ws"]) if wind else None
+
+    def r100(m):
+        return int(round(m / 100.0)) * 100
+
+    out = {"nutzbar": bool(nutz), "von": None, "bis": None, "arbeitshoehe_m": None, "um": None,
+           "basis_m": None, "blau": None, "top_m": None,
+           "ausloesetemp_c": None if trigger is None else round(trigger, 1),
+           "ausloesung_ab": next((x["zeit"] for x in hours if trigger is not None and x["t0"] >= trigger), None),
+           "cape_max": int(round(cape)), "gewitter": gewitter, "risiko": risiko,
+           "wind700_kt": None if w is None else int(round(w["ws"])),
+           "wind700_dir": None if w is None or w["wd"] is None else int(round(w["wd"])),
+           "wind_stark": bool(w and w["ws"] >= TH_WIND_STARK_KT), "gradienten": None}
+    if nutz:
+        best = nutz[0]
+        for x in nutz:                                 # first hour wins ties, like the page
+            if min(x["top"], x["lcl"]) > min(best["top"], best["lcl"]):
+                best = x
+        blau = best["top"] < best["lcl"]
+        out.update(von=nutz[0]["zeit"], bis=nutz[-1]["zeit"], um=best["zeit"],
+                   arbeitshoehe_m=r100(min(best["top"], best["lcl"])), top_m=r100(best["top"]),
+                   blau=blau, basis_m=None if blau else r100(best["lcl"]),
+                   gradienten=[round(-(b[1] - a[1]) / (b[0] - a[0]) * 100, 2)
+                               for a, b in zip(best["pts"], best["pts"][1:])])
+    return out
+
+
+def thermik_forecast(session, now: datetime, sset: datetime, retry: bool = True) -> list:
+    """Per region the pre-computed numbers; regions without a profile are left out."""
+    local, s = now.astimezone(TZ), sset.astimezone(TZ)
+    end_cap = s.hour + s.minute / 60 - 1.5
+    out = []
+    for p, d in zip(THERMIK_POINTS, fetch_thermik(session, retry)):
+        r = thermik_calc((d or {}).get("hourly") if isinstance(d, dict) else None,
+                         p["elev"], p["elev"] + TH_ZIEL_AGL, end_cap, day=local.date().isoformat())
+        if r is not None:
+            out.append({"region": p["key"], **r})
+    if not out:
+        raise ValueError("kein Punkt mit auswertbarem Profil")
+    return out
+
+
+def thermik_text(regs: list) -> str:
+    by = {p["key"]: p for p in THERMIK_POINTS}
+    rows = []
+    for r in regs:
+        p = by[r["region"]]
+        head = f'{p["name"]} ({p["ort"]} {p["elev"]} m, Kammhöhe ca. {p["kamm"]} m): '
+        if r["nutzbar"]:
+            head += (f'Fenster {r["von"]}–{r["bis"]}, Arbeitshöhe ca. {r["arbeitshoehe_m"]} m (um {r["um"]}), '
+                     + ("Blauthermik (Basis läge über der Thermikobergrenze)" if r["blau"]
+                        else f'Cumulus, Basis ca. {r["basis_m"]} m, Thermikobergrenze ca. {r["top_m"]} m'))
+        else:
+            head += "keine nutzbare Thermik"
+        head += f', CAPE max {r["cape_max"]} J/kg, Gewitterrisiko {r["risiko"]}'
+        if r["gewitter"]:
+            head += " (Gewitter im Modell)"
+        if r["wind700_kt"] is not None:
+            head += f', Wind 700 hPa {r["wind700_dir"] if r["wind700_dir"] is not None else "–"}°/{r["wind700_kt"]} kt'
+            if r["wind_stark"]:
+                head += " (stark: Thermik zerrissen, Lee beachten)"
+        if r["gradienten"]:
+            head += ", Gradienten ab Boden K/100 m: " + "/".join(f"{g:.2f}" for g in r["gradienten"])
+        rows.append(head + ".")
+    return ("Thermikprognose Alpenraum für heute (vorgerechnet aus dem Open-Meteo-Höhenprofil, Parcel-Methode, "
+            "Höhen in m ü. M., Zeiten Lokalzeit; Modellabschätzung, keine Beobachtung):\n" + "\n".join(rows))
+
+
+def thermik_fallback(regs: list) -> str:
+    ok = [r for r in regs if r["nutzbar"]]
+    if not ok:
+        return "Prognose: heute keine nutzbare Thermik im Alpenraum."
+    lo, hi = min(r["arbeitshoehe_m"] for r in ok), max(r["arbeitshoehe_m"] for r in ok)
+    txt = (f"Prognose: nutzbare Thermik in {len(ok)} von {len(regs)} Regionen, Arbeitshöhen "
+           + (f"um {lo} m" if lo == hi else f"{lo} bis {hi} m") + ".")
+    if any(r["risiko"] == "hoch" for r in regs):
+        txt += " Gewitterrisiko hoch."
+    return txt
+
+
 def safe_text(label: str, fn, *args) -> str:
     """One broken input must not cost the whole briefing: it is reported as unavailable."""
     try:
@@ -832,6 +1042,8 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
                                    default=(None, "Föhn-Index: nicht verfügbar."))
     hourly = attempt("Prognose Open-Meteo", fetch_forecast, session)
     rain3 = attempt("Regenwahrscheinlichkeit 3 h", rain_next_3h, hourly, now)
+    thermik = (attempt("Thermikprognose", thermik_forecast, session, now, sset, hourly is not None)
+               if thermik_saison(local.date()) else None)
     caps = []
     if foehn_idx is not None and foehn_idx >= 4:
         caps.append(f"Föhn-Index {signed(foehn_idx)} hPa")
@@ -853,6 +1065,7 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
         safe_text("Prognose Open-Meteo", forecast_text, hourly),
         (f"Regenwahrscheinlichkeit der nächsten 3 Stunden (Open-Meteo): höchstens {rain3} %."
          if rain3 is not None else "Regenwahrscheinlichkeit der nächsten 3 Stunden: nicht verfügbar."),
+        safe_text("Thermikprognose", thermik_text, thermik) if thermik else "",
         f"Obergrenze für briefing.lage: maessig (Grund: {cap_reason})." if cap_reason else "",
     ] if part)
 
@@ -943,7 +1156,7 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
     if alpen == "frei" and not ridge_clear:
         alpen = "teilweise"
         corrections.append("alpen frei -> teilweise (kein brauchbares, freies Bild vom Alpenhauptkamm)")
-    headline, text = clip(b.get("headline"), 80), clip(b.get("text"), 900)
+    headline, text = clip(b.get("headline"), 80), clip(b.get("text"), 1100)
     if platz["flaeche"] == "gesperrt":   # fixed-wing pilots: a closed airfield must be the first thing they read
         if PLATZ_OFFEN_RE.search(headline) or PLATZ_OFFEN_RE.search(text):
             headline, text = PLATZ_OFFEN_RE.sub("Platz gesperrt", headline), PLATZ_OFFEN_RE.sub("Platz gesperrt", text)
@@ -952,8 +1165,22 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
             headline = clip(f"Platz gesperrt: {headline}" if headline else "Platz gesperrt", 80)
             corrections.append("headline: «Platz gesperrt» vorangestellt")
         if not PLATZ_ZU_START_RE.match(text):   # an unrelated «gesperrt» further on does not count
-            text = clip(f'Platz gesperrt: {platz["grund"] or "siehe fgzo.ch"}. {text}', 900)
+            text = clip(f'Platz gesperrt: {platz["grund"] or "siehe fgzo.ch"}. {text}', 1100)
             corrections.append("text: Platzsperre vorangestellt")
+    thermik_out = None   # always written: no stale summer values after 30 September or an outage
+    if thermik:
+        t_ai = clip(b.get("thermik"), 300) if isinstance(b.get("thermik"), str) else ""
+        if not any(r["nutzbar"] for r in thermik):
+            t_sum = thermik_fallback(thermik)             # fixed wording on days without usable thermals
+        elif t_ai:
+            t_sum = t_ai
+        else:
+            t_sum = thermik_fallback(thermik)
+            corrections.append("thermik: Zusammenfassung aus den Rechenwerten (KI lieferte keine)")
+        thermik_out = {"quelle": "Open-Meteo", "tag": local.date().isoformat(), "zusammenfassung": t_sum,
+                       "regionen": [{k: r[k] for k in ("region", "nutzbar", "von", "bis", "arbeitshoehe_m", "basis_m",
+                                                         "blau", "cape_max", "risiko", "wind700_kt", "wind700_dir",
+                                                         "wind_stark")} for r in thermik]}
     for c in corrections:
         print(f"correction: {c}", file=sys.stderr)
     sicht_km = int_or_none(sky.get("sicht_km"), 0, 200)
@@ -962,7 +1189,7 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
 
     record.update(
         ok=True, error=None, fail_streak=0, generated_at_utc=iso(now), model=MODEL, served_by=served_by,
-        effort=BRIEFING_EFFORT, request_id=req_id, usage=usage, korrekturen=corrections,
+        effort=BRIEFING_EFFORT, request_id=req_id, usage=usage, korrekturen=corrections, thermik=thermik_out,
         briefing={"headline": headline, "text": text, "lage": lage}, platz=platz,
         himmel={
             "bedeckung_achtel": int_or_none(sky.get("bedeckung_achtel"), 0, 8),
