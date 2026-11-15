@@ -170,6 +170,36 @@
     .brf-src a { color: var(--accent); text-decoration: none; }
     .brf-src a:hover { text-decoration: underline; }
 
+    /* KI-Briefing: Header-Button (Lage-Punkt, Uhrzeit, „neu") + eigenes Detail-Fenster */
+    .ai-btn { position: relative; }
+    .ai-time { font-weight: 400; opacity: 0.8; }
+    .ai-time:not(:empty)::before { content: ' · '; }
+    .ai-new { margin-left: 4px; }
+    .ai-new[hidden] { display: none; }
+    .ai-dot.stale { background: transparent !important; box-shadow: inset 0 0 0 2px #64748b; }
+    .ai-dot.loading { animation: ai-pulse 1.2s ease-in-out infinite; }
+    @keyframes ai-pulse { 50% { opacity: 0.35; } }
+    .top-btn.ai-btn:hover .ai-new { background: var(--bg); color: var(--accent); }
+    #ai-modal .brf-modal-card { max-width: 640px; }
+    .ai-headline { font-size: 1rem; font-weight: 600; display: flex; gap: 8px; align-items: center; color: var(--text); margin-top: 4px; }
+    .ai-lage { font-size: 0.78rem; color: var(--text-muted); margin: 4px 0 0 18px; }
+    .ai-lage b { color: var(--text); }
+    .ai-text { font-size: 0.85rem; line-height: 1.55; margin: 8px 0 12px; color: var(--text); }
+    .ai-text.ai-small { font-size: 0.78rem; color: var(--text-muted); margin: 8px 0 0; }
+    .ai-muted { color: var(--text-muted); font-weight: 400; }
+    .ai-banner { font-size: 0.78rem; line-height: 1.5; color: #fca5a5; background: rgba(239, 68, 68, 0.12); border-left: 3px solid #ef4444; padding: 6px 10px; margin: 0 0 10px; }
+    .ai-banner.warn { color: #fcd34d; background: rgba(245, 158, 11, 0.12); border-left-color: #f59e0b; }
+    .ai-banner details { margin-top: 4px; color: var(--text-muted); word-break: break-word; }
+    .ai-kv { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px 12px; font-size: 0.78rem; margin: 0; }
+    .ai-kv dt { color: var(--text-muted); }
+    .ai-kv dd { margin: 0; color: var(--text); font-weight: 600; }
+    .ai-sec { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin: 14px 0 6px; }
+    .ai-row { font-size: 0.78rem; line-height: 1.5; padding: 4px 0; border-bottom: 1px solid var(--card-border); color: var(--text-muted); }
+    .ai-row b { color: var(--text); }
+    .ai-row .ai-prob { color: #fcd34d; }
+    .ai-cams summary { cursor: pointer; }
+    .ai-foot { margin: 12px 0 0; }
+
     /* === Wetter-Panel === */
     .wx-panel {
       max-width: 1600px;
@@ -467,6 +497,12 @@
       display: none;
     }
     .radar-panel.open { display: block; }
+    /* Radar-Knopf und Radar-Karte sitzen oben im Wetter-Panel */
+    .wx-tools { display: flex; justify-content: center; margin: 0 0 12px; }
+    .wx-panel .radar-panel { margin: 0 0 16px; max-width: none; }
+    #radar-toggle[aria-expanded="true"] { background: var(--accent-dim); }
+    #radar-toggle .chev { transition: transform var(--ease); }
+    #radar-toggle[aria-expanded="true"] .chev { transform: rotate(180deg); }
 
     .radar-card {
       background-color: var(--card-bg);
@@ -727,7 +763,11 @@
       /* Buttons nebeneinander auf Mobile */
       .header-links { flex-direction: row; flex-wrap: nowrap; gap: 8px; }
       .header-links > button, .header-links > .dropdown { flex: 1; }
-      .header-links .top-btn { width: 100%; justify-content: center; padding: 10px 4px; font-size: 0.85rem; }
+      .header-links .top-btn { width: 100%; justify-content: center; padding: 10px 4px; font-size: 0.85rem; min-width: 0; }
+      /* KI-Briefing mobil: Uhrzeit nur im Fenster, „neu" als Eckpunkt */
+      .ai-time { display: none; }
+      .ai-new { position: absolute; top: -4px; right: -2px; margin: 0; width: 10px; height: 10px; padding: 0;
+                font-size: 0; border: 2px solid var(--bg); }
 
       /* Dropdown-Menü Full-Width auf Mobile */
       .dropdown { position: static; }
@@ -770,7 +810,7 @@
 
     /* === Reduzierte Bewegung respektieren === */
     @media (prefers-reduced-motion: reduce) {
-      .status-dot, .radar-marker::after { animation: none !important; }
+      .status-dot, .radar-marker::after, .ai-dot.loading { animation: none !important; }
       .media-container::after { animation-duration: 2s; }
       .cam-card { transition: border-color var(--ease); }
       .cam-card:hover { transform: none; }
@@ -800,14 +840,9 @@
         Wetter LSZK
       </button>
 
-      <button class="top-btn" id="radar-toggle" onclick="toggleRadar()" aria-expanded="false">
-        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="1.5"/>
-          <path d="M12 5a7 7 0 0 1 7 7"/>
-          <path d="M12 9a3 3 0 0 1 3 3"/>
-          <path d="M5 19a7 7 0 0 0 7-7"/>
-        </svg>
-        Radar LSZK
+      <button class="top-btn ai-btn" id="ai-toggle" type="button" onclick="openAiModal()" aria-haspopup="dialog" title="KI-Briefing">
+        <span class="brf-dot ai-dot loading" id="ai-dot" aria-hidden="true"></span>
+        KI-Briefing<span class="ai-time" id="ai-time"></span><span class="brf-new ai-new" id="ai-new" hidden>neu</span>
       </button>
 
       <div class="dropdown">
@@ -833,10 +868,60 @@
   </header>
 
   <!-- Briefing-Ampel: Kurzüberblick, Klick öffnet die Erklärung im Detail-Fenster -->
-  <div id="briefing-bar" title="Kurz-Briefing – Klick für Werte &amp; Erklärung"></div>
+  <div id="briefing-bar" title="Ampel – Klick für Werte &amp; Erklärung"></div>
 
   <!-- ===== WETTER-PANEL ===== -->
   <div class="wx-panel" id="wx-panel">
+    <div class="wx-tools">
+      <button class="top-btn" id="radar-toggle" type="button" onclick="toggleRadar()" aria-expanded="false" aria-controls="radar-panel">
+        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="1.5"/>
+          <path d="M12 5a7 7 0 0 1 7 7"/>
+          <path d="M12 9a3 3 0 0 1 3 3"/>
+          <path d="M5 19a7 7 0 0 0 7-7"/>
+        </svg>
+        Wetterradar <span class="chev" aria-hidden="true">▾</span>
+      </button>
+    </div>
+
+    <div class="radar-panel" id="radar-panel">
+      <div class="radar-card">
+        <div class="wx-card-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="1.5"/>
+            <path d="M12 5a7 7 0 0 1 7 7"/>
+            <path d="M12 9a3 3 0 0 1 3 3"/>
+            <path d="M5 19a7 7 0 0 0 7-7"/>
+          </svg>
+          Wetterradar – LSZK Flugplatz Speck
+        </div>
+        <div class="radar-map loading" id="radar-map"></div>
+        <div class="radar-controls">
+          <button class="radar-btn" id="radar-prev" title="Vorheriger Frame" aria-label="Vorheriger Frame">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+          </button>
+          <button class="radar-btn" id="radar-play" title="Play/Pause" aria-label="Play/Pause">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+          </button>
+          <button class="radar-btn" id="radar-next" title="Nächster Frame" aria-label="Nächster Frame">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+          </button>
+          <div class="radar-scrubber" id="radar-scrubber">
+            <div class="radar-scrubber-thumb" id="radar-scrubber-thumb"></div>
+          </div>
+          <button class="radar-speed" id="radar-speed" title="Geschwindigkeit">1×</button>
+          <button class="radar-layer-toggle" id="radar-clouds" title="Wolken (Satellitenbild) ein-/ausblenden. Tagsüber Echtfarben, nachts Infrarot – dünner Bodennebel ist nachts nur eingeschränkt erkennbar." aria-pressed="true">☁ Wolken</button>
+        </div>
+        <div class="radar-info">
+          <div>
+            <span class="radar-frame-time" id="radar-frame-time">--:--</span>
+            <span class="radar-frame-tag" id="radar-frame-tag">JETZT</span>
+          </div>
+          <div id="radar-updated">Regen: <a href="https://www.rainviewer.com/" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;">RainViewer</a> · Vorhersage: <a href="https://www.dwd.de/" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;">DWD RV</a> · Wolken: <a href="https://view.eumetsat.int/" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;">EUMETSAT</a></div>
+        </div>
+      </div>
+    </div>
+
     <div class="wx-card">
       <div class="wx-card-title">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -867,44 +952,6 @@
         Thermik – Modellabschätzung
       </div>
       <div id="thermik-content"></div>
-    </div>
-  </div>
-
-  <div class="radar-panel" id="radar-panel">
-    <div class="radar-card">
-      <div class="wx-card-title">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="1.5"/>
-          <path d="M12 5a7 7 0 0 1 7 7"/>
-          <path d="M12 9a3 3 0 0 1 3 3"/>
-          <path d="M5 19a7 7 0 0 0 7-7"/>
-        </svg>
-        Wetterradar – LSZK Flugplatz Speck
-      </div>
-      <div class="radar-map loading" id="radar-map"></div>
-      <div class="radar-controls">
-        <button class="radar-btn" id="radar-prev" title="Vorheriger Frame" aria-label="Vorheriger Frame">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
-        </button>
-        <button class="radar-btn" id="radar-play" title="Play/Pause" aria-label="Play/Pause">
-          <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
-        </button>
-        <button class="radar-btn" id="radar-next" title="Nächster Frame" aria-label="Nächster Frame">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
-        </button>
-        <div class="radar-scrubber" id="radar-scrubber">
-          <div class="radar-scrubber-thumb" id="radar-scrubber-thumb"></div>
-        </div>
-        <button class="radar-speed" id="radar-speed" title="Geschwindigkeit">1×</button>
-        <button class="radar-layer-toggle" id="radar-clouds" title="Wolken (Satellitenbild) ein-/ausblenden. Tagsüber Echtfarben, nachts Infrarot – dünner Bodennebel ist nachts nur eingeschränkt erkennbar." aria-pressed="true">☁ Wolken</button>
-      </div>
-      <div class="radar-info">
-        <div>
-          <span class="radar-frame-time" id="radar-frame-time">--:--</span>
-          <span class="radar-frame-tag" id="radar-frame-tag">JETZT</span>
-        </div>
-        <div id="radar-updated">Regen: <a href="https://www.rainviewer.com/" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;">RainViewer</a> · Vorhersage: <a href="https://www.dwd.de/" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;">DWD RV</a> · Wolken: <a href="https://view.eumetsat.int/" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;">EUMETSAT</a></div>
-      </div>
     </div>
   </div>
 
@@ -969,22 +1016,20 @@
       <div class="cam-card">
         <div class="cam-header">
           <a href="https://mollisairport.roundshot.com/" target="_blank" rel="noopener">Mollis LSZM</a>
-          <span class="status-dot age-unknown" title="Live-Frame – keine Altersprüfung"></span>
+          <span class="status-dot"></span>
         </div>
-        <div class="media-container loaded">
-          <div class="iframe-overlay"></div>
-          <iframe data-src="https://mollisairport.roundshot.com/" loading="lazy" title="Webcam Mollis LSZM"></iframe>
+        <div class="media-container">
+          <img class="live-cam" data-src="https://wsrv.nl/?url=mollisairport.roundshot.com/cams/1641/medium" data-crop="cx=650&amp;cy=0&amp;cw=800&amp;ch=450&amp;precrop" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" width="640" height="360" alt="Mollis LSZM">
         </div>
       </div>
 
       <div class="cam-card">
         <div class="cam-header">
           <a href="https://birrfeld.roundshot.com/#/" target="_blank" rel="noopener">Birrfeld LSZF</a>
-          <span class="status-dot age-unknown" title="Live-Frame – keine Altersprüfung"></span>
+          <span class="status-dot"></span>
         </div>
-        <div class="media-container loaded">
-          <div class="iframe-overlay"></div>
-          <iframe data-src="https://birrfeld.roundshot.com/#/" loading="lazy" title="Webcam Birrfeld LSZF"></iframe>
+        <div class="media-container">
+          <img class="live-cam" data-src="https://wsrv.nl/?url=birrfeld.roundshot.com/cams/4d4ace145f81c381b57a67cee137338caabbcc99/quarter" data-crop="cx=500&amp;cy=0&amp;cw=910&amp;ch=512&amp;precrop" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" width="640" height="360" alt="Birrfeld LSZF">
         </div>
       </div>
 
@@ -1048,11 +1093,20 @@
       <div class="cam-card">
         <div class="cam-header">
           <a href="https://chaeserrugg.roundshot.com/" target="_blank" rel="noopener">Chäserugg</a>
-          <span class="status-dot age-unknown" title="Live-Frame – keine Altersprüfung"></span>
+          <span class="status-dot"></span>
         </div>
-        <div class="media-container loaded">
-          <div class="iframe-overlay"></div>
-          <iframe data-src="https://chaeserrugg.roundshot.com/" loading="lazy" title="Webcam Chäserugg"></iframe>
+        <div class="media-container">
+          <img class="live-cam" data-src="https://wsrv.nl/?url=chaeserrugg.roundshot.com/cams/75/medium" data-crop="cx=60&amp;cy=0&amp;cw=800&amp;ch=450&amp;precrop" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" width="640" height="360" alt="Chäserugg">
+        </div>
+      </div>
+
+      <div class="cam-card">
+        <div class="cam-header">
+          <a href="https://saentis.roundshot.com/" target="_blank" rel="noopener">Säntis</a>
+          <span class="status-dot"></span>
+        </div>
+        <div class="media-container">
+          <img class="live-cam" data-src="https://wsrv.nl/?url=saentis.roundshot.com/cams/156/medium" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" width="640" height="360" alt="Säntis Gipfelpanorama">
         </div>
       </div>
 
@@ -1079,6 +1133,16 @@
 
       <div class="cam-card">
         <div class="cam-header">
+          <a href="https://sportbahnenelm.roundshot.com/schabell/" target="_blank" rel="noopener">Elm – Schabell</a>
+          <span class="status-dot"></span>
+        </div>
+        <div class="media-container">
+          <img class="live-cam" data-src="https://wsrv.nl/?url=sportbahnenelm.roundshot.com/cams/1721/medium" data-crop="cx=420&amp;cy=0&amp;cw=800&amp;ch=450&amp;precrop" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" width="640" height="360" alt="Elm Schabell">
+        </div>
+      </div>
+
+      <div class="cam-card">
+        <div class="cam-header">
           <a href="https://webcam.hotel-klausenpass.ch/panorama.jpg" target="_blank" rel="noopener">Klausenpass</a>
           <span class="status-dot"></span>
         </div>
@@ -1090,32 +1154,50 @@
       <div class="cam-card">
         <div class="cam-header">
           <a href="https://rotenfluebahn.roundshot.com/rotenflue/#/" target="_blank" rel="noopener">Mythen</a>
-          <span class="status-dot age-unknown" title="Live-Frame – keine Altersprüfung"></span>
+          <span class="status-dot"></span>
         </div>
-        <div class="media-container loaded">
-          <div class="iframe-overlay"></div>
-          <iframe data-src="https://rotenfluebahn.roundshot.com/rotenflue/#/" loading="lazy" title="Webcam Mythen (Rotenflue)"></iframe>
+        <div class="media-container">
+          <img class="live-cam" data-src="https://wsrv.nl/?url=rotenfluebahn.roundshot.com/cams/1598/medium" data-crop="cx=250&amp;cy=0&amp;cw=800&amp;ch=450&amp;precrop" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" width="640" height="360" alt="Mythen">
         </div>
       </div>
 
       <div class="cam-card">
         <div class="cam-header">
-          <a href="https://webcam.skiarena.ch/oberalppass/image.jpg" target="_blank" rel="noopener">Oberalppass</a>
+          <a href="https://andermatt-sedrun-disentis.roundshot.com/schneehuenerstock/" target="_blank" rel="noopener">Schneehüenerstock</a>
           <span class="status-dot"></span>
         </div>
         <div class="media-container">
-          <img class="live-cam" data-src="https://wsrv.nl/?url=webcam.skiarena.ch/oberalppass/image.jpg" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" width="640" height="360" alt="Oberalppass">
+          <img class="live-cam" data-src="https://wsrv.nl/?url=andermatt-sedrun-disentis.roundshot.com/cams/1768/medium" data-crop="cx=260&amp;cy=0&amp;cw=800&amp;ch=450&amp;precrop" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" width="640" height="360" alt="Schneehüenerstock über dem Oberalppass">
         </div>
       </div>
 
       <div class="cam-card">
         <div class="cam-header">
           <a href="https://laax.roundshot.com/crap-sogn-gion-plaun/" target="_blank" rel="noopener">Laax Crap Sogn Gion</a>
-          <span class="status-dot age-unknown" title="Live-Frame – keine Altersprüfung"></span>
+          <span class="status-dot"></span>
         </div>
-        <div class="media-container loaded">
-          <div class="iframe-overlay"></div>
-          <iframe data-src="https://laax.roundshot.com/crap-sogn-gion-plaun/" loading="lazy" title="Webcam Laax Crap Sogn Gion"></iframe>
+        <div class="media-container">
+          <img class="live-cam" data-src="https://wsrv.nl/?url=laax.roundshot.com/cams/45/medium" data-crop="cx=550&amp;cy=0&amp;cw=800&amp;ch=450&amp;precrop" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" width="640" height="360" alt="Laax Crap Sogn Gion">
+        </div>
+      </div>
+
+      <div class="cam-card">
+        <div class="cam-header">
+          <a href="https://lenzerheide.roundshot.com/rothorn/" target="_blank" rel="noopener">Parpaner Rothorn</a>
+          <span class="status-dot"></span>
+        </div>
+        <div class="media-container">
+          <img class="live-cam" data-src="https://wsrv.nl/?url=lenzerheide.roundshot.com/cams/52/medium" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" width="640" height="360" alt="Parpaner Rothorn Lenzerheide">
+        </div>
+      </div>
+
+      <div class="cam-card">
+        <div class="cam-header">
+          <a href="https://www.windy.com/webcams/1678358730" target="_blank" rel="noopener">Jakobshorn</a>
+          <span class="status-dot"></span>
+        </div>
+        <div class="media-container">
+          <img class="live-cam" data-src="https://wsrv.nl/?url=images-webcams.windy.com/30/1678358730/current/original/1678358730.jpg" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" width="640" height="360" alt="Jakobshorn Davos">
         </div>
       </div>
 
@@ -1162,11 +1244,10 @@
       <div class="cam-card">
         <div class="cam-header">
           <a href="https://ascona-locarno.roundshot.com/bellavistahotel/" target="_blank" rel="noopener">Ascona / Locarno</a>
-          <span class="status-dot age-unknown" title="Live-Frame – keine Altersprüfung"></span>
+          <span class="status-dot"></span>
         </div>
-        <div class="media-container loaded">
-          <div class="iframe-overlay"></div>
-          <iframe data-src="https://ascona-locarno.roundshot.com/bellavistahotel/" loading="lazy" title="Webcam Ascona / Locarno"></iframe>
+        <div class="media-container">
+          <img class="live-cam" data-src="https://wsrv.nl/?url=ascona-locarno.roundshot.com/cams/1418/medium" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" width="640" height="360" alt="Ascona Locarno">
         </div>
       </div>
 
@@ -1188,10 +1269,10 @@
     </div>
   </div>
 
-  <div class="brf-modal" id="brf-modal" role="dialog" aria-modal="true" aria-label="Briefing-Details">
+  <div class="brf-modal" id="brf-modal" role="dialog" aria-modal="true" aria-label="Ampel-Details">
     <div class="brf-modal-backdrop"></div>
     <div class="brf-modal-card">
-      <h3>Kurz-Briefing erklärt
+      <h3>Ampel erklärt
         <button class="lightbox-close" id="brf-modal-close" type="button" aria-label="Schliessen">×</button>
       </h3>
       <div id="brf-modal-content"></div>
@@ -1200,6 +1281,20 @@
       </div>
       <div style="text-align:center;margin-top:14px;">
         <button class="top-btn" id="brf-modal-wx" type="button">Alle Wetterdetails öffnen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- KI-Briefing: Detail-Fenster (Inhalt aus data/ai_status.json, alles über escHtml) -->
+  <div class="brf-modal" id="ai-modal" role="dialog" aria-modal="true" aria-labelledby="ai-modal-title">
+    <div class="brf-modal-backdrop"></div>
+    <div class="brf-modal-card">
+      <h3><span id="ai-modal-title">KI-Briefing</span>
+        <button class="lightbox-close" id="ai-modal-close" type="button" aria-label="Schliessen">×</button>
+      </h3>
+      <div id="ai-modal-content"></div>
+      <div class="brf-note">
+        <strong>KI-generiert, ohne Gewähr.</strong> Automatische Einschätzung aus Webcam-Bildern, Messwerten und Modellprognose (Claude von Anthropic); sie kann falsch oder überholt sein. Massgebend sind die offizielle Flugwetterberatung (MeteoSchweiz, Skybriefing), AIP, NOTAM/DABS, die Flugplatzleitung (fgzo.ch) und die eigene Beobachtung.
       </div>
     </div>
   </div>
@@ -1367,7 +1462,7 @@
         img.classList.add('loaded');
         container.classList.add('loaded');
       };
-      fresh.src = bust(displayUrl(base), ts);
+      fresh.src = bust(displayUrl(base + (img.dataset.crop ? '&' + img.dataset.crop : '')), ts);
 
       applyStatusToCam(img);
     }
@@ -1536,6 +1631,7 @@
     setInterval(function () { if (!document.hidden) refreshCams(); }, REFRESH_MS);
     document.addEventListener('visibilitychange', function () {
       if (!document.hidden) refreshCams();
+      if (!document.hidden && Date.now() - ai.loadedAt > 600000) loadAi();
     });
     if (lastEl) lastEl.textContent = nowStr();
 
@@ -1556,6 +1652,7 @@
       storeSet('lszk-wx-open', open ? '1' : null);
       if (open && !wxLoaded) { wxLoaded = true; loadWetter(); }
       if (open) { loadOpenMeteo(); loadThermik(); }
+      syncRadar();   // das Wetterradar liegt im Wetter-Panel: mit dem Panel starten bzw. pausieren
     };
 
     // Briefing-Ampel braucht frische Daten auch bei geschlossenem Panel
@@ -1565,6 +1662,7 @@
       loadOpenMeteo();
       loadThermik();
       loadWetter();
+      loadAi();
     }, 600000);
 
     /* ── Briefing-Ampel: verdichtet Kernwerte zu farbigen Chips ────
@@ -1700,7 +1798,7 @@
         out.push({
           color: R, chip: 'Regen jetzt', title: 'Niederschlag',
           value: 'es regnet aktuell am Platz',
-          text:  'Aktuelle Regenrate der Wetterstation Speck. Für die Entwicklung: Radar-Panel und Regen-Zeile im 12-h-Trend.'
+          text:  'Aktuelle Regenrate der Wetterstation Speck. Für die Entwicklung: Wetterradar im Wetter-Panel und Regen-Zeile im 12-h-Trend.'
         });
       } else if (briefing.rainProb !== undefined) {
         out.push({
@@ -1708,7 +1806,7 @@
           chip:  'Regen ' + Math.round(briefing.rainProb) + ' %',
           title: 'Regenwahrscheinlichkeit',
           value: Math.round(briefing.rainProb) + ' % (Maximum der nächsten 12 h)',
-          text:  'Höchste Regenwahrscheinlichkeit der nächsten 12&nbsp;Stunden laut Open-Meteo. Ab 30&nbsp;% gelb, über 60&nbsp;% rot. Zeitliche Verteilung: Regen-Zeile im 12-h-Trend, Zugbahnen im Radar.'
+          text:  'Höchste Regenwahrscheinlichkeit der nächsten 12&nbsp;Stunden laut Open-Meteo. Ab 30&nbsp;% gelb, über 60&nbsp;% rot. Zeitliche Verteilung: Regen-Zeile im 12-h-Trend, Zugbahnen im Wetterradar.'
         });
       }
       return out;
@@ -1754,6 +1852,227 @@
       m.classList.remove('open');
       document.body.style.overflow = '';
     }
+
+    /* ── KI-Briefing (data/ai_status.json, 3× täglich vom Job: Sonnenaufgang + 30 min, 10:00, 15:00) ──
+       Der Inhalt ist KI-Text und damit untrusted: jeder String läuft über escHtml oder eine feste Map.
+       Bei einem Fehlschlag behält die Datei das letzte gute Briefing (ok=false, error, attempted_at_utc). */
+    var AI_SEEN_KEY = 'lszk-ai-seen', AI_STALE_MIN = 360, AI_RUNNING_MIN = 10, AI_GREY = '#64748b';
+    var ai = { data: undefined, loadedAt: 0 };          // undefined = lädt, null = keine Datei
+    var AI_LAGE = {
+      gut:      { label: 'gut',      color: '#10b981' },
+      maessig:  { label: 'mässig',   color: '#f59e0b' },
+      schlecht: { label: 'schlecht', color: '#ef4444' }
+    };
+    var AI_MAPS = {
+      basis_quelle: { kamera: 'Kamera', metar: 'METAR', taupunkt: 'Taupunkt', kombiniert: 'kombiniert', keine_wolken: 'keine Wolken', unbekannt: '' },
+      sicht:        { gut: 'gut', maessig: 'mässig', schlecht: 'schlecht', unbekannt: '–' },
+      nebel:        { kein: 'kein', dunst: 'Dunst', bodennebel: 'Bodennebel', hochnebel: 'Hochnebel', unbekannt: '–' },
+      alpen:        { frei: 'frei', teilweise: 'teilweise frei', verhangen: 'verhangen', nicht_sichtbar: 'nicht sichtbar' },
+      niederschlag: { kein: 'kein', in_der_ferne: 'in der Ferne', am_platz: 'am Platz', unbekannt: '–' },
+      region:       { platz: 'Platz', zuercher_oberland: 'Zürcher Oberland', voralpen: 'Voralpen', glarner_alpen: 'Glarner Alpen', zentralalpen: 'Zentralalpen', graubuenden: 'Graubünden', alpensuedseite: 'Alpensüdseite' },
+      problem:      { nacht: 'Nacht', zu_dunkel: 'zu dunkel', eingefroren: 'Bild eingefroren', linse_nass: 'Linse nass', verschmutzt: 'Linse verschmutzt', fehlbild: 'Fehlbild' },
+      slot:         { sunrise: 'Sonnenaufgang' }
+    };
+    function aiHas(map, k) { return typeof k === 'string' && Object.prototype.hasOwnProperty.call(map, k); }
+    function aiMap(map, v) {               // Map-Werte sind feste, HTML-sichere Konstanten
+      if (v === null || v === undefined || v === '') return '–';
+      return aiHas(map, v) ? (map[v] || '–') : escHtml(v);
+    }
+    function aiNum(v, unit) { return (typeof v === 'number' && isFinite(v)) ? v + unit : null; }
+    function aiDate(s) { var t = Date.parse(s); return (typeof s === 'string' && !isNaN(t)) ? new Date(t) : null; }
+    function aiHM(d)  { return d.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich' }); }
+    function aiDay(d) { return d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Zurich' }); }
+    function aiDM(d)  { return d.toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Zurich' }); }
+    function aiWhen(d, now) {              // «HH:MM» heute, «gestern HH:MM», sonst «TT.MM. HH:MM»
+      if (aiDay(d) === aiDay(now)) return aiHM(d);
+      if (aiDay(d) === aiDay(new Date(now.getTime() - 86400000))) return 'gestern ' + aiHM(d);
+      return aiDM(d) + ' ' + aiHM(d);
+    }
+    function aiNextSlot(now) {             // grob wie im Job: Sonnenaufgang + 30 min, 10:00, 15:00
+      var s = calcSunTimes(47.37557, 8.76169), m = /^(\d{2}):(\d{2})$/.exec(s.rise || ''), slots = [];
+      if (m) {
+        var mins = (+m[1]) * 60 + (+m[2]) + 30;
+        slots.push(('0' + Math.floor(mins / 60)).slice(-2) + ':' + ('0' + (mins % 60)).slice(-2));
+      }
+      slots.push('10:00', '15:00');
+      var cur = aiHM(now);
+      for (var i = 0; i < slots.length; i++) if (slots[i] > cur) return 'ca. ' + slots[i];
+      return m ? 'morgen ca. ' + slots[0] : '';
+    }
+
+    function loadAi() {
+      return fetch('data/ai_status.json?t=' + Date.now(), { cache: 'no-store' })
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function (d) { ai.data = (d && typeof d === 'object' && !Array.isArray(d)) ? d : null; })
+        .catch(function () { if (ai.data === undefined) ai.data = null; })   // Aussetzer: letzten Stand behalten
+        .then(function () { ai.loadedAt = Date.now(); renderAiButton(); if (aiModalOpen()) renderAiModal(); });
+    }
+
+    // kind: loading | none | ok | stale; dazu failed (letzter Versuch fehlgeschlagen) und running (läuft gerade)
+    function aiState() {
+      var d = ai.data, now = new Date();
+      if (d === undefined) return { kind: 'loading' };
+      if (!d) return { kind: 'none' };
+      var b = (d.briefing && typeof d.briefing === 'object' && !Array.isArray(d.briefing)) ? d.briefing : null;
+      var st = { kind: 'none', data: d, b: b, gen: aiDate(d.generated_at_utc), tri: aiDate(d.attempted_at_utc),
+                 lage: null, isNew: false, failed: false, running: false };
+      if (d.ok === false && st.tri) {
+        if ((now - st.tri) / 60000 < AI_RUNNING_MIN) st.running = true; else st.failed = true;
+      }
+      if (!b || !st.gen) return st;
+      st.lage = aiHas(AI_LAGE, b.lage) ? b.lage : null;
+      var fresh = (now - st.gen) / 60000 < AI_STALE_MIN && aiDay(st.gen) === aiDay(now);
+      st.kind = fresh ? 'ok' : 'stale';
+      st.isNew = fresh && storeGet(AI_SEEN_KEY) !== String(d.generated_at_utc);
+      return st;
+    }
+
+    function renderAiButton() {
+      var btn = document.getElementById('ai-toggle'), dot = document.getElementById('ai-dot'),
+          tm = document.getElementById('ai-time'), nw = document.getElementById('ai-new');
+      if (!btn || !dot || !tm || !nw) return;
+      var st = aiState(), now = new Date(), time = '', label = 'KI-Briefing';
+      dot.className = 'brf-dot ai-dot';
+      dot.style.background = AI_GREY;
+      if (st.kind === 'loading') {
+        dot.classList.add('loading');
+        label += ', wird geladen';
+      } else if (st.kind === 'none') {
+        label += st.running ? ', wird gerade erstellt' : ', noch keines vorhanden';
+      } else {
+        if (st.kind === 'ok') {
+          time = aiHM(st.gen);
+          if (st.lage) { dot.style.background = AI_LAGE[st.lage].color; label += ', Lage ' + AI_LAGE[st.lage].label; }
+        } else {
+          time = aiWhen(st.gen, now);
+          dot.classList.add('stale');
+          label += ', veraltet';
+        }
+        label += ', Stand ' + aiWhen(st.gen, now);
+        if (st.failed)  { time += ' ⚠'; label += ', letzte Aktualisierung fehlgeschlagen'; }
+        if (st.running) label += ', wird gerade aktualisiert';
+      }
+      tm.textContent = time;
+      nw.hidden = !st.isNew;
+      btn.title = label;
+      btn.setAttribute('aria-label', label);
+    }
+
+    function aiModalHtml() {
+      var st = aiState(), now = new Date(), html = '';
+      var sched = 'Erstellt wird es dreimal täglich (ca. 30 min nach Sonnenaufgang, 10:00 und 15:00).';
+      if (st.kind === 'loading') return '<div class="ai-text">Wird geladen…</div>';
+      if (st.running) html += '<div class="ai-banner warn">Wird gerade aktualisiert…</div>';
+      if (st.kind === 'none') {
+        if (st.failed) html += '<div class="ai-banner">Der letzte Versuch' + (st.tri ? ' (' + aiWhen(st.tri, now) + ')' : '') + ' ist fehlgeschlagen.</div>';
+        return html + '<div class="ai-text">Noch kein KI-Briefing vorhanden. ' + sched + '</div>';
+      }
+      var d = st.data, b = st.b;
+      var sky = (d.himmel && typeof d.himmel === 'object' && !Array.isArray(d.himmel)) ? d.himmel : {};
+      if (st.kind === 'stale') {
+        html += '<div class="ai-banner warn">Stand ' + aiWhen(st.gen, now) + ' – die Lage kann sich inzwischen geändert haben.</div>';
+      }
+      if (st.failed) {
+        html += '<div class="ai-banner">Letzte Aktualisierung' + (st.tri ? ' um ' + aiWhen(st.tri, now) : '') +
+          ' fehlgeschlagen; angezeigt wird der Stand von ' + aiWhen(st.gen, now) + '.' +
+          (d.error ? '<details><summary>Technische Details</summary>' + escHtml(d.error) + '</details>' : '') + '</div>';
+      }
+      var lg = st.lage ? AI_LAGE[st.lage] : null;
+      html += '<div class="ai-headline"><span class="brf-dot" style="background:' + (lg ? lg.color : AI_GREY) + '"></span>' +
+        '<span>' + escHtml(b.headline || '') + '</span></div>';
+      html += '<div class="ai-lage">Lage für Lokalflüge: <b>' + (lg ? lg.label : '–') + '</b></div>';
+      html += '<div class="ai-text">' + escHtml(b.text || '') + '</div>';
+
+      var basis = aiNum(sky.wolkenbasis_m, ' m ü. M.'), bq = aiMap(AI_MAPS.basis_quelle, sky.basis_quelle);
+      var sichtTxt = aiMap(AI_MAPS.sicht, sky.sicht), sk = aiNum(sky.sicht_km, ' km');
+      var nebelTxt = aiMap(AI_MAPS.nebel, sky.nebel), nog = aiNum(sky.nebel_obergrenze_m, ' m');
+      var schnee = aiNum(sky.schneegrenze_m, ' m');
+      var rows = [
+        ['Bedeckung',    aiNum(sky.bedeckung_achtel, '/8') || '–'],
+        ['Wolkenbasis',  basis ? basis + (bq !== '–' ? ' <span class="ai-muted">(' + bq + ')</span>' : '') : '–'],
+        ['Sicht',        sk ? (sichtTxt !== '–' ? sichtTxt + ' (≈ ' + sk + ')' : '≈ ' + sk) : sichtTxt],
+        ['Nebel',        nog ? nebelTxt + ' bis ' + nog : nebelTxt],
+        ['Alpen',        aiMap(AI_MAPS.alpen, sky.alpen)],
+        ['Schneegrenze', schnee ? '≈ ' + schnee : '–'],
+        ['Niederschlag', aiMap(AI_MAPS.niederschlag, sky.niederschlag)]
+      ];
+      html += '<div class="ai-sec">Himmel</div><dl class="ai-kv">';
+      rows.forEach(function (r) { html += '<div><dt>' + r[0] + '</dt><dd>' + r[1] + '</dd></div>'; });
+      html += '</dl>';
+      if (sky.zusammenfassung) html += '<div class="ai-text ai-small">' + escHtml(sky.zusammenfassung) + '</div>';
+
+      var regs = Array.isArray(sky.regionen) ? sky.regionen : [], regHtml = '';
+      Object.keys(AI_MAPS.region).forEach(function (k) {
+        regs.forEach(function (r) {
+          if (r && r.region === k && r.zustand) regHtml += '<div class="ai-row"><b>' + AI_MAPS.region[k] + '</b> ' + escHtml(r.zustand) + '</div>';
+        });
+      });
+      if (regHtml) html += '<div class="ai-sec">Regionen</div>' + regHtml;
+
+      var cams = Array.isArray(d.kameras) ? d.kameras.filter(function (k) { return k && typeof k === 'object'; }) : [];
+      if (cams.length) {
+        var probs = 0, camHtml = '';
+        cams.forEach(function (k) {
+          var p = (k.problem && k.problem !== 'keins') ? aiMap(AI_MAPS.problem, k.problem) : '';
+          if (p) probs++;
+          var age = (typeof k.bildalter_min === 'number' && isFinite(k.bildalter_min))
+            ? ' <span class="ai-muted">(Bild ' + Math.round(k.bildalter_min) + ' min alt)</span>' : '';
+          var tags = Array.isArray(k.tags) ? k.tags.filter(function (t) { return typeof t === 'string'; })
+            .map(function (t) { return escHtml(t.replace(/_/g, ' ')); }).join(', ') : '';
+          camHtml += '<div class="ai-row"><b>' + escHtml(k.titel || '') + '</b>' + age +
+            (p ? ' ⚠ <span class="ai-prob">' + p + '</span>' : '') + '<br>' + escHtml(k.satz || '') +
+            (tags ? ' <span class="ai-muted">· ' + tags + '</span>' : '') + '</div>';
+        });
+        html += '<details class="ai-cams"' + (probs ? ' open' : '') + '><summary class="ai-sec">Kameras (' + cams.length + ')' +
+          (probs ? ' · ' + probs + ' mit Problem' : '') + '</summary>' + camHtml + '</details>';
+      }
+
+      // «Nicht ausgewertet» gehört nur bei ok===true sicher zum angezeigten Briefing
+      var inp = (d.ok === true && d.inputs && typeof d.inputs === 'object') ? d.inputs : null;
+      var fehl = (inp && Array.isArray(inp.fehlend)) ? inp.fehlend.filter(function (f) { return f && typeof f === 'object'; }) : [];
+      if (fehl.length) {
+        html += '<div class="ai-sec">Nicht ausgewertet</div>';
+        fehl.forEach(function (f) { html += '<div class="ai-row"><b>' + escHtml(f.titel || '') + '</b> – ' + escHtml(f.grund || '') + '</div>'; });
+      }
+
+      var slot = '';
+      if (d.ok === true && typeof d.slot === 'string') {
+        slot = aiHas(AI_MAPS.slot, d.slot) ? AI_MAPS.slot[d.slot] : (/^\d{2}:\d{2}$/.test(d.slot) ? d.slot : '');
+      }
+      var next = aiNextSlot(now);
+      html += '<div class="brf-src ai-foot">Stand ' + aiDM(st.gen) + ' ' + aiHM(st.gen) + (slot ? ' (Briefing ' + slot + ')' : '') +
+        (next ? ' · nächstes Briefing ' + next : '') + '</div>';
+      return html;
+    }
+    function renderAiModal() {
+      var c = document.getElementById('ai-modal-content');
+      if (!c) return;
+      try { c.innerHTML = aiModalHtml(); }
+      catch (e) { c.innerHTML = '<div class="ai-text">Das KI-Briefing kann gerade nicht angezeigt werden.</div>'; }
+    }
+    function aiModalOpen() {
+      var m = document.getElementById('ai-modal');
+      return !!(m && m.classList.contains('open'));
+    }
+    function openAiModal() {
+      var m = document.getElementById('ai-modal');
+      if (!m) return;
+      renderAiModal();
+      m.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      var st = aiState();
+      if (st.isNew) { storeSet(AI_SEEN_KEY, String(st.data.generated_at_utc)); renderAiButton(); }
+      if (Date.now() - ai.loadedAt > 120000) loadAi();
+    }
+    function closeAiModal() {
+      var m = document.getElementById('ai-modal');
+      if (!m || !m.classList.contains('open')) return;
+      m.classList.remove('open');
+      document.body.style.overflow = '';
+      var b = document.getElementById('ai-toggle');
+      if (b) b.focus();
+    }
+    window.openAiModal = openAiModal;
 
     /* ── Föhn-Index: METAR-QNH Lugano-Agno (LSZA) − Zürich-Kloten (LSZH) ──
        data/metar_foehn.json schreibt der METAR-Job alle 30 min; das KI-Briefing liest dieselbe Datei.
@@ -1958,7 +2277,7 @@
         else               { fCol = '#ef4444'; fTxt = fdp > 0 ? 'Südföhn wahrscheinlich' : 'Nordstau / kräftige Bise'; }
         foehnHtml = '<div class="wx-stat"><div class="wx-stat-label">' + (fdp < 0 ? 'Bise-Index' : 'Föhn-Index') + '</div>' +
           '<div class="wx-stat-value" style="color:' + fCol + ';white-space:nowrap;">' + (fdp > 0 ? '+' : '') + fdp + '&nbsp;hPa</div>' +
-          '<div class="wx-stat-sub" style="white-space:nowrap;">LSZA − LSZH' + fObs + '<br>' + fTxt + '</div></div>';
+          '<div class="wx-stat-sub"><span style="white-space:nowrap;">LSZA − LSZH' + fObs + '</span><br>' + fTxt + '</div></div>';
       }
 
       // Runway Diagram aus Stationsdaten – nur rendern, wenn echte Winddaten da sind
@@ -2600,13 +2919,14 @@
       cloudsOn: storeGet('lszk-radar-clouds') !== '0'
     };
 
-    window.toggleRadar = function () {
-      var panel = document.getElementById('radar-panel');
-      var btn   = document.getElementById('radar-toggle');
-      var open  = panel.classList.toggle('open');
-      btn.setAttribute('aria-expanded', open);
-      storeSet('lszk-radar-open', open ? '1' : null);
-      if (open) {
+    // Das Radar liegt im Wetter-Panel: sichtbar nur, wenn beide offen sind. Leaflet nie in einem
+    // versteckten Container initialisieren; Animation und Refresh ruhen bei geschlossenem Panel.
+    function radarVisible() {
+      var wp = document.getElementById('wx-panel'), rp = document.getElementById('radar-panel');
+      return !!(wp && rp && wp.classList.contains('open') && rp.classList.contains('open'));
+    }
+    function syncRadar() {
+      if (radarVisible()) {
         if (!radar.initialized) {
           radar.initialized = true;
           initRadar();
@@ -2620,6 +2940,14 @@
         stopRadarAnim();
         clearRadarRefresh();
       }
+    }
+    window.toggleRadar = function () {
+      var panel = document.getElementById('radar-panel');
+      var btn   = document.getElementById('radar-toggle');
+      var open  = panel.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open);
+      storeSet('lszk-radar-open', open ? '1' : null);
+      syncRadar();
     };
 
     function loadLeaflet(cb) {
@@ -2688,7 +3016,7 @@
 
         bindRadarControls();
         loadRadarData(true);
-        ensureRadarRefresh();
+        if (radarVisible()) ensureRadarRefresh();   // Panel evtl. während des Ladens geschlossen
       });
     }
 
@@ -3153,6 +3481,19 @@
         if (e.key === 'Escape' && m.classList.contains('open')) closeBrfModal();
       });
     })();
+
+    // KI-Briefing: Detail-Fenster schliessen per Hintergrund, × und Escape
+    (function () {
+      var m = document.getElementById('ai-modal');
+      if (!m) return;
+      m.querySelector('.brf-modal-backdrop').addEventListener('click', closeAiModal);
+      document.getElementById('ai-modal-close').addEventListener('click', closeAiModal);
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && m.classList.contains('open')) closeAiModal();
+      });
+    })();
+    renderAiButton();
+    loadAi();
 
     // Briefing-Ampel und Thermik auch ohne offenes Panel laden
     loadOpenMeteo();

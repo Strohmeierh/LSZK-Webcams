@@ -69,7 +69,8 @@ LSPV_INDEX = "https://cams.lspv.dyndns.info/cams/interval"
 # ── Webcams sent to the model ────────────────────────────────────────────────
 # "title" must match the card title in index.html exactly; the image URL is read from the
 # card (data-src / data-cam), so URL changes in the HTML are picked up automatically.
-# "wsrv": resize parameters (never crop; ~600-1000 image tokens each). Descriptions were
+# "wsrv": resize parameters (~600-1000 image tokens each); the 360° roundshot panoramas are cut to the
+# flight-relevant sector with cx/cy/cw/ch&precrop (pixel values of the 450 px high "medium" image). Descriptions were
 # calibrated on 08.11.2026 against sun positions, swisstopo terrain profiles and maps.
 CAMS = [
     {"title": "Speck – Runway 30", "region": "platz", "wsrv": "w=1024&h=1024&fit=inside", "desc": """\
@@ -100,27 +101,47 @@ Hintergrund: Mürtschenstock 2390–2441 m, ein zackiges Kalkmassiv bei 46–58 
 Höhenmassstab an der rechten Wand (von oben gemessen): Kamm 1650–1750 m bei 4–7 % der Bildhöhe, ≈1400 m bei 11 %, ≈1200 m bei 18 %, ≈950 m bei 26 %, ≈750 m bei 33 %, Talboden der Linthebene (~430 m) bei ~44 %; das Seeufer liegt bei 48 %.
 Taugt für: Seenebel und Hochnebel, Wolkenbasis ca. 500–2400 m, Sichtweite (2,5 / 20 / 33 / 40 km), Schneefallgrenze an der Hirzli-Kette, Wind (Seeoberfläche), Föhnanzeichen. Es ist nur ein schmales Himmelsband sichtbar, daher keine Aussage zum Bedeckungsgrad.
 Eigenheiten: Die hellen Kalkfelsen am Mürtschenstock sind kein Schnee. Im Winterhalbjahr herrscht morgens Gegenlicht, weil die Sonne hinter den Bergen aufgeht. Kein Overlay im Bild, Update etwa alle 20 min, nachts dunkel (nur Lichter von Rapperswil)."""},
+    {"title": "Säntis", "region": "voralpen", "wsrv": "cx=922&cy=0&cw=1568&ch=450&precrop", "desc": """\
+Säntis-Gipfel (Alpstein, AR/AI/SG): Roundshot-Kamera auf dem Gipfel, ~2505 m ü. M., 47 km ESE von LSZK. Das Bild ist ein Ausschnitt des 360°-Panoramas: 184° von ESE über S bis WNW (Azimut ≈ 110° + 1,84° × x % der Bildbreite; 38 % = S, 87 % = W). Horizont bei ~48 % der Bildhöhe, darüber Himmel bis ~25°.
+Landmarken von links nach rechts (x % der Bildbreite): Altmann 2435 m (4 %, 2,4 km, markanter naher Felsgipfel); am Horizont Rätikon mit Schesaplana 2965 m (10 %, 35 km) und Silvretta mit Piz Linard 3410 m (12 %, 75 km); Rheintal bei Buchs ~450 m (17–22 %, Dunst/Nebel im Tal); Alvier 2341 m (28 %, 16 km); nah und dunkel Wildhuser Schofberg 2374 m (29 %, 2,3 km); Gamsberg 2385 m (33 %, 13 km), Pizol 2844 m (35 %, 32 km), Ringelspitz 3247 m (38 %, 39 km); Churfirsten mit Chäserrugg 2261 m (45 %, 11 km), Brisi 2278 m (52 %), Selun 2205 m (55 %) und Leistchamm 2101 m (60 %, 15 km); dahinter die Glarner Alpen mit Hausstock 3158 m (53 %, 47 km), Tödi 3614 m (56 %, 58 km) und Glärnisch 2905 m (61 %, 37 km); unten bei 50–55 % das Obertoggenburg (Unterwasser/Alt St. Johann, ~900 m); Lütispitz 1986 m (69 %, 5 km); Speer 1951 m (75 %, 18 km), dahinter Rigi und Pilatus (77 %, 68–88 km); Linthebene, Zürichsee und Zürcher Oberland liegen bei 80–90 % (Bachtel rechnerisch bei 92 %, 35 km). Ab ~90 % verdeckt das helle Radom der Gipfelstation die Sicht Richtung LSZK; vorne unten Flachdächer der Station.
+Taugt für: Obergrenze von Nebelmeer und Hochnebel über Mittelland, Toggenburg und Rheintal (Vergleich mit Gipfeln 1950–2500 m), Wolkenbasis und Bewölkung über Churfirsten und Glarner Alpen, Fernsicht in Stufen von 2 bis 75 km, Föhnzeichen (Föhnmauer über den Glarner Alpen, klares Rheintal), Schneefallgrenze. Gleichmässig weiss/hellblau = Gipfel in der Wolke (Basis ≤ 2500 m); das ist am Säntis häufig und sagt wenig über das Flachland.
+Eigenheiten: Im Winterhalbjahr steht die Sonne mittags im Bild (bei ~37 %, Gegenlicht über Rheintal und Pizol). Raureif, Eis oder Tropfen auf dem Kameragehäuse ergeben unscharfe Flecken. Kein Overlay, kein Zeitstempel im Bild. Update alle 10 min. Nachts dunkel = keine Information."""},
     {"title": "Richtung Tödi", "region": "glarner_alpen", "wsrv": "w=1120&h=1120&fit=inside&we", "desc": """\
 Leuggelbach GL (Glarus Süd, Decoralwerke), Kamera ~565 m auf dem Fabrikdach im Talboden des Grosstals, ~49 km SSE von LSZK. Blick Süd talaufwärts (Mitte ~187°, ~90° Bildwinkel).
 Links die steile Ostflanke (Grat ~1800 m, 2–3 km), rechts die Westflanke (Grat ~1300–1600 m, 3–4 km). Mitte-links ein Seitengrat bis ~2200 m (5–8 km); die hellgrauen Kalkfelsen am Grat sind kein Schnee.
 Am Talende rechts der Mitte (~73 % von links, ~38 % von oben) steht der Tödi 3614 m (21 km, Alpenhauptkamm). Links davon Piz Urlaun 3359 m, rechts Chamerstock 2124 m und Gämsfairenstock 2972 m.
 Taugt für: Alpen frei/verdeckt, Wolkenbasis 1300–3600 m, Schneefallgrenze an den Talflanken (550–1850 m), Föhn (Föhnmauer am Tödi bei klarem Tal, Lenticularis) sowie Hochnebel/Stau im Glarnerland.
 Eigenheiten: Gegenlicht – von Oktober bis März steht die Sonne mittags im Bild (Blendung, Strahlen, rote Geisterscheiben), und die Tödi-Nordseite wirkt mittags dunkel. Firn und Gletscher am Tödi sind ganzjährig weiss. Nachts ist das Bild schwarz. Overlay unten links «www.decoral.ch» mit Lokalzeit."""},
+    {"title": "Elm – Schabell", "region": "glarner_alpen", "wsrv": "cx=0&cy=0&cw=1416&ch=450&precrop", "desc": """\
+Schabell ob Elm GL (Sportbahnen Elm, Westseite des Sernftals): Roundshot-Kamera bei der Bergstation Schabell auf dem Grat, ~2015 m ü. M., 2,5 km NW über dem Dorf Elm, 57 km SE von LSZK. Das Bild ist ein Ausschnitt des 360°-Panoramas: 198° von ENE über S bis W (Azimut ≈ 65° + 1,98° × x % der Bildbreite; 13 % = E, 58 % = S, 100 % ≈ W). Die Gipfel liegen bei 30–45 % der Bildhöhe, darüber Himmel.
+Landmarken von links nach rechts (x % der Bildbreite): Fanenstock 2237 m und Foostock 2610 m (2 %, 5–8 km); Piz Sardona 3057 m (15 %, 8 km), Piz Segnas 3098 m (22 %, 8 km), Segnespass 2626 m und Martinsloch (26–27 %, 7 km), gezackte Tschingelhörner 2849 m (28–35 %); tief unten bei 30 % das Dorf Elm 986 m (2,5 km, Talboden meist im Schatten); Zwölfihorn 2748 m (46 %); Vorab 3028 m (54 %, 6 km, breiter vergletscherter Stock, grösster Berg im Bild); Panixerpass 2403 m (68 %, 9 km, Sattel); Hausstock 3158 m (80 %, 8,5 km) mit Ruchi 3106 m (81 %); Leiterberg 2669 m (85 %), Richetlipass 2261 m (87 %, 7 km); am rechten Rand Sessellift-Mast und Bergstation Schabell, knapp dahinter Gross Chärpf 2794 m (~93 %). Vorne die Skipiste mit gelben Schneilanzen.
+Taugt für: Glarner Hauptkette (Sardona–Vorab–Hausstock) frei/verdeckt, Wolkenbasis 1000–3100 m (Talboden 986 m, Kamera 2015 m, Pässe 2260–2630 m, Gipfel bis 3158 m), Übergänge Segnes- und Panixerpass Richtung Surselva, Föhn (Föhnmauer über dem Kamm Vorab–Hausstock, Schneefahnen), Schneefallgrenze an den Flanken des Sernftals, Talnebel. Gleichmässig grau = Kamera in der Wolke (Basis ≤ 2000 m).
+Eigenheiten: Blick nach Süden – im Winterhalbjahr steht die Sonne vormittags bis mittags im Bild (um 10 Uhr bei ~43 %, mittags bei ~57 % über dem Vorab; Gegenlicht, Nordwände dunkel, Linsenreflexe). Helle Kalkbänder in den Wänden sind kein Schnee. Kein Overlay, kein Zeitstempel im Bild. Update alle 10–20 min. Nachts dunkel = keine Information."""},
     {"title": "Klausenpass", "region": "zentralalpen", "wsrv": "w=1280&h=1280&fit=inside&we", "desc": """\
 Klausenpass UR: Hotel Klausenpass auf ~1850 m, 1,4 km W unterhalb der Passhöhe (1948 m), 56 km S von LSZK. Fisheye ~160°, Bildmitte Blick SW (~222°) talabwärts ins Schächental (Talboden Unterschächen ~1000 m, ~73 % von links).
 Landmarken von links nach rechts: Clariden 3267 m (Ecke oben links), Chammliberg 3214 m (Felswand oben links), Gross Schärhorn 3294 m (spitzer Gipfel ~26 %), Griessstock 2660–2720 m (Gipfelblock ~43 %), Gross Windgällen 3187 m (Horn ~52 %), Gross Spitzen 2400 m (~68 %), Uri-Rotstock-Gruppe 2930–2950 m in 22–23 km (~74–81 %), im Talausgang Hoh Brisen 2413 m (28 km), Läged Windgällen 2572 m (Fels oben rechts).
 Taugt für: Wolkenbasis 1850–3300 m (Gipfelleiter), Sicht bis ~28 km, Nebelmeer/Hochnebel (weisse Decke im Talausgang rechts der Mitte), Schneefallgrenze (Südhänge rechts), Föhnhinweise.
 Eigenheiten: ganz grau/weiss = Kamera in Wolke (Basis ≤ 1850 m). Wintermittag Sonnenblendung oben links ist kein Dunst; linke Talseite ganztags im Schatten; morgens Himmel überbelichtet weiss trotz klar. Nachts schwarz = keine Info. Update alle 30 min (Zeitstempel oben rechts)."""},
-    {"title": "Oberalppass", "region": "zentralalpen", "wsrv": "w=1024&h=1024&fit=inside", "desc": """\
-Oberalppass GR/UR (nahe Alpenhauptkamm), Kamera bei der Talstation der Sesselbahn Oberalp-Flyer auf ~2050 m, 80 km S von LSZK; Weitwinkel/Fisheye ~155°, Blick N–NNE (Bildmitte ~22°).
-Landmarken von links nach rechts: Oberalpsee 2026 m (ganz links), Gasthaus Piz Calmot (Chalet links), Schneehüenerstock 2773 m (Felszahn ~12 %), Fellilücke 2478 m (Sattel ~25 %), Piz Tiarms 2917 m (Gipfel ~37 %, 2 km), Crispalt-Grat 2800–3000 m in ~3 km (Lücke ~55–61 %), Calmut 2310 m mit Mast/Bergstation (~87 %); goldene Talstation Oberalp-Flyer rechts vorne.
-Taugt für: Wolkenbasis 2050–3000 m am Pass (Gipfelleiter), Schnee auf Passhöhe; Sicht nur bis ~3 km beurteilbar; ganz grau = Kamera in Wolke.
-Eigenheiten: Overlay mit Datum (TT/MM/JJJJ) oben rechts; starke Verzerrung; Schneehänge können bei diffusem Licht mit grauen Wolken verschmelzen."""},
+    {"title": "Schneehüenerstock", "region": "zentralalpen", "wsrv": "cx=0&cy=0&cw=1524&ch=450&precrop", "desc": """\
+Schneehüenerstock UR (Alpenhauptkamm, direkt über dem Oberalppass): Roundshot-Kamera auf der Bergstation des Schneehüenerstock-Express, ~2600 m ü. M., 1,6 km NW der Passhöhe, 79 km S von LSZK. Das Bild ist ein Ausschnitt des 360°-Panoramas: 209° von ENE über S bis W (Azimut ≈ 54° + 2,09° × x % der Bildbreite; 17 % = E, 60 % = S, 100 % ≈ W). Horizont bei ~47 % der Bildhöhe, darüber Himmel bis ~25°.
+Landmarken von links nach rechts (x % der Bildbreite): Piz Tiarms 2917 m (2 %, 1,6 km) mit nach rechts abfallendem Felsgrat bis ~19 %; dahinter die Surselva mit Piz Medel 3209 m (25 %, 20 km), Piz Gannaretsch 3040 m (33 %, 12 km) und Scopi 3187 m (36 %, 17 km); Oberalppass 2044 m (37 %, 1,6 km, tief unten hinter einer Schneekuppe); Piz Cavradi 2614 m (43 %, 5 km), Piz Blas 3018 m (47 %, 12 km), Piz Ravetsch 3005 m (50 %, 10 km); gross im Mittelgrund Pazolastock 2739 m (58 %, 2,4 km) und Rossbodenstock 2837 m (63 %, 3,8 km); Gotthardgruppe mit Pizzo Centrale 2999 m (69 %, 11 km), Gemsstock 2961 m (72 %, 8 km), Pizzo Lucendro 2963 m (77 %, 18 km) und Pizzo Rotondo 3191 m (80 %, 22 km); Urserental mit Andermatt 1438 m (85 %, 6 km, Talboden); Furkapass 2429 m (89 %, 21 km), Galenstock 3586 m (94 %, 19 km), Dammastock 3630 m (99 %, 18 km). Vorne links das Dach der Bergstation, unten Sesselbahnmasten.
+Taugt für: Alpenhauptkamm frei/verdeckt am Oberalp und Gotthard, Wolkenbasis 2000–3600 m (Gipfelleiter), Sicht bis ~22 km, Talnebel im Urserental und in der Surselva, Stau von Süden (Wolken über der Gotthardgruppe) oder von Norden, Neuschnee. Gleichmässig grau/weiss = Kamera in der Wolke (Basis ≤ 2600 m).
+Eigenheiten: Der Blick geht nach Süden, im Winterhalbjahr steht die Sonne vormittags bis nachmittags im Bild (mittags bei ~59 %, Gegenlicht und Überstrahlung, Nordflanken dunkel). Schneehänge können bei diffusem Licht mit Wolken verschmelzen. Kein Overlay, kein Zeitstempel im Bild. Update alle 10 min. Nachts dunkel = keine Information."""},
     {"title": "Gotthardpass", "region": "zentralalpen", "wsrv": "w=1024&h=1024&fit=inside", "desc": """\
 Gotthardpass, Passhöhe an der Strasse H2 (Airolo TI), Kamera auf ca. 2110 m (Pass 2106 m = 6910 ft). Blick nach OSO (Bildmitte ~110°, ca. 70° Bildwinkel); trotz «Sued» im Dateinamen kein Südblick.
 Vorn Passstrasse und Parkplatz, Mitte-rechts Lago della Piazza (2090 m) mit den Hospiz-Gebäuden (0,65 km). Links steile Flanke Sasso di San Gottardo/Monte Prosa (Bildoberkante links ≈ 2500 m), Mitte hinten Kamm des Pizzo Canariscio (≈ 2300–2420 m, 3 km), am rechten Rand ferne Gipfel südlich Airolo (Pizzo Scheggia 2558 m, Pizzo del Corno 2500 m, 9–11 km).
 Taugt für: Gotthard-Übergang VFR offen/zu, Wolkenbasis 2100–2700 m, Sicht bis ca. 10 km, Neuschnee und Schneelinie, Südstau (Wolken quellen rechts aus der Val Tremola) vs. Nordstau (Wolkenwalze über den linken Grat).
 Eigenheiten: Zeitstempel oben links (Lokalzeit), Takt 5 min. Vormittags Gegenlicht. Schnee/Eis auf der Scheibe ergibt unscharfe Flecken ohne Kanten (keine Aussage, nicht Nebel). Im Winter Strasse gesperrt und ungeräumt. Nachts schwarz."""},
+    {"title": "Parpaner Rothorn", "region": "graubuenden", "wsrv": "cx=473&cy=0&cw=1704&ch=450&precrop&w=1568&h=1568&fit=inside", "desc": """\
+Parpaner Rothorn GR (Lenzerheide), Roundshot-Panoramakamera auf der Bergstation, 2865 m ü. M., 95 km SE von LSZK. Das Bild ist ein Ausschnitt des 360°-Panoramas: 260° von E über S und W bis NNW; die Bildbreite entspricht dem Azimut (Azimut ≈ 85° + 2,6° × x%; 5 % = E, 37 % = S, 71 % = W, rechter Rand = NNW 345°). Der Horizont liegt bei ~52 % der Bildhöhe und entspricht der Kamerahöhe: Was darüber hinausragt, ist höher als ~2900 m. Himmel bis ~35° Höhe.
+Landmarken (x % der Bildbreite): Erzhorn 2922 m (2 %, 2,5 km), Aroser Rothorn 2980 m (11 %, 1,4 km, grösster Gipfel links), Piz Kesch 3418 m (14 %, 25 km), Antennenmast (16 %), Richtung Albulapass (19 %, verdeckt), Piz Naira 2871 m (24 %, 2 km), Piz Bernina 4049 m (25 %, 47 km), Piz Ela 3339 m (26 %, 18 km), Piz Julier 3380 m (27 %, 31 km), Tinzenhorn 3173 m (28 %, 16 km), Piz d'Err 3378 m (29,5 %, 23 km; der Julierpass liegt in dieser Richtung dahinter, verdeckt), Piz Mitgel 3159 m (31 %, 15 km), Lenzer Horn 2906 m (37,5 %, 3,7 km, dunkle Pyramide; verdeckt das Oberhalbstein), Albulatal bei Tiefencastel (40–50 %, dunkles Tal), Piz Curvér 2972 m (47 %, 17 km), Piz Tambo 3279 m (52,5 %, 36 km), Piz Beverin 2998 m (60 %, 21 km), Lenzerheide 1476 m (61 %, im Tal, 3,7 km), Piz Scalottas 2323 m (64 %, 7 km), Heidsee 1484 m (67 %), Piz Danis 2496 m (69,5 %, 7 km), Tödi 3614 m (74,5 %, 52 km), Stätzerhorn 2575 m (77,5 %, 6 km), Fulhorn 2529 m (80 %), Ringelspitz 3247 m (87 %, 26 km), Calanda 2697–2806 m (92,5–94,5 %, 19–20 km), Churer Rheintal mit Chur 580 m (97 %, 14 km, Talgrund im Dunst).
+Taugt für: Hauptkamm Graubünden frei/verdeckt (Kesch, Ela, Err, Bernina), Wolkenbasis bzw. -obergrenze im Bereich 2300–3400 m (Gipfelleiter; Kamera in der Wolke = Basis ≤ 2850 m), Nebelmeer und Hochnebel über Albulatal, Lenzerheide und Churer Rheintal, Sichtweite in Stufen 4 / 15–25 / 36 / 47–52 km, Schneefallgrenze an den Hängen der Lenzerheide (1500–2500 m), Föhnmauer am Hauptkamm. Albula- und Julierpass selbst sind verdeckt; beurteilbar sind nur die Gipfel darüber.
+Eigenheiten: Im Winterhalbjahr steht die Sonne von ca. 9 bis 15 Uhr im Bild über dem Südsektor (20–55 %): Lens-Flare und Gegenlicht-Dunst nicht als schlechte Sicht werten. Vordergrund: Antennen, Richtfunkspiegel (linker Rand, unten rechts), Glasdach der Station; verpixelte Fläche unten links ignorieren. Kein Zeitstempel im Bild, Takt 10 min, nachts dunkel."""},
+    {"title": "Jakobshorn", "region": "graubuenden", "wsrv": "w=1568&h=1568&fit=inside", "desc": """\
+Jakobshorn ob Davos GR, Panoramakamera (feratel) auf dem Gipfel, ca. 2590 m ü. M., 106 km ESE von LSZK. Panorama über ~243° von SE über S und W bis N (Azimut ≈ 130° + 2,43° × x%; 20 % = S, 58 % = W, 95 % = N). Flüelapass, Dischma und Silvretta (NE bis SE) sind NICHT im Bild. Unten unscharfer Schnee/Fels direkt vor der Linse.
+Landmarken (x % der Bildbreite): Jatzhorn 2682 m (0–5 %, 1 km, dunkle Pyramide am linken Rand), Piz Kesch 3418 m (18 %, 17 km), Hoch Ducan 3063 m (20 %, 9 km), Sertigtal mit Sertig Dörfli 1860 m (20–22 %, Talboden), Gletscher Ducan 3019 m (24 %), Felszacken der Kette zwischen Sertig und Monstein, 2700–3000 m (26–33 %, 6–13 km), Piz Ela 3339 m (33 %, 22 km), Tinzenhorn 3173 m (~36 %, 22 km), Landwassertal talabwärts Richtung Glaris/Monstein (38–46 %, bewaldet, Talboden ~1500 m), rundes Gipfelgebäude Jakobshorn mit Antennenmast (47–59 %, Vordergrund), Valbellahorn 2764 m (50 %, 12 km), Aroser Rothorn 2980 m (53 %, 18 km, hinter dem Mast), Strela-Kette 2600–2780 m (55–75 %, 6–9 km) mit Schafgrind 2637 m (62 %) und Strela 2636 m (74 %), Davos Platz 1560 m (69–82 %, im Tal, 3 km; Schatzalpbahn 78 %), Strelapass 2349 m (77,5 %), Schiahorn 2709 m (80 %, grauer Fels), Weissfluh 2843 m (82 %, 8 km), Weissfluhjoch 2657 m (84 %), Speichersee (84 %, unten), Teile von Davos Dorf (85–88 %), Hang des Brämabüel (87–100 %, Vordergrund), dahinter am Horizont der Rätikon mit Sulzfluh 2817 m (94 %, 27 km) und Madrisahorn 2826 m (97 %, 18 km) über dem Prättigau.
+Taugt für: Wolkenbasis 1600–3400 m im Raum Davos (Talboden, Waldgrenze ~2100 m, Strela-Kette 2600–2800 m, Kesch/Ducan/Ela > 3000 m; Kamera in der Wolke = Basis ≤ 2550 m), Talnebel und Hochnebel im Landwassertal und über Davos, Sicht bis ~27 km, Schneefallgrenze an den Hängen ob Davos, Stau am Rätikon/Prättigau (rechter Rand).
+Eigenheiten: Im Winterhalbjahr steht die Sonne ganztags im Bild: morgens am linken Rand über dem Jatzhorn (Blendung, Linsenreflexe), mittags über dem Sertigtal (20–30 %), nachmittags über dem Landwassertal; Gegenlicht nicht als Dunst werten. Kein Overlay und kein Zeitstempel im Bild, Takt ~10 min, nachts dunkel (nur Lichter von Davos)."""},
     {"title": "Ambri Tarnolgio", "region": "alpensuedseite", "wsrv": "w=1024&h=1024&fit=inside", "desc": """\
 Tarnolgio ob Faido (Leventina TI, Strasse nach Carì), Kamera auf ca. 1610 m (5280 ft) an der NO-Talflanke – NICHT Ambrì. Weitwinkel (~120°) nach S (Bildmitte ~186°), nach oben geneigt: ca. 60 % Himmel, Berge nur im unteren Drittel, Ränder verzeichnet.
 Von links: Talausgang der unteren Leventina Richtung Lavorgo/Biasca (Talboden 300–650 m) mit fernen Kämmen. Mitte der dunkle Pizzo Forno (2907 m, 7,6 km), rechts davon die Campo-Tencia-Gruppe (bis 3072 m, 9,5 km), am rechten Rand Pizzo Campolungo (2713 m). Unten rechts die Wiesen von Dalpe (1190 m, Gegenhang 3 km), unten die Dächer des Weilers.
@@ -129,7 +150,7 @@ Eigenheiten: Logos «Swiss Alps»/SIRMES und Datumszeile ignorieren. Takt 15 min
 ]
 CAM_TITLES = [c["title"] for c in CAMS]
 # Cameras on the main Alpine ridge: "alpen: frei" needs a usable, cloud-free image from one of them
-HAUPTKAMM_TITLES = ("Gotthardpass", "Oberalppass")
+HAUPTKAMM_TITLES = ("Gotthardpass", "Schneehüenerstock", "Parpaner Rothorn")
 
 # ── Prompts ──────────────────────────────────────────────────────────────────
 SYSTEM_BRIEFING = """Du bist der Flugwetter-Assistent des Webcam-Dashboards für den Flugplatz Speck-Fehraltorf (LSZK) im Zürcher Oberland: 47,376 N / 8,762 E, 536 m ü. M., Piste 12/30. Die Leserinnen und Leser sind Motor- und Segelflugpiloten der Flugsportgruppe Zürcher Oberland (FGZO), die sich vor einem Flug in einer Minute ein Bild der Lage machen wollen.
@@ -148,7 +169,7 @@ Grundsätze
 - Ehrlich bei Unsicherheit: Lässt sich etwas aus den Daten nicht sicher bestimmen, setze null bzw. "unbekannt" und erfinde nichts. Gegenlicht, Dunst über dem See, Schatten und Spiegelungen sind keine Wolken.
 - Unbrauchbare Bilder (Nacht, schwarzes Bild, Platzhalter oder Fehlermeldung, nasse oder verschmutzte Linse) markierst du mit dem passenden "problem" und stützt dich nicht darauf. Ein gleichmässig graues Bild einer Bergkamera ist dagegen meist eine Beobachtung: Die Kamera steckt in der Wolke, die Basis liegt dort unter der Kamerahöhe (Tag "in_wolke", problem "keins").
 - Tag "flugbetrieb" nur bei Flugzeugen in der Luft oder beim Rollen; abgestellte Flugzeuge zählen nicht.
-- Der Platzstatus der FGZO ist massgebend. Bestehen Einschränkungen (gesperrte Rollwege, Pistenzustand, Schliessung), erwähnst du sie sinngemäss im Briefing. Erfinde keine Einschränkungen und keine NOTAM.
+- Der Platzstatus der FGZO ist massgebend. Bestehen Einschränkungen (gesperrte Rollwege, Pistenzustand, Schliessung), erwähnst du sie sinngemäss im Briefing. Den Pistenzustand übernimmst du wörtlich und unübersetzt so, wie ihn fgzo.ch meldet (zum Beispiel «SLIPPERY WET» oder «DRY»). Erfinde keine Einschränkungen und keine NOTAM.
 - Keine Empfehlung, ob geflogen werden soll, keine Anrede, keine Sicherheitsfloskeln: Der Haftungshinweis steht bereits auf der Seite.
 
 Sprache und Form
@@ -166,7 +187,7 @@ TAGS = ["sonnig", "quellwolken", "bedeckt", "tiefe_wolken", "hochnebel", "nebel"
         "niederschlag", "gewitterwolken", "foehnzeichen", "schnee", "nasse_piste", "schneebedeckte_piste",
         "flugbetrieb", "gegenlicht"]
 PROBLEMS = ["keins", "nacht", "zu_dunkel", "eingefroren", "linse_nass", "verschmutzt", "fehlbild"]
-REGIONS = ["platz", "zuercher_oberland", "voralpen", "glarner_alpen", "zentralalpen", "alpensuedseite"]
+REGIONS = ["platz", "zuercher_oberland", "voralpen", "glarner_alpen", "zentralalpen", "graubuenden", "alpensuedseite"]
 
 
 def _nullable(schema: dict) -> dict:
@@ -440,7 +461,7 @@ def fetch_cam(session, cam: dict, ref: dict, cam_status: dict, now: datetime):
         if isinstance(changed, (int, float)):
             age = minutes_since(datetime.fromtimestamp(changed / 1000, tz=timezone.utc), now)
         if age is not None and age > MAX_IMAGE_AGE_MIN:
-            raise RuntimeError(f"Bild seit {age_text(age)} unverändert (Kamera eingefroren?)")
+            raise RuntimeError(f"Bild seit {age_text(age).replace(' Tage', ' Tagen')} unverändert (Kamera eingefroren?)")
         origin = unquote(ref["url"].split("?url=", 1)[1].split("&", 1)[0])
         return fetch_image(session, wsrv_url(origin, params, int(now.timestamp()))), age, ref["url"]
 
@@ -555,7 +576,7 @@ def foehn_index(foehn, now: datetime):
 
 
 def fgzo_text(fgzo) -> str:
-    if not fgzo or not fgzo.get("updated"):
+    if not isinstance(fgzo, dict) or not fgzo.get("updated"):
         return "Platzstatus FGZO: nicht verfügbar."
     parts = [f'Platzstatus FGZO (fgzo.ch, aktualisiert {fgzo.get("updated")}): {fgzo.get("status") or "?"}',
              f'Ampel {fgzo.get("ampel") or "?"}']
@@ -564,6 +585,10 @@ def fgzo_text(fgzo) -> str:
     if fgzo.get("traffic"):
         parts.append(fgzo["traffic"])
     text = ", ".join(parts) + "."
+    if fgzo.get("runway_condition"):
+        # original wording of fgzo.ch (e.g. SLIPPERY WET), not a translation (user decision 15.11.)
+        text += f' Pistenzustand im Originalwortlaut von fgzo.ch (nicht übersetzen): «{fgzo["runway_condition"]}»'
+        text += f' ({fgzo["runway_line"]}).' if fgzo.get("runway_line") else "."
     if fgzo.get("notice"):
         text += " Hinweistext: " + fgzo["notice"].replace("\n\n", " / ").replace("\n", " / ")
     if fgzo.get("ok") is False:
