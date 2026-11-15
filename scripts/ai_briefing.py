@@ -1542,8 +1542,9 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
         corrections.append("text: Satz mit «Luftraum frei» entfernt")
     if platz["flaeche"] != "gesperrt":   # the page shows the airfield line right above the text (user, 15.11.)
         sentences = SENTENCE_SPLIT_RE.split(text)
-        if sentences and platz_repeat(sentences[0], platz["text"]):
-            text = " ".join(sentences[1:])
+        rest = " ".join(sentences[1:]).strip()
+        if rest and platz_repeat(sentences[0], platz["text"]):   # never leave an empty text
+            text = rest
             corrections.append("text: wiederholte Platzzeile am Anfang entfernt")
     if platz["flaeche"] == "gesperrt":   # fixed-wing pilots: a closed airfield must be the first thing they read
         if PLATZ_OFFEN_RE.search(headline) or PLATZ_OFFEN_RE.search(text):

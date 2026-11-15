@@ -2115,7 +2115,8 @@
       var txt = typeof b.text === 'string' ? b.text : '';
       if (pz && pz.flaeche !== 'gesperrt' && typeof pz.text === 'string') {
         var line = pz.text.replace(/\s*\(FGZO-Stand[^)]*\)\s*$/, '');
-        if (line && txt.indexOf(line + '.') === 0) txt = txt.slice(line.length + 1).replace(/^\s+/, '');
+        var rest = (line && txt.indexOf(line + '.') === 0) ? txt.slice(line.length + 1).replace(/^\s+/, '') : '';
+        if (rest) txt = rest;                // nie einen leeren Text zeigen
       }
       html += '<div class="ai-text">' + escHtml(aiSwiss(txt)) + '</div>';
 
