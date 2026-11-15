@@ -174,6 +174,7 @@
     .ai-btn { position: relative; }
     .ai-time { font-weight: 400; opacity: 0.8; }
     .ai-time:not(:empty)::before { content: ' · '; }
+    .ai-warn:not(:empty) { margin-left: 4px; color: #fcd34d; }
     .ai-new { margin-left: 4px; }
     .ai-new[hidden] { display: none; }
     .ai-dot.stale { background: transparent !important; box-shadow: inset 0 0 0 2px #64748b; }
@@ -181,6 +182,7 @@
     @keyframes ai-pulse { 50% { opacity: 0.35; } }
     .top-btn.ai-btn:hover .ai-new { background: var(--bg); color: var(--accent); }
     #ai-modal .brf-modal-card { max-width: 640px; }
+    #ai-modal-content { overflow-wrap: anywhere; }
     .ai-headline { font-size: 1rem; font-weight: 600; display: flex; gap: 8px; align-items: center; color: var(--text); margin-top: 4px; }
     .ai-lage { font-size: 0.78rem; color: var(--text-muted); margin: 4px 0 0 18px; }
     .ai-lage b { color: var(--text); }
@@ -842,7 +844,7 @@
 
       <button class="top-btn ai-btn" id="ai-toggle" type="button" onclick="openAiModal()" aria-haspopup="dialog" title="KI-Briefing">
         <span class="brf-dot ai-dot loading" id="ai-dot" aria-hidden="true"></span>
-        KI-Briefing<span class="ai-time" id="ai-time"></span><span class="brf-new ai-new" id="ai-new" hidden>neu</span>
+        KI-Briefing<span class="ai-time" id="ai-time"></span><span class="ai-warn" id="ai-warn" aria-hidden="true"></span><span class="brf-new ai-new" id="ai-new" hidden>neu</span>
       </button>
 
       <div class="dropdown">
@@ -1929,7 +1931,8 @@
 
     function renderAiButton() {
       var btn = document.getElementById('ai-toggle'), dot = document.getElementById('ai-dot'),
-          tm = document.getElementById('ai-time'), nw = document.getElementById('ai-new');
+          tm = document.getElementById('ai-time'), nw = document.getElementById('ai-new'),
+          wn = document.getElementById('ai-warn');
       if (!btn || !dot || !tm || !nw) return;
       var st = aiState(), now = new Date(), time = '', label = 'KI-Briefing';
       dot.className = 'brf-dot ai-dot';
@@ -1949,10 +1952,11 @@
           label += ', veraltet';
         }
         label += ', Stand ' + aiWhen(st.gen, now);
-        if (st.failed)  { time += ' ⚠'; label += ', letzte Aktualisierung fehlgeschlagen'; }
+        if (st.failed)  label += ', letzte Aktualisierung fehlgeschlagen';
         if (st.running) label += ', wird gerade aktualisiert';
       }
       tm.textContent = time;
+      if (wn) wn.textContent = st.failed ? '⚠' : '';
       nw.hidden = !st.isNew;
       btn.title = label;
       btn.setAttribute('aria-label', label);

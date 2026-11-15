@@ -589,8 +589,10 @@ def fgzo_text(fgzo) -> str:
         # original wording of fgzo.ch (e.g. SLIPPERY WET), not a translation (user decision 15.11.)
         text += f' Pistenzustand im Originalwortlaut von fgzo.ch (nicht übersetzen): «{fgzo["runway_condition"]}»'
         text += f' ({fgzo["runway_line"]}).' if fgzo.get("runway_line") else "."
-    if fgzo.get("notice"):
-        text += " Hinweistext: " + fgzo["notice"].replace("\n\n", " / ").replace("\n", " / ")
+    notice = str(fgzo.get("notice") or "").strip()
+    duplicate = bool(fgzo.get("runway_condition")) and notice == str(fgzo.get("runway_line") or "").strip()
+    if notice and not duplicate:   # the runway line is already quoted above
+        text += " Hinweistext: " + notice.replace("\n\n", " / ").replace("\n", " / ")
     if fgzo.get("ok") is False:
         text += " (Letzter Abruf fehlgeschlagen, Stand evtl. veraltet.)"
     return text
