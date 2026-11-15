@@ -192,6 +192,7 @@
     .ai-muted { color: var(--text-muted); font-weight: 400; }
     .ai-banner { font-size: 0.78rem; line-height: 1.5; color: #fca5a5; background: rgba(239, 68, 68, 0.12); border-left: 3px solid #ef4444; padding: 6px 10px; margin: 0 0 10px; }
     .ai-banner.warn { color: #fcd34d; background: rgba(245, 158, 11, 0.12); border-left-color: #f59e0b; }
+    .ai-banner a { color: inherit; text-decoration: underline; }
     .ai-banner details { margin-top: 4px; color: var(--text-muted); word-break: break-word; }
     .ai-kv { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px 12px; font-size: 0.78rem; margin: 0; }
     .ai-kv dt { color: var(--text-muted); }
@@ -1985,6 +1986,34 @@
       btn.setAttribute('aria-label', label);
     }
 
+    function aiDabsHtml(d, now) {            // DABS-Auszug: Trefferliste vom Programm, nicht von der KI
+      var x = (d.dabs && typeof d.dabs === 'object' && !Array.isArray(d.dabs)) ? d.dabs : null;
+      if (!x) return '';                       // Datensatz ohne DABS-Feld: kein Abschnitt
+      var str = function (v) { return typeof v === 'string' ? v : ''; };
+      var html = '<div class="ai-sec">DABS – erste Richtung</div>' +
+        '<div class="ai-banner warn"><b>Nur eine erste Richtung, ersetzt kein DABS-Briefing.</b> ' +
+        'Automatischer Auszug nach Lage, Höhe und Zeit; er kann unvollständig oder überholt sein. Massgebend: ' +
+        '<a href="https://www.skybriefing.com/o/dabs?today" target="_blank" rel="noopener noreferrer">Original-DABS (PDF)</a>.</div>';
+      var stand = aiDate(x.stand_utc);
+      var tag = /^\d{4}-\d{2}-\d{2}$/.test(str(x.datum)) ? aiDate(x.datum + 'T12:00:00+00:00') : null;
+      if (x.ok !== true || !stand || !tag) return html + '<div class="ai-row">DABS nicht auswertbar – bitte das Original öffnen.</div>';
+      if (aiDay(tag) !== aiDay(now)) return html + '<div class="ai-row">Der Auszug ist nicht von heute und wird nicht mehr angezeigt.</div>';
+      var hits = Array.isArray(x.treffer) ? x.treffer.filter(function (t) { return t && typeof t === 'object'; }) : [];
+      hits.forEach(function (t) {
+        var kopf = [str(t.gebiet), str(t.notam)].filter(Boolean).join(' · ') || 'Eintrag';
+        var band = (str(t.unten) || '?') + ' bis ' + (str(t.oben) || '?');
+        html += '<div class="ai-row"><b>' + escHtml(kopf) + '</b> ' + escHtml(str(t.zeit)) + ' · ' + escHtml(band) +
+          (t.unsicher === true ? ' ⚠ <span class="ai-prob">nicht eindeutig lesbar</span>' : '') +
+          '<br>' + escHtml(str(t.text)) +
+          (t.karte === false ? ' <span class="ai-muted">· nicht auf der DABS-Karte</span>' : '') + '</div>';
+      });
+      if (!hits.length) html += '<div class="ai-row">Keine DABS-Einträge im Fluggebiet gefunden.</div>';
+      var ver = (typeof x.version === 'number' && isFinite(x.version)) ? 'Version ' + x.version + ', ' : '';
+      var tot = (typeof x.eintraege_total === 'number' && isFinite(x.eintraege_total))
+        ? ' · ' + hits.length + ' von ' + x.eintraege_total + ' Einträgen' : '';
+      return html + '<div class="brf-src">Stand ' + ver + aiDM(stand) + ' ' + aiHM(stand) + ' (Zeiten in Lokalzeit)' + tot +
+        (str(x.filter) ? ' · ' + escHtml(x.filter) : '') + ' · neue Versionen um 09:00, 13:00 und 16:00</div>';
+    }
     function aiThermikHtml(d, st) {
       var t = d.thermik;
       if (st.kind !== 'ok' || !t || typeof t !== 'object' || Array.isArray(t)) return '';
@@ -2070,6 +2099,7 @@
       });
       if (regHtml) html += '<div class="ai-sec">Regionen</div>' + regHtml;
       html += aiThermikHtml(d, st);
+      html += aiDabsHtml(d, now);
 
       var cams = Array.isArray(d.kameras) ? d.kameras.filter(function (k) { return k && typeof k === 'object'; }) : [];
       if (cams.length) {
