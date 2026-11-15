@@ -1196,7 +1196,7 @@
       </h3>
       <div id="brf-modal-content"></div>
       <div class="brf-note">
-        <strong>Quellen &amp; Genauigkeit:</strong> Böen und Niederschlag sind aktuelle Messwerte der Wetterstation Speck am Platz, das QNH für den Föhn-/Bise-Index von MeteoSchweiz (Lugano/Zürich). Thermikfenster, Arbeitshöhe, Charakter, Auslösetemperatur, CAPE und Regenwahrscheinlichkeit sind Modellvorhersagen (Open-Meteo, nächste 12&nbsp;h) bzw. eine vereinfachte Abschätzung aus wenigen Höhenstufen. Das sind grobe Richtwerte zur ersten Orientierung – <strong>kein Ersatz</strong> für ein Emagramm, SoaringMeteo und die offizielle Flugwetterberatung.
+        <strong>Quellen &amp; Genauigkeit:</strong> Böen und Niederschlag sind aktuelle Messwerte der Wetterstation Speck am Platz, der Föhn-/Bise-Index aus den METAR-QNH von Lugano-Agno (LSZA) und Zürich-Kloten (LSZH). Thermikfenster, Arbeitshöhe, Charakter, Auslösetemperatur, CAPE und Regenwahrscheinlichkeit sind Modellvorhersagen (Open-Meteo, nächste 12&nbsp;h) bzw. eine vereinfachte Abschätzung aus wenigen Höhenstufen. Das sind grobe Richtwerte zur ersten Orientierung – <strong>kein Ersatz</strong> für ein Emagramm, SoaringMeteo und die offizielle Flugwetterberatung.
       </div>
       <div style="text-align:center;margin-top:14px;">
         <button class="top-btn" id="brf-modal-wx" type="button">Alle Wetterdetails öffnen</button>
@@ -1677,13 +1677,13 @@
       }
       if (briefing.foehnDp !== undefined && briefing.foehnDp !== null) {
         var a  = Math.abs(briefing.foehnDp);
-        var dv = (briefing.foehnDp > 0 ? '+' : '') + briefing.foehnDp.toFixed(1).replace('.', ',');
+        var dv = (briefing.foehnDp > 0 ? '+' : '') + Math.round(briefing.foehnDp);
         out.push({
           color: a < 2 ? G : (a < 4 ? Y : R),
           chip:  (briefing.foehnDp < 0 ? 'Bise ' : 'Föhn ') + dv + ' hPa',
           title: 'Föhn-/Bise-Index',
-          value: dv + ' hPa (QNH Lugano − Zürich)',
-          text:  'Klassischer Föhn-Indikator: Druckdifferenz über den Alpenkamm. Grosse positive Werte = Südföhn auf der Alpennordseite – Turbulenz, Leewellen und kräftiger Höhenwind bis ins Zürcher Oberland. Negativ = Nord-/Bisenlage. Bis ±2&nbsp;hPa unauffällig, ab ±4&nbsp;hPa Föhnlage wahrscheinlich.'
+          value: dv + ' hPa (QNH Lugano-Agno LSZA − Zürich-Kloten LSZH)',
+          text:  'Klassischer Föhn-Indikator: Druckdifferenz über den Alpenkamm, gerechnet aus den METAR-QNH von Lugano-Agno (LSZA) minus Zürich-Kloten (LSZH); ganze hPa, neue Meldung alle 30&nbsp;Min. Das KI-Briefing nutzt denselben Wert. Grosse positive Werte = Südföhn auf der Alpennordseite – Turbulenz, Leewellen und kräftiger Höhenwind bis ins Zürcher Oberland. Negativ = Nord-/Bisenlage. Bis ±2&nbsp;hPa unauffällig, ab ±4&nbsp;hPa Föhnlage wahrscheinlich.'
         });
       }
       if (briefing.gustKt !== undefined && briefing.gustKt !== null) {
@@ -1755,24 +1755,25 @@
       document.body.style.overflow = '';
     }
 
-    /* ── Föhn-Index: letzten gefüllten QNH aus SMN-now-CSV holen ── */
-    function lastQnh(txt) {
-      var lines = txt.trim().split(/\r?\n/);
-      if (lines.length < 2) return null;
-      var idx = lines[0].split(';').indexOf('pp0qnhs0');
-      if (idx === -1) return null;
-      for (var i = lines.length - 1; i >= 1; i--) {
-        var c = lines[i].split(';');
-        var v = c[idx] ? parseFloat(c[idx]) : NaN;
-        if (!isNaN(v) && v > 900 && v < 1100) return v;
-      }
-      return null;
-    }
-    function fetchQnh(st) {
-      return fetch('https://data.geo.admin.ch/ch.meteoschweiz.ogd-smn/' + st + '/ogd-smn_' + st + '_t_now.csv?t=' + Date.now(), { cache: 'no-store' })
-        .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
-        .then(lastQnh)
-        .catch(function() { return null; });
+    /* ── Föhn-Index: METAR-QNH Lugano-Agno (LSZA) − Zürich-Kloten (LSZH) ──
+       data/metar_foehn.json schreibt der METAR-Job alle 30 min; das KI-Briefing liest dieselbe Datei.
+       Ganze hPa wie im METAR. Älter als 120 min oder unvollständig = keine Anzeige. */
+    var FOEHN_MAX_AGE_MIN = 120;
+    function fetchFoehn() {
+      var none = { sued: null, nord: null, obs: null };
+      return fetch('data/metar_foehn.json?t=' + Date.now(), { cache: 'no-store' })
+        .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function(d) {
+          if (!d || typeof d.index_hpa !== 'number' || !isFinite(d.index_hpa) || !d.sued || !d.nord) return none;
+          var qs = d.sued.qnh, qn = d.nord.qnh;
+          if (typeof qs !== 'number' || typeof qn !== 'number') return none;
+          var ts = Date.parse(d.sued.obs_utc), tn = Date.parse(d.nord.obs_utc);
+          if (isNaN(ts) || isNaN(tn)) return none;
+          var obs = Math.min(ts, tn);
+          if (Date.now() - obs > FOEHN_MAX_AGE_MIN * 60000) return none;
+          return { sued: qs, nord: qn, obs: new Date(obs) };
+        })
+        .catch(function() { return none; });
     }
 
     /* ── Wetterdaten laden (Station + METAR kombiniert) ──── */
@@ -1797,20 +1798,19 @@
         })
         .catch(function() { return null; });
 
-      // Föhn-Index: QNH-Differenz Lugano (Süd) − Zürich (Nord)
-      var pSued = fetchQnh('lug');
-      var pNord = fetchQnh('sma');
+      // Föhn-Index: QNH-Differenz METAR Lugano-Agno (LSZA, Süd) − Zürich-Kloten (LSZH, Nord)
+      var pFoehn = fetchFoehn();
 
       // Flugplatzstatus FGZO (vom Job geschrieben, gleiche Kadenz wie Wetter)
       var pFgzo = fetch('data/fgzo_status.json?t=' + Date.now(), { cache: 'no-store' })
         .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
         .catch(function() { return null; });
 
-      Promise.all([pStation, pMetar, pSued, pNord, pFgzo]).then(function(results) {
+      Promise.all([pStation, pMetar, pFoehn, pFgzo]).then(function(results) {
         _stationData = results[0];
         _metarData   = results[1];
-        briefing.platz = results[4];
-        renderAll(el, _stationData, _metarData, { sued: results[2], nord: results[3] });
+        briefing.platz = results[3];
+        renderAll(el, _stationData, _metarData, results[2]);
       });
     }
 
@@ -1944,18 +1944,21 @@
           '<div class="wx-stat-sub" style="white-space:nowrap;">' + baseFt + '&nbsp;ft (MSL)<br>≈&nbsp;' + (baseMsl - 536) + '&nbsp;m über Platz</div></div>';
       }
 
-      // Föhn-Index-Kachel: QNH Lugano − Zürich (Süd−Nord über den Alpenkamm)
+      // Föhn-Index-Kachel: METAR-QNH LSZA − LSZH (Süd−Nord über den Alpenkamm), ganze hPa
       var foehnHtml = '';
       if (foehn && foehn.sued !== null && foehn.sued !== undefined && foehn.nord !== null && foehn.nord !== undefined) {
-        var fdp  = foehn.sued - foehn.nord;
+        var fdp  = Math.round(foehn.sued - foehn.nord);
+        var fObs = (foehn.obs instanceof Date)
+          ? ' · ' + foehn.obs.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich' })
+          : '';
         var fadp = Math.abs(fdp);
         var fCol, fTxt;
         if (fadp < 2)      { fCol = '#10b981'; fTxt = 'unauffällig'; }
         else if (fadp < 4) { fCol = '#f59e0b'; fTxt = fdp > 0 ? 'Südföhn-Tendenz' : 'Nord-/Bise-Tendenz'; }
         else               { fCol = '#ef4444'; fTxt = fdp > 0 ? 'Südföhn wahrscheinlich' : 'Nordstau / kräftige Bise'; }
         foehnHtml = '<div class="wx-stat"><div class="wx-stat-label">' + (fdp < 0 ? 'Bise-Index' : 'Föhn-Index') + '</div>' +
-          '<div class="wx-stat-value" style="color:' + fCol + ';white-space:nowrap;">' + (fdp > 0 ? '+' : '') + fdp.toFixed(1).replace('.', ',') + '&nbsp;hPa</div>' +
-          '<div class="wx-stat-sub" style="white-space:nowrap;">Lugano − Zürich<br>' + fTxt + '</div></div>';
+          '<div class="wx-stat-value" style="color:' + fCol + ';white-space:nowrap;">' + (fdp > 0 ? '+' : '') + fdp + '&nbsp;hPa</div>' +
+          '<div class="wx-stat-sub" style="white-space:nowrap;">LSZA − LSZH' + fObs + '<br>' + fTxt + '</div></div>';
       }
 
       // Runway Diagram aus Stationsdaten – nur rendern, wenn echte Winddaten da sind

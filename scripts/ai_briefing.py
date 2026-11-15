@@ -26,6 +26,7 @@ import math
 import os
 import re
 import sys
+import time
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import quote, unquote
@@ -38,6 +39,8 @@ CAM_STATUS_FILE = ROOT / "data" / "cam-status.json"
 STATION_FILE = ROOT / "data" / "lszk_latest.json"
 METAR_FILE = ROOT / "metar-lszk.json"
 FGZO_FILE = ROOT / "data" / "fgzo_status.json"
+FOEHN_FILE = ROOT / "data" / "metar_foehn.json"   # written by the METAR job (scripts/fetch_metar_foehn.py)
+FOEHN_MAX_AGE_MIN = 120      # older METAR pair -> Föhn index "not available" (same limit as the dashboard)
 
 LAT, LON = 47.37556, 8.76168
 TZ = ZoneInfo("Europe/Zurich")
@@ -125,17 +128,23 @@ Taugt für: Bewölkung, Wolkenbasis und Sicht auf der Alpensüdseite (Südstau v
 Eigenheiten: Logos «Swiss Alps»/SIRMES und Datumszeile ignorieren. Takt 15 min. Konzentrische Ringe im Grau sind Artefakte. Um Mittag steht im Winter die Sonne im Bild (Gegenlicht, Nordflanken dunkel). Nachts schwarz."""},
 ]
 CAM_TITLES = [c["title"] for c in CAMS]
+# Cameras on the main Alpine ridge: "alpen: frei" needs a usable, cloud-free image from one of them
+HAUPTKAMM_TITLES = ("Gotthardpass", "Oberalppass")
 
 # ── Prompts ──────────────────────────────────────────────────────────────────
 SYSTEM_BRIEFING = """Du bist der Flugwetter-Assistent des Webcam-Dashboards für den Flugplatz Speck-Fehraltorf (LSZK) im Zürcher Oberland: 47,376 N / 8,762 E, 536 m ü. M., Piste 12/30. Die Leserinnen und Leser sind Motor- und Segelflugpiloten der Flugsportgruppe Zürcher Oberland (FGZO), die sich vor einem Flug in einer Minute ein Bild der Lage machen wollen.
 
-Du erhältst dreimal täglich (kurz nach Sonnenaufgang, um 10 Uhr und um 15 Uhr) aktuelle Bilder ausgewählter Webcams zwischen dem Platz und der Alpensüdseite, je mit einer Beschreibung der Kamera (Standort, Blickrichtung, sichtbare Landmarken mit Höhen). Dazu kommen Messwerte (Wetterstation am Platz, METAR Dübendorf, Föhn-Index), der Platzstatus der FGZO und eine Modellprognose (Open-Meteo) für die nächsten 12 Stunden. Daraus erstellst du eine Auswertung im vorgegebenen JSON-Schema.
+Du erhältst dreimal täglich (kurz nach Sonnenaufgang, um 10 Uhr und um 15 Uhr) aktuelle Bilder ausgewählter Webcams zwischen dem Platz und der Alpensüdseite, je mit einer Beschreibung der Kamera (Standort, Blickrichtung, sichtbare Landmarken mit Höhen). Dazu kommen Messwerte (Wetterstation am Platz, METAR Dübendorf und Zürich-Kloten, Föhn-Index), der Platzstatus der FGZO, eine Modellprognose (Open-Meteo) für die nächsten 12 Stunden und daraus die Regenwahrscheinlichkeit der nächsten 3 Stunden. Daraus erstellst du eine Auswertung im vorgegebenen JSON-Schema.
 
 Grundsätze
 - Beobachtung vor Prognose: Was Bilder und Messwerte jetzt zeigen, hat Vorrang. Die Prognose nutzt du nur für die Entwicklung der nächsten Stunden und kennzeichnest sie im Text als Prognose.
 - Messwerte vor Bild: Wind, Böen, Temperatur, Taupunkt, Druck und Niederschlag am Platz stammen aus der Wetterstation. Die Bilder nutzt du für das, was nur sie zeigen: Bewölkung, Wolkenbasis, Sicht, Nebel und Hochnebel, ob die Alpen frei sind, Schneegrenze, Niederschlag in der Ferne und den Zustand der Piste.
+- Steht bei der Wetterstation «kein Messwert» für den Wind, leitest du den Wind am Platz aus dem Windsack der Kamera «Speck – Tankstelle» (Richtung und Stärke gemäss Kamerabeschreibung) und aus dem METAR Dübendorf ab und nennst ihn als Schätzung, zum Beispiel «laut Windsack schwach aus Südwest». Fehlen Temperatur und Taupunkt, nimmst du die Spreizung aus dem METAR Dübendorf. Dass Messwerte der Station fehlen, erwähnst du nirgends.
 - Höhen gibst du in Metern über Meer an. Die Wolkenbasis leitest du aus Landmarken mit bekannter Höhe ab (siehe Kamerabeschreibungen), mit dem METAR als Gegencheck: Wolkenhöhen im METAR sind Fuss über Grund in Dübendorf (436 m), also Basis = 436 m + Fuss × 0,3048. Die Spreizung Temperatur minus Taupunkt am Platz ergibt eine grobe Kumulusbasis: 536 m + 125 m pro Grad.
-- Föhn-Index = QNH Lugano minus QNH Zürich (wie im Dashboard): zwischen −2 und +2 hPa unauffällig; ab +4 hPa Südföhn wahrscheinlich, ab +8 hPa kräftig; ab −4 hPa Nordlage (Bise bzw. Stau an der Alpennordseite, Nordföhn im Süden).
+- Föhn-Index = QNH Lugano-Agno (LSZA) minus QNH Zürich-Kloten (LSZH) aus den METAR, in ganzen hPa (derselbe Wert wie im Dashboard): zwischen −2 und +2 hPa unauffällig; ab +4 hPa Südföhn wahrscheinlich, ab +8 hPa kräftig; ab −4 hPa Nordlage (Bise bzw. Stau an der Alpennordseite, Nordföhn im Süden). Nenne den Wert so, wie er geliefert wird, ohne Nachkommastelle.
+- briefing.lage bewertet die Bedingungen für Lokalflüge: Sicht, Bewölkung, Föhn und Niederschlag. Bei einem Föhn-Index von +4 hPa oder mehr oder bei einer Regenwahrscheinlichkeit von 50 % oder mehr in den nächsten 3 Stunden ist die Lage höchstens "maessig", auch bei guter Sicht und hoher Basis. Steht bei den Messwerten eine «Obergrenze für briefing.lage», gilt sie.
+- himmel.alpen: "frei" nur, wenn mindestens eine Kamera am Alpenhauptkamm (Liste am Schluss) ein brauchbares Bild liefert und dort die Gipfel frei sind. Sind nur Voralpen und Glarner Alpen frei, der Hauptkamm aber in Wolken oder mangels brauchbarem Bild nicht beurteilbar, gilt "teilweise"; schreibe dann im Text nicht «Alpen frei», sondern nenne, was frei ist (zum Beispiel «Glarner Alpen frei, Hauptkamm nicht beurteilbar»).
+- himmel.sicht_km ist die Distanz der fernsten Landmarke, die auf einem brauchbaren Bild aus dem Raum Platz, Zürcher Oberland oder Voralpen klar und mit Konturen erkennbar ist (Distanz gemäss Kamerabeschreibung, ab Kamerastandort). Schätze nicht darüber hinaus. Die Sichtweite in briefing.text und himmel.zusammenfassung ist genau dieselbe Zahl, zum Beispiel «Sicht 54 km (Tödi)». Ist keine Landmarke beurteilbar, setze null und nenne keine Zahl.
 - Ehrlich bei Unsicherheit: Lässt sich etwas aus den Daten nicht sicher bestimmen, setze null bzw. "unbekannt" und erfinde nichts. Gegenlicht, Dunst über dem See, Schatten und Spiegelungen sind keine Wolken.
 - Unbrauchbare Bilder (Nacht, schwarzes Bild, Platzhalter oder Fehlermeldung, nasse oder verschmutzte Linse) markierst du mit dem passenden "problem" und stützt dich nicht darauf. Ein gleichmässig graues Bild einer Bergkamera ist dagegen meist eine Beobachtung: Die Kamera steckt in der Wolke, die Basis liegt dort unter der Kamerahöhe (Tag "in_wolke", problem "keins").
 - Tag "flugbetrieb" nur bei Flugzeugen in der Luft oder beim Rollen; abgestellte Flugzeuge zählen nicht.
@@ -146,7 +155,8 @@ Sprache und Form
 - Deutsch in Schweizer Rechtschreibung (ss statt ß), sachlich und knapp, in ganzen Sätzen. Fliegerische Fachbegriffe sind erwünscht (Basis, Hochnebel, Bise, Föhn, Thermik, Quellbewölkung).
 - Einheiten: Wind in kt, Höhen in m ü. M., Sicht in km, Temperaturen in °C.
 - briefing.headline: höchstens 60 Zeichen, das Wichtigste zuerst, zum Beispiel «Hochnebel bis 900 m, darüber sonnig» oder «Alpen frei, Basis um 1800 m».
-- briefing.text: 3 bis 5 Sätze, höchstens 600 Zeichen: Einschränkungen aus dem Platzstatus (falls vorhanden) zuerst, dann Lage am Platz, Bewölkung, Basis und Sicht, Zustand der Alpen, Entwicklung der nächsten Stunden laut Prognose.
+- briefing.text: 3 bis 5 Sätze, höchstens 700 Zeichen: Einschränkungen aus dem Platzstatus (falls vorhanden) zuerst, dann Lage am Platz, Bewölkung, Basis und Sicht, Zustand der Alpen, Entwicklung der nächsten Stunden laut Prognose. Die Regenwahrscheinlichkeit der nächsten 3 Stunden nennst du immer als Zahl in Prozent.
+- Prognose-Wortwahl: Ab 50 % Regenwahrscheinlichkeit schreibst du «Regen wahrscheinlich», bei 30 bis 49 % «Regen möglich», darunter höchstens «einzelne Tropfen nicht ausgeschlossen». «Wolkenlos» oder «fast wolkenlos» nur bei weniger als 15 % Gesamtbedeckung, bei 15 bis 40 % «leicht bewölkt», bei 40 bis 75 % «aufgelockert» oder «teilweise bewölkt», darüber «stark bewölkt» oder «bedeckt». Sieh die ganze Prognosetabelle durch: Kehrt sich die Entwicklung im Zeitraum wieder um (zum Beispiel erneute Bewölkungszunahme oder Regen ab 17 Uhr), erwähnst du das mit Uhrzeit.
 - himmel.zusammenfassung: 1 bis 2 Sätze. himmel.regionen: je Region ein kurzer Satz, nur für Regionen, zu denen ein brauchbares Bild vorliegt.
 - kameras: jede gezeigte Kamera genau einmal, titel exakt wie angegeben, satz höchstens 120 Zeichen über das, was auf dem Bild zu sehen ist (nicht über die Kamera)."""
 
@@ -170,9 +180,10 @@ def _obj(props: dict) -> dict:
 BRIEFING_SCHEMA = _obj({
     "briefing": _obj({
         "headline": {"type": "string", "description": "höchstens 60 Zeichen"},
-        "text": {"type": "string", "description": "3 bis 5 Sätze, höchstens 600 Zeichen"},
+        "text": {"type": "string", "description": "3 bis 5 Sätze, höchstens 700 Zeichen, mit Regenwahrscheinlichkeit der nächsten 3 h"},
         "lage": {"type": "string", "enum": ["gut", "maessig", "schlecht"],
-                 "description": "Gesamteindruck von Sicht und Bewölkung für Lokalflüge"},
+                 "description": "Gesamteindruck für Lokalflüge (Sicht, Bewölkung, Föhn, Niederschlag); höchstens maessig "
+                                "bei Föhn-Index ab +4 hPa oder Regenwahrscheinlichkeit ab 50 % in den nächsten 3 h"},
     }),
     "himmel": _obj({
         "bedeckung_achtel": _nullable({"type": "integer", "enum": list(range(9)),
@@ -182,11 +193,14 @@ BRIEFING_SCHEMA = _obj({
         "basis_quelle": {"type": "string",
                          "enum": ["kamera", "metar", "taupunkt", "kombiniert", "keine_wolken", "unbekannt"]},
         "sicht": {"type": "string", "enum": ["gut", "maessig", "schlecht", "unbekannt"]},
-        "sicht_km": _nullable({"type": "integer", "description": "geschätzte horizontale Sicht im Raum LSZK in km"}),
+        "sicht_km": _nullable({"type": "integer",
+                               "description": "Distanz der fernsten klar erkannten Landmarke im Raum LSZK bis Voralpen, km; "
+                                              "dieselbe Zahl wie im Text"}),
         "nebel": {"type": "string", "enum": ["kein", "dunst", "bodennebel", "hochnebel", "unbekannt"]},
         "nebel_obergrenze_m": _nullable({"type": "integer",
                                          "description": "Obergrenze von Hochnebel oder Nebelmeer, m ü. M."}),
-        "alpen": {"type": "string", "enum": ["frei", "teilweise", "verhangen", "nicht_sichtbar"]},
+        "alpen": {"type": "string", "enum": ["frei", "teilweise", "verhangen", "nicht_sichtbar"],
+                  "description": "frei nur mit brauchbarem, freiem Bild vom Alpenhauptkamm, sonst teilweise"},
         "schneegrenze_m": _nullable({"type": "integer",
                                      "description": "tiefste Höhe mit geschlossener Schneedecke an Hängen, m ü. M."}),
         "niederschlag": {"type": "string", "enum": ["kein", "in_der_ferne", "am_platz", "unbekannt"]},
@@ -455,15 +469,45 @@ GERMAN_STATION = [
 ]
 
 
+STATION_WIND = ("Wind Direction", "10 Min Avg Wind Speed", "10 Min High Wind Speed")
+STATION_THERMO = ("Temp", "Dew Point", "Hum")
+WIND_HINT = ("Wind: kein Messwert. Wind am Platz aus dem Windsack (Kamera «Speck – Tankstelle») "
+             "und dem METAR Dübendorf ableiten.")
+THERMO_HINT = "Temperatur, Taupunkt, Feuchte: kein Messwert (Spreizung aus dem METAR Dübendorf nehmen)."
+
+
+def _num(value):
+    try:
+        return float(str(value).replace(",", "."))
+    except (TypeError, ValueError):
+        return None
+
+
 def station_text(station, now: datetime) -> str:
     if not station:
-        return "Wetterstation am Platz: keine Daten."
-    vals = {}
+        return f"Wetterstation am Platz: keine Daten. {WIND_HINT} {THERMO_HINT}"
+    vals, nums = {}, {}
     for v in ((station.get("summary") or {}).get("currConditionValues") or []):
         name, val = v.get("sensorDataName"), v.get("convertedValue")
         if name and val not in (None, "", "--"):
             vals[name] = f'{val} {html.unescape(v.get("unitLabel") or "")}'.strip()
+            nums[name] = _num(val)
+    cur = station.get("current") or {}
+    # Outdoor sensor dropout (seen 15.11.2026): current.windDirection null and humidity "0"
+    # (temperature "0", loTemp "-68"); the summary then shows "--" or bogus numbers
+    if (isinstance(cur, dict) and cur and cur.get("windDirection") is None
+            and str(cur.get("humidity")).strip() in ("0", "0.0", "", "--", "None")):
+        for k in STATION_WIND + STATION_THERMO:
+            vals.pop(k, None)
+    hum, temp = nums.get("Hum"), nums.get("Temp")
+    if (hum is not None and hum <= 0) or (temp is not None and not -40 <= temp <= 45):
+        for k in STATION_THERMO:
+            vals.pop(k, None)
     parts = [f"{de}: {vals[en]}" for en, de in GERMAN_STATION if en in vals]
+    if "10 Min Avg Wind Speed" not in vals:
+        parts.append(WIND_HINT)
+    if "Temp" not in vals:
+        parts.append(THERMO_HINT)
     received = (station.get("current") or {}).get("lastReceived")
     age = None
     if isinstance(received, (int, float)):
@@ -483,32 +527,31 @@ def metar_text(metar, now: datetime) -> str:
     return f"METAR Dübendorf LSMD (436 m, 10 km westlich){age}: {m['rawOb']}"
 
 
-def last_qnh(session, station: str):
-    url = f"https://data.geo.admin.ch/ch.meteoschweiz.ogd-smn/{station}/ogd-smn_{station}_t_now.csv"
-    r = session.get(url, timeout=20, headers={"User-Agent": UA})
-    r.raise_for_status()
-    lines = r.text.strip().splitlines()
-    idx = lines[0].split(";").index("pp0qnhs0")
-    for line in reversed(lines[1:]):
-        cells = line.split(";")
-        try:
-            v = float(cells[idx])
-        except (IndexError, ValueError):
-            continue
-        if 900 < v < 1100:
-            return v
-    return None
+def signed(v: int) -> str:
+    return f"+{v}" if v > 0 else str(v)
 
 
-def foehn_text(session) -> str:
-    try:
-        lug, sma = last_qnh(session, "lug"), last_qnh(session, "sma")
-    except Exception as e:  # noqa: BLE001
-        return f"Föhn-Index: nicht verfügbar ({type(e).__name__})."
-    if lug is None or sma is None:
-        return "Föhn-Index: nicht verfügbar."
-    return (f"Föhn-Index QNH Lugano minus QNH Zürich-Fluntern: {lug - sma:+.1f} hPa "
-            f"(Lugano {lug:.1f} hPa, Zürich {sma:.1f} hPa).")
+def foehn_index(foehn, now: datetime):
+    """(index in whole hPa or None, text for the model) from data/metar_foehn.json:
+    METAR QNH Lugano-Agno (LSZA) minus Zürich-Kloten (LSZH), the same value as on the dashboard."""
+    na = "Föhn-Index: nicht verfügbar."
+    if not isinstance(foehn, dict):
+        return None, na
+    s, n, idx = foehn.get("sued"), foehn.get("nord"), foehn.get("index_hpa")
+    if not (isinstance(s, dict) and isinstance(n, dict)) or not isinstance(idx, int) or isinstance(idx, bool):
+        return None, na
+    times = [parse_iso(s.get("obs_utc")), parse_iso(n.get("obs_utc"))]
+    if None in times:
+        return None, na
+    age = minutes_since(min(times), now)
+    if age > FOEHN_MAX_AGE_MIN:
+        return None, "Föhn-Index: nicht verfügbar (METAR älter als 2 Stunden)."
+    text = (f"Föhn-Index (METAR-QNH Lugano-Agno LSZA minus Zürich-Kloten LSZH, ganze hPa): {signed(idx)} hPa "
+            f"(LSZA {s.get('qnh')} hPa, LSZH {n.get('qnh')} hPa, Beobachtung vor {age} min).")
+    if n.get("raw"):
+        text += (f"\nMETAR Zürich-Kloten LSZH (Platzhöhe 432 m, Gegencheck für Sicht und Wolken): "
+                 f"{clip(n['raw'], 200)}")
+    return idx, text
 
 
 def fgzo_text(fgzo) -> str:
@@ -536,13 +579,47 @@ OM_URL = ("https://api.open-meteo.com/v1/forecast?latitude=47.37556&longitude=8.
           "&forecast_hours=12&wind_speed_unit=kn&timezone=Europe%2FZurich")
 
 
-def forecast_text(session) -> str:
-    try:
-        r = session.get(OM_URL, timeout=20, headers={"User-Agent": UA})
-        r.raise_for_status()
-        h = r.json()["hourly"]
-    except Exception as e:  # noqa: BLE001
-        return f"Prognose Open-Meteo: nicht verfügbar ({type(e).__name__})."
+def fetch_forecast(session) -> dict:
+    """Open-Meteo hourly block; one retry, because a transient error would cost the forecast
+    for the whole slot."""
+    for attempt_no in (1, 2):
+        try:
+            r = session.get(OM_URL, timeout=20, headers={"User-Agent": UA})
+            r.raise_for_status()
+            h = r.json().get("hourly")
+            if not isinstance(h, dict):
+                raise ValueError("hourly fehlt in der Antwort")
+            return h
+        except Exception as e:  # noqa: BLE001
+            if attempt_no == 2:
+                raise
+            print(f"Open-Meteo attempt 1 failed ({type(e).__name__}: {e}), retrying", file=sys.stderr)
+            time.sleep(3)
+
+
+def rain_next_3h(h, now: datetime):
+    """Highest precipitation probability (%) for the next 3 hours, or None. Open-Meteo's hourly
+    value at time T refers to the preceding hour, so the hours ending after now and at most
+    3 h ahead cover now .. now + 3 h."""
+    if not isinstance(h, dict):
+        return None
+    local = now.astimezone(TZ)
+    best = None
+    for t, p in zip(h.get("time") or [], h.get("precipitation_probability") or []):
+        if not isinstance(p, (int, float)) or isinstance(p, bool) or not math.isfinite(p):
+            continue
+        try:
+            ts = datetime.fromisoformat(str(t)).replace(tzinfo=TZ)
+        except ValueError:
+            continue
+        if local < ts <= local + timedelta(hours=3):
+            best = p if best is None else max(best, p)
+    return None if best is None else int(round(best))
+
+
+def forecast_text(h) -> str:
+    if not isinstance(h, dict):
+        return "Prognose Open-Meteo: nicht verfügbar."
 
     def raw(key, i):
         try:
@@ -682,15 +759,40 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
     rise, sset = sun_times(local.date())
     record["sun"] = {"rise": rise.astimezone(TZ).strftime("%H:%M"), "set": sset.astimezone(TZ).strftime("%H:%M")}
 
-    context = "\n\n".join([
+    input_errors = []  # kept in the record (inputs.fehler): the Actions log is not public
+
+    def attempt(label, fn, *args, default=None):
+        """One broken input must not cost the whole briefing; the reason goes into the record."""
+        try:
+            return fn(*args)
+        except Exception as e:  # noqa: BLE001
+            print(f"{label}: {type(e).__name__}: {e}", file=sys.stderr)
+            input_errors.append(clip(f"{label}: {type(e).__name__}: {e}", 160))
+            return default
+
+    foehn_idx, foehn_txt = attempt("Föhn-Index", foehn_index, load_json(FOEHN_FILE), now,
+                                   default=(None, "Föhn-Index: nicht verfügbar."))
+    hourly = attempt("Prognose Open-Meteo", fetch_forecast, session)
+    rain3 = attempt("Regenwahrscheinlichkeit 3 h", rain_next_3h, hourly, now)
+    caps = []
+    if foehn_idx is not None and foehn_idx >= 4:
+        caps.append(f"Föhn-Index {signed(foehn_idx)} hPa")
+    if rain3 is not None and rain3 >= 50:
+        caps.append(f"Regenwahrscheinlichkeit {rain3} % in den nächsten 3 Stunden")
+    cap_reason = "; ".join(caps)
+
+    context = "\n\n".join(part for part in [
         f"Zeitpunkt: {local:%d.%m.%Y %H:%M} Lokalzeit (Europe/Zurich). "
         f'Sonnenaufgang {record["sun"]["rise"]}, Sonnenuntergang {record["sun"]["set"]}.',
         safe_text("Wetterstation am Platz", station_text, load_json(STATION_FILE), now),
         safe_text("METAR Dübendorf (LSMD)", metar_text, load_json(METAR_FILE), now),
-        safe_text("Föhn-Index", foehn_text, session),
+        foehn_txt,
         safe_text("Platzstatus FGZO", fgzo_text, load_json(FGZO_FILE)),
-        safe_text("Prognose Open-Meteo", forecast_text, session),
-    ])
+        safe_text("Prognose Open-Meteo", forecast_text, hourly),
+        (f"Regenwahrscheinlichkeit der nächsten 3 Stunden (Open-Meteo): höchstens {rain3} %."
+         if rain3 is not None else "Regenwahrscheinlichkeit der nächsten 3 Stunden: nicht verfügbar."),
+        f"Obergrenze für briefing.lage: maessig (Grund: {cap_reason})." if cap_reason else "",
+    ] if part)
 
     try:
         page = HTML_FILE.read_text(encoding="utf-8")
@@ -718,10 +820,12 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
         content.append({"type": "image", "source": {"type": "base64", "media_type": "image/jpeg",
                                                     "data": base64.standard_b64encode(img).decode("ascii")}})
         used.append({"titel": cam["title"], "key": key, "bildalter_min": age})
+    ridge = [u["titel"] for u in used if u["titel"] in HAUPTKAMM_TITLES]
     content.append({"type": "text", "text": (
         "Erstelle jetzt die Auswertung im vorgegebenen Schema. Führe unter kameras jede der "
-        f"{len(used)} gezeigten Kameras genau einmal auf, titel exakt wie angegeben.")})
-    record["inputs"] = {"kameras": [u["titel"] for u in used], "fehlend": missing}
+        f"{len(used)} gezeigten Kameras genau einmal auf, titel exakt wie angegeben.\n"
+        f"Kameras am Alpenhauptkamm mit Bild: {', '.join(ridge) if ridge else 'keine'}.")})
+    record["inputs"] = {"kameras": [u["titel"] for u in used], "fehlend": missing, "fehler": input_errors}
 
     if len(used) < MIN_IMAGES:
         settle(record, now, 0.0)  # nothing was sent
@@ -765,20 +869,37 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
     def int_or_none(v, lo, hi):
         return v if isinstance(v, int) and not isinstance(v, bool) and lo <= v <= hi else None
 
+    # Safety net for the hard rules of the prompt; every correction is recorded
+    corrections = []
+    lage = b.get("lage") if b.get("lage") in ("gut", "maessig", "schlecht") else None
+    if lage == "gut" and cap_reason:
+        lage = "maessig"
+        corrections.append(f"lage gut -> maessig ({cap_reason})")
+    alpen = sky.get("alpen")
+    ridge_clear = any(c["titel"] in HAUPTKAMM_TITLES and c["problem"] == "keins" and "in_wolke" not in c["tags"]
+                      for c in cams_out)
+    if alpen == "frei" and not ridge_clear:
+        alpen = "teilweise"
+        corrections.append("alpen frei -> teilweise (kein brauchbares, freies Bild vom Alpenhauptkamm)")
+    for c in corrections:
+        print(f"correction: {c}", file=sys.stderr)
+    sicht_km = int_or_none(sky.get("sicht_km"), 0, 200)
+    if sicht_km is not None and str(sicht_km) not in f'{b.get("text")} {sky.get("zusammenfassung")}':
+        print(f"warning: sicht_km {sicht_km} is not mentioned in the text", file=sys.stderr)
+
     record.update(
         ok=True, error=None, fail_streak=0, generated_at_utc=iso(now), model=MODEL, served_by=served_by,
-        effort=BRIEFING_EFFORT, request_id=req_id, usage=usage,
-        briefing={"headline": clip(b.get("headline"), 80), "text": clip(b.get("text"), 900),
-                  "lage": b.get("lage") if b.get("lage") in ("gut", "maessig", "schlecht") else None},
+        effort=BRIEFING_EFFORT, request_id=req_id, usage=usage, korrekturen=corrections,
+        briefing={"headline": clip(b.get("headline"), 80), "text": clip(b.get("text"), 900), "lage": lage},
         himmel={
             "bedeckung_achtel": int_or_none(sky.get("bedeckung_achtel"), 0, 8),
             "wolkenbasis_m": int_or_none(sky.get("wolkenbasis_m"), 300, 9000),
             "basis_quelle": sky.get("basis_quelle"),
             "sicht": sky.get("sicht"),
-            "sicht_km": int_or_none(sky.get("sicht_km"), 0, 200),
+            "sicht_km": sicht_km,
             "nebel": sky.get("nebel"),
             "nebel_obergrenze_m": int_or_none(sky.get("nebel_obergrenze_m"), 300, 4000),
-            "alpen": sky.get("alpen"),
+            "alpen": alpen,
             "schneegrenze_m": int_or_none(sky.get("schneegrenze_m"), 200, 4500),
             "niederschlag": sky.get("niederschlag"),
             "zusammenfassung": clip(sky.get("zusammenfassung"), 400),
