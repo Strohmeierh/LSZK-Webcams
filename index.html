@@ -2027,7 +2027,7 @@
             (p ? ' ⚠ <span class="ai-prob">' + p + '</span>' : '') + '<br>' + escHtml(k.satz || '') +
             (tags ? ' <span class="ai-muted">· ' + tags + '</span>' : '') + '</div>';
         });
-        html += '<details class="ai-cams"' + (probs ? ' open' : '') + '><summary class="ai-sec">Kameras (' + cams.length + ')' +
+        html += '<details class="ai-cams"><summary class="ai-sec">Kameras (' + cams.length + ')' +
           (probs ? ' · ' + probs + ' mit Problem' : '') + '</summary>' + camHtml + '</details>';
       }
 
