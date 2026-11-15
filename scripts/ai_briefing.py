@@ -412,6 +412,13 @@ def briefing_due(prev: dict, now: datetime):
     return True, f"slot {label} due (planned {hhmm(start)}{', made up late' if late else ''}, {nxt_txt})", label
 
 
+def slot_start(label, now: datetime):
+    """Planned start (UTC) of the slot `label` on the local day of `now`; None if unknown.
+    The page shows this time on the button (10:00 instead of the generation time 10:03)."""
+    slots, _, _ = slots_for(now.astimezone(TZ).date())
+    return next((start for lab, start in slots if lab == label), None)
+
+
 # ── Inputs for the briefing ──────────────────────────────────────────────────
 def resolve_cams(page: str) -> dict:
     """title -> {"src": raw data-src (key of cam-status.json), "url": usable URL}
@@ -771,8 +778,8 @@ def _fnum(v):
 def thermik_calc(h, elev, ziel, end_cap, levels=TH_LEVELS, lcl_k=TH_LCL_M_PER_K, day=None):
     """Port of renderThermik() (index.html). h: Open-Meteo hourly block, end_cap: last usable
     hour (decimal, sunset - 1.5 h). Returns None without a usable profile."""
-    if not isinstance(h, dict):
-        return None
+    if not isinstance(h, dict) or not isinstance(h.get("time"), list):
+        return None                                   # one broken point must not cost the other regions
 
     def col(key, i):
         try:
@@ -849,7 +856,8 @@ def thermik_calc(h, elev, ziel, end_cap, levels=TH_LEVELS, lcl_k=TH_LCL_M_PER_K,
            "cape_max": int(round(cape)), "gewitter": gewitter, "risiko": risiko,
            "wind700_kt": None if w is None else int(round(w["ws"])),
            "wind700_dir": None if w is None or w["wd"] is None else int(round(w["wd"])),
-           "wind_stark": bool(w and w["ws"] >= TH_WIND_STARK_KT), "gradienten": None}
+           "wind_stark": bool(w and round(w["ws"]) >= TH_WIND_STARK_KT),   # same rounding as wind700_kt
+           "gradienten": None}
     if nutz:
         best = nutz[0]
         for x in nutz:                                 # first hour wins ties, like the page
@@ -940,13 +948,38 @@ DABS_SKIP = {"Firing-Nr", "AIP-Area", "NOTAM-Nr", "Validity", "UTC", "Lower Limi
 DABS_MONTHS = {m: i for i, m in enumerate("JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC".split(), 1)}
 DABS_COORD = r"(\d{2})(\d{2})(\d{2})N (\d{3})(\d{2})(\d{2})E"
 
+# Safety net: briefing.text must never read like an airspace clearance (a missed DABS entry would).
+# Checked sentence by sentence: airspace wording plus a "free / no restriction" claim. "Fluggebiet"
+# alone is too common in weather sentences ("im Fluggebiet sind die Gipfel frei"), so it only counts
+# together with a restriction word, or as "das Fluggebiet ist frei".
+AIRSPACE_CTX_RE = re.compile(r"luftraum|\bdabs\b|sperrgebiet|gefahrengebiet|beschränkungsgebiet|\b[rd]-area\b",
+                             re.IGNORECASE)
+AIRSPACE_FREE_RE = re.compile(r"(?<!nicht\s)\bfrei(?:gegeben)?\b|uneingeschränkt"
+                              r"|\bnicht\s+(?:eingeschränkt|beschränkt|gesperrt|aktiv)\b", re.IGNORECASE)
+NO_RESTRICTION_RE = re.compile(r"\b(?:keine|ohne)\b[^.]{0,30}(?:einschränkung|beschränkung)"
+                               r"|(?:einschränkungs|beschränkungs)frei"
+                               r"|\bkeine\b[^.]{0,20}(?:sperr|gefahren|beschränkungs)gebiet", re.IGNORECASE)
+AREA_CTX_RE = re.compile(r"\bfluggebiet", re.IGNORECASE)
+AREA_FREE_RE = re.compile(r"\bfluggebiet\s+(?:ist\s+)?(?:heute\s+|derzeit\s+|aktuell\s+)?frei\b", re.IGNORECASE)
+# sentence end, but not after a date such as "Stand 14.11. 08:45"
+SENTENCE_SPLIT_RE = re.compile(r"(?<!\d\.\d\.)(?<!\d\.\d\d\.)(?<=[.!?])\s+")
+
+
+def airspace_claim(sentence: str) -> bool:
+    """True if the sentence could be read as «airspace free» or «no restrictions»."""
+    if AIRSPACE_CTX_RE.search(sentence) and (AIRSPACE_FREE_RE.search(sentence) or NO_RESTRICTION_RE.search(sentence)):
+        return True
+    if AREA_CTX_RE.search(sentence) and NO_RESTRICTION_RE.search(sentence):
+        return True
+    return bool(AREA_FREE_RE.search(sentence))
+
 
 class DabsError(RuntimeError):
     """The DABS could not be fetched or its layout is not the known one."""
 
 
 _PDF_TOKEN = re.compile(rb"""
-    \((?P<str>(?:\x5c.|[^\x5c()]|\((?:\x5c.|[^\x5c()])*\))*)\)
+    \((?P<str>(?:\x5c.|[^\x5c()]|\((?:\x5c.|[^\x5c()]|\((?:\x5c.|[^\x5c()])*\))*\))*)\)
   | (?P<num>[-+]?(?:\d+\.?\d*|\.\d+))
   | (?P<op>[A-Za-z'"*]+)
   | (?P<other><<|>>|\[|\]|/[^\s/\[\]()<>]*|<[0-9A-Fa-f\s]*>)
@@ -1144,6 +1177,14 @@ def dabs_distance_km(lat: float, lon: float) -> float:
     return 0.0 if inside else best
 
 
+def dabs_window_text(a: datetime, b: datetime) -> str:
+    """«HH:MM–HH:MM» in local time; an end on a later local day reads «24:00» or gets «(+1)»."""
+    days = (b.astimezone(TZ).date() - a.astimezone(TZ).date()).days
+    if days == 1 and hhmm(b) == "00:00":
+        return f"{hhmm(a)}–24:00"
+    return f"{hhmm(a)}–{hhmm(b)}" + (f" (+{days})" if days > 0 else "")
+
+
 def dabs_hits(parsed: dict, now: datetime, until: datetime) -> list:
     """Entries that may matter in the flying area between now and `until` (sunset + 30 min).
     Anything that cannot be read (time, height, position) counts as a hit."""
@@ -1158,8 +1199,10 @@ def dabs_hits(parsed: dict, now: datetime, until: datetime) -> list:
         if (e["mitte"] is not None and e["radius_km"] is not None
                 and dabs_distance_km(*e["mitte"]) - e["radius_km"] > DABS_MARGIN_KM):
             continue
-        zeit = (f'{e["zeit_roh"]} UTC' if unclear_time
-                else ", ".join(f"{hhmm(a)}–{hhmm(b)}" for a, b in wins))
+        if unclear_time:
+            zeit = f'{e["zeit_roh"]} UTC' if e["zeit_roh"] else "Zeit unlesbar"
+        else:
+            zeit = ", ".join(dabs_window_text(a, b) for a, b in wins)
         hits.append({"gebiet": clip(e["gebiet"], 40), "notam": clip(e["notam"], 20), "zeit": clip(zeit, 120),
                      "unten": clip(e["unten"], 30), "oben": clip(e["oben"], 30), "text": clip(e["text"], 300),
                      "karte": e["sec"] == 1, "unsicher": e["unsicher"],
@@ -1450,6 +1493,13 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
         alpen = "teilweise"
         corrections.append("alpen frei -> teilweise (kein brauchbares, freies Bild vom Alpenhauptkamm)")
     headline, text = clip(b.get("headline"), 80), clip(b.get("text"), 1100)
+    # never "airspace free": a missed DABS entry would read like a clearance. Runs before the airfield
+    # rule, so a removed sentence cannot take the closure notice with it.
+    sentences = SENTENCE_SPLIT_RE.split(text)
+    kept = [s for s in sentences if not airspace_claim(s)]
+    if len(kept) != len(sentences):
+        text = " ".join(kept)
+        corrections.append("text: Satz mit «Luftraum frei» entfernt")
     if platz["flaeche"] == "gesperrt":   # fixed-wing pilots: a closed airfield must be the first thing they read
         if PLATZ_OFFEN_RE.search(headline) or PLATZ_OFFEN_RE.search(text):
             headline = clip(PLATZ_OFFEN_RE.sub("Platz gesperrt", headline), 80)
@@ -1461,19 +1511,10 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
         if not PLATZ_ZU_START_RE.match(text):   # an unrelated «gesperrt» further on does not count
             text = clip(f'Platz gesperrt: {platz["grund"] or "siehe fgzo.ch"}. {text}', 1100)
             corrections.append("text: Platzsperre vorangestellt")
-    # never "airspace free": a missed DABS entry would read like a clearance
-    frei = re.compile(r"luftraum[^.]{0,40}\bfrei\b|keine[^.]{0,30}luftraum(?:beschränkung|einschränkung)", re.IGNORECASE)
-    sentences = re.split(r"(?<=[.!?])\s+", text)
-    kept = [s for s in sentences if not frei.search(s)]
-    if len(kept) != len(sentences):
-        text = " ".join(kept)
-        corrections.append("text: Satz mit «Luftraum frei» entfernt")
     thermik_out = None   # always written: no stale values from an earlier thermal day or an outage
-    if thermik:
+    if thermik:   # only set on days with usable thermals somewhere (see the data-driven check above)
         t_ai = clip(b.get("thermik"), 300) if isinstance(b.get("thermik"), str) else ""
-        if not any(r["nutzbar"] for r in thermik):
-            t_sum = thermik_fallback(thermik)             # fixed wording on days without usable thermals
-        elif t_ai:
+        if t_ai:
             t_sum = t_ai
         else:
             t_sum = thermik_fallback(thermik)
@@ -1488,8 +1529,10 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
     if sicht_km is not None and str(sicht_km) not in f'{b.get("text")} {sky.get("zusammenfassung")}':
         print(f"warning: sicht_km {sicht_km} is not mentioned in the text", file=sys.stderr)
 
+    planned = slot_start(record.get("slot"), now)
     record.update(
         ok=True, error=None, fail_streak=0, generated_at_utc=iso(now), model=MODEL, served_by=served_by,
+        slot_planned_utc=iso(planned) if planned else None,
         effort=BRIEFING_EFFORT, request_id=req_id, usage=usage, korrekturen=corrections, thermik=thermik_out,
         briefing={"headline": headline, "text": text, "lage": lage}, platz=platz,
         himmel={

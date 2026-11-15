@@ -1866,7 +1866,8 @@
     /* ── KI-Briefing (data/ai_status.json, 3× täglich vom Job: Sonnenaufgang + 30 min, 10:00, 15:00) ──
        Der Inhalt ist KI-Text und damit untrusted: jeder String läuft über escHtml oder eine feste Map.
        Bei einem Fehlschlag behält die Datei das letzte gute Briefing (ok=false, error, attempted_at_utc). */
-    var AI_SEEN_KEY = 'lszk-ai-seen', AI_STALE_MIN = 360, AI_RUNNING_MIN = 10, AI_GREY = '#64748b';
+    var AI_SEEN_KEY = 'lszk-ai-seen', AI_STALE_MIN = 360, AI_RUNNING_MIN = 10, AI_GREY = '#64748b',
+        AI_SLOT_LATE_MIN = 30;             // Button zeigt die geplante Zeit, solange das Briefing höchstens so spät kam
     var ai = { data: undefined, loadedAt: 0 };          // undefined = lädt, null = keine Datei
     var AI_LAGE = {
       gut:      { label: 'gut',      color: '#10b981' },
@@ -1899,6 +1900,20 @@
       if (aiDay(d) === aiDay(now)) return aiHM(d);
       if (aiDay(d) === aiDay(new Date(now.getTime() - 86400000))) return 'gestern ' + aiHM(d);
       return aiDM(d) + ' ' + aiHM(d);
+    }
+    function aiSlotHM(d, gen) {            // Button: geplante Briefing-Zeit («10:00» statt «10:03»)
+      var hm = aiHM(gen), p = aiDate(d.slot_planned_utc), plan = '';
+      if (p && aiDay(p) === aiDay(gen)) plan = aiHM(p);
+      else if (d.ok === true && typeof d.slot === 'string') plan = d.slot;   // ältere Datensätze: «10:00», «15:00»
+      var hmMin = function (s) { var m = /^(\d{2}):(\d{2})$/.exec(s); return m ? (+m[1]) * 60 + (+m[2]) : NaN; };
+      var late = hmMin(hm) - hmMin(plan);   // spät nachgeholt: echte Uhrzeit, damit nichts älter wirkt
+      return (late >= 0 && late <= AI_SLOT_LATE_MIN) ? plan : hm;
+    }
+    function aiSlotWhen(d, gen, now) {     // wie aiWhen, aber mit der geplanten Briefing-Zeit
+      var hm = aiSlotHM(d, gen);
+      if (aiDay(gen) === aiDay(now)) return hm;
+      if (aiDay(gen) === aiDay(new Date(now.getTime() - 86400000))) return 'gestern ' + hm;
+      return aiDM(gen) + ' ' + hm;
     }
     function aiNextSlot(now) {             // grob wie im Job: Sonnenaufgang + 30 min, 10:00, 15:00
       var s = calcSunTimes(47.37557, 8.76169), m = /^(\d{2}):(\d{2})$/.exec(s.rise || ''), slots = [];
@@ -1963,10 +1978,10 @@
         label += st.running ? ', wird gerade erstellt' : ', noch keines vorhanden';
       } else {
         if (st.kind === 'ok') {
-          time = aiHM(st.gen);
+          time = aiSlotHM(st.data, st.gen);
           if (st.lage) { dot.style.background = AI_LAGE[st.lage].color; label += ', Lage ' + AI_LAGE[st.lage].label; }
         } else {
-          time = aiWhen(st.gen, now);
+          time = aiSlotWhen(st.data, st.gen, now);
           dot.classList.add('stale');
           label += ', veraltet';
         }
