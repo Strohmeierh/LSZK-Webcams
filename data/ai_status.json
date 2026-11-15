@@ -1,21 +1,21 @@
 {
   "stats": {
     "month": "2026-11",
-    "cost_month_usd": 0.5527,
+    "cost_month_usd": 0.292,
     "attempts_month": 2,
     "date": "2026-11-15",
-    "cost_today_usd": 0.5527,
+    "cost_today_usd": 0.292,
     "attempts_today": 2,
     "budget_month_usd": 80.0,
-    "reserved_usd": 0.4
+    "reserved_usd": 0.0
   },
   "schema_version": 1,
-  "ok": false,
+  "ok": true,
   "attempted_at_utc": "2026-11-15T09:03:42+00:00",
   "slot": "10:00",
   "reserved_run": "43697348634.1",
-  "fail_streak": 1,
-  "error": "Versuch läuft oder wurde abgebrochen (kein Ergebnis gespeichert)",
+  "fail_streak": 0,
+  "error": null,
   "sun": {
     "rise": "07:29",
     "set": "16:50"
@@ -39,60 +39,56 @@
       }
     ]
   },
-  "generated_at_utc": "2026-11-15T07:03:49+00:00",
+  "generated_at_utc": "2026-11-15T09:03:47+00:00",
   "model": "claude-opus-5-5",
   "served_by": "claude-opus-5-5",
   "effort": "medium",
-  "request_id": "req_011Ch4HcQaFi4uQWm4Z56eqK",
+  "request_id": "req_011Ch4Snb37z35GwJrnHuYEi",
   "usage": {
-    "input_tokens": 20134,
-    "output_tokens": 3609,
+    "input_tokens": 19151,
+    "output_tokens": 3137,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 0,
     "attempts": 1,
-    "cost_usd": 0.1527
+    "cost_usd": 0.1393
   },
   "briefing": {
-    "headline": "Bedeckt, Basis um 2900 m, Alpen frei, Föhntendenz",
-    "text": "Platz offen, Piste laut FGZO trocken. Am Platz windstill, mehrschichtige Bewölkung um 7/8, Basis der Hauptschicht um 2900 m, einzelne Fetzen um 2400 m; Sicht über 40 km. Glarner und Urner Alpen unter der Decke frei, Neuschnee ab rund 1500 m, in der Leventina Talnebel. Föhn-Index +7,4 hPa: Südföhn wahrscheinlich, laut Prognose auf 3000 m SW 30–35 kt. Prognose: am Vormittag vereinzelt Tropfen möglich, ab etwa 14 Uhr Auflockerung, um 15 Uhr fast wolkenlos.",
-    "lage": "gut"
+    "headline": "Bedeckt, Basis um 1400 m, Piste rutschig nass",
+    "text": "Laut FGZO ist der Platz offen, die Graspiste aber rutschig nass (Meldung 08:30). Am Platz windstill, 4 °C bei Taupunkt 4 °C, der leichte Regen hat aufgehört. Fast bedeckt, einzelne Fetzen um 1400 m, Hauptschicht um 2100 m (METAR LSMD), Sicht im Dunst um 15 km. Glarner Alpen und Tödi sind sichtbar, die Gipfel über etwa 2700 m stecken teils in Wolken. Föhn-Index +7,4 hPa: Südstau, die Leventina liegt in den Wolken. Eine Modellprognose ist nicht verfügbar.",
+    "lage": "maessig"
   },
   "himmel": {
     "bedeckung_achtel": 7,
-    "wolkenbasis_m": 2900,
+    "wolkenbasis_m": 1400,
     "basis_quelle": "kombiniert",
-    "sicht": "gut",
-    "sicht_km": 50,
-    "nebel": "kein",
+    "sicht": "maessig",
+    "sicht_km": 15,
+    "nebel": "dunst",
     "nebel_obergrenze_m": null,
-    "alpen": "frei",
-    "schneegrenze_m": 1500,
+    "alpen": "teilweise",
+    "schneegrenze_m": 1800,
     "niederschlag": "kein",
-    "zusammenfassung": "Mittelhohe, mehrschichtige Bewölkung mit Basis um 2900 m über dem Mittelland, darunter sehr gute Sicht bis zu den Alpen. Föhn-Index +7,4 hPa deutet auf Südföhn hin.",
+    "zusammenfassung": "Grau bedeckt mit einzelnen tiefen Fetzen um 1400 m und einer Hauptschicht um 2100 m, dunstige Sicht um 15 km. Südföhnlage mit Stau auf der Alpensüdseite, Neuschnee in den Alpen oberhalb von etwa 1800 m.",
     "regionen": [
       {
         "region": "platz",
-        "zustand": "Bedeckt mit hoher Basis, windstill, Piste trocken, gute Bodensicht."
-      },
-      {
-        "region": "zuercher_oberland",
-        "zustand": "Hügel frei, dunkle Decke deutlich über den Gipfeln, Fernsicht bis zu den Alpen."
+        "zustand": "Windstill, Vorfeld und Wendefläche nass mit Pfützen, Himmel grau bedeckt, Oberland-Hügel frei."
       },
       {
         "region": "voralpen",
-        "zustand": "Speer, Mürtschenstock und Hirzli-Kette frei, Bewölkung über den Gipfeln, Neuschnee an den Höhen."
+        "zustand": "Bedeckt und dunstig, Speer und Hirzli-Kette frei, Mürtschenstock bei rund 30 km Sicht erkennbar und angezuckert."
       },
       {
         "region": "glarner_alpen",
-        "zustand": "Tödi frei, aufgelockerte Bewölkung mit Lücken, Neuschnee an den Flanken ab etwa 1500 m."
+        "zustand": "Tödi und Seitengrate sichtbar und frisch verschneit, darüber eine geschlossene graue Decke."
       },
       {
         "region": "zentralalpen",
-        "zustand": "Klausengebiet frei mit Neuschnee, Wolken an der Uri-Rotstock-Gruppe; Gotthard ohne verwertbares Bild."
+        "zustand": "Am Klausen sind die Gipfel über etwa 2700 m teils in Wolken, Neuschnee bis gegen 1800 m."
       },
       {
         "region": "alpensuedseite",
-        "zustand": "Bedeckt, Gipfel der Campo-Tencia-Gruppe frei, Talnebel in der Leventina bis etwa 1200 m."
+        "zustand": "Tarnolgio auf 1610 m steckt in der Wolke, Südstau mit einer Basis unter 1600 m."
       }
     ]
   },
@@ -100,21 +96,21 @@
     {
       "titel": "Speck – Runway 30",
       "key": "https://wsrv.nl/?url=fgzo.ch/webcam/images/fgzo.jpg",
-      "bildalter_min": 0,
-      "satz": "Graue, geschlossene Wolkendecke weit über den Baumwipfeln, Piste trocken, leichter Dunst im Westen.",
+      "bildalter_min": 1,
+      "satz": "Graspiste und Wiesen grün, Himmel gleichmässig grau bedeckt, Waldhorizont klar.",
       "tags": [
-        "bedeckt",
-        "dunst"
+        "bedeckt"
       ],
       "problem": "keins"
     },
     {
       "titel": "Speck – Tankstelle",
       "key": "https://wsrv.nl/?url=fgzo.ch/webcam/images/fgzo2.jpg",
-      "bildalter_min": 0,
-      "satz": "Bedeckter Himmel, Oberland-Hügel bis Bachtel klar sichtbar, Windsack hängt schlaff, Vorfeld trocken.",
+      "bildalter_min": 1,
+      "satz": "Vorfeld nass mit Pfützen, Windsack hängt schlaff, dunkle Wolkenfetzen, Oberland-Hügel sichtbar.",
       "tags": [
-        "bedeckt"
+        "bedeckt",
+        "nasse_piste"
       ],
       "problem": "keins"
     },
@@ -122,31 +118,32 @@
       "titel": "Bachtel",
       "key": "https://wsrv.nl/?url=bachtel.it-wms.com/panorama1_raw.jpg",
       "bildalter_min": 29,
-      "satz": "Dunkle Wolkendecke über dem Mittelland, Säntis bis Glärnisch verschneit und frei, Morgenrot im Osten.",
+      "satz": "Viele Tropfen auf der Linse, Landschaft erkennbar, Horizont dunstig unter grauer Decke.",
       "tags": [
         "bedeckt",
-        "schnee"
+        "dunst"
       ],
-      "problem": "keins"
+      "problem": "linse_nass"
     },
     {
       "titel": "Wangen-Lachen – Cam 1",
       "key": "cam1",
       "bildalter_min": 4,
-      "satz": "Bedeckt mit hoher Basis, Speer und Berge am Obersee frei, Sonne tief im Osten, Vorfeld trocken.",
+      "satz": "Vorfeld nass, grau bedeckt, Speer und Hirzli-Wand dunstig sichtbar.",
       "tags": [
         "bedeckt",
-        "gegenlicht"
+        "dunst",
+        "nasse_piste"
       ],
       "problem": "keins"
     },
     {
       "titel": "Rapperswil",
       "key": "https://wsrv.nl/?url=images-webcams.windy.com/91/1614073791/current/original/1614073791.jpg",
-      "bildalter_min": 9,
-      "satz": "Gegenlicht bei Sonnenaufgang, Mürtschenstock und Flumserberge frei und verschneit, See ruhig.",
+      "bildalter_min": 6,
+      "satz": "Mürtschenstock und Hirzli-Kette angezuckert und im Dunst gut sichtbar, See ruhig.",
       "tags": [
-        "gegenlicht",
+        "dunst",
         "schnee"
       ],
       "problem": "keins"
@@ -155,8 +152,9 @@
       "titel": "Richtung Tödi",
       "key": "https://wsrv.nl/?url=decoral.ch/Kameratoedi.jpg",
       "bildalter_min": 4,
-      "satz": "Tödi frei, aufgelockerte Bewölkung mit Lücken, Neuschnee an den oberen Talflanken.",
+      "satz": "Tödi und Seitengrate frisch verschneit und sichtbar, darüber eine graue geschlossene Decke.",
       "tags": [
+        "bedeckt",
         "schnee"
       ],
       "problem": "keins"
@@ -165,8 +163,10 @@
       "titel": "Klausenpass",
       "key": "https://wsrv.nl/?url=webcam.hotel-klausenpass.ch/panorama.jpg",
       "bildalter_min": 4,
-      "satz": "Gipfel frei mit Neuschnee bis unter Kamerahöhe, Wolken an der Uri-Rotstock-Gruppe im Hintergrund.",
+      "satz": "Neuschnee an den Hängen, Gipfel links teils in Wolken, Talausgang offen.",
       "tags": [
+        "bedeckt",
+        "tiefe_wolken",
         "schnee"
       ],
       "problem": "keins"
@@ -175,7 +175,7 @@
       "titel": "Gotthardpass",
       "key": "https://wsrv.nl/?url=webcam.afbn.ch/H_OSG_017,200_S_KAM_001_Sued.jpg",
       "bildalter_min": 4,
-      "satz": "Nur unscharfe graue Flecken ohne Konturen, vermutlich Schnee oder Eis auf der Scheibe.",
+      "satz": "Unscharfe graue Flecken ohne Kanten, vermutlich Schnee oder Nässe auf der Scheibe.",
       "tags": [],
       "problem": "linse_nass"
     },
@@ -183,11 +183,9 @@
       "titel": "Ambri Tarnolgio",
       "key": "https://wsrv.nl/?url=www.tarnolgio.ch/webcam00.jpg",
       "bildalter_min": 4,
-      "satz": "Bedeckt, verschneite Gipfel frei, Talnebel in der Leventina unterhalb der Kamera.",
+      "satz": "Bild gleichmässig grau, die Kamera steckt in der Wolke.",
       "tags": [
-        "bedeckt",
-        "nebel",
-        "schnee"
+        "in_wolke"
       ],
       "problem": "keins"
     }
