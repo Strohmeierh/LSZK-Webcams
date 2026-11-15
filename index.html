@@ -186,6 +186,7 @@
     .ai-headline { font-size: 1rem; font-weight: 600; display: flex; gap: 8px; align-items: center; color: var(--text); margin-top: 4px; }
     .ai-lage { font-size: 0.78rem; color: var(--text-muted); margin: 4px 0 0 18px; }
     .ai-lage b { color: var(--text); }
+    .ai-platz.zu { color: #fca5a5; font-weight: 600; }
     .ai-text { font-size: 0.85rem; line-height: 1.55; margin: 8px 0 12px; color: var(--text); }
     .ai-text.ai-small { font-size: 0.78rem; color: var(--text-muted); margin: 8px 0 0; }
     .ai-muted { color: var(--text-muted); font-weight: 400; }
@@ -1683,7 +1684,7 @@
     }
 
     /* ── Flugplatzstatus FGZO (data/fgzo_status.json, vom Wetter-Job alle 10 min
-       aus fgzo.ch/status/ gelesen). Farbe = Ampel der FGZO, keine eigene Wertung.
+       aus fgzo.ch/status/ gelesen). Farbe = Ampel der FGZO; Ausnahme: nur Helikopterbetrieb = für Flächenflugzeuge gesperrt (rot).
        „neu" = FGZO-Zeitstempel weicht vom zuletzt im Detail-Fenster gesehenen ab. */
     var FGZO_SEEN_KEY = 'lszk-fgzo-seen';
     var FGZO_URL = 'https://fgzo.ch/status/';
@@ -1715,11 +1716,16 @@
       });
       var color = failed ? N : ({ gruen: G, gelb: Y, rot: R })[p.ampel] || N;
       var closed = /CLOSED|CLSD/i.test(p.status || '');
+      // Sicht der Flächenflieger (vom Job abgeleitet): nur Helikopterbetrieb = gesperrt, rot statt FGZO-Gelb
+      var heli = !closed && p.flaeche === 'gesperrt';
+      if (heli && !failed) color = R;
       var chip;
       if (failed) {
         chip = 'Platz: Daten veraltet';
       } else if (closed) {
         chip = 'Platz ' + escHtml(p.status);
+      } else if (heli) {
+        chip = p.flaeche_grund === 'nur Helikopterbetrieb' ? 'Platz: nur Heli' : 'Platz: gesperrt';
       } else {
         // Pistenzustand in Grossbuchstaben (FGZO schreibt mal „DRY", mal „Dry"), lange Freitexte kürzen
         var rwy = p.runway_condition ? String(p.runway_condition).toUpperCase() : '';
@@ -1729,7 +1735,8 @@
       if (isNew && !failed) chip += ' · <span class="brf-new">neu</span>';
 
       var value = escHtml(p.status || '?') +
-        (p.ampel === 'gelb' && !closed ? ' mit Einschränkung' : '') +
+        (heli ? ' – für Flächenflugzeuge gesperrt' + (p.flaeche_grund ? ' (' + escHtml(p.flaeche_grund) + ')' : '')
+              : (p.ampel === 'gelb' && !closed ? ' mit Einschränkung' : '')) +
         (p.closing ? ' · Betriebsschluss ' + escHtml(p.closing) + ' LT' : '') +
         (p.traffic ? ' · ' + escHtml(p.traffic) : '');
 
@@ -1923,6 +1930,7 @@
       }
       if (!b || !st.gen) return st;
       st.lage = aiHas(AI_LAGE, b.lage) ? b.lage : null;
+      st.sperre = !!(d.platz && typeof d.platz === 'object' && d.platz.flaeche === 'gesperrt');
       var fresh = (now - st.gen) / 60000 < AI_STALE_MIN && aiDay(st.gen) === aiDay(now);
       st.kind = fresh ? 'ok' : 'stale';
       st.isNew = fresh && storeGet(AI_SEEN_KEY) !== String(d.generated_at_utc);
@@ -1946,6 +1954,7 @@
         if (st.kind === 'ok') {
           time = aiHM(st.gen);
           if (st.lage) { dot.style.background = AI_LAGE[st.lage].color; label += ', Lage ' + AI_LAGE[st.lage].label; }
+          if (st.sperre) { dot.style.background = AI_LAGE.schlecht.color; label += ', Platz für Flächenflugzeuge gesperrt'; }
         } else {
           time = aiWhen(st.gen, now);
           dot.classList.add('stale');
@@ -1982,8 +1991,12 @@
           (d.error ? '<details><summary>Technische Details</summary>' + escHtml(d.error) + '</details>' : '') + '</div>';
       }
       var lg = st.lage ? AI_LAGE[st.lage] : null;
-      html += '<div class="ai-headline"><span class="brf-dot" style="background:' + (lg ? lg.color : AI_GREY) + '"></span>' +
+      html += '<div class="ai-headline"><span class="brf-dot" style="background:' + (st.sperre ? AI_LAGE.schlecht.color : (lg ? lg.color : AI_GREY)) + '"></span>' +
         '<span>' + escHtml(b.headline || '') + '</span></div>';
+      var pz = (d.platz && typeof d.platz === 'object' && !Array.isArray(d.platz)) ? d.platz : null;
+      if (pz && typeof pz.text === 'string' && pz.text) {
+        html += '<div class="ai-lage ai-platz' + (st.sperre ? ' zu' : '') + '">' + escHtml(pz.text) + '</div>';
+      }
       html += '<div class="ai-lage">Lage für Lokalflüge: <b>' + (lg ? lg.label : '–') + '</b></div>';
       html += '<div class="ai-text">' + escHtml(b.text || '') + '</div>';
 

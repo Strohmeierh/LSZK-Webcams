@@ -23,7 +23,9 @@ Output schema (data/fgzo_status.json):
         "runway_line": "Runway condition LSZK / 11.10.2026 / 0700 LT / SLIPPERY WET",
         "runway_condition": "SLIPPERY WET",
         "contact": "Kontakt: ...",
-        "updated": "11.10.2026, 07:36"   # FGZO's own timestamp
+        "updated": "11.10.2026, 07:36",  # FGZO's own timestamp
+        "flaeche": "offen",              # derived, fixed-wing view: offen | eingeschraenkt | gesperrt | unbekannt
+        "flaeche_grund": null            # e.g. "nur Helikopterbetrieb", "geschlossen", "offen mit Einschränkungen"
     }
 
 On failure (HTTP error, timeout, bot-challenge page, unexpected markup) the previous
@@ -58,6 +60,27 @@ INTRO_RES = [
 
 DATA_KEYS = ("ampel", "status", "traffic", "closing", "notice",
              "runway_line", "runway_condition", "contact", "updated")
+
+# Fixed-wing view (the dashboard users fly aeroplanes): helicopter-only operation counts as
+# closed. FGZO wording 2021-2024: "Nur Helikopter-Betrieb erlaubt!" and "Nur HELI-Betrieb und
+# Flächenflugzeuge mit Ski ... erlaubt!" -- the status word stays OPEN, the ampel is yellow.
+HELI_ONLY_RE = re.compile(r"\bnur\s+(?:für\s+)?heli|\bheli\w*\s+only\b|\bonly\s+heli", re.IGNORECASE)
+CLOSED_RE = re.compile(r"CLOSED|CLSD|GESCHLOSSEN", re.IGNORECASE)
+
+
+def derive_flaeche(rec: dict) -> dict:
+    """offen | eingeschraenkt | gesperrt | unbekannt plus reason, from the parsed fields only."""
+    status = str(rec.get("status") or "")
+    ampel = rec.get("ampel")
+    if CLOSED_RE.search(status) or ampel == "rot":
+        return {"flaeche": "gesperrt", "flaeche_grund": "geschlossen"}
+    if HELI_ONLY_RE.search(str(rec.get("notice") or "")):
+        return {"flaeche": "gesperrt", "flaeche_grund": "nur Helikopterbetrieb"}
+    if ampel == "gelb":
+        return {"flaeche": "eingeschraenkt", "flaeche_grund": "offen mit Einschränkungen"}
+    if ampel == "gruen" and re.search(r"OPEN|OFFEN", status, re.IGNORECASE):
+        return {"flaeche": "offen", "flaeche_grund": None}
+    return {"flaeche": "unbekannt", "flaeche_grund": None}
 
 
 def now_iso() -> str:
@@ -184,6 +207,7 @@ def main() -> int:
         record.setdefault("fetched_at_utc", None)
         for key in DATA_KEYS:
             record.setdefault(key, None)
+        record.update(derive_flaeche(record))   # also for a previous record without the field
         write(record)
         print(f"FAILED — {e} (previous content kept)", file=sys.stderr)
         return 1
@@ -196,6 +220,7 @@ def main() -> int:
         "source": URL,
     }
     record.update(data)
+    record.update(derive_flaeche(record))
     write(record)
     print(
         f"OK — {data['ampel']} / {data['status']} / {data['traffic']} / "

@@ -163,20 +163,20 @@ Grundsätze
 - Steht bei der Wetterstation «kein Messwert» für den Wind, leitest du den Wind am Platz aus dem Windsack der Kamera «Speck – Tankstelle» (Richtung und Stärke gemäss Kamerabeschreibung) und aus dem METAR Dübendorf ab und nennst ihn als Schätzung, zum Beispiel «laut Windsack schwach aus Südwest». Fehlen Temperatur und Taupunkt, nimmst du die Spreizung aus dem METAR Dübendorf. Dass Messwerte der Station fehlen, erwähnst du nirgends.
 - Höhen gibst du in Metern über Meer an. Die Wolkenbasis leitest du aus Landmarken mit bekannter Höhe ab (siehe Kamerabeschreibungen), mit dem METAR als Gegencheck: Wolkenhöhen im METAR sind Fuss über Grund in Dübendorf (436 m), also Basis = 436 m + Fuss × 0,3048. Die Spreizung Temperatur minus Taupunkt am Platz ergibt eine grobe Kumulusbasis: 536 m + 125 m pro Grad.
 - Föhn-Index = QNH Lugano-Agno (LSZA) minus QNH Zürich-Kloten (LSZH) aus den METAR, in ganzen hPa (derselbe Wert wie im Dashboard): zwischen −2 und +2 hPa unauffällig; ab +4 hPa Südföhn wahrscheinlich, ab +8 hPa kräftig; ab −4 hPa Nordlage (Bise bzw. Stau an der Alpennordseite, Nordföhn im Süden). Nenne den Wert so, wie er geliefert wird, ohne Nachkommastelle.
-- briefing.lage bewertet die Bedingungen für Lokalflüge: Sicht, Bewölkung, Föhn und Niederschlag. Bei einem Föhn-Index von +4 hPa oder mehr oder bei einer Regenwahrscheinlichkeit von 50 % oder mehr in den nächsten 3 Stunden ist die Lage höchstens "maessig", auch bei guter Sicht und hoher Basis. Steht bei den Messwerten eine «Obergrenze für briefing.lage», gilt sie.
+- briefing.lage bewertet die Bedingungen für Lokalflüge: Sicht, Bewölkung, Föhn und Niederschlag. Bei einem Föhn-Index von +4 hPa oder mehr oder bei einer Regenwahrscheinlichkeit von 50 % oder mehr in den nächsten 3 Stunden ist die Lage höchstens "maessig", auch bei guter Sicht und hoher Basis. Steht bei den Messwerten eine «Obergrenze für briefing.lage», gilt sie. Die Lage bewertest du nach dem Wetter, auch wenn der Platz gesperrt ist.
 - himmel.alpen: "frei" nur, wenn mindestens eine Kamera am Alpenhauptkamm (Liste am Schluss) ein brauchbares Bild liefert und dort die Gipfel frei sind. Sind nur Voralpen und Glarner Alpen frei, der Hauptkamm aber in Wolken oder mangels brauchbarem Bild nicht beurteilbar, gilt "teilweise"; schreibe dann im Text nicht «Alpen frei», sondern nenne, was frei ist (zum Beispiel «Glarner Alpen frei, Hauptkamm nicht beurteilbar»).
 - himmel.sicht_km ist die Distanz der fernsten Landmarke, die auf einem brauchbaren Bild aus dem Raum Platz, Zürcher Oberland oder Voralpen klar und mit Konturen erkennbar ist (Distanz gemäss Kamerabeschreibung, ab Kamerastandort). Schätze nicht darüber hinaus. Die Sichtweite in briefing.text und himmel.zusammenfassung ist genau dieselbe Zahl, zum Beispiel «Sicht 54 km (Tödi)». Ist keine Landmarke beurteilbar, setze null und nenne keine Zahl.
 - Ehrlich bei Unsicherheit: Lässt sich etwas aus den Daten nicht sicher bestimmen, setze null bzw. "unbekannt" und erfinde nichts. Gegenlicht, Dunst über dem See, Schatten und Spiegelungen sind keine Wolken.
 - Unbrauchbare Bilder (Nacht, schwarzes Bild, Platzhalter oder Fehlermeldung, nasse oder verschmutzte Linse) markierst du mit dem passenden "problem" und stützt dich nicht darauf. Ein gleichmässig graues Bild einer Bergkamera ist dagegen meist eine Beobachtung: Die Kamera steckt in der Wolke, die Basis liegt dort unter der Kamerahöhe (Tag "in_wolke", problem "keins").
 - Tag "flugbetrieb" nur bei Flugzeugen in der Luft oder beim Rollen; abgestellte Flugzeuge zählen nicht.
-- Der Platzstatus der FGZO ist massgebend. Bestehen Einschränkungen (gesperrte Rollwege, Pistenzustand, Schliessung), erwähnst du sie sinngemäss im Briefing. Den Pistenzustand übernimmst du wörtlich und unübersetzt so, wie ihn fgzo.ch meldet (zum Beispiel «SLIPPERY WET» oder «DRY»). Erfinde keine Einschränkungen und keine NOTAM.
+- Der Platzstatus der FGZO ist massgebend. Die Zeile «Platz für Flächenflugzeuge» ist verbindlich. Die Leser fliegen Flächenflugzeuge: Ist der Platz nur für Helikopter offen, gilt er als gesperrt; schreibe dann nie «Platz offen». Bestehen Einschränkungen (gesperrte Rollwege, Pistenzustand, Schliessung), erwähnst du sie sinngemäss im Briefing. Den Pistenzustand übernimmst du wörtlich und unübersetzt so, wie ihn fgzo.ch meldet (zum Beispiel «SLIPPERY WET» oder «DRY»). Erfinde keine Einschränkungen und keine NOTAM.
 - Keine Empfehlung, ob geflogen werden soll, keine Anrede, keine Sicherheitsfloskeln: Der Haftungshinweis steht bereits auf der Seite.
 
 Sprache und Form
 - Deutsch in Schweizer Rechtschreibung (ss statt ß), sachlich und knapp, in ganzen Sätzen. Fliegerische Fachbegriffe sind erwünscht (Basis, Hochnebel, Bise, Föhn, Thermik, Quellbewölkung).
 - Einheiten: Wind in kt, Höhen in m ü. M., Sicht in km, Temperaturen in °C.
-- briefing.headline: höchstens 60 Zeichen, das Wichtigste zuerst, zum Beispiel «Hochnebel bis 900 m, darüber sonnig» oder «Alpen frei, Basis um 1800 m».
-- briefing.text: 3 bis 5 Sätze, höchstens 700 Zeichen: Einschränkungen aus dem Platzstatus (falls vorhanden) zuerst, dann Lage am Platz, Bewölkung, Basis und Sicht, Zustand der Alpen, Entwicklung der nächsten Stunden laut Prognose. Die Regenwahrscheinlichkeit der nächsten 3 Stunden nennst du immer als Zahl in Prozent.
+- briefing.headline: höchstens 60 Zeichen, das Wichtigste zuerst, zum Beispiel «Hochnebel bis 900 m, darüber sonnig» oder «Alpen frei, Basis um 1800 m». Steht bei «Platz für Flächenflugzeuge» GESPERRT, beginnt die Headline mit «Platz gesperrt», zum Beispiel «Platz gesperrt (nur Heli), Hochnebel bis 900 m».
+- briefing.text: 3 bis 5 Sätze, höchstens 700 Zeichen. Der erste Satz nennt immer den Platzstatus in Kurzform, zum Beispiel «Platz offen, LOW TRAFFIC, Betriebsschluss 16:52, Piste SLIPPERY WET.», «Platz gesperrt: nur Helikopterbetrieb.» oder «Platz geschlossen.»; ist der Status unbekannt, sagst du das. Danach weitere Einschränkungen aus dem Hinweistext (falls vorhanden), dann Lage am Platz, Bewölkung, Basis und Sicht, Zustand der Alpen, Entwicklung der nächsten Stunden laut Prognose. Die Regenwahrscheinlichkeit der nächsten 3 Stunden nennst du immer als Zahl in Prozent.
 - Prognose-Wortwahl: Ab 50 % Regenwahrscheinlichkeit schreibst du «Regen wahrscheinlich», bei 30 bis 49 % «Regen möglich», darunter höchstens «einzelne Tropfen nicht ausgeschlossen». «Wolkenlos» oder «fast wolkenlos» nur bei weniger als 15 % Gesamtbedeckung, bei 15 bis 40 % «leicht bewölkt», bei 40 bis 75 % «aufgelockert» oder «teilweise bewölkt», darüber «stark bewölkt» oder «bedeckt». Sieh die ganze Prognosetabelle durch: Kehrt sich die Entwicklung im Zeitraum wieder um (zum Beispiel erneute Bewölkungszunahme oder Regen ab 17 Uhr), erwähnst du das mit Uhrzeit.
 - himmel.zusammenfassung: 1 bis 2 Sätze. himmel.regionen: je Region ein kurzer Satz, nur für Regionen, zu denen ein brauchbares Bild vorliegt.
 - kameras: jede gezeigte Kamera genau einmal, titel exakt wie angegeben, satz höchstens 120 Zeichen über das, was auf dem Bild zu sehen ist (nicht über die Kamera)."""
@@ -575,6 +575,33 @@ def foehn_index(foehn, now: datetime):
     return idx, text
 
 
+FLAECHE_TEXT = {"offen": "OFFEN", "eingeschraenkt": "OFFEN MIT EINSCHRÄNKUNGEN",
+                "gesperrt": "GESPERRT", "unbekannt": "UNBEKANNT"}
+PLATZ_UNKNOWN = {"flaeche": "unbekannt", "grund": None, "text": "Platzstatus nicht verfügbar"}
+
+
+def platz_status(fgzo) -> dict:
+    """Fixed-wing status of the airfield, decided by code (fetch_fgzo_status.py derives "flaeche";
+    helicopter-only counts as closed), not by the model. Used for the prompt, the safety net and the page."""
+    if not isinstance(fgzo, dict) or not fgzo.get("updated"):
+        return dict(PLATZ_UNKNOWN)
+    flaeche = fgzo.get("flaeche") if fgzo.get("flaeche") in FLAECHE_TEXT else "unbekannt"
+    grund = clip(fgzo.get("flaeche_grund"), 80) or None
+    if flaeche == "gesperrt":
+        parts = [f'Platz gesperrt: {grund or "siehe fgzo.ch"}']
+    else:
+        parts = [{"offen": "Platz offen", "eingeschraenkt": "Platz offen mit Einschränkungen"}.get(flaeche, "Platzstatus unklar")]
+        if fgzo.get("traffic"):
+            parts.append(clip(fgzo["traffic"], 30))
+        if fgzo.get("closing"):
+            parts.append(f'Betriebsschluss {clip(fgzo["closing"], 10)}')
+    if fgzo.get("runway_condition"):
+        parts.append(f'Piste {clip(fgzo["runway_condition"], 40)}')
+    text = ", ".join(parts) + f' (FGZO-Stand {clip(fgzo.get("updated"), 20)}'
+    text += ", letzter Abruf fehlgeschlagen)" if fgzo.get("ok") is False else ")"
+    return {"flaeche": flaeche, "grund": grund, "text": text}
+
+
 def fgzo_text(fgzo) -> str:
     if not isinstance(fgzo, dict) or not fgzo.get("updated"):
         return "Platzstatus FGZO: nicht verfügbar."
@@ -807,6 +834,8 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
     if rain3 is not None and rain3 >= 50:
         caps.append(f"Regenwahrscheinlichkeit {rain3} % in den nächsten 3 Stunden")
     cap_reason = "; ".join(caps)
+    fgzo = load_json(FGZO_FILE)
+    platz = attempt("Platzstatus", platz_status, fgzo, default=dict(PLATZ_UNKNOWN))
 
     context = "\n\n".join(part for part in [
         f"Zeitpunkt: {local:%d.%m.%Y %H:%M} Lokalzeit (Europe/Zurich). "
@@ -814,7 +843,9 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
         safe_text("Wetterstation am Platz", station_text, load_json(STATION_FILE), now),
         safe_text("METAR Dübendorf (LSMD)", metar_text, load_json(METAR_FILE), now),
         foehn_txt,
-        safe_text("Platzstatus FGZO", fgzo_text, load_json(FGZO_FILE)),
+        f'Platz für Flächenflugzeuge (verbindlich): {FLAECHE_TEXT[platz["flaeche"]]}'
+        + (f' ({platz["grund"]})' if platz["grund"] else "") + f'. Kurzform: {platz["text"]}.',
+        safe_text("Platzstatus FGZO", fgzo_text, fgzo),
         safe_text("Prognose Open-Meteo", forecast_text, hourly),
         (f"Regenwahrscheinlichkeit der nächsten 3 Stunden (Open-Meteo): höchstens {rain3} %."
          if rain3 is not None else "Regenwahrscheinlichkeit der nächsten 3 Stunden: nicht verfügbar."),
@@ -908,6 +939,14 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
     if alpen == "frei" and not ridge_clear:
         alpen = "teilweise"
         corrections.append("alpen frei -> teilweise (kein brauchbares, freies Bild vom Alpenhauptkamm)")
+    headline, text = clip(b.get("headline"), 80), clip(b.get("text"), 900)
+    if platz["flaeche"] == "gesperrt":   # fixed-wing pilots: a closed airfield must be the first thing they read
+        if not headline.lower().startswith("platz gesperrt"):
+            headline = clip(f"Platz gesperrt: {headline}", 80)
+            corrections.append("headline: «Platz gesperrt» vorangestellt")
+        if not re.search(r"gesperrt|geschlossen", text[:200], re.IGNORECASE):
+            text = clip(f'Platz gesperrt: {platz["grund"] or "siehe fgzo.ch"}. {text}', 900)
+            corrections.append("text: Platzsperre vorangestellt")
     for c in corrections:
         print(f"correction: {c}", file=sys.stderr)
     sicht_km = int_or_none(sky.get("sicht_km"), 0, 200)
@@ -917,7 +956,7 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
     record.update(
         ok=True, error=None, fail_streak=0, generated_at_utc=iso(now), model=MODEL, served_by=served_by,
         effort=BRIEFING_EFFORT, request_id=req_id, usage=usage, korrekturen=corrections,
-        briefing={"headline": clip(b.get("headline"), 80), "text": clip(b.get("text"), 900), "lage": lage},
+        briefing={"headline": headline, "text": text, "lage": lage}, platz=platz,
         himmel={
             "bedeckung_achtel": int_or_none(sky.get("bedeckung_achtel"), 0, 8),
             "wolkenbasis_m": int_or_none(sky.get("wolkenbasis_m"), 300, 9000),
