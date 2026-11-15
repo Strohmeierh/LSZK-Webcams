@@ -952,15 +952,20 @@ DABS_COORD = r"(\d{2})(\d{2})(\d{2})N (\d{3})(\d{2})(\d{2})E"
 # Checked sentence by sentence: airspace wording plus a "free / no restriction" claim. "Fluggebiet"
 # alone is too common in weather sentences ("im Fluggebiet sind die Gipfel frei"), so it only counts
 # together with a restriction word, or as "das Fluggebiet ist frei".
-AIRSPACE_CTX_RE = re.compile(r"luftraum|\bdabs\b|sperrgebiet|gefahrengebiet|beschränkungsgebiet|\b[rd]-area\b",
-                             re.IGNORECASE)
-AIRSPACE_FREE_RE = re.compile(r"(?<!nicht\s)\bfrei(?:gegeben)?\b|uneingeschränkt"
-                              r"|\bnicht\s+(?:eingeschränkt|beschränkt|gesperrt|aktiv)\b", re.IGNORECASE)
-NO_RESTRICTION_RE = re.compile(r"\b(?:keine|ohne)\b[^.]{0,30}(?:einschränkung|beschränkung)"
+_KEIN = r"\bkein(?:e[nmrs]?|erlei)?\b"     # kein, keine, keinen, keiner, keines, keinem, keinerlei
+AIRSPACE_CTX_RE = re.compile(r"luftr[aä]um|\bdabs\b|sperrgebiet|gefahrengebiet|beschränkungsgebiet|\b[rd]-areas?\b"
+                             r"|\bls[rd]\s?\d", re.IGNORECASE)
+AIRSPACE_FREE_RE = re.compile(r"(?<!nicht\s)\bfrei(?:gegeben|e[nmrs]?)?\b|uneingeschränkt|unbeschränkt"
+                              r"|\bnicht\s+(?:eingeschränkt|beschränkt|gesperrt|aktiv)\b"
+                              r"|(?:" + _KEIN + r"|\bnichts\b)[^.]{0,30}\baktiv\b", re.IGNORECASE)
+NO_RESTRICTION_RE = re.compile(r"(?:" + _KEIN + r"|\bohne\b)[^.]{0,30}"
+                               r"(?<!sicht)(?<!wetter)(?:einschränkung|beschränkung|restriktion|sperrung)"
                                r"|(?:einschränkungs|beschränkungs)frei"
-                               r"|\bkeine\b[^.]{0,20}(?:sperr|gefahren|beschränkungs)gebiet", re.IGNORECASE)
+                               r"|" + _KEIN + r"[^.]{0,20}(?:sperr|gefahren|beschränkungs)gebiet", re.IGNORECASE)
 AREA_CTX_RE = re.compile(r"\bfluggebiet", re.IGNORECASE)
 AREA_FREE_RE = re.compile(r"\bfluggebiet\s+(?:ist\s+)?(?:heute\s+|derzeit\s+|aktuell\s+)?frei\b", re.IGNORECASE)
+WEATHER_RE = re.compile(r"sicht|nebel|wolke|bewölk|bedeck|regen|niederschlag|dunst|schnee|gewitter|wetter|wind"
+                        r"|turbulen|föhn|thermik|basis", re.IGNORECASE)
 # sentence end, but not after a date such as "Stand 14.11. 08:45"
 SENTENCE_SPLIT_RE = re.compile(r"(?<!\d\.\d\.)(?<!\d\.\d\d\.)(?<=[.!?])\s+")
 
@@ -969,9 +974,9 @@ def airspace_claim(sentence: str) -> bool:
     """True if the sentence could be read as «airspace free» or «no restrictions»."""
     if AIRSPACE_CTX_RE.search(sentence) and (AIRSPACE_FREE_RE.search(sentence) or NO_RESTRICTION_RE.search(sentence)):
         return True
-    if AREA_CTX_RE.search(sentence) and NO_RESTRICTION_RE.search(sentence):
-        return True
-    return bool(AREA_FREE_RE.search(sentence))
+    if not AREA_CTX_RE.search(sentence) or WEATHER_RE.search(sentence):
+        return False   # "Fluggebiet" in a weather sentence: «keine Sichteinschränkungen im Fluggebiet»
+    return bool(NO_RESTRICTION_RE.search(sentence) or AREA_FREE_RE.search(sentence))
 
 
 class DabsError(RuntimeError):

@@ -81,7 +81,9 @@ def derive_flaeche(rec: dict) -> dict:
     ampel = rec.get("ampel")
     if CLOSED_RE.search(status) or ampel == "rot":
         return {"flaeche": "gesperrt", "flaeche_grund": "geschlossen"}
-    if HELI_ONLY_RE.search(re.sub(r"\s+", " ", str(rec.get("notice") or ""))):   # one space for the lookbehind
+    # one space for the lookbehind; line breaks stay, so the per-line rules do not reach across lines
+    notice = re.sub(r" ?\n ?", "\n", re.sub(r"[^\S\n]+", " ", str(rec.get("notice") or "")))
+    if HELI_ONLY_RE.search(notice):
         return {"flaeche": "gesperrt", "flaeche_grund": "nur Helikopterbetrieb"}
     if ampel == "gelb":
         return {"flaeche": "eingeschraenkt", "flaeche_grund": "offen mit Einschränkungen"}
