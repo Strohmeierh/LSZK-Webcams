@@ -2038,7 +2038,9 @@
       hits.forEach(function (t) {
         var kopf = [str(t.gebiet), str(t.notam)].filter(Boolean).join(' · ') || 'Eintrag';
         var band = aiSwissAlt((str(t.unten) || '?') + ' bis ' + (str(t.oben) || '?'));
-        html += '<div class="ai-row"><b>' + escHtml(kopf) + '</b> ' + escHtml(str(t.zeit)) + ' · ' + escHtml(band) +
+        var zeit = str(t.zeit);                // Lokalzeit mit «LT» (Wunsch 16.11.); ältere Datensätze ohne Zusatz
+        if (/^\d{2}:\d{2}/.test(zeit) && !/\b(?:LT|UTC)\b/.test(zeit)) zeit += ' LT';
+        html += '<div class="ai-row"><b>' + escHtml(kopf) + '</b> ' + escHtml(zeit) + ' · ' + escHtml(band) +
           (t.unsicher === true ? ' ⚠ <span class="ai-prob">nicht eindeutig lesbar</span>' : '') +
           '<br>' + escHtml(str(t.text)) +
           (t.karte === false ? ' <span class="ai-muted">· nicht auf der DABS-Karte</span>' : '') + '</div>';
@@ -2047,8 +2049,8 @@
       var ver = (typeof x.version === 'number' && isFinite(x.version)) ? 'Version ' + x.version + ', ' : '';
       var tot = (typeof x.eintraege_total === 'number' && isFinite(x.eintraege_total))
         ? ' · ' + hits.length + ' von ' + x.eintraege_total + ' Einträgen' : '';
-      return html + '<div class="brf-src">Stand ' + ver + aiDM(stand) + ' ' + aiHM(stand) + ' (Zeiten in Lokalzeit)' + tot +
-        (str(x.filter) ? ' · ' + escHtml(x.filter) : '') + ' · neue Versionen um 09:00, 13:00 und 16:00</div>';
+      return html + '<div class="brf-src">Stand ' + ver + aiDM(stand) + ' ' + aiHM(stand) + ' LT' + tot +
+        (str(x.filter) ? ' · ' + escHtml(x.filter) : '') + ' · neue Versionen um 09:00, 13:00 und 16:00 LT · LT = Lokalzeit</div>';
     }
     function aiThermikHtml(d, st) {
       var t = d.thermik;
