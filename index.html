@@ -211,6 +211,7 @@
     .ai-row { font-size: 0.78rem; line-height: 1.5; padding: 4px 0; border-bottom: 1px solid var(--card-border); color: var(--text-muted); }
     .ai-row b { color: var(--text); }
     .ai-row .ai-prob { color: #fcd34d; }
+    .ai-row.ai-done { opacity: 0.7; }      /* DABS-Eintrag heute schon beendet; 0.7 bleibt am Handy lesbar */
     .ai-cams summary { cursor: pointer; }
 
     /* === Wetter-Panel === */
@@ -2035,20 +2036,25 @@
       if (x.ok !== true || !stand || !tag) return html + '<div class="ai-row">DABS nicht auswertbar – bitte das Original öffnen.</div>';
       if (aiDay(tag) !== aiDay(now)) return html + '<div class="ai-row">Der Auszug ist nicht von heute und wird nicht mehr angezeigt.</div>';
       var hits = Array.isArray(x.treffer) ? x.treffer.filter(function (t) { return t && typeof t === 'object'; }) : [];
+      var nDone = 0;
       hits.forEach(function (t) {
+        var done = t.beendet === true;         // heute schon vorbei: grau, damit die Liste zur DABS-Karte passt (Wunsch 16.11.)
+        if (done) nDone++;
         var kopf = [str(t.gebiet), str(t.notam)].filter(Boolean).join(' · ') || 'Eintrag';
         var band = aiSwissAlt((str(t.unten) || '?') + ' bis ' + (str(t.oben) || '?'));
         var zeit = str(t.zeit);                // Lokalzeit mit «LT» (Wunsch 16.11.); ältere Datensätze ohne Zusatz
         if (/^\d{2}:\d{2}/.test(zeit) && !/\b(?:LT|UTC)\b/.test(zeit)) zeit += ' LT';
-        html += '<div class="ai-row"><b>' + escHtml(kopf) + '</b> ' + escHtml(zeit) + ' · ' + escHtml(band) +
+        html += '<div class="ai-row' + (done ? ' ai-done' : '') + '"><b>' + escHtml(kopf) + '</b> ' + escHtml(zeit) +
+          (done ? ' · beendet' : '') + ' · ' + escHtml(band) +
           (t.unsicher === true ? ' ⚠ <span class="ai-prob">nicht eindeutig lesbar</span>' : '') +
           '<br>' + escHtml(str(t.text)) +
           (t.karte === false ? ' <span class="ai-muted">· nicht auf der DABS-Karte</span>' : '') + '</div>';
       });
       if (!hits.length) html += '<div class="ai-row">Keine DABS-Einträge im Fluggebiet gefunden.</div>';
+      else if (nDone === hits.length) html += '<div class="ai-row">Keine weiteren DABS-Einträge im Fluggebiet bis 30 min nach Sonnenuntergang.</div>';
       var ver = (typeof x.version === 'number' && isFinite(x.version)) ? 'Version ' + x.version + ', ' : '';
       var tot = (typeof x.eintraege_total === 'number' && isFinite(x.eintraege_total))
-        ? ' · ' + hits.length + ' von ' + x.eintraege_total + ' Einträgen' : '';
+        ? ' · ' + hits.length + ' von ' + x.eintraege_total + ' Einträgen' + (nDone ? ' (' + nDone + ' beendet)' : '') : '';
       return html + '<div class="brf-src">Stand ' + ver + aiDM(stand) + ' ' + aiHM(stand) + ' LT' + tot +
         (str(x.filter) ? ' · ' + escHtml(x.filter) : '') + ' · neue Versionen um 09:00, 13:00 und 16:00 LT · LT = Lokalzeit</div>';
     }
