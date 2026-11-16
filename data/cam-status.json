@@ -5,8 +5,8 @@
     "source": "origin"
   },
   "https://wsrv.nl/?url=ascona-locarno.roundshot.com/cams/1418/medium": {
-    "hash": "075dcde1d292082a2aa1761f732ca70b3999da6b",
-    "lastChange": 1794860550000,
+    "hash": "65a9c4f07d7125b01b8448205cb0cd8f720b153e",
+    "lastChange": 1794861764000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=bachtel.it-wms.com/panorama1_raw.jpg": {
@@ -25,34 +25,34 @@
     "source": "origin"
   },
   "https://wsrv.nl/?url=decoral.ch/Kameratoedi.jpg": {
-    "hash": "fff567a2b4edccf134ff7203ab1d47a9a6293279",
-    "lastChange": 1794861311000,
+    "hash": "54fbe73ca384334576a54ea1989b2ad492af69c9",
+    "lastChange": 1794861607000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=eichi.ch%2F%3Feichi_webcam_image%3Deichi": {
-    "hash": "707cbb79de89d886811826b5d1c211292abe5cd7",
-    "lastChange": 1794861467000,
+    "hash": "965523caa25f399608625714c31efc75576b07f4",
+    "lastChange": 1794861740000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=eichi.ch%2F%3Feichi_webcam_image%3Deichi2": {
-    "hash": "aeb046255d08c697aee1d4dfaab2f91aa85c9725",
-    "lastChange": 1794861427000,
+    "hash": "0ea7e2aa6829c904959aed102917d22125f5449d",
+    "lastChange": 1794861760000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=fgzo.ch/webcam/images/fgzo.jpg": {
-    "hash": "bb4c74d2a77c5e33ad1c734bcf8794b20b3e510f",
-    "lastChange": 1794861511000,
-    "source": "origin"
+    "hash": "32190cfc456465216bb712dee99af1987fadd2dc",
+    "lastChange": 1794861808457,
+    "source": "bot"
   },
   "https://wsrv.nl/?url=fgzo.ch/webcam/images/fgzo2.jpg": {
-    "hash": "f718d93a70e7db041e9f72f44e87ab22cc018de5",
-    "lastChange": 1794861511000,
-    "source": "origin"
+    "hash": "12ae420e10057f8db785e69a6d4e0a6e185d2550",
+    "lastChange": 1794861808457,
+    "source": "bot"
   },
   "https://wsrv.nl/?url=flugplatz-schaenis.ch/images/webcam/cam_schaenis_high.jpg": {
-    "hash": "4d1d0b9c7266c205daa7851ba1e7f630f0366a04",
-    "lastChange": 1794861310000,
-    "source": "origin"
+    "hash": "21e34fde256d07043853274019ef79c1e438172e",
+    "lastChange": 1794861808457,
+    "source": "bot"
   },
   "https://wsrv.nl/?url=images-webcams.windy.com/30/1678358730/current/original/1678358730.jpg": {
     "hash": "25ecd1254f54026869a9c418cbba30c85aa4afe6",
@@ -75,18 +75,18 @@
     "source": "origin"
   },
   "https://wsrv.nl/?url=mollisairport.roundshot.com/cams/1641/medium": {
-    "hash": "6c076d75d247f191e8e1f134a71007216944ca52",
-    "lastChange": 1794861231000,
+    "hash": "a04c26edf01e9907757685d83054ec2850165127",
+    "lastChange": 1794861818000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=rotenfluebahn.roundshot.com/cams/1598/medium": {
-    "hash": "01e33ccf94ae428b685102bae0946d2143d70cdb",
-    "lastChange": 1794860679000,
+    "hash": "61b8ab8911467024081f8774ac037af5a54fa048",
+    "lastChange": 1794861764000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=saentis.roundshot.com/cams/156/medium": {
-    "hash": "5d37f96eb949d4c84dee0a37b1b32ea308c52ce8",
-    "lastChange": 1794861214000,
+    "hash": "935b547c5ac120f84115dde45360cdf92c2f0465",
+    "lastChange": 1794861819000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=sportbahnenelm.roundshot.com/cams/1721/medium": {
@@ -96,7 +96,7 @@
   },
   "https://wsrv.nl/?url=webcam.afbn.ch/H_OSG_017,200_S_KAM_001_Sued.jpg": {
     "hash": "d3c997d7088b7b4ea69b62d3ec1db4f2808e73ba",
-    "lastChange": 1794861301000,
+    "lastChange": 1794861601000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=webcam.hotel-klausenpass.ch/panorama.jpg": {
@@ -105,9 +105,9 @@
     "source": "origin"
   },
   "https://wsrv.nl/?url=www.hotel-grimselpass.ch/webcams/grimsel.jpg": {
-    "hash": "c04022c5da3d3e60416ea08ed675283fe3ef66aa",
-    "lastChange": 1794861534000,
-    "source": "origin"
+    "hash": "278d903ce531bc18d9cedda85f20ac5a4c554e4f",
+    "lastChange": 1794861808457,
+    "source": "bot"
   },
   "https://wsrv.nl/?url=www.sky-cam.ch/skiarena/gurschen_N/gurschen_N.jpg": {
     "hash": "687c311bef8d4a39e53b81039ac83db5b15f1b60",
