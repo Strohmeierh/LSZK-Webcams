@@ -2,16 +2,16 @@
  "schema_version": 1,
  "sued": {
   "icao": "LSZA",
-  "obs_utc": "2026-11-16T01:20:00+00:00",
+  "obs_utc": "2026-11-16T01:50:00+00:00",
   "qnh": 1015,
-  "raw": "METAR LSZA 160120Z AUTO VRB01KT 9999 OVC055 07/05 Q1015",
+  "raw": "METAR LSZA 160150Z AUTO 35002KT 9999 OVC055 07/05 Q1015",
   "source": "aviationweather.gov"
  },
  "nord": {
   "icao": "LSZH",
-  "obs_utc": "2026-11-16T01:20:00+00:00",
+  "obs_utc": "2026-11-16T01:50:00+00:00",
   "qnh": 1009,
-  "raw": "METAR LSZH 160120Z AUTO 16004KT 120V240 9999 VCSH SCT027 BKN058 08/07 Q1009 TEMPO RA",
+  "raw": "METAR LSZH 160150Z AUTO 20004KT 160V230 9999 BKN030 09/07 Q1009 TEMPO RA",
   "source": "aviationweather.gov"
  },
  "index_hpa": 6
