@@ -63,7 +63,7 @@ MONTHLY_BUDGET_USD = 80.0    # LSZK share of the 200 USD monthly credit
 RESERVE_USD = 0.40           # booked before each call, replaced by the reported cost afterwards
 MIN_IMAGES = 3
 
-UA = "LSZK-Webcams-Dashboard/1.0 (+https://strohmeierh.github.io/LSZK-Webcams/)"
+UA = "LSZK-Webcams-Dashboard/1.0 (+https://lszk.strowa.ch/)"
 MAX_IMAGE_AGE_MIN = 180      # older images (frozen cams) are not sent
 LSPV_INDEX = "https://cams.lspv.dyndns.info/cams/interval"
 

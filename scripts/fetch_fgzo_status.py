@@ -44,7 +44,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 OUT_FILE = ROOT / "data" / "fgzo_status.json"
 URL = "https://fgzo.ch/status/"
-UA = "LSZK-Webcams-Dashboard/1.0 (+https://strohmeierh.github.io/LSZK-Webcams/)"
+UA = "LSZK-Webcams-Dashboard/1.0 (+https://lszk.strowa.ch/)"
 
 AMPEL = {"open": "gruen", "open-restricted": "gelb", "closed": "rot"}
 
