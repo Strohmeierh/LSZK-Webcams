@@ -1,1 +1,1 @@
-[{"icaoId":"LSMD","receiptTime":"2026-11-17T14:24:30.967Z","obsTime":1794925200,"reportTime":"2026-11-17T14:20:00.000Z","temp":14,"dewp":11,"wdir":310,"wspd":14,"wgst":24,"visib":"6+","altim":998,"qcField":0,"metarType":"METAR","rawOb":"METAR LSMD 171420Z 31014G24KT 280V340 9999 FEW033 14/11 Q0998 RMK BLU+","lat":47.399,"lon":8.648,"elev":436,"name":"Dübendorf Arpt, ZH, CH","cover":"FEW","clouds":[{"cover":"FEW","base":3300}],"fltCat":"VFR"}]
+[{"rawOb":"LSMD 171520Z 30013KT 9999 FEW036 14/10 Q0998 RMK BLU+","reportTime":"2026/11/17 15:20"}]
