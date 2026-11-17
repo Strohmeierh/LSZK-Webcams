@@ -1699,6 +1699,9 @@
        „neu" = FGZO-Zeitstempel weicht vom zuletzt im Detail-Fenster gesehenen ab. */
     var FGZO_SEEN_KEY = 'lszk-fgzo-seen';
     var FGZO_URL = 'https://fgzo.ch/status/';
+    // fgzo.ch liefert dem Job ab und zu eine Bot-Abfrage statt der Seite (ok=false, letzter Stand bleibt).
+    // Massgebend ist das Alter des letzten erfolgreichen Abrufs: bis 45 min (zwei, drei Fehlabrufe) gilt er noch.
+    var FGZO_FRESH_MIN = 45;
 
     function fgzoItem(G, Y, R, N) {
       var p = briefing.platz;
@@ -1709,7 +1712,7 @@
         var dF = new Date(p.fetched_at_utc);
         if (!isNaN(dF.getTime())) ageMin = (Date.now() - dF.getTime()) / 60000;
       }
-      var failed = !hasData || p.ok === false || ageMin === null || ageMin >= 30;
+      var failed = !hasData || ageMin === null || ageMin >= FGZO_FRESH_MIN;
       var isNew  = hasData && storeGet(FGZO_SEEN_KEY) !== p.updated;
       var srcLink = '<a href="' + FGZO_URL + '" target="_blank" rel="noopener">Original auf fgzo.ch ↗</a>';
       var disclaimer = '<div class="brf-src">Auszug ohne Gewähr. Massgebend sind fgzo.ch, die Flugplatzleitung sowie AIP und NOTAM.</div>';
@@ -1959,10 +1962,35 @@
 
     // kind: loading | none | ok | stale; dazu failed (letzter Versuch fehlgeschlagen) und running (läuft gerade)
     function aiFgzoSperre() {            // aktueller FGZO-Stand (Ampel-Daten, alle 10 min), nur wenn frisch
-      var fz = briefing.platz;
-      if (!fz || typeof fz !== 'object' || fz.ok === false || fz.flaeche !== 'gesperrt') return false;
+      var fz = briefing.platz;           // ein einzelner Fehlabruf (ok=false) behält den letzten Stand: zählt weiter
+      if (!fz || typeof fz !== 'object' || fz.flaeche !== 'gesperrt') return false;
       var t = Date.parse(fz.fetched_at_utc);
-      return !isNaN(t) && (Date.now() - t) / 60000 < 30;
+      return !isNaN(t) && (Date.now() - t) / 60000 < FGZO_FRESH_MIN;
+    }
+    // Platz für Flächenflugzeuge gesperrt (Wunsch 17.11.): klare Sperrzeile, gleicher Wortlaut wie SPERRE_TEXT im Job.
+    // grund stammt vom Job (abgeleitet), wird trotzdem escaped; Rückgabe ist HTML-sicher.
+    function aiSperreText(grund) {
+      if (grund === 'nur Helikopterbetrieb') return 'Platz für Flächenflugzeuge gesperrt – nur Helikopterbetrieb erlaubt';
+      if (grund === 'geschlossen') return 'Platz geschlossen';
+      return 'Platz für Flächenflugzeuge gesperrt' + ((typeof grund === 'string' && grund) ? ' (' + escHtml(grund) + ')' : '');
+    }
+    // Sätze wie SENTENCE_SPLIT_RE in ai_briefing.py (kein Satzende nach einem Datum «14.11.»), ohne Lookbehind (ältere Safari)
+    function aiSentences(txt) {
+      var out = [], re = /[.!?]\s+/g, start = 0, m;
+      while ((m = re.exec(txt))) {
+        var end = m.index + 1;
+        if (/\d\.\d{1,2}\.$/.test(txt.slice(Math.max(0, end - 6), end))) continue;
+        out.push(txt.slice(start, end));
+        start = m.index + m[0].length;
+      }
+      out.push(txt.slice(start));
+      return out.filter(function (s) { return /\S/.test(s); });
+    }
+    // FGZO-Hinweis im Text (Datensätze vor dem Feld fgzo_hinweis): bei gesperrtem Platz gegenstandslos (Wunsch 17.11.)
+    var AI_FGZO_HINT = /^\s*(?:FGZO-Hinweise?|Hinweise?\s+(?:(?:der|von|laut)\s+)?(?:der\s+)?FGZO|(?:Einschränkungen|Auflagen)\s+(?:laut|der|von|gemäss)\s+(?:der\s+)?FGZO)(?![A-Za-zÄÖÜäöü])/i;
+    function aiDropFgzoHint(txt) {
+      var all = aiSentences(txt), keep = all.filter(function (s) { return !AI_FGZO_HINT.test(s); });
+      return (keep.length && keep.length < all.length) ? keep.join(' ') : txt;   // nie einen leeren Text zeigen
     }
     function aiState() {
       var d = ai.data, now = new Date(), live = aiFgzoSperre();
@@ -2001,7 +2029,7 @@
       } else {
         if (st.kind === 'ok') {
           time = aiSlotHM(st.data, st.gen);
-          if (st.lage) { dot.style.background = AI_LAGE[st.lage].color; label += ', Lage ' + AI_LAGE[st.lage].label; }
+          if (st.lage && !st.sperre) { dot.style.background = AI_LAGE[st.lage].color; label += ', Lage ' + AI_LAGE[st.lage].label; }
         } else {
           time = aiSlotWhen(st.data, st.gen, now);
           dot.classList.add('stale');
@@ -2014,7 +2042,7 @@
       if (st.sperre && st.kind !== 'loading') {
         dot.classList.remove('stale');
         dot.style.background = AI_LAGE.schlecht.color;
-        label += ', Platz für Flächenflugzeuge gesperrt';
+        label += ', Platz für Flächenflugzeuge gesperrt, Lokalflüge nicht möglich';
       }
       tm.textContent = time;
       if (wn) wn.textContent = st.failed ? '⚠' : '';
@@ -2090,8 +2118,8 @@
       if (st.running) html += '<div class="ai-banner warn">Wird gerade aktualisiert…</div>';
       if (st.kind === 'none') {
         if (st.failed) html += '<div class="ai-banner">Der letzte Versuch' + (st.tri ? ' (' + aiWhen(st.tri, now) + ')' : '') + ' ist fehlgeschlagen.</div>';
-        if (st.sperreJetzt) html += '<div class="ai-lage ai-platz zu">Aktuell laut FGZO: Platz für Flächenflugzeuge gesperrt' +
-          (briefing.platz.flaeche_grund ? ' (' + escHtml(briefing.platz.flaeche_grund) + ')' : '') + '</div>';
+        if (st.sperreJetzt) html += '<div class="ai-lage ai-platz zu">Aktuell laut FGZO: ' + aiSperreText(briefing.platz.flaeche_grund) +
+          ' – Lokalflüge nicht möglich</div>';
         return html + '<div class="ai-text">Noch kein KI-Briefing vorhanden. ' + sched + '</div>';
       }
       var d = st.data, b = st.b;
@@ -2108,21 +2136,27 @@
       html += '<div class="ai-headline"><span class="brf-dot" style="background:' + (st.sperre ? AI_LAGE.schlecht.color : (lg ? lg.color : AI_GREY)) + '"></span>' +
         '<span>' + escHtml(aiSwiss(b.headline || '')) + '</span></div>';
 
-      // Platzstatus und Lage hervorgehoben (Wunsch 15.11.); Farben nur aus festen Maps, nie aus dem Datensatz
+      // Platzstatus und Lage hervorgehoben (Wunsch 15.11.); Farben nur aus festen Maps, nie aus dem Datensatz.
+      // Für Flächenflugzeuge gesperrt (im Briefing oder inzwischen laut FGZO): nur die Sperre, Lage «nicht möglich»,
+      // kein FGZO-Hinweis zum Flugbetrieb (Wunsch 17.11.)
       var pz = (d.platz && typeof d.platz === 'object' && !Array.isArray(d.platz)) ? d.platz : null;
       var pzKey = (pz && aiHas(AI_PLATZ_COLOR, pz.flaeche)) ? pz.flaeche : 'unbekannt';
       var dot = function (c) { return '<span class="brf-dot" style="background:' + c + '"></span>'; };
-      html += '<div class="ai-status" style="border-left-color:' + ((st.sperreBriefing || st.sperreJetzt) ? AI_PLATZ_COLOR.gesperrt : AI_PLATZ_COLOR[pzKey]) + '">';
-      if (pz && typeof pz.text === 'string' && pz.text) {
-        var pm = /^([\s\S]*?)\s*(\(FGZO-Stand[^)]*\))\s*$/.exec(pz.text);
-        html += '<div class="ai-st-row' + (st.sperreBriefing ? ' zu' : '') + '">' + dot(AI_PLATZ_COLOR[st.sperreBriefing ? 'gesperrt' : pzKey]) +
-          '<span>' + escHtml(pm ? pm[1] : pz.text) + (pm ? ' <span class="ai-muted">' + escHtml(pm[2]) + '</span>' : '') + '</span></div>';
+      var muted = function (s) { return ' <span class="ai-muted">' + escHtml(s) + '</span>'; };
+      var pm = (pz && typeof pz.text === 'string') ? /^([\s\S]*?)\s*(\(FGZO-Stand[^)]*\))\s*$/.exec(pz.text) : null;
+      html += '<div class="ai-status" style="border-left-color:' + (st.sperre ? AI_PLATZ_COLOR.gesperrt : AI_PLATZ_COLOR[pzKey]) + '">';
+      if (st.sperre) {
+        var fz = briefing.platz, live = st.sperreJetzt;   // der aktuelle FGZO-Stand geht dem Briefing vor
+        var upd = (live && typeof fz.updated === 'string' && fz.updated) ? muted('(FGZO-Stand ' + fz.updated + ')') : '';
+        html += '<div class="ai-st-row zu">' + dot(AI_PLATZ_COLOR.gesperrt) + '<span>' +
+          (live && !st.sperreBriefing ? 'Aktuell laut FGZO: ' : '') + aiSperreText(live ? fz.flaeche_grund : (pz && pz.grund)) +
+          (live ? upd : (pm ? muted(pm[2]) : '')) + '</span></div>';
+      } else if (pz && typeof pz.text === 'string' && pz.text) {
+        html += '<div class="ai-st-row">' + dot(AI_PLATZ_COLOR[pzKey]) +
+          '<span>' + escHtml(pm ? pm[1] : pz.text) + (pm ? muted(pm[2]) : '') + '</span></div>';
       }
-      if (st.sperreJetzt && !st.sperreBriefing) {
-        html += '<div class="ai-st-row zu">' + dot(AI_PLATZ_COLOR.gesperrt) + '<span>Aktuell laut FGZO: Platz für Flächenflugzeuge gesperrt' +
-          (briefing.platz.flaeche_grund ? ' (' + escHtml(briefing.platz.flaeche_grund) + ')' : '') + '</span></div>';
-      }
-      html += '<div class="ai-st-row">' + dot(lg ? lg.color : AI_GREY) + '<span>Lage für Lokalflüge: ' + (lg ? lg.label : '–') + '</span></div></div>';
+      html += '<div class="ai-st-row' + (st.sperre ? ' zu' : '') + '">' + dot(st.sperre ? AI_PLATZ_COLOR.gesperrt : (lg ? lg.color : AI_GREY)) +
+        '<span>Lage für Lokalflüge: ' + (st.sperre ? 'nicht möglich' : (lg ? lg.label : '–')) + '</span></div></div>';
 
       // ältere Datensätze beginnen noch mit der Platzzeile: hier nicht ein zweites Mal zeigen
       var txt = typeof b.text === 'string' ? b.text : '';
@@ -2131,7 +2165,10 @@
         var rest = (line && txt.indexOf(line + '.') === 0) ? txt.slice(line.length + 1).replace(/^\s+/, '') : '';
         if (rest) txt = rest;                // nie einen leeren Text zeigen
       }
-      html += '<div class="ai-text">' + escHtml(aiSwiss(txt)) + '</div>';
+      // FGZO-Hinweis (eigenes Feld seit 17.11.) direkt vor dem Text, aber nur solange der Platz nicht gesperrt ist
+      var hint = (typeof b.fgzo_hinweis === 'string') ? b.fgzo_hinweis.replace(/^\s+|\s+$/g, '') : '';
+      if (st.sperre) { hint = ''; txt = aiDropFgzoHint(txt); }
+      html += '<div class="ai-text">' + escHtml(aiSwiss(hint ? hint + ' ' + txt : txt)) + '</div>';
 
       var basis = aiMeter(sky.wolkenbasis_m), bq = aiMap(AI_MAPS.basis_quelle, sky.basis_quelle);
       var sichtTxt = aiMap(AI_MAPS.sicht, sky.sicht), sk = aiNum(sky.sicht_km, ' km');
