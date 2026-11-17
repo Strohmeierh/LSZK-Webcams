@@ -1,21 +1,21 @@
 {
   "stats": {
     "month": "2026-11",
-    "cost_month_usd": 1.2738,
-    "attempts_month": 6,
-    "date": "2026-11-16",
-    "cost_today_usd": 0.7307,
-    "attempts_today": 3,
+    "cost_month_usd": 1.6738,
+    "attempts_month": 7,
+    "date": "2026-11-17",
+    "cost_today_usd": 0.4,
+    "attempts_today": 1,
     "budget_month_usd": 80.0,
-    "reserved_usd": 0.0
+    "reserved_usd": 0.4
   },
   "schema_version": 1,
-  "ok": true,
-  "attempted_at_utc": "2026-11-16T14:04:10+00:00",
-  "slot": "15:00",
-  "reserved_run": "43881765018.1",
-  "fail_streak": 0,
-  "error": null,
+  "ok": false,
+  "attempted_at_utc": "2026-11-17T07:04:01+00:00",
+  "slot": "sunrise",
+  "reserved_run": "44035728582.1",
+  "fail_streak": 1,
+  "error": "Versuch läuft oder wurde abgebrochen (kein Ergebnis gespeichert)",
   "sun": {
     "rise": "07:30",
     "set": "16:49"
