@@ -1,1 +1,1 @@
-[{"rawOb":"LSMD 171520Z 30013KT 9999 FEW036 14/10 Q0998 RMK BLU+","reportTime":"2026/11/17 15:20"}]
+[{"icaoId":"LSMD","receiptTime":"2026-11-17T15:53:25.787Z","obsTime":1794930600,"reportTime":"2026-11-17T16:00:00.000Z","temp":13,"dewp":10,"wdir":300,"wspd":9,"altim":998,"qcField":2,"metarType":"METAR","rawOb":"METAR LSMD 171550Z AUTO 30009KT 280V340 9999NDV SCT220 13/10 Q0998 RMK","lat":47.399,"lon":8.648,"elev":436,"name":"Dübendorf Arpt, ZH, CH","cover":"SCT","clouds":[{"cover":"SCT","base":22000}]}]
