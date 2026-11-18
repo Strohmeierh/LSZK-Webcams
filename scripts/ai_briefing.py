@@ -77,19 +77,19 @@ LSPV_INDEX = "https://cams.lspv.dyndns.info/cams/interval"
 # calibrated on 08.11.2026 against sun positions, swisstopo terrain profiles and maps.
 CAMS = [
     {"title": "Speck – Runway 30", "region": "platz", "wsrv": "w=1024&h=1024&fit=inside", "desc": """\
-Webcam 1 «Piste West» (Overlay «LSZK RWY12»; die Kartenbezeichnung «Runway 30» ist irreführend): Kamera am FGZO-Gebäude am Ostende des Flugplatzes Speck (ca. 545 m ü. M., ~9 m über dem Platz, 536 m/1758 ft). Blick WSW (Bildmitte ~250°, Bildfeld ~200° SSW bis ~300° WNW, Weitwinkel; Himmel nur bis ~20° Höhe).
+Webcam 1 «Piste West» (Overlay «LSZK RWY12»; die Kartenbezeichnung «Runway 30» ist irreführend): Kamera am FGZO-Gebäude am Ostende des Flugplatzes Speck (ca. 545 m MSL, ~9 m über dem Platz, 536 m/1758 ft). Blick WSW (Bildmitte ~250°, Bildfeld ~200° SSW bis ~300° WNW, Weitwinkel; Himmel nur bis ~20° Höhe).
 Vorne Rasen-Abstellplatz mit Flugzeugen auf Betonplatten, rechts unten Balkon/Gehweg. Diagonal durchs Bild die Graspiste 12/30 (graubrauner, abgenutzter Mittelstreifen) bis zur Schwelle 12 am rechten Bildrand (~600 m).
-Dahinter Weide/Abstellfläche (Container, Flugzeuge ~200 m), Fussballplatz mit Flutlichtmasten (~0,4 km), Hochspannungsmasten (~1 km). Am Horizont nur Wald: Speckholz/Lochweid links (0,2–0,5 km), bewaldeter Hügel Höchi 584 m in der Mitte (1,3 km, Baumwipfel ~615 m ü. M.). Keine Berge/Alpen, kein Windsack.
+Dahinter Weide/Abstellfläche (Container, Flugzeuge ~200 m), Fussballplatz mit Flutlichtmasten (~0,4 km), Hochspannungsmasten (~1 km). Am Horizont nur Wald: Speckholz/Lochweid links (0,2–0,5 km), bewaldeter Hügel Höchi 584 m in der Mitte (1,3 km, Baumwipfel ~615 m MSL). Keine Berge/Alpen, kein Windsack.
 Taugt für Pistenzustand (Gras, Schnee, Wasser, Reif), Bodensicht bis ~3 km sowie Wolken und aufziehendes Wetter im Westsektor. Die Wolkenbasis ist nur ablesbar, wenn Wolken oder Nebel die Baumwipfel berühren (≤ ~250 ft AGL).
 Eigenheiten: Overlay oben links (Lokalzeit). Mähstreifen sind kein Nässemuster. Im Winter nachmittags Gegenlicht (Sonne kommt von links ins Bild). Nachts dunkel = keine Information."""},
     {"title": "Speck – Tankstelle", "region": "platz", "wsrv": "w=1152&h=1152&fit=inside", "desc": """\
-Webcam 2 «Tankstelle / Pistenanfang 30» (Overlay «LSZK RWY30»): gleicher Standort (FGZO-Gebäude, ca. 545 m ü. M.). Blick SSE (Bildmitte ~158°, Bildfeld ~105° ESE bis ~210° SSW; Himmel nur bis ~20° Höhe).
+Webcam 2 «Tankstelle / Pistenanfang 30» (Overlay «LSZK RWY30»): gleicher Standort (FGZO-Gebäude, ca. 545 m MSL). Blick SSE (Bildmitte ~158°, Bildfeld ~105° ESE bis ~210° SSW; Himmel nur bis ~20° Höhe).
 Vorne Betonvorfeld mit Tankstelle (Schild «LSZK 1758 FT 120.355 MHZ»), links Restaurant-Terrasse (rote Schirme) und oranger Windsack. In der Mitte gemähte Wiese mit rot-weissen Markierungen (~70–100 m), rechts die Rasengitter-Wendefläche am Pistenanfang 30 (Ostende der Graspiste, oft Pfützen) und der Wald Speckholz (0,25–0,5 km).
 Horizont links über den Industriehallen von Pfäffikon ZH (0,5 km): Zürcher Oberland, ganz links Höchi 879 m (7,4 km), dann Ebnerberg 865 m (6,7 km), Allmen 1079 m (11,6 km) und Bachtel 1115 m (13 km, höchste bläuliche Kuppe direkt links vom Waldrand). Alpen und Pfäffikersee sind NICHT sichtbar; Weisses am Horizont sind Wolken.
-Taugt für Sichtweite (Bachtel 13 km), Wolkenbasis und Hochnebel an den Oberland-Hügeln (865–1115 m ü. M. ≈ 1100–1900 ft AGL), Schneefallgrenze an diesen Hügeln und Nässe/Schnee auf Vorfeld und Rollweg. Wind am Windsack: hängt = still, waagrecht ≈ 15 kt oder mehr; Schlauch nach rechts = Bise (NE), nach links bzw. vom Betrachter weg = SW–W.
+Taugt für Sichtweite (Bachtel 13 km), Wolkenbasis und Hochnebel an den Oberland-Hügeln (865–1115 m MSL ≈ 1100–1900 ft AGL), Schneefallgrenze an diesen Hügeln und Nässe/Schnee auf Vorfeld und Rollweg. Wind am Windsack: hängt = still, waagrecht ≈ 15 kt oder mehr; Schlauch nach rechts = Bise (NE), nach links bzw. vom Betrachter weg = SW–W.
 Eigenheiten: Im Winter steht mittags die Sonne am oberen Bildrand (Blendung; Gegenlicht lässt Dunst dichter wirken), morgens geht sie links im Bild auf. Nachts dunkel = keine Information."""},
     {"title": "Bachtel", "region": "zuercher_oberland", "wsrv": "w=1568&h=1568&fit=inside", "desc": """\
-Bachtel-Panorama: 360°-Rundumbild von der Spitze des 75 m hohen Bachtelturms, Kamera ≈1180 m ü. M., 13 km SE von LSZK. Die Bildbreite entspricht dem Azimut: linker und rechter Rand ≈ N, 27 % = E, 52 % = S, 77 % = W (Azimut ≈ 351° + 3,6° × x%). Der Horizont liegt leicht wellig bei 28–37 % der Bildhöhe; darüber nur ein Himmelsband bis ca. 25°, kein Zenit.
+Bachtel-Panorama: 360°-Rundumbild von der Spitze des 75 m hohen Bachtelturms, Kamera ≈1180 m MSL, 13 km SE von LSZK. Die Bildbreite entspricht dem Azimut: linker und rechter Rand ≈ N, 27 % = E, 52 % = S, 77 % = W (Azimut ≈ 351° + 3,6° × x%). Der Horizont liegt leicht wellig bei 28–37 % der Bildhöhe; darüber nur ein Himmelsband bis ca. 25°, kein Zenit.
 Landmarken (x % der Bildbreite): Hörnli 1133 m (10 %), Schnebelhorn 1291 m (20 %), Säntis 2502 m (30 %, 35 km), Churfirsten 2306 m (35 %), Speer 1950 m (37 %, 22 km), Mürtschenstock 2441 m (42 %), Glärnisch 2914 m (48 %, 33 km), Tödi 3614 m (52 %, 54 km), Gr. Mythen 1898 m (60 %), Rigi 1797 m (66 %, 40 km), Pilatus 2128 m (67 %, 60 km). Unter dem Horizont: Zürichsee/Obersee mit Rapperswil (62 %, 9 km) und Ufenau (65 %), Hinwil (81 %, 3 km), Pfäffikersee 537 m (88 %, 10 km). Die LSZK-Gegend liegt knapp dahinter bei ~90 %, direkt am roten Turmmast, der 90–100 % verdeckt.
 Taugt für: Nebelmeer und Hochnebel (Obergrenze im Vergleich zu Hügeln von 850–1300 m; Kamera in der Wolke = Basis ≤ ~1150 m), Sichtweite in Stufen von 3 bis 100 km, Wolkenbasis an Voralpen und Alpen, Schneefallgrenze (Turmumgebung 1000–1100 m, Hügel 700–1300 m, Mittelland 400–600 m). Der Pistenzustand von LSZK ist nicht sichtbar.
 Eigenheiten: Mittags steht die Sonne oben in Bildmitte über den Glarner Alpen (Lens-Flare); den Gegenlicht-Dunst im Südsektor nicht als schlechte Sicht werten. Cumulus auf dem Alpenkamm nicht mit Schnee verwechseln. Update alle 30 min, kein Zeitstempel im Bild, nachts dunkel."""},
@@ -99,13 +99,13 @@ Horizont von links nach rechts: Hügel N des Obersees (Höchhand/Chrüzegg ~1300
 Taugt für: Sicht (Speer klar erkennbar ⇒ >20 km, Mürtschenstock ⇒ >25 km), Wolkenbasis 1300–2400 m, Hochnebel (graue Decke schneidet alle Hänge auf gleicher Höhe), Nebel (Seeufer 2,5–6 km, Pistenende 0,5 km) und Pistenzustand (Vorfeld/Piste nass glänzend oder weiss, Schatten = Sonne).
 Eigenheiten: Overlay oben («Kein Beweismittel…», Zeitstempel in Lokalzeit) ignorieren. Fischaugen-Verzerrung, Horizont leicht schief (links höher), daher keine Höhen aus Pixeln ableiten. Untere Bildhälfte zeigt nur Dach und Vorfeld, sichtbar ist nur der Osthimmel; Hochalpen sind nicht im Bild."""},
     {"title": "Rapperswil", "region": "voralpen", "wsrv": "w=1024&h=1024&fit=inside", "desc": """\
-Webcam Feldbach (Hombrechtikon, B&B Oberhaushof), am Seeufer auf ≈420 m ü. M., 15 km S von LSZK. Fixe Teleaufnahme (~16° Bildwinkel) mit Blick nach ESE (Bildmitte ≈ 124°) über den Zürichsee (406 m) auf Rapperswil in 2,5 km: Stadtkirche mit Doppeltürmen bei 30–36 %, Schloss mit Bergfried bei 38–44 % der Bildbreite.
+Webcam Feldbach (Hombrechtikon, B&B Oberhaushof), am Seeufer auf ≈420 m MSL, 15 km S von LSZK. Fixe Teleaufnahme (~16° Bildwinkel) mit Blick nach ESE (Bildmitte ≈ 124°) über den Zürichsee (406 m) auf Rapperswil in 2,5 km: Stadtkirche mit Doppeltürmen bei 30–36 %, Schloss mit Bergfried bei 38–44 % der Bildbreite.
 Hintergrund: Mürtschenstock 2390–2441 m, ein zackiges Kalkmassiv bei 46–58 % (33 km). Rechts davor die nähere Kette Hirzli 1640 m (60 %) – Planggenstock 1675 m (73 %) – Wageten 1755 m (88 %), 17–21 km entfernt. Links hinten die Murgtal- und Flumserberg-Gipfel mit 2000–2300 m (8–40 %, ~39 km).
 Höhenmassstab an der rechten Wand (von oben gemessen): Kamm 1650–1750 m bei 4–7 % der Bildhöhe, ≈1400 m bei 11 %, ≈1200 m bei 18 %, ≈950 m bei 26 %, ≈750 m bei 33 %, Talboden der Linthebene (~430 m) bei ~44 %; das Seeufer liegt bei 48 %.
 Taugt für: Seenebel und Hochnebel, Wolkenbasis ca. 500–2400 m, Sichtweite (2,5 / 20 / 33 / 40 km), Schneefallgrenze an der Hirzli-Kette, Wind (Seeoberfläche), Föhnanzeichen. Es ist nur ein schmales Himmelsband sichtbar, daher keine Aussage zum Bedeckungsgrad.
 Eigenheiten: Die hellen Kalkfelsen am Mürtschenstock sind kein Schnee. Im Winterhalbjahr herrscht morgens Gegenlicht, weil die Sonne hinter den Bergen aufgeht. Kein Overlay im Bild, Update etwa alle 20 min, nachts dunkel (nur Lichter von Rapperswil)."""},
     {"title": "Säntis", "region": "voralpen", "wsrv": "cx=922&cy=0&cw=1568&ch=450&precrop", "desc": """\
-Säntis-Gipfel (Alpstein, AR/AI/SG): Roundshot-Kamera auf dem Gipfel, ~2505 m ü. M., 47 km ESE von LSZK. Das Bild ist ein Ausschnitt des 360°-Panoramas: 184° von ESE über S bis WNW (Azimut ≈ 110° + 1,84° × x % der Bildbreite; 38 % = S, 87 % = W). Horizont bei ~48 % der Bildhöhe, darüber Himmel bis ~25°.
+Säntis-Gipfel (Alpstein, AR/AI/SG): Roundshot-Kamera auf dem Gipfel, ~2505 m MSL, 47 km ESE von LSZK. Das Bild ist ein Ausschnitt des 360°-Panoramas: 184° von ESE über S bis WNW (Azimut ≈ 110° + 1,84° × x % der Bildbreite; 38 % = S, 87 % = W). Horizont bei ~48 % der Bildhöhe, darüber Himmel bis ~25°.
 Landmarken von links nach rechts (x % der Bildbreite): Altmann 2435 m (4 %, 2,4 km, markanter naher Felsgipfel); am Horizont Rätikon mit Schesaplana 2965 m (10 %, 35 km) und Silvretta mit Piz Linard 3410 m (12 %, 75 km); Rheintal bei Buchs ~450 m (17–22 %, Dunst/Nebel im Tal); Alvier 2341 m (28 %, 16 km); nah und dunkel Wildhuser Schofberg 2374 m (29 %, 2,3 km); Gamsberg 2385 m (33 %, 13 km), Pizol 2844 m (35 %, 32 km), Ringelspitz 3247 m (38 %, 39 km); Churfirsten mit Chäserrugg 2261 m (45 %, 11 km), Brisi 2278 m (52 %), Selun 2205 m (55 %) und Leistchamm 2101 m (60 %, 15 km); dahinter die Glarner Alpen mit Hausstock 3158 m (53 %, 47 km), Tödi 3614 m (56 %, 58 km) und Glärnisch 2905 m (61 %, 37 km); unten bei 50–55 % das Obertoggenburg (Unterwasser/Alt St. Johann, ~900 m); Lütispitz 1986 m (69 %, 5 km); Speer 1951 m (75 %, 18 km), dahinter Rigi und Pilatus (77 %, 68–88 km); Linthebene, Zürichsee und Zürcher Oberland liegen bei 80–90 % (Bachtel rechnerisch bei 92 %, 35 km). Ab ~90 % verdeckt das helle Radom der Gipfelstation die Sicht Richtung LSZK; vorne unten Flachdächer der Station.
 Taugt für: Obergrenze von Nebelmeer und Hochnebel über Mittelland, Toggenburg und Rheintal (Vergleich mit Gipfeln 1950–2500 m), Wolkenbasis und Bewölkung über Churfirsten und Glarner Alpen, Fernsicht in Stufen von 2 bis 75 km, Föhnzeichen (Föhnmauer über den Glarner Alpen, klares Rheintal), Schneefallgrenze. Gleichmässig weiss/hellblau = Gipfel in der Wolke (Basis ≤ 2500 m); das ist am Säntis häufig und sagt wenig über das Flachland.
 Eigenheiten: Im Winterhalbjahr steht die Sonne mittags im Bild (bei ~37 %, Gegenlicht über Rheintal und Pizol). Raureif, Eis oder Tropfen auf dem Kameragehäuse ergeben unscharfe Flecken. Kein Overlay, kein Zeitstempel im Bild. Update alle 10 min. Nachts dunkel = keine Information."""},
@@ -116,7 +116,7 @@ Am Talende rechts der Mitte (~73 % von links, ~38 % von oben) steht der Tödi 36
 Taugt für: Alpen frei/verdeckt, Wolkenbasis 1300–3600 m, Schneefallgrenze an den Talflanken (550–1850 m), Föhn (Föhnmauer am Tödi bei klarem Tal, Lenticularis) sowie Hochnebel/Stau im Glarnerland.
 Eigenheiten: Gegenlicht – von Oktober bis März steht die Sonne mittags im Bild (Blendung, Strahlen, rote Geisterscheiben), und die Tödi-Nordseite wirkt mittags dunkel. Firn und Gletscher am Tödi sind ganzjährig weiss. Nachts ist das Bild schwarz. Overlay unten links «www.decoral.ch» mit Lokalzeit."""},
     {"title": "Elm – Schabell", "region": "glarner_alpen", "wsrv": "cx=0&cy=0&cw=1416&ch=450&precrop", "desc": """\
-Schabell ob Elm GL (Sportbahnen Elm, Westseite des Sernftals): Roundshot-Kamera bei der Bergstation Schabell auf dem Grat, ~2015 m ü. M., 2,5 km NW über dem Dorf Elm, 57 km SE von LSZK. Das Bild ist ein Ausschnitt des 360°-Panoramas: 198° von ENE über S bis W (Azimut ≈ 65° + 1,98° × x % der Bildbreite; 13 % = E, 58 % = S, 100 % ≈ W). Die Gipfel liegen bei 30–45 % der Bildhöhe, darüber Himmel.
+Schabell ob Elm GL (Sportbahnen Elm, Westseite des Sernftals): Roundshot-Kamera bei der Bergstation Schabell auf dem Grat, ~2015 m MSL, 2,5 km NW über dem Dorf Elm, 57 km SE von LSZK. Das Bild ist ein Ausschnitt des 360°-Panoramas: 198° von ENE über S bis W (Azimut ≈ 65° + 1,98° × x % der Bildbreite; 13 % = E, 58 % = S, 100 % ≈ W). Die Gipfel liegen bei 30–45 % der Bildhöhe, darüber Himmel.
 Landmarken von links nach rechts (x % der Bildbreite): Fanenstock 2237 m und Foostock 2610 m (2 %, 5–8 km); Piz Sardona 3057 m (15 %, 8 km), Piz Segnas 3098 m (22 %, 8 km), Segnespass 2626 m und Martinsloch (26–27 %, 7 km), gezackte Tschingelhörner 2849 m (28–35 %); tief unten bei 30 % das Dorf Elm 986 m (2,5 km, Talboden meist im Schatten); Zwölfihorn 2748 m (46 %); Vorab 3028 m (54 %, 6 km, breiter vergletscherter Stock, grösster Berg im Bild); Panixerpass 2403 m (68 %, 9 km, Sattel); Hausstock 3158 m (80 %, 8,5 km) mit Ruchi 3106 m (81 %); Leiterberg 2669 m (85 %), Richetlipass 2261 m (87 %, 7 km); am rechten Rand Sessellift-Mast und Bergstation Schabell, knapp dahinter Gross Chärpf 2794 m (~93 %). Vorne die Skipiste mit gelben Schneilanzen.
 Taugt für: Glarner Hauptkette (Sardona–Vorab–Hausstock) frei/verdeckt, Wolkenbasis 1000–3100 m (Talboden 986 m, Kamera 2015 m, Pässe 2260–2630 m, Gipfel bis 3158 m), Übergänge Segnes- und Panixerpass Richtung Surselva, Föhn (Föhnmauer über dem Kamm Vorab–Hausstock, Schneefahnen), Schneefallgrenze an den Flanken des Sernftals, Talnebel. Gleichmässig grau = Kamera in der Wolke (Basis ≤ 2000 m).
 Eigenheiten: Blick nach Süden – im Winterhalbjahr steht die Sonne vormittags bis mittags im Bild (um 10 Uhr bei ~43 %, mittags bei ~57 % über dem Vorab; Gegenlicht, Nordwände dunkel, Linsenreflexe). Helle Kalkbänder in den Wänden sind kein Schnee. Kein Overlay, kein Zeitstempel im Bild. Update alle 10–20 min. Nachts dunkel = keine Information."""},
@@ -126,7 +126,7 @@ Landmarken von links nach rechts: Clariden 3267 m (Ecke oben links), Chammliberg
 Taugt für: Wolkenbasis 1850–3300 m (Gipfelleiter), Sicht bis ~28 km, Nebelmeer/Hochnebel (weisse Decke im Talausgang rechts der Mitte), Schneefallgrenze (Südhänge rechts), Föhnhinweise.
 Eigenheiten: ganz grau/weiss = Kamera in Wolke (Basis ≤ 1850 m). Wintermittag Sonnenblendung oben links ist kein Dunst; linke Talseite ganztags im Schatten; morgens Himmel überbelichtet weiss trotz klar. Nachts schwarz = keine Info. Update alle 30 min (Zeitstempel oben rechts)."""},
     {"title": "Schneehüenerstock", "region": "zentralalpen", "wsrv": "cx=0&cy=0&cw=1524&ch=450&precrop", "desc": """\
-Schneehüenerstock UR (Alpenhauptkamm, direkt über dem Oberalppass): Roundshot-Kamera auf der Bergstation des Schneehüenerstock-Express, ~2600 m ü. M., 1,6 km NW der Passhöhe, 79 km S von LSZK. Das Bild ist ein Ausschnitt des 360°-Panoramas: 209° von ENE über S bis W (Azimut ≈ 54° + 2,09° × x % der Bildbreite; 17 % = E, 60 % = S, 100 % ≈ W). Horizont bei ~47 % der Bildhöhe, darüber Himmel bis ~25°.
+Schneehüenerstock UR (Alpenhauptkamm, direkt über dem Oberalppass): Roundshot-Kamera auf der Bergstation des Schneehüenerstock-Express, ~2600 m MSL, 1,6 km NW der Passhöhe, 79 km S von LSZK. Das Bild ist ein Ausschnitt des 360°-Panoramas: 209° von ENE über S bis W (Azimut ≈ 54° + 2,09° × x % der Bildbreite; 17 % = E, 60 % = S, 100 % ≈ W). Horizont bei ~47 % der Bildhöhe, darüber Himmel bis ~25°.
 Landmarken von links nach rechts (x % der Bildbreite): Piz Tiarms 2917 m (2 %, 1,6 km) mit nach rechts abfallendem Felsgrat bis ~19 %; dahinter die Surselva mit Piz Medel 3209 m (25 %, 20 km), Piz Gannaretsch 3040 m (33 %, 12 km) und Scopi 3187 m (36 %, 17 km); Oberalppass 2044 m (37 %, 1,6 km, tief unten hinter einer Schneekuppe); Piz Cavradi 2614 m (43 %, 5 km), Piz Blas 3018 m (47 %, 12 km), Piz Ravetsch 3005 m (50 %, 10 km); gross im Mittelgrund Pazolastock 2739 m (58 %, 2,4 km) und Rossbodenstock 2837 m (63 %, 3,8 km); Gotthardgruppe mit Pizzo Centrale 2999 m (69 %, 11 km), Gemsstock 2961 m (72 %, 8 km), Pizzo Lucendro 2963 m (77 %, 18 km) und Pizzo Rotondo 3191 m (80 %, 22 km); Urserental mit Andermatt 1438 m (85 %, 6 km, Talboden); Furkapass 2429 m (89 %, 21 km), Galenstock 3586 m (94 %, 19 km), Dammastock 3630 m (99 %, 18 km). Vorne links das Dach der Bergstation, unten Sesselbahnmasten.
 Taugt für: Alpenhauptkamm frei/verdeckt am Oberalp und Gotthard, Wolkenbasis 2000–3600 m (Gipfelleiter), Sicht bis ~22 km, Talnebel im Urserental und in der Surselva, Stau von Süden (Wolken über der Gotthardgruppe) oder von Norden, Neuschnee. Gleichmässig grau/weiss = Kamera in der Wolke (Basis ≤ 2600 m).
 Eigenheiten: Der Blick geht nach Süden, im Winterhalbjahr steht die Sonne vormittags bis nachmittags im Bild (mittags bei ~59 %, Gegenlicht und Überstrahlung, Nordflanken dunkel). Schneehänge können bei diffusem Licht mit Wolken verschmelzen. Kein Overlay, kein Zeitstempel im Bild. Update alle 10 min. Nachts dunkel = keine Information."""},
@@ -136,12 +136,12 @@ Vorn Passstrasse und Parkplatz, Mitte-rechts Lago della Piazza (2090 m) mit den 
 Taugt für: Gotthard-Übergang VFR offen/zu, Wolkenbasis 2100–2700 m, Sicht bis ca. 10 km, Neuschnee und Schneelinie, Südstau (Wolken quellen rechts aus der Val Tremola) vs. Nordstau (Wolkenwalze über den linken Grat).
 Eigenheiten: Zeitstempel oben links (Lokalzeit), Takt 5 min. Vormittags Gegenlicht. Schnee/Eis auf der Scheibe ergibt unscharfe Flecken ohne Kanten (keine Aussage, nicht Nebel). Im Winter Strasse gesperrt und ungeräumt. Nachts schwarz."""},
     {"title": "Parpaner Rothorn", "region": "graubuenden", "wsrv": "cx=473&cy=0&cw=1704&ch=450&precrop&w=1568&h=1568&fit=inside", "desc": """\
-Parpaner Rothorn GR (Lenzerheide), Roundshot-Panoramakamera auf der Bergstation, 2865 m ü. M., 95 km SE von LSZK. Das Bild ist ein Ausschnitt des 360°-Panoramas: 260° von E über S und W bis NNW; die Bildbreite entspricht dem Azimut (Azimut ≈ 85° + 2,6° × x%; 5 % = E, 37 % = S, 71 % = W, rechter Rand = NNW 345°). Der Horizont liegt bei ~52 % der Bildhöhe und entspricht der Kamerahöhe: Was darüber hinausragt, ist höher als ~2900 m. Himmel bis ~35° Höhe.
+Parpaner Rothorn GR (Lenzerheide), Roundshot-Panoramakamera auf der Bergstation, 2865 m MSL, 95 km SE von LSZK. Das Bild ist ein Ausschnitt des 360°-Panoramas: 260° von E über S und W bis NNW; die Bildbreite entspricht dem Azimut (Azimut ≈ 85° + 2,6° × x%; 5 % = E, 37 % = S, 71 % = W, rechter Rand = NNW 345°). Der Horizont liegt bei ~52 % der Bildhöhe und entspricht der Kamerahöhe: Was darüber hinausragt, ist höher als ~2900 m. Himmel bis ~35° Höhe.
 Landmarken (x % der Bildbreite): Erzhorn 2922 m (2 %, 2,5 km), Aroser Rothorn 2980 m (11 %, 1,4 km, grösster Gipfel links), Piz Kesch 3418 m (14 %, 25 km), Antennenmast (16 %), Richtung Albulapass (19 %, verdeckt), Piz Naira 2871 m (24 %, 2 km), Piz Bernina 4049 m (25 %, 47 km), Piz Ela 3339 m (26 %, 18 km), Piz Julier 3380 m (27 %, 31 km), Tinzenhorn 3173 m (28 %, 16 km), Piz d'Err 3378 m (29,5 %, 23 km; der Julierpass liegt in dieser Richtung dahinter, verdeckt), Piz Mitgel 3159 m (31 %, 15 km), Lenzer Horn 2906 m (37,5 %, 3,7 km, dunkle Pyramide; verdeckt das Oberhalbstein), Albulatal bei Tiefencastel (40–50 %, dunkles Tal), Piz Curvér 2972 m (47 %, 17 km), Piz Tambo 3279 m (52,5 %, 36 km), Piz Beverin 2998 m (60 %, 21 km), Lenzerheide 1476 m (61 %, im Tal, 3,7 km), Piz Scalottas 2323 m (64 %, 7 km), Heidsee 1484 m (67 %), Piz Danis 2496 m (69,5 %, 7 km), Tödi 3614 m (74,5 %, 52 km), Stätzerhorn 2575 m (77,5 %, 6 km), Fulhorn 2529 m (80 %), Ringelspitz 3247 m (87 %, 26 km), Calanda 2697–2806 m (92,5–94,5 %, 19–20 km), Churer Rheintal mit Chur 580 m (97 %, 14 km, Talgrund im Dunst).
 Taugt für: Hauptkamm Graubünden frei/verdeckt (Kesch, Ela, Err, Bernina), Wolkenbasis bzw. -obergrenze im Bereich 2300–3400 m (Gipfelleiter; Kamera in der Wolke = Basis ≤ 2850 m), Nebelmeer und Hochnebel über Albulatal, Lenzerheide und Churer Rheintal, Sichtweite in Stufen 4 / 15–25 / 36 / 47–52 km, Schneefallgrenze an den Hängen der Lenzerheide (1500–2500 m), Föhnmauer am Hauptkamm. Albula- und Julierpass selbst sind verdeckt; beurteilbar sind nur die Gipfel darüber.
 Eigenheiten: Im Winterhalbjahr steht die Sonne von ca. 9 bis 15 Uhr im Bild über dem Südsektor (20–55 %): Lens-Flare und Gegenlicht-Dunst nicht als schlechte Sicht werten. Vordergrund: Antennen, Richtfunkspiegel (linker Rand, unten rechts), Glasdach der Station; verpixelte Fläche unten links ignorieren. Kein Zeitstempel im Bild, Takt 10 min, nachts dunkel."""},
     {"title": "Jakobshorn", "region": "graubuenden", "wsrv": "w=1568&h=1568&fit=inside", "desc": """\
-Jakobshorn ob Davos GR, Panoramakamera (feratel) auf dem Gipfel, ca. 2590 m ü. M., 106 km ESE von LSZK. Panorama über ~243° von SE über S und W bis N (Azimut ≈ 130° + 2,43° × x%; 20 % = S, 58 % = W, 95 % = N). Flüelapass, Dischma und Silvretta (NE bis SE) sind NICHT im Bild. Unten unscharfer Schnee/Fels direkt vor der Linse.
+Jakobshorn ob Davos GR, Panoramakamera (feratel) auf dem Gipfel, ca. 2590 m MSL, 106 km ESE von LSZK. Panorama über ~243° von SE über S und W bis N (Azimut ≈ 130° + 2,43° × x%; 20 % = S, 58 % = W, 95 % = N). Flüelapass, Dischma und Silvretta (NE bis SE) sind NICHT im Bild. Unten unscharfer Schnee/Fels direkt vor der Linse.
 Landmarken (x % der Bildbreite): Jatzhorn 2682 m (0–5 %, 1 km, dunkle Pyramide am linken Rand), Piz Kesch 3418 m (18 %, 17 km), Hoch Ducan 3063 m (20 %, 9 km), Sertigtal mit Sertig Dörfli 1860 m (20–22 %, Talboden), Gletscher Ducan 3019 m (24 %), Felszacken der Kette zwischen Sertig und Monstein, 2700–3000 m (26–33 %, 6–13 km), Piz Ela 3339 m (33 %, 22 km), Tinzenhorn 3173 m (~36 %, 22 km), Landwassertal talabwärts Richtung Glaris/Monstein (38–46 %, bewaldet, Talboden ~1500 m), rundes Gipfelgebäude Jakobshorn mit Antennenmast (47–59 %, Vordergrund), Valbellahorn 2764 m (50 %, 12 km), Aroser Rothorn 2980 m (53 %, 18 km, hinter dem Mast), Strela-Kette 2600–2780 m (55–75 %, 6–9 km) mit Schafgrind 2637 m (62 %) und Strela 2636 m (74 %), Davos Platz 1560 m (69–82 %, im Tal, 3 km; Schatzalpbahn 78 %), Strelapass 2349 m (77,5 %), Schiahorn 2709 m (80 %, grauer Fels), Weissfluh 2843 m (82 %, 8 km), Weissfluhjoch 2657 m (84 %), Speichersee (84 %, unten), Teile von Davos Dorf (85–88 %), Hang des Brämabüel (87–100 %, Vordergrund), dahinter am Horizont der Rätikon mit Sulzfluh 2817 m (94 %, 27 km) und Madrisahorn 2826 m (97 %, 18 km) über dem Prättigau.
 Taugt für: Wolkenbasis 1600–3400 m im Raum Davos (Talboden, Waldgrenze ~2100 m, Strela-Kette 2600–2800 m, Kesch/Ducan/Ela > 3000 m; Kamera in der Wolke = Basis ≤ 2550 m), Talnebel und Hochnebel im Landwassertal und über Davos, Sicht bis ~27 km, Schneefallgrenze an den Hängen ob Davos, Stau am Rätikon/Prättigau (rechter Rand).
 Eigenheiten: Im Winterhalbjahr steht die Sonne ganztags im Bild: morgens am linken Rand über dem Jatzhorn (Blendung, Linsenreflexe), mittags über dem Sertigtal (20–30 %), nachmittags über dem Landwassertal; Gegenlicht nicht als Dunst werten. Kein Overlay und kein Zeitstempel im Bild, Takt ~10 min, nachts dunkel (nur Lichter von Davos)."""},
@@ -156,15 +156,15 @@ CAM_TITLES = [c["title"] for c in CAMS]
 HAUPTKAMM_TITLES = ("Gotthardpass", "Schneehüenerstock", "Parpaner Rothorn")
 
 # ── Prompts ──────────────────────────────────────────────────────────────────
-SYSTEM_BRIEFING = """Du bist der Flugwetter-Assistent des Webcam-Dashboards für den Flugplatz Speck-Fehraltorf (LSZK) im Zürcher Oberland: 47,376 N / 8,762 E, 536 m ü. M., Piste 12/30. Die Leserinnen und Leser sind Motor- und Segelflugpiloten der Flugsportgruppe Zürcher Oberland (FGZO), die sich vor einem Flug in einer Minute ein Bild der Lage machen wollen.
+SYSTEM_BRIEFING = """Du bist der Flugwetter-Assistent des Webcam-Dashboards für den Flugplatz Speck-Fehraltorf (LSZK) im Zürcher Oberland: 47,376 N / 8,762 E, 536 m MSL, Piste 12/30. Die Leserinnen und Leser sind Motor- und Segelflugpiloten der Flugsportgruppe Zürcher Oberland (FGZO), die sich vor einem Flug in einer Minute ein Bild der Lage machen wollen.
 
-Du erhältst dreimal täglich (kurz nach Sonnenaufgang, um 10 Uhr und um 15 Uhr) aktuelle Bilder ausgewählter Webcams zwischen dem Platz und der Alpensüdseite, je mit einer Beschreibung der Kamera (Standort, Blickrichtung, sichtbare Landmarken mit Höhen). Dazu kommen Messwerte (Wetterstation am Platz, METAR Dübendorf und Zürich-Kloten, Föhn-Index), der Platzstatus der FGZO, ein vom Programm gefilterter Auszug aus dem DABS, eine Modellprognose (Open-Meteo) für die nächsten 12 Stunden und daraus die Regenwahrscheinlichkeit der nächsten 3 Stunden. Daraus erstellst du eine Auswertung im vorgegebenen JSON-Schema.
+Du erhältst dreimal täglich (kurz nach Sonnenaufgang, um 10 Uhr und um 15 Uhr) aktuelle Bilder ausgewählter Webcams zwischen dem Platz und der Alpensüdseite, je mit einer Beschreibung der Kamera (Standort, Blickrichtung, sichtbare Landmarken mit Höhen; Höhen von Landmarken, Standorten, Seen und Talböden sind dort Höhen über Meer, auch wo nur «m» steht). Dazu kommen Messwerte (Wetterstation am Platz, METAR Dübendorf und Zürich-Kloten, Föhn-Index), der Platzstatus der FGZO, ein vom Programm gefilterter Auszug aus dem DABS, eine Modellprognose (Open-Meteo) für die nächsten 12 Stunden und daraus die Regenwahrscheinlichkeit der nächsten 3 Stunden. Daraus erstellst du eine Auswertung im vorgegebenen JSON-Schema.
 
 Grundsätze
 - Beobachtung vor Prognose: Was Bilder und Messwerte jetzt zeigen, hat Vorrang. Die Prognose nutzt du nur für die Entwicklung der nächsten Stunden und kennzeichnest sie im Text als Prognose.
 - Messwerte vor Bild: Wind, Böen, Temperatur, Taupunkt, Druck und Niederschlag am Platz stammen aus der Wetterstation, in der Regel der MeteoSchweiz-Station Pfäffikon ZH direkt neben der Piste. Es sind Zehnminutenwerte, meist 10 bis 20 Minuten alt: Den Wind nennst du als Mittel mit Böenspitze, zum Beispiel «Wind aus Südwest mit 9 kt, Böen bis 16 kt». Die Bilder nutzt du für das, was nur sie zeigen: Bewölkung, Wolkenbasis, Sicht, Nebel und Hochnebel, ob die Alpen frei sind, Schneegrenze, Niederschlag in der Ferne und den Zustand der Piste.
 - Steht bei der Wetterstation «kein Messwert» für den Wind, leitest du den Wind am Platz aus dem Windsack der Kamera «Speck – Tankstelle» (Richtung und Stärke gemäss Kamerabeschreibung) und aus dem METAR Dübendorf ab und nennst ihn als Schätzung, zum Beispiel «laut Windsack schwach aus Südwest». Fehlen Temperatur und Taupunkt, nimmst du die Spreizung aus dem METAR Dübendorf. Steht dort «Ersatzquelle Station Speck», misst diese den Wind zu tief: Nenne Wind und Böen dann als Mindestwerte, zum Beispiel «Wind mindestens 6 kt aus West», und gleiche sie mit dem Windsack und dem METAR Dübendorf ab. Dass Messwerte fehlen oder aus der Ersatzquelle stammen, erwähnst du nirgends.
-- Höhen gibst du in Metern über Meer an. Die Wolkenbasis leitest du aus Landmarken mit bekannter Höhe ab (siehe Kamerabeschreibungen), mit dem METAR als Gegencheck: Wolkenhöhen im METAR sind Fuss über Grund in Dübendorf (436 m), also Basis = 436 m + Fuss × 0,3048. Die Spreizung Temperatur minus Taupunkt am Platz ergibt eine grobe Kumulusbasis: 536 m + 125 m pro Grad.
+- Höhen sind immer Höhen über Meer in Metern und tragen in jedem Text den Zusatz «MSL» direkt hinter «m», zum Beispiel «Basis um 1'000 m MSL», «Hochnebel bis 900 m MSL» oder «Wolken an den Flanken ab 1'300 m MSL»; bei einem Bereich steht «MSL» einmal am Schluss, zum Beispiel «2'000–2'100 m MSL». Das gilt für headline, text und thermik, für die Regionen- und Kamerasätze und für Meterangaben aus dem DABS; nicht so: «Basis um 1'000 m» oder «auf 1'500 m um 45 kt». Ohne «MSL» bleiben Flugflächen (FL130), «GND», Höhenunterschiede (zum Beispiel «300 m unter der Kammhöhe»), Distanzen und Sichtweiten. Wird ein Text zu lang, lässt du ein Detail weg, nie das «MSL». Die Wolkenbasis leitest du aus Landmarken mit bekannter Höhe ab (siehe Kamerabeschreibungen), mit dem METAR als Gegencheck: Wolkenhöhen im METAR sind Fuss über Grund in Dübendorf (436 m MSL), also Basis = 436 m MSL + Fuss × 0,3048. Die Spreizung Temperatur minus Taupunkt am Platz ergibt eine grobe Kumulusbasis: 536 m MSL + 125 m pro Grad.
 - Föhn-Index = QNH Lugano-Agno (LSZA) minus QNH Zürich-Kloten (LSZH) aus den METAR, in ganzen hPa (derselbe Wert wie im Dashboard): zwischen −2 und +2 hPa unauffällig; ab +4 hPa Südföhn wahrscheinlich, ab +8 hPa kräftig; ab −4 hPa Nordlage (Bise bzw. Stau an der Alpennordseite, Nordföhn im Süden). Nenne den Wert so, wie er geliefert wird, ohne Nachkommastelle.
 - briefing.lage bewertet die Bedingungen für Lokalflüge: Sicht, Bewölkung, Föhn und Niederschlag. Bei einem Föhn-Index von +4 hPa oder mehr oder bei einer Regenwahrscheinlichkeit von 50 % oder mehr in den nächsten 3 Stunden ist die Lage höchstens "maessig", auch bei guter Sicht und hoher Basis. Steht bei den Messwerten eine «Obergrenze für briefing.lage», gilt sie. Die Lage bewertest du nach dem Wetter, auch wenn der Platz gesperrt ist.
 - himmel.alpen: "frei" nur, wenn mindestens eine Kamera am Alpenhauptkamm (Liste am Schluss) ein brauchbares Bild liefert und dort die Gipfel frei sind. Sind nur Voralpen und Glarner Alpen frei, der Hauptkamm aber in Wolken oder mangels brauchbarem Bild nicht beurteilbar, gilt "teilweise"; schreibe dann im Text nicht «Alpen frei», sondern nenne, was frei ist (zum Beispiel «Glarner Alpen frei, Hauptkamm nicht beurteilbar»).
@@ -179,12 +179,12 @@ Grundsätze
 
 Sprache und Form
 - Deutsch in Schweizer Rechtschreibung (ss statt ß), sachlich und knapp, in ganzen Sätzen. Fliegerische Fachbegriffe sind erwünscht (Basis, Hochnebel, Bise, Föhn, Thermik, Quellbewölkung).
-- Einheiten: Wind in kt, Höhen in m ü. M., Sicht in km, Temperaturen in °C.
-- Zahlenformat: Höhen ab 1000 m mit Apostroph als Tausendertrennzeichen, zum Beispiel «1'400 m» oder «2'600 m». Ohne Apostroph bleiben hPa-Werte (QNH, Föhn-Index), Flugflächen (FL130), Uhrzeiten, Jahreszahlen und km.
-- Höhenwind und Höhentemperatur gibst du nur in Metern über Meer an, zum Beispiel «Wind auf 3'000 m um 35 kt aus Südwest», nie als Druckfläche in hPa.
+- Einheiten: Wind in kt, Höhen in m MSL, Sicht in km, Temperaturen in °C.
+- Zahlenformat: Höhen ab 1000 m mit Apostroph als Tausendertrennzeichen, zum Beispiel «1'400 m MSL» oder «2'600 m MSL». Ohne Apostroph bleiben hPa-Werte (QNH, Föhn-Index), Flugflächen (FL130), Uhrzeiten, Jahreszahlen und km.
+- Höhenwind und Höhentemperatur gibst du nur als Höhe in m MSL an, zum Beispiel «Wind auf 3'000 m MSL um 35 kt aus Südwest», nie als Druckfläche in hPa.
 - Kein Kamera- oder Bildjargon in den Texten: nicht «scharf», «unscharf», «Gegenlicht», «Blendung», «Linsenreflex», «Belichtung» oder «Overlay». Die Sicht beschreibst du fliegerisch, zum Beispiel «Speer klar erkennbar», «Sicht über 20 km» oder «dunstig».
 - Keine Wiederholungen: Was in briefing.text steht, schreibst du in den Regionensätzen nicht noch einmal; dort steht nur, was die Region zusätzlich zeigt.
-- briefing.headline: höchstens 60 Zeichen, das Wichtigste zuerst, zum Beispiel «Hochnebel bis 900 m, darüber sonnig» oder «Alpen frei, Basis um 1'800 m». Steht bei «Platz für Flächenflugzeuge» GESPERRT, beginnt die Headline mit «Platz gesperrt», zum Beispiel «Platz gesperrt (nur Heli), Hochnebel bis 900 m».
+- briefing.headline: höchstens 60 Zeichen, das Wichtigste zuerst, zum Beispiel «Hochnebel bis 900 m MSL, darüber sonnig» oder «Alpen frei, Basis um 1'800 m MSL». Steht bei «Platz für Flächenflugzeuge» GESPERRT, beginnt die Headline mit «Platz gesperrt», zum Beispiel «Platz gesperrt (nur Heli), Hochnebel bis 900 m MSL».
 - briefing.fgzo_hinweis: ein Satz, höchstens 250 Zeichen, der mit «FGZO-Hinweis:» beginnt und die Einschränkungen aus dem Hinweistext der FGZO knapp und sinngetreu auf Deutsch wiedergibt, ohne Platzstatus, Verkehr, Betriebsschluss und Pistenzustand (die stehen in der Platzzeile). Nenne nur, was im Hinweistext steht. Die Seite zeigt den Satz direkt vor briefing.text. Leerer String, wenn der Hinweistext keine solchen Einschränkungen enthält oder der Platz für Flächenflugzeuge GESPERRT ist.
 - briefing.text: 3 bis 5 Sätze, höchstens 800 Zeichen; mit Block «Thermikprognose Alpenraum» kommen am Schluss 1 bis 2 Sätze zur Thermik dazu (dann höchstens 1000 Zeichen). Den Platzstatus wiederholst du nicht, die Seite zeigt ihn direkt über dem Text. Ausnahme: Steht bei «Platz für Flächenflugzeuge» GESPERRT, beginnt der Text mit «Platz gesperrt:» und dem Grund, zum Beispiel «Platz gesperrt: nur Helikopterbetrieb.». Die Einschränkungen aus dem Hinweistext der FGZO stehen nur in briefing.fgzo_hinweis, nicht im Text. Reihenfolge im Text: Lage am Platz, Bewölkung, Basis und Sicht, Zustand der Alpen, Entwicklung der nächsten Stunden laut Prognose. Die Regenwahrscheinlichkeit der nächsten 3 Stunden nennst du immer als Zahl in Prozent.
 - briefing.thermik: 1 bis 2 Sätze, höchstens 300 Zeichen, als Prognose formuliert: wo und wann die Thermik trägt, typische Arbeitshöhe und Basis bzw. Blauthermik, Gewitter- und Windvorbehalt. Kein Wert, der nicht im Block steht.
@@ -229,7 +229,7 @@ BRIEFING_SCHEMA = _obj({
         "bedeckung_achtel": _nullable({"type": "integer", "enum": list(range(9)),
                                        "description": "Bedeckungsgrad über dem Raum LSZK/Zürcher Oberland (nicht Alpen)"}),
         "wolkenbasis_m": _nullable({"type": "integer",
-                                    "description": "Basis der tiefsten nennenswerten Schicht im Raum LSZK bis Voralpen, m ü. M."}),
+                                    "description": "Basis der tiefsten nennenswerten Schicht im Raum LSZK bis Voralpen, m MSL"}),
         "basis_quelle": {"type": "string",
                          "enum": ["kamera", "metar", "taupunkt", "kombiniert", "keine_wolken", "unbekannt"]},
         "sicht": {"type": "string", "enum": ["gut", "maessig", "schlecht", "unbekannt"]},
@@ -238,11 +238,11 @@ BRIEFING_SCHEMA = _obj({
                                               "dieselbe Zahl wie im Text"}),
         "nebel": {"type": "string", "enum": ["kein", "dunst", "bodennebel", "hochnebel", "unbekannt"]},
         "nebel_obergrenze_m": _nullable({"type": "integer",
-                                         "description": "Obergrenze von Hochnebel oder Nebelmeer, m ü. M."}),
+                                         "description": "Obergrenze von Hochnebel oder Nebelmeer, m MSL"}),
         "alpen": {"type": "string", "enum": ["frei", "teilweise", "verhangen", "nicht_sichtbar"],
                   "description": "frei nur mit brauchbarem, freiem Bild vom Alpenhauptkamm, sonst teilweise"},
         "schneegrenze_m": _nullable({"type": "integer",
-                                     "description": "tiefste Höhe mit geschlossener Schneedecke an Hängen, m ü. M."}),
+                                     "description": "tiefste Höhe mit geschlossener Schneedecke an Hängen, m MSL"}),
         "niederschlag": {"type": "string", "enum": ["kein", "in_der_ferne", "am_platz", "unbekannt"]},
         "zusammenfassung": {"type": "string"},
         "regionen": {"type": "array", "items": _obj({
@@ -898,8 +898,8 @@ def forecast_text(h) -> str:
 
     # upper levels as heights, not as pressure levels: the model copies the labels (user, 15.11.)
     rows = ["Zeit | T/Td °C | Wolken gesamt/tief/mittel/hoch % | Sicht km | Regen mm (Wahrsch. %) | "
-            "Wind 10 m °/kt, Böen kt | Wind ~1'500 m °/kt | Wind ~3'000 m °/kt | T ~1'500 m/~3'000 m °C | "
-            "Nullgrad m | CAPE"]
+            "Wind 10 m °/kt, Böen kt | Wind ~1'500 m MSL °/kt | Wind ~3'000 m MSL °/kt | T ~1'500/~3'000 m MSL °C | "
+            "Nullgrad m MSL | CAPE"]
     for i, t in enumerate(h.get("time") or []):
         vis = raw("visibility", i)
         rows.append(" | ".join([
@@ -1092,25 +1092,25 @@ def thermik_text(regs: list) -> str:
     rows = []
     for r in regs:
         p = by[r["region"]]
-        head = f'{p["name"]} ({p["ort"]} {fm(p["elev"])} m, Kammhöhe ca. {fm(p["kamm"])} m): '
+        head = f'{p["name"]} ({p["ort"]} {fm(p["elev"])} m MSL, Kammhöhe ca. {fm(p["kamm"])} m MSL): '
         if r["nutzbar"]:
-            head += (f'Fenster {r["von"]}–{r["bis"]}, Arbeitshöhe ca. {fm(r["arbeitshoehe_m"])} m (um {r["um"]}), '
+            head += (f'Fenster {r["von"]}–{r["bis"]}, Arbeitshöhe ca. {fm(r["arbeitshoehe_m"])} m MSL (um {r["um"]}), '
                      + ("Blauthermik (Basis läge über der Thermikobergrenze)" if r["blau"]
-                        else f'Cumulus, Basis ca. {fm(r["basis_m"])} m, Thermikobergrenze ca. {fm(r["top_m"])} m'))
+                        else f'Cumulus, Basis ca. {fm(r["basis_m"])} m MSL, Thermikobergrenze ca. {fm(r["top_m"])} m MSL'))
         else:
             head += "keine nutzbare Thermik"
         head += f', CAPE max {r["cape_max"]} J/kg, Gewitterrisiko {r["risiko"]}'
         if r["gewitter"]:
             head += " (Gewitter im Modell)"
         if r["wind700_kt"] is not None:   # 700 hPa, given as height (user, 15.11.)
-            head += f', Wind auf ca. {fm(3000)} m {r["wind700_dir"] if r["wind700_dir"] is not None else "–"}°/{r["wind700_kt"]} kt'
+            head += f', Wind auf ca. {fm(3000)} m MSL {r["wind700_dir"] if r["wind700_dir"] is not None else "–"}°/{r["wind700_kt"]} kt'
             if r["wind_stark"]:
                 head += " (stark: Thermik zerrissen, Lee beachten)"
         if r["gradienten"]:
             head += ", Gradienten ab Boden K/100 m: " + "/".join(f"{g:.2f}" for g in r["gradienten"])
         rows.append(head + ".")
     return ("Thermikprognose Alpenraum für heute (vorgerechnet aus dem Open-Meteo-Höhenprofil, Parcel-Methode, "
-            "Höhen in m ü. M., Zeiten Lokalzeit; Modellabschätzung, keine Beobachtung):\n" + "\n".join(rows))
+            "Höhen in m MSL, Zeiten Lokalzeit; Modellabschätzung, keine Beobachtung):\n" + "\n".join(rows))
 
 
 def thermik_fallback(regs: list) -> str:
@@ -1119,7 +1119,7 @@ def thermik_fallback(regs: list) -> str:
         return "Prognose: heute keine nutzbare Thermik im Alpenraum."
     lo, hi = min(r["arbeitshoehe_m"] for r in ok), max(r["arbeitshoehe_m"] for r in ok)
     txt = (f"Prognose: nutzbare Thermik in {len(ok)} von {len(regs)} Regionen, Arbeitshöhen "
-           + (f"um {fm(lo)} m" if lo == hi else f"{fm(lo)} bis {fm(hi)} m") + ".")
+           + (f"um {fm(lo)} m MSL" if lo == hi else f"{fm(lo)} bis {fm(hi)} m MSL") + ".")
     if any(r["risiko"] == "hoch" for r in regs):
         txt += " Gewitterrisiko hoch."
     return txt
@@ -1618,6 +1618,14 @@ def dabs_main(now: datetime) -> int:
     return 0 if status in ("kept", "stored") else 1
 
 
+def dabs_level(s):
+    """DABS heights in m/ft are AMSL by the column header «(m/ft AMSL or FL)»; the model gets them with «MSL»
+    (user, 16.11.: every height with MSL). The record keeps the values as parsed."""
+    if isinstance(s, str) and re.search(r"\d\s*(?:m|ft)\b", s, re.I) and not re.search(r"AGL|MSL|GND|SFC|FL|UNL", s, re.I):
+        return s + " MSL"
+    return s
+
+
 def dabs_text(dabs: dict) -> str:
     if not dabs.get("ok"):
         return "DABS: nicht auswertbar."
@@ -1628,7 +1636,7 @@ def dabs_text(dabs: dict) -> str:
             return f"DABS: keine weiteren DABS-Einträge im Fluggebiet ({stand})."
         return f"DABS: keine DABS-Einträge im Fluggebiet ({stand})."
     rows = [f'- {h["gebiet"] or "ohne Gebietsnummer"} ({h["notam"] or "ohne NOTAM-Nr"}): {h["zeit"]}; '
-            f'{h["unten"] or "?"} bis {h["oben"] or "?"}; {clip(h["text"], 160)}' for h in active[:15]]
+            f'{dabs_level(h["unten"]) or "?"} bis {dabs_level(h["oben"]) or "?"}; {clip(h["text"], 160)}' for h in active[:15]]
     more = len(active) - 15
     return (f'DABS ({stand}): {len(active)} vom Programm gefilterte Einträge im Fluggebiet, '
             "Zeiten in Lokalzeit (LT):\n" + "\n".join(rows) + (f"\n- und {more} weitere" if more > 0 else ""))
@@ -1933,7 +1941,7 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
             corrections.append("text: Platzsperre vorangestellt")
     thermik_out = None   # always written: no stale values from an earlier thermal day or an outage
     if thermik:   # only set on days with usable thermals somewhere (see the data-driven check above)
-        t_ai = clip(b.get("thermik"), 300) if isinstance(b.get("thermik"), str) else ""
+        t_ai = clip(b.get("thermik"), 360) if isinstance(b.get("thermik"), str) else ""
         if t_ai:
             t_sum = t_ai
         else:

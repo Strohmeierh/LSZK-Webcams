@@ -1917,8 +1917,12 @@
     function aiSwissAlt(s) {
       return String(s == null ? '' : s).replace(/(^|[^\d.,:'’])([1-9]\d{0,2})(\d{3})(?=\s*(?:FT|M)(?![A-Za-zÄÖÜäöü\d]))/gi, "$1$2'$3");
     }
-    function aiMeter(v) {                  // Höhe aus dem Datensatz: 1400 -> «1'400 m ü. M.»
-      return (typeof v === 'number' && isFinite(v)) ? aiThousands(Math.round(v)) + ' m ü. M.' : null;
+    // DABS-Höhen in m/ft sind laut Spaltenkopf des DABS «AMSL»: Zusatz «MSL» wie im übrigen KI-Fenster (Wunsch 18.11.)
+    function aiMslBand(s) {
+      return (s && /\d\s*(?:m|ft)\b/i.test(s) && !/AGL|MSL|GND|SFC|FL|UNL/i.test(s)) ? s + ' MSL' : s;
+    }
+    function aiMeter(v) {                  // Höhe aus dem Datensatz: 1400 -> «1'400 m MSL» (Wunsch 18.11.: Höhen immer mit MSL)
+      return (typeof v === 'number' && isFinite(v)) ? aiThousands(Math.round(v)) + ' m MSL' : null;
     }
     var ai = { data: undefined, loadedAt: 0 };          // undefined = lädt, null = keine Datei
     var AI_LAGE = {
@@ -2095,7 +2099,7 @@
         var done = t.beendet === true;         // heute schon vorbei: grau, damit die Liste zur DABS-Karte passt (Wunsch 16.11.)
         if (done) nDone++;
         var kopf = [str(t.gebiet), str(t.notam)].filter(Boolean).join(' · ') || 'Eintrag';
-        var band = aiSwissAlt((str(t.unten) || '?') + ' bis ' + (str(t.oben) || '?'));
+        var band = aiSwissAlt((aiMslBand(str(t.unten)) || '?') + ' bis ' + (aiMslBand(str(t.oben)) || '?'));
         var zeit = str(t.zeit);                // Lokalzeit mit «LT» (Wunsch 16.11.); ältere Datensätze ohne Zusatz
         if (/^\d{2}:\d{2}/.test(zeit) && !/\b(?:LT|UTC)\b/.test(zeit)) zeit += ' LT';
         html += '<div class="ai-row' + (done ? ' ai-done' : '') + '"><b>' + escHtml(kopf) + '</b> ' + escHtml(zeit) +
@@ -2117,7 +2121,7 @@
       if (st.kind !== 'ok' || !t || typeof t !== 'object' || Array.isArray(t)) return '';
       var regs = Array.isArray(t.regionen) ? t.regionen : [], rows = '', any = false;
       function hm(s) { return (typeof s === 'string' && /^\d{2}:\d{2}$/.test(s)) ? s : null; }
-      function m(v) { return (typeof v === 'number' && isFinite(v)) ? aiThousands(Math.round(v)) + ' m' : null; }
+      function m(v) { return (typeof v === 'number' && isFinite(v)) ? aiThousands(Math.round(v)) + ' m MSL' : null; }
       Object.keys(AI_MAPS.thermik_region).forEach(function (k) {
         regs.forEach(function (r) {
           if (!r || typeof r !== 'object' || r.region !== k) return;
@@ -2128,7 +2132,7 @@
           } else parts.push('keine nutzbare Thermik');
           if (aiHas(AI_MAPS.risiko, r.risiko) && r.risiko !== 'gering') parts.push('<span class="ai-prob">Gewitterrisiko ' + AI_MAPS.risiko[r.risiko] + '</span>');
           var w = aiNum(r.wind700_kt, ' kt');
-          if (r.wind_stark === true && w) parts.push('<span class="ai-prob">Wind 3' + "'" + '000 m ' + w + ' (zerrissen, Lee)</span>');
+          if (r.wind_stark === true && w) parts.push('<span class="ai-prob">Wind 3' + "'" + '000 m MSL ' + w + ' (zerrissen, Lee)</span>');
           rows += '<div class="ai-row"><b>' + AI_MAPS.thermik_region[k] + '</b> ' + parts.join(' · ') + '</div>';
         });
       });
