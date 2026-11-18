@@ -37,6 +37,9 @@
   var LABEL_MAX = 60;
   // Entscheid F-C: Regen von MeteoSchweiz macht die Piste nass (neben einer FGZO-Meldung ungleich DRY)
   var WET_BY_RAIN = true;
+  // Entscheid des Benutzers offen: «Richtwert AFM» sichtbar in der Kurzzeile (nur mit Zahlen, direkt nach dem Kopf).
+  // Ausgeliefert aus. Umschalten = diese Zeile und den Test der ausgelieferten Stellung in tests/perf-teaser.test.js ändern.
+  var TEASER_AFM_TAG = false;
 
   var TEXT = {
     noData: 'Keine aktuellen Messwerte vom Platz – keine Berechnung.',
@@ -89,8 +92,8 @@
     noDirection: 'Windrichtung fehlt – keine Berechnung',
     noRunway: 'Keine Piste mit Gegenwind – keine Berechnung',
     calm: 'windstill',
-    nodir: 'ohne Windrichtung',
     cross: 'Wind quer',
+    afmTag: 'Richtwert AFM',
     noValue: 'kein Wert',
     closed: 'Platz gesperrt',
     closedAll: 'Platz geschlossen',
@@ -183,6 +186,7 @@
     // seitlich); umbrochen wird dann per overflow-wrap
     '.perf-t-body > span { min-width: 0; }',
     '.perf-t-head { font-weight: 600; }',
+    '.perf-t-tag { color: var(--text-muted); font-weight: 400; }',
     '.perf-t-state { color: #f87171; }',
     '.perf-t-load { color: var(--text-muted); }',
     '.perf-t-warn { color: #fcd34d; }',
@@ -943,7 +947,7 @@
 
   /* ── Modell: eine Rechnung für alle Darstellungen (rein, für Node-Tests) ── */
   // ctx: { dataState: 'loading'|'ready'|'error', list, selectedId, notice, aircraft, airfield,
-  //        wx (window.LSZK_WX), fgzo, fgzoPending, nowMs, detailsOpen }
+  //        wx (window.LSZK_WX), fgzo, fgzoPending, nowMs, detailsOpen, afmTag (Vorgabe TEASER_AFM_TAG) }
   // kind: internal | loading | data-error | no-wx | fgzo-pending | calc-error | no-direction | no-runway | result.
   // core.compute läuft höchstens einmal. notice steht nur in den Zuständen, in denen die Karte ihn zeigt;
   // selectedId ist ab geladenen Daten die id des geladenen Musters.
@@ -951,7 +955,7 @@
     ctx = ctx || {};
     var m = {
       kind: 'internal', nowMs: isNum(ctx.nowMs) ? ctx.nowMs : Date.now(), list: ctx.list, selectedId: ctx.selectedId,
-      notice: null, detailsOpen: !!ctx.detailsOpen,
+      notice: null, detailsOpen: !!ctx.detailsOpen, afmTag: typeof ctx.afmTag === 'boolean' ? ctx.afmTag : TEASER_AFM_TAG,
       ac: null, af: null, a: null, fg: null, rn: null, ws: null, res: null, hintKind: null, computed: null, skipped: null
     };
     if (!core || core.VERSION !== VERSION) return m;
@@ -1101,12 +1105,16 @@
     }
   }
 
+  // Kopf: Muster, «windstill» bzw. «Wind quer», Pisten. Ohne Windrichtung steht kein Wort im Kopf, das sagt die
+  // Vorbehaltszeile. Mit m.afmTag folgt «Richtwert AFM» als eigenes Element (nur mit Zahlen).
   function teaserHtml(m) {
     var h, warn;
     if (m.kind === 'result') {
       var c = m.computed;
       var where = c.length === 1 ? 'Piste&nbsp;' + esc(c[0].id) : (c.length === 2 ? 'beide Pisten' : c.length + ' Pisten');
-      h = '<span class="perf-t-head">' + esc(clip(m.ac.label, LABEL_MAX)) + ' · ' + (m.hintKind ? TEASER[m.hintKind] + ' · ' : '') + where + '</span>' +
+      var word = m.hintKind === 'calm' ? TEASER.calm : (m.hintKind === 'cross' ? TEASER.cross : '');
+      h = '<span class="perf-t-head">' + esc(clip(m.ac.label, LABEL_MAX)) + ' · ' + (word ? word + ' · ' : '') + where + '</span>' +
+        (m.afmTag ? '<span class="perf-t-tag">' + TEASER.afmTag + '</span>' : '') +
         core.PHASES.map(function (ph) { return teaserRowHtml(ph, c); }).join('');
       warn = teaserWarnings(m);
     } else {
@@ -1417,6 +1425,7 @@
     FGZO_FRESH_MIN: FGZO_FRESH_MIN,
     FGZO_WAIT_MS: FGZO_WAIT_MS,
     WET_BY_RAIN: WET_BY_RAIN,
+    TEASER_AFM_TAG: TEASER_AFM_TAG,
     TEXT: TEXT,
     TEASER: TEASER,
     CSS: CSS,

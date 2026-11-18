@@ -1100,7 +1100,8 @@ function startBrowser(t, opts) {
 }
 const perfFetches = (env) => env.fetchUrls.filter((u) => u.startsWith('perf/')).length;
 const shown = (env) => text(env.content.innerHTML);
-const teaserText = (env) => text(env.teaser.innerHTML).trim();
+// Text der Kurzzeile ohne den Zusatz «Richtwert AFM», damit die boot-Tests nicht von TEASER_AFM_TAG abhängen
+const teaserText = (env) => text(env.teaser.innerHTML.replace(/<span class="perf-t-tag">[^<]*<\/span>/g, '')).trim();
 // Wahl wie im Browser: value des bestehenden <select> setzen, dann change auf #perf-sel
 function choose(env, id) {
   const s = env.sel.querySelector('select');
@@ -1132,6 +1133,8 @@ test('boot: Kurzzeile und Karte versteckt bis zum ersten update, dann Zahlen nac
   await settle();
   assert.ok(shown(env).includes('Start 331 m 492 m 625 m'), shown(env));
   assert.equal(teaserText(env), 'Cessna 172 Diesel · Piste 30 Start über 15 m: 492 m · verfügbar 625 m Landung über 15 m: 489 m · verfügbar 520 m');
+  // Der Weg über boot nimmt die ausgelieferte Stellung des Zusatzes «Richtwert AFM»
+  assert.equal(env.teaser.innerHTML.includes('<span class="perf-t-tag">Richtwert AFM</span>'), ui.TEASER_AFM_TAG);
   assert.ok(env.fetchUrls.some((u) => u.startsWith('data/fgzo_status.json?t=')));
 });
 

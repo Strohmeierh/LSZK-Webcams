@@ -42,8 +42,9 @@ function fgzo(over) {
     ok: true, fetched_at_utc: new Date(NOW - 14 * MIN).toISOString(), runway_condition: 'DRY', updated: '18.11.2026, 07:14'
   }, over);
 }
+// afmTag: false ausdrücklich, damit diese Tests nicht von der ausgelieferten Stellung TEASER_AFM_TAG abhängen
 function ctxOf(wx, over) {
-  return Object.assign({ dataState: 'ready', list: LIST, aircraft: C172D, airfield: AF, wx, fgzo: fgzo(), nowMs: NOW, detailsOpen: false }, over);
+  return Object.assign({ dataState: 'ready', list: LIST, aircraft: C172D, airfield: AF, wx, fgzo: fgzo(), nowMs: NOW, detailsOpen: false, afmTag: false }, over);
 }
 const parts = (wx, over) => ui.renderParts(ctxOf(wx, over));
 function text(html) {
@@ -146,8 +147,8 @@ test('Kurzzeile mit Ergebnis: Kopf, je Phase «über 15 m» gegen «verfügbar»
     ['K5 windstill', parts(wxPfa({ tempC: 20, qnhHpa: 1013.25, windDir: null, windKt: 0 })),
       [HEAD + 'Cessna 172 Diesel · windstill · beide Pisten', row('Start über 15 m: [amber]525 m · verfügbar ab 520 m'),
         row('Landung über 15 m: 520 m · verfügbar ab 520 m')]],
-    ['K12 ohne Richtung 2 kt: Rückenwind möglich', parts(wxPfa({ tempC: 3, qnhHpa: 1022, windDir: null, windKt: 2 })),
-      [HEAD + 'Cessna 172 Diesel · ohne Windrichtung · beide Pisten', row('Start über 15 m: 489 m · verfügbar ab 520 m'),
+    ['K12 ohne Richtung 2 kt: Rückenwind möglich (im Vorbehalt, nicht im Kopf)', parts(wxPfa({ tempC: 3, qnhHpa: 1022, windDir: null, windKt: 2 })),
+      [HEAD + 'Cessna 172 Diesel · beide Pisten', row('Start über 15 m: 489 m · verfügbar ab 520 m'),
         row('Landung über 15 m: 506 m · verfügbar ab 520 m'), warn(DIR)]],
     ['K6 quer', parts(wxPfa({ tempC: 25, qnhHpa: 1015, windDir: 214, windKt: 10 })),
       [HEAD + 'Cessna 172 Diesel · Wind quer · beide Pisten', row('Start über 15 m: [amber]560 m · verfügbar ab 520 m'),
@@ -236,7 +237,7 @@ test('Kurzzeile: Vorbehalte in fester Reihenfolge (Sperre, Windrichtung, Nässe 
       [H].concat(R, warn('Platz gesperrt (veraltete Meldung)'), warn('Pistenzustand unbekannt'), warn('Hinweis in den Details'))]
   ];
   // Ohne Windrichtung (bis 3 kt) gerechnet: Rückenwind möglich, auch ohne gelbes Element der Karte; Reihenfolge fest
-  const N = HEAD + 'Cessna 172 Diesel · ohne Windrichtung · beide Pisten';
+  const N = HEAD + 'Cessna 172 Diesel · beide Pisten';
   const RN = [row('Start über 15 m: 489 m · verfügbar ab 520 m'), row('Landung über 15 m: 506 m · verfügbar ab 520 m')];
   const nodir = (over) => wxPfa(Object.assign({ tempC: 3, qnhHpa: 1022, windDir: null, windKt: 2 }, over));
   cases.push(
@@ -362,8 +363,8 @@ function gleichlauf(ctx, label, stats) {
   const blocks = cardBlocks(p.body);
   assert.ok(blocks.length > 0, label);
   assert.equal(it[0][0], 'perf-t-head', label);
-  const hint = p.body.includes(ui.TEXT.calm) ? 'windstill · ' : p.body.includes(ui.TEXT.nodir) ? 'ohne Windrichtung · '
-    : p.body.includes(ui.TEXT.cross) ? 'Wind quer · ' : '';
+  // Hinweiswort im Kopf nur bei Windstille und Wind quer; ohne Windrichtung sagt es der Vorbehalt
+  const hint = p.body.includes(ui.TEXT.calm) ? 'windstill · ' : p.body.includes(ui.TEXT.cross) ? 'Wind quer · ' : '';
   const where = blocks.length === 1 ? 'Piste ' + blocks[0].id : (blocks.length === 2 ? 'beide Pisten' : blocks.length + ' Pisten');
   assert.equal(it[0][1], ctx.aircraft.label + ' · ' + hint + where, label + ': Kopf');
   const rows = it.filter(([c]) => c === 'perf-t-row');
@@ -596,6 +597,8 @@ test('CSS der Kurzzeile: kein Dreieck, Flex im inneren span, Umbruch statt Über
   assert.equal(rule('.perf-box[open] .perf-t-chev'), 'transform: rotate(180deg);');
   assert.equal(rule('.perf-box[open] > .perf-teaser'), 'margin-bottom: 8px;');
   assert.equal(rule('.perf-t-head'), 'font-weight: 600;');
+  // Zusatz «Richtwert AFM» gedämpft und in normalem Gewicht (steht auch bei ausgeschaltetem Zusatz bereit)
+  assert.equal(rule('.perf-t-tag'), 'color: var(--text-muted); font-weight: 400;');
   assert.equal(rule('.perf-t-state'), 'color: #f87171;');
   assert.equal(rule('.perf-t-load'), 'color: var(--text-muted);');
   assert.equal(rule('.perf-t-warn'), 'color: #fcd34d;');
@@ -607,4 +610,60 @@ test('CSS der Kurzzeile: kein Dreieck, Flex im inneren span, Umbruch statt Über
   assert.ok(/@media \(max-width: 340px\) \{\n {2}\.perf-t-ico \{ display: none; \}\n\}/.test(ui.CSS), 'Symbol unter 340 px ausgeblendet');
   assert.ok(/@media \(prefers-reduced-motion: reduce\) \{\n {2}\.perf-t-chev \{ transition: none; \}/.test(ui.CSS));
   assert.ok(!/outline:\s*(?:none|0)\b/.test(ui.CSS));
+});
+
+/* ── Schalter «Richtwert AFM» (TEASER_AFM_TAG) ────────────── */
+
+test('Schalter «Richtwert AFM»: ausgeliefert aus (Umschalten ändert genau die Konstante und diesen Test)', () => {
+  assert.equal(ui.TEASER_AFM_TAG, false, 'ausgelieferte Stellung');
+  // ohne Angabe gilt die Konstante
+  const p = ui.renderParts(Object.assign(ctxOf(wxPfa()), { afmTag: undefined }));
+  assert.equal(p.kind, 'result');
+  assert.equal(p.teaser.includes('perf-t-tag'), ui.TEASER_AFM_TAG);
+});
+
+test('Schalter «Richtwert AFM» eingeschaltet: eigenes Element direkt nach dem Kopf, nur mit Zahlen; Karte und übrige Kurzzeile unverändert', () => {
+  const TAG = '<span class="perf-t-tag">Richtwert AFM</span>';
+  const ctxs = [];
+  CASES.forEach(([id, acId, field, inp]) => {
+    if (field !== 'lszk') return;
+    [['dryToday', null, 0], ['closedWet', 'x', 0], ['dryStale', null, null]].forEach(([fk, notice, rain]) => {
+      ctxs.push([id + '/' + fk, ctxOf(wxPfa({ tempC: inp[0], qnhHpa: inp[1], windDir: inp[2], windKt: inp[3], rain1hMm: rain, rainMmH: rain }),
+        { aircraft: ACS[acId], fgzo: FG[fk], notice })]);
+    });
+  });
+  [undefined, wxPfa({ src: 'speck' }), wxPfa({ time: NOW - 46 * MIN }), wxPfa({ time: NOW + 10 * MIN }), wxPfa({ qnhHpa: null }), wxPfa({ qnhHpa: 850 }),
+    wxPfa({ tempC: 45 }), wxPfa({ windDir: null, windKt: 6 })].forEach((w, i) => [null, 'x'].forEach((notice) => {
+    ctxs.push(['ohne Zahlen ' + i, ctxOf(w, { notice })]);
+  }));
+  ctxs.push(['FGZO lädt', ctxOf(wxPfa(), { fgzoPending: true })], ['Daten laden', ctxOf(wxPfa(), { dataState: 'loading', aircraft: null })],
+    ['Datenfehler', ctxOf(wxPfa(), { dataState: 'error', aircraft: null, notice: 'x' })], ['keine Gegenwindpiste', ctxOf(wxPfa(), { airfield: one })],
+    ['drei Pisten', ctxOf(wxPfa({ tempC: 20, qnhHpa: 1013.25, windDir: null, windKt: 0 }), { airfield: three })]);
+  let results = 0, others = 0;
+  ctxs.forEach(([label, ctx]) => {
+    const off = ui.renderParts(Object.assign({}, ctx, { afmTag: false }));
+    const on = ui.renderParts(Object.assign({}, ctx, { afmTag: true }));
+    assert.equal(on.sel + on.body, off.sel + off.body, label + ': Karte');
+    assert.ok(!off.teaser.includes('perf-t-tag'), label + ': Zusatz trotz Stellung aus');
+    if (off.kind === 'result') {
+      results++;
+      const end = off.teaser.indexOf('</span>') + '</span>'.length;           // Ende des Kopfs (ohne innere Elemente)
+      assert.ok(off.teaser.startsWith('<span class="perf-t-head">'), label);
+      assert.equal(on.teaser, off.teaser.slice(0, end) + TAG + off.teaser.slice(end), label + ': Zusatz direkt nach dem Kopf');
+      assertCleanTeaser(on.teaser, label);
+    } else {
+      others++;
+      assert.equal(on.teaser, off.teaser, label + ': Zusatz in einem Zustand ohne Zahlen');
+    }
+  });
+  assert.ok(results >= 150 && others >= 20, results + ' mit Ergebnis, ' + others + ' ohne');
+  // Beispiele: eine Piste (Kopfzeile), windstill nass (eigene Zeile), ohne Windrichtung
+  assert.deepEqual(marked(parts(wxPfa(), { afmTag: true }).teaser), [HEAD + 'Cessna 172 Diesel · Piste 30', 'perf-t-tag: Richtwert AFM',
+    row('Start über 15 m: 492 m · verfügbar 625 m'), row('Landung über 15 m: 489 m · verfügbar 520 m')]);
+  assert.deepEqual(marked(parts(wxPfa({ tempC: 20, qnhHpa: 1013.25, windDir: null, windKt: 0, rain1hMm: 0.4 }), { afmTag: true }).teaser),
+    [HEAD + 'Cessna 172 Diesel · windstill · beide Pisten', 'perf-t-tag: Richtwert AFM', row('Start über 15 m: [amber]630 m · verfügbar ab 520 m'),
+      row('Landung über 15 m: 520 m · verfügbar ab 520 m'), warn(WET)]);
+  assert.deepEqual(marked(parts(wxPfa({ tempC: 3, qnhHpa: 1022, windDir: null, windKt: 2 }), { afmTag: true }).teaser),
+    [HEAD + 'Cessna 172 Diesel · beide Pisten', 'perf-t-tag: Richtwert AFM', row('Start über 15 m: 489 m · verfügbar ab 520 m'),
+      row('Landung über 15 m: 506 m · verfügbar ab 520 m'), warn(DIR)]);
 });
