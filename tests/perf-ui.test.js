@@ -430,6 +430,21 @@ test('Schwellen: Mittelwind der Messwertzeile auf 0,1 kt, Wind im Rechenweg auf 
   html = render(wxPfa({ windDir: 304, windKt: 6.996 }));                       // Komponente 6,996 kt → abgerundet 6 kt
   assert.ok(has(html, 'Wind 304° / 6,9 kt'), text(html));
   assert.ok(has(html, 'Gegenwindkomponente 6,99 kt aus dem Mittelwind 6,99 kt, abgerundet 6 kt.'), text(html));
+  // die Zeile der Rückenwindpiste schneidet gleich ab (nicht «7,00 kt»)
+  assert.ok(has(html, 'Piste 12: Wind aus 304°, Rückenwindkomponente 6,99 kt aus dem Mittelwind – nicht berechnet.'), text(html));
+});
+
+test('Rechenweg: Gegenwind- und Rückenwindzeile zeigen dieselbe, abgeschnittene Windkomponente', () => {
+  let n = 0;
+  [[215, 6.6, '0,11'], [304, 6.996, '6,99'], [290, 8, '7,76'], [124, 12.345, '12,34'], [200, 9.999, '2,41']].forEach(([dir, kt, shown]) => {
+    const t = text(render(wxPfa({ windDir: dir, windKt: kt })));
+    const head = /Gegenwindkomponente (\S+) kt aus dem Mittelwind/.exec(t);
+    const tail = /Rückenwindkomponente (\S+) kt aus dem Mittelwind – nicht berechnet\./.exec(t);
+    assert.ok(head && tail, dir + '/' + kt + ': ' + t);
+    assert.deepEqual([head[1], tail[1]], [shown, shown], dir + '/' + kt);
+    n++;
+  });
+  assert.equal(n, 5);
 });
 
 test('Feststellungen: 50-%-Satz, Gegenwindgrenze, Überschreitungen, Gleichstand', () => {

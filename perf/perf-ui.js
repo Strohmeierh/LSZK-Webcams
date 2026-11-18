@@ -16,7 +16,7 @@
 }(typeof self !== 'undefined' ? self : this, function (core) {
   'use strict';
 
-  var VERSION = 1;
+  var VERSION = 2;
 
   var STALE_MIN = 45;          // Messwerte älter: keine Zahlen
   var FUTURE_MIN = 5;          // Messzeit weiter in der Zukunft: keine Zahlen
@@ -185,7 +185,8 @@
   // Mittelwind: auf eine Nachkommastelle abgeschnitten, nicht gerundet (0,97 kt → 0,9 kt passt zu «unter 1 kt»)
   function fmtWind(v) { return fmtDec(Math.floor(v * 10 + 1e-9) / 10, 1); }
 
-  // Wind im Rechenweg (Mittelwind und Gegenwindkomponente): auf zwei Nachkommastellen abgeschnitten
+  // Wind im Rechenweg (Mittelwind, Gegenwindkomponente und Rückenwindkomponente der nicht gerechneten Piste):
+  // auf zwei Nachkommastellen abgeschnitten, damit beide Pisten dieselbe Zahl zeigen
   // (6,996 kt → 6,99 kt passt zu «abgerundet 6 kt», 0,999 kt → 0,99 kt zu «unter 1 kt»)
   function fmtKt2(v) { return fmtDec(Math.floor(v * 100 + 1e-7) / 100, 2); }
 
@@ -797,7 +798,7 @@
     res.runways.forEach(function (rw) {
       if (!rw.computed) {
         if (rw.reason === 'tailwind') {
-          h.push('<p>Piste ' + esc(rw.id) + ': Wind aus ' + fmtInt(res.input.windDirTrue) + '°, Rückenwindkomponente ' + fmtDec(rw.wind.componentKt, 2) +
+          h.push('<p>Piste ' + esc(rw.id) + ': Wind aus ' + fmtInt(res.input.windDirTrue) + '°, Rückenwindkomponente ' + fmtKt2(rw.wind.componentKt) +
             '&nbsp;kt aus dem Mittelwind – nicht berechnet.</p>');
         }
         return;
