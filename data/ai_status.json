@@ -1,31 +1,30 @@
 {
   "stats": {
     "month": "2026-11",
-    "cost_month_usd": 2.4442,
+    "cost_month_usd": 2.2864,
     "attempts_month": 10,
     "date": "2026-11-18",
-    "cost_today_usd": 0.4,
+    "cost_today_usd": 0.2422,
     "attempts_today": 1,
     "budget_month_usd": 80.0,
-    "reserved_usd": 0.4
+    "reserved_usd": 0.0
   },
   "schema_version": 1,
-  "ok": false,
+  "ok": true,
   "attempted_at_utc": "2026-11-18T07:04:21+00:00",
   "slot": "sunrise",
   "reserved_run": "44255877551.1",
-  "fail_streak": 1,
-  "error": "Versuch läuft oder wurde abgebrochen (kein Ergebnis gespeichert)",
+  "fail_streak": 0,
+  "error": null,
   "sun": {
-    "rise": "07:31",
-    "set": "16:48"
+    "rise": "07:33",
+    "set": "16:47"
   },
   "inputs": {
     "kameras": [
       "Speck – Runway 30",
       "Speck – Tankstelle",
       "Bachtel",
-      "Wangen-Lachen – Cam 1",
       "Rapperswil",
       "Säntis",
       "Richtung Tödi",
@@ -37,70 +36,75 @@
       "Jakobshorn",
       "Ambri Tarnolgio"
     ],
-    "fehlend": [],
+    "fehlend": [
+      {
+        "titel": "Wangen-Lachen – Cam 1",
+        "grund": "HTTP 404 (application/json)"
+      }
+    ],
     "fehler": [
-      "Prognose Open-Meteo: ReadTimeout: HTTPSConnectionPool(host='api.open-meteo.com', port=443): Read timed out. (read timeout=20)",
-      "Thermikprognose: ReadTimeout: HTTPSConnectionPool(host='api.open-meteo.com', port=443): Read timed out. (read timeout=20)"
+      "DABS: ConnectTimeout: HTTPSConnectionPool(host='www.skybriefing.com', port=443): Max retries exceeded with url: /o/dabs?today (Caused by ConnectTimeoutError(<H…"
     ]
   },
-  "generated_at_utc": "2026-11-17T14:04:09+00:00",
+  "generated_at_utc": "2026-11-18T07:04:26+00:00",
   "model": "claude-opus-5-5",
   "served_by": "claude-opus-5-5",
   "effort": "medium",
-  "request_id": "req_011Ch8dNryT7V5rg5waawLSL",
+  "request_id": "req_011Ch9yBhtXhBMeVZcNoLopm",
   "usage": {
-    "input_tokens": 34782,
-    "output_tokens": 6021,
+    "input_tokens": 35539,
+    "output_tokens": 5003,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 0,
     "attempts": 1,
-    "cost_usd": 0.2595
+    "cost_usd": 0.2422
   },
   "briefing": {
-    "headline": "Platz gesperrt (nur Heli), Föhn-Index +6 hPa",
-    "text": "Platz gesperrt: nur Helikopterbetrieb. Am Platz Wind aus 280° mit 10 kt, Böen 19 kt; teilweise bis stark bewölkt mit Schauern in der Umgebung, Basis um 1'200 m (Bachtel in Wolkenfetzen), Sicht 17 km (Hirzli). Föhn-Index +6 hPa mit Südstau am Gotthard und in der Leventina; die Glarner Hauptkette und die Bündner Gipfel sind weitgehend frei und frisch verschneit, die Gotthardgruppe steckt in Wolken. Eine Prognose und die Regenwahrscheinlichkeit für die nächsten 3 Stunden sind nicht verfügbar. DABS (Version 3, Stand 12:45 LT): LSD12 Sihltal 13:00–22:00 LT aktiv, GND bis 3'000m; LSR39B Brisen und LSR39C Stoos 14:00–16:00 LT aktiv, 2'750m bis FL130.",
+    "headline": "Platz gesperrt (nur Heli), Schauer, Basis um 1'200 m",
+    "fgzo_hinweis": "",
+    "text": "Platz gesperrt: nur Helikopterbetrieb. Laut Windsack um 10 kt aus West bis Südwest, Dübendorf meldet 290° mit 11 kt, Spreizung 4 Grad. Stark bewölkt mit dunklen Schauerwolken, Basis um 1'200 m (Dübendorf SCT036 entspricht rund 1'500 m), Sicht 13 km (Bachtel), Schauer über dem Zürichsee bei Rapperswil. Nordalpen verhangen, Säntis und Glarner Alpen in Wolken, Hauptkamm am Oberalp frei; Föhn-Index +2 hPa unauffällig. Prognose: bedeckt, Regen wahrscheinlich (98 % in den nächsten 3 h), am meisten um 14–15 Uhr, Wind auf 1'500 m um 40 kt aus Westsüdwest; um 17 Uhr kurz aufgelockert, ab 18 Uhr erneut Regen. DABS nicht auswertbar. Thermik laut Prognose nur in Mittelbünden und um Davos von 12 bis 13 Uhr, Arbeitshöhe unter Kammhöhe; sonst keine nutzbare Thermik bei starkem Höhenwind.",
     "lage": "maessig"
   },
   "himmel": {
-    "bedeckung_achtel": 6,
+    "bedeckung_achtel": 7,
     "wolkenbasis_m": 1200,
     "basis_quelle": "kombiniert",
-    "sicht": "gut",
-    "sicht_km": 17,
+    "sicht": "maessig",
+    "sicht_km": 13,
     "nebel": "kein",
     "nebel_obergrenze_m": null,
     "alpen": "teilweise",
-    "schneegrenze_m": 2100,
+    "schneegrenze_m": 2200,
     "niederschlag": "in_der_ferne",
     "zusammenfassung": "",
     "regionen": [
       {
         "region": "platz",
-        "zustand": "Lücken mit blauem Himmel im Westen, Windsack deutlich angeströmt aus West."
+        "zustand": "Pfützen auf Vorfeld und Wendefläche, Graspiste nass."
       },
       {
         "region": "zuercher_oberland",
-        "zustand": "Bachtelturm in tiefen Wolkenfetzen, darunter Schauerdunst über dem Zürichsee."
+        "zustand": "Oberland-Hügel frei, Regenschleier Richtung Obersee und Glarnerland."
       },
       {
         "region": "voralpen",
-        "zustand": "Säntis in Wolken, Gipfel um Speer und Mürtschenstock verhangen, Hirzli-Kette bis knapp unter den Kamm frei."
+        "zustand": "Säntis in der Wolke, am oberen Zürichsee Regen mit Sicht um 3 km."
       },
       {
         "region": "glarner_alpen",
-        "zustand": "Sardona, Vorab und Hausstock frei und verschneit, im Grosstal und im Sernftal Wolkenbänke an den Flanken, Tödi in Wolken."
+        "zustand": "Talflanken im Grosstal und Sernftal mit Wolkenfetzen ab etwa 1'200 m, Kamm Vorab–Hausstock in Wolken."
       },
       {
         "region": "zentralalpen",
-        "zustand": "Gotthardpass in der Wolke mit Neuschnee, Surselva und Schächental frei mit Neuschnee."
+        "zustand": "Schächental und Oberalp frei, Gipfel über dem Klausen teils in Wolken, Neuschnee oberhalb rund 2'200 m."
       },
       {
         "region": "graubuenden",
-        "zustand": "Gipfel um Davos und Lenzerheide sowie der Hauptkamm Richtung Bernina frei, Basis über den Gipfeln."
+        "zustand": "Gipfel um Lenzerheide und Davos weitgehend frei, Wolkenbänke im Südsektor, Neuschnee bis gegen 2'000 m."
       },
       {
         "region": "alpensuedseite",
-        "zustand": "Leventina mit Südstau, Wolken auf Höhe der Kamera um 1'600 m."
+        "zustand": "Leventina mit mittelhoher Schichtbewölkung, Gipfel frei."
       }
     ]
   },
@@ -109,9 +113,10 @@
       "titel": "Speck – Runway 30",
       "key": "https://wsrv.nl/?url=fgzo.ch/webcam/images/fgzo.jpg",
       "bildalter_min": 1,
-      "satz": "Teilweise bewölkt mit Quellwolken und Lücken im Westen, Graspiste ohne sichtbare Wasserflächen.",
+      "satz": "Dunkle Schauerwolken im Westen, Graspiste nass, Bodensicht gut.",
       "tags": [
-        "quellwolken"
+        "bedeckt",
+        "nasse_piste"
       ],
       "problem": "keins"
     },
@@ -119,9 +124,10 @@
       "titel": "Speck – Tankstelle",
       "key": "https://wsrv.nl/?url=fgzo.ch/webcam/images/fgzo2.jpg",
       "bildalter_min": 1,
-      "satz": "Stark bewölkt, Oberland-Hügel bis Bachtel erkennbar, Windsack deutlich angeströmt, Vorfeld feucht.",
+      "satz": "Windsack fast waagrecht aus West bis Südwest, Pfützen auf dem Vorfeld, Oberland-Hügel erkennbar.",
       "tags": [
-        "bedeckt"
+        "bedeckt",
+        "nasse_piste"
       ],
       "problem": "keins"
     },
@@ -129,31 +135,20 @@
       "titel": "Bachtel",
       "key": "https://wsrv.nl/?url=bachtel.it-wms.com/panorama1_raw.jpg",
       "bildalter_min": 29,
-      "satz": "Turm in tiefen Wolkenfetzen, Basis um 1'150 m, Schauerdunst über dem Zürichsee, Sicht nach Süden eingeschränkt.",
+      "satz": "Stark bewölkt, Schauer über Zürichsee und Richtung Glarnerland, Voralpen in Wolken.",
       "tags": [
-        "tiefe_wolken",
-        "in_wolke",
+        "bedeckt",
         "niederschlag"
-      ],
-      "problem": "keins"
-    },
-    {
-      "titel": "Wangen-Lachen – Cam 1",
-      "key": "cam1",
-      "bildalter_min": 4,
-      "satz": "Vorfeld nass, Gipfel der Voralpen teils in Wolken, Basis um 1'500 m.",
-      "tags": [
-        "tiefe_wolken",
-        "nasse_piste"
       ],
       "problem": "keins"
     },
     {
       "titel": "Rapperswil",
       "key": "https://wsrv.nl/?url=images-webcams.windy.com/91/1614073791/current/original/1614073791.jpg",
-      "bildalter_min": 7,
-      "satz": "Rapperswil und Hirzli-Kette klar, Kamm knapp in Wolken, Mürtschenstock verhangen.",
+      "bildalter_min": 2,
+      "satz": "Regen über dem See, Rapperswil nur schwach erkennbar, Berge nicht sichtbar.",
       "tags": [
+        "niederschlag",
         "tiefe_wolken"
       ],
       "problem": "keins"
@@ -172,20 +167,23 @@
       "titel": "Richtung Tödi",
       "key": "https://wsrv.nl/?url=decoral.ch/Kameratoedi.jpg",
       "bildalter_min": 4,
-      "satz": "Wolkenbänke an den Talflanken um 1'500–2'000 m, Tödi in Wolken, einzelne Lücken.",
+      "satz": "Wolkenfetzen an den Talflanken, Tödi zum Teil sichtbar mit Neuschnee, sonst verhangen.",
       "tags": [
-        "tiefe_wolken"
+        "tiefe_wolken",
+        "bedeckt",
+        "schnee"
       ],
       "problem": "keins"
     },
     {
       "titel": "Elm – Schabell",
       "key": "https://wsrv.nl/?url=sportbahnenelm.roundshot.com/cams/1721/medium",
-      "bildalter_min": 11,
-      "satz": "Sardona bis Hausstock frei und verschneit, Wolkenbänke im Sernftal unter 2'000 m.",
+      "bildalter_min": 14,
+      "satz": "Kamera am Wolkenrand, Kamm Sardona–Vorab in Wolken, Schneereste am Grat.",
       "tags": [
-        "schnee",
-        "tiefe_wolken"
+        "tiefe_wolken",
+        "bedeckt",
+        "schnee"
       ],
       "problem": "keins"
     },
@@ -193,8 +191,9 @@
       "titel": "Klausenpass",
       "key": "https://wsrv.nl/?url=webcam.hotel-klausenpass.ch/panorama.jpg",
       "bildalter_min": 4,
-      "satz": "Schärhorn und Windgällen frei mit Neuschnee, darüber aufgelockerte Bewölkung.",
+      "satz": "Schächental frei, Clariden in Wolken, Neuschnee an den Gipfeln.",
       "tags": [
+        "quellwolken",
         "schnee"
       ],
       "problem": "keins"
@@ -203,10 +202,11 @@
       "titel": "Schneehüenerstock",
       "key": "https://wsrv.nl/?url=andermatt-sedrun-disentis.roundshot.com/cams/1768/medium",
       "bildalter_min": 10,
-      "satz": "Surselva-Gipfel frei, Gotthardgruppe in Stauwolken von Süden, viel Neuschnee.",
+      "satz": "Oberalp und Gotthardgruppe frei, verschneit, lockere Wolken darüber.",
       "tags": [
-        "schnee",
-        "foehnzeichen"
+        "sonnig",
+        "quellwolken",
+        "schnee"
       ],
       "problem": "keins"
     },
@@ -214,19 +214,17 @@
       "titel": "Gotthardpass",
       "key": "https://wsrv.nl/?url=webcam.afbn.ch/H_OSG_017,200_S_KAM_001_Sued.jpg",
       "bildalter_min": 4,
-      "satz": "Passhöhe in der Wolke, Sicht unter 1 km, Neuschnee.",
-      "tags": [
-        "in_wolke",
-        "schnee"
-      ],
-      "problem": "keins"
+      "satz": "Keine Beurteilung möglich.",
+      "tags": [],
+      "problem": "eingefroren"
     },
     {
       "titel": "Parpaner Rothorn",
       "key": "https://wsrv.nl/?url=lenzerheide.roundshot.com/cams/52/medium",
-      "bildalter_min": 12,
-      "satz": "Hauptkamm bis Bernina frei, Neuschnee an den Hängen, aufgelockerte Bewölkung über den Gipfeln.",
+      "bildalter_min": 2,
+      "satz": "Wolkenbänke im Südsektor um Kesch und Ela, Westen frei, Neuschnee bis tief hinab.",
       "tags": [
+        "quellwolken",
         "schnee"
       ],
       "problem": "keins"
@@ -234,11 +232,11 @@
     {
       "titel": "Jakobshorn",
       "key": "https://wsrv.nl/?url=images-webcams.windy.com/30/1678358730/current/original/1678358730.jpg",
-      "bildalter_min": 15,
-      "satz": "Gipfel um Davos frei und verschneit, stark bewölkt über 3'000 m.",
+      "bildalter_min": 7,
+      "satz": "Gipfel um Davos frei, Wolkenbank darüber, frisch verschneit.",
       "tags": [
-        "schnee",
-        "bedeckt"
+        "bedeckt",
+        "schnee"
       ],
       "problem": "keins"
     },
@@ -246,66 +244,136 @@
       "titel": "Ambri Tarnolgio",
       "key": "https://wsrv.nl/?url=www.tarnolgio.ch/webcam00.jpg",
       "bildalter_min": 4,
-      "satz": "Stauwolken bis auf Kamerahöhe um 1'600 m, Pizzo Forno nur durch Lücken sichtbar.",
+      "satz": "Altocumulus-Decke, Campo-Tencia-Gruppe frei und verschneit.",
       "tags": [
-        "in_wolke",
-        "tiefe_wolken"
+        "bedeckt",
+        "schnee"
       ],
       "problem": "keins"
     }
   ],
   "dabs": {
-    "ok": true,
-    "datum": "2026-11-17",
-    "version": 3,
-    "stand_utc": "2026-11-17T11:45:00+00:00",
-    "abgerufen_utc": "2026-11-17T14:04:09+00:00",
+    "ok": false,
+    "datum": null,
+    "version": null,
+    "stand_utc": null,
+    "abgerufen_utc": "2026-11-18T07:04:26+00:00",
     "quelle": "https://www.skybriefing.com/o/dabs?today",
     "filter": "Fluggebiet LSZK–Säntis–Flüela–Julier–Gotthard–Mythen mit 15 km Marge, Untergrenze unter FL150, bis 30 min nach Sonnenuntergang",
-    "eintraege_total": 8,
-    "treffer": [
-      {
-        "gebiet": "LSD12",
-        "notam": "W0319/26",
-        "zeit": "13:00–22:00 LT",
-        "unten": "GND",
-        "oben": "3000m / 9850ft",
-        "text": "D-AREA LSD12 SIHLTAL ACT.",
-        "karte": true,
-        "unsicher": false,
-        "beendet": false
-      },
-      {
-        "gebiet": "LSR39B",
-        "notam": "W3091/26",
-        "zeit": "14:00–16:00 LT",
-        "unten": "2750m / 9000ft",
-        "oben": "FL130",
-        "text": "R-AREA LSR39B BRISEN ACT. LOWER LIMIT 9000FT AMSL OR 2000FT GND WHICHEVER IS HIGHER.",
-        "karte": true,
-        "unsicher": false,
-        "beendet": false
-      },
-      {
-        "gebiet": "LSR39C",
-        "notam": "W3092/26",
-        "zeit": "14:00–16:00 LT",
-        "unten": "2750m / 9000ft",
-        "oben": "FL130",
-        "text": "R-AREA LSR39C STOOS ACT. LOWER LIMIT 9000FT AMSL OR 2000FT GND WHICHEVER IS HIGHER.",
-        "karte": true,
-        "unsicher": false,
-        "beendet": false
-      }
-    ],
-    "fehler": null
+    "eintraege_total": null,
+    "treffer": [],
+    "fehler": "DABS: ConnectTimeout: HTTPSConnectionPool(host='www.skybriefing.com', port=443): Max retries exceeded with url: /o/dabs?today (Caused by ConnectTimeoutError(<H…"
   },
-  "slot_planned_utc": "2026-11-17T14:00:00+00:00",
+  "slot_planned_utc": "2026-11-18T07:03:26+00:00",
   "korrekturen": [],
-  "thermik": null,
+  "thermik": {
+    "quelle": "Open-Meteo",
+    "tag": "2026-11-18",
+    "zusammenfassung": "Prognose: Nutzbare Thermik nur in Mittelbünden und um Davos von 12 bis 13 Uhr, Arbeitshöhe ca. 1'900 bzw. 2'100 m und damit unter Kammhöhe, Gewitterrisiko gering. Übrige Regionen ohne nutzbare Thermik, Wind auf 3'000 m bis 52 kt: zerrissen, Lee beachten.",
+    "regionen": [
+      {
+        "region": "alpstein",
+        "nutzbar": false,
+        "von": null,
+        "bis": null,
+        "arbeitshoehe_m": null,
+        "basis_m": null,
+        "blau": null,
+        "cape_max": 20,
+        "risiko": "gering",
+        "wind700_kt": 52,
+        "wind700_dir": 269,
+        "wind_stark": true
+      },
+      {
+        "region": "mythen",
+        "nutzbar": false,
+        "von": null,
+        "bis": null,
+        "arbeitshoehe_m": null,
+        "basis_m": null,
+        "blau": null,
+        "cape_max": 90,
+        "risiko": "gering",
+        "wind700_kt": 49,
+        "wind700_dir": 275,
+        "wind_stark": true
+      },
+      {
+        "region": "glarner_alpen",
+        "nutzbar": false,
+        "von": null,
+        "bis": null,
+        "arbeitshoehe_m": null,
+        "basis_m": null,
+        "blau": null,
+        "cape_max": 20,
+        "risiko": "gering",
+        "wind700_kt": 44,
+        "wind700_dir": 270,
+        "wind_stark": true
+      },
+      {
+        "region": "urseren",
+        "nutzbar": false,
+        "von": null,
+        "bis": null,
+        "arbeitshoehe_m": null,
+        "basis_m": null,
+        "blau": null,
+        "cape_max": 10,
+        "risiko": "gering",
+        "wind700_kt": 30,
+        "wind700_dir": 278,
+        "wind_stark": true
+      },
+      {
+        "region": "surselva",
+        "nutzbar": false,
+        "von": null,
+        "bis": null,
+        "arbeitshoehe_m": null,
+        "basis_m": null,
+        "blau": null,
+        "cape_max": 0,
+        "risiko": "gering",
+        "wind700_kt": 36,
+        "wind700_dir": 284,
+        "wind_stark": true
+      },
+      {
+        "region": "mittelbuenden",
+        "nutzbar": true,
+        "von": "12:00",
+        "bis": "13:00",
+        "arbeitshoehe_m": 1900,
+        "basis_m": 1900,
+        "blau": false,
+        "cape_max": 30,
+        "risiko": "gering",
+        "wind700_kt": 19,
+        "wind700_dir": 280,
+        "wind_stark": false
+      },
+      {
+        "region": "davos",
+        "nutzbar": true,
+        "von": "12:00",
+        "bis": "13:00",
+        "arbeitshoehe_m": 2100,
+        "basis_m": 2100,
+        "blau": false,
+        "cape_max": 50,
+        "risiko": "gering",
+        "wind700_kt": 24,
+        "wind700_dir": 268,
+        "wind_stark": false
+      }
+    ]
+  },
   "platz": {
     "flaeche": "gesperrt",
     "grund": "nur Helikopterbetrieb",
-    "text": "Platz gesperrt: nur Helikopterbetrieb, Piste STANDING WATER (FGZO-Stand 17.11.2026, 10:56)"
+    "text": "Platz für Flächenflugzeuge gesperrt – nur Helikopterbetrieb erlaubt (FGZO-Stand 18.11.2026, 07:14)"
   }
 }
