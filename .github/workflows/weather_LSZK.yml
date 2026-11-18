@@ -14,8 +14,12 @@ jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
+      # ref: the branch head when the job STARTS (not the commit from dispatch time), so a run
+      # that waited in the queue starts from what the other jobs pushed in the meantime
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref }}
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -27,18 +31,15 @@ jobs:
           WEATHERLINK_DEVICE_TOKEN: ${{ vars.WEATHERLINK_DEVICE_TOKEN }}
         run: python fetch_weather.py
 
+      # The Speck station is only the fallback source. If WeatherLink fails, the run stays red,
+      # but the airfield status is still fetched and committed (the two "if" lines below).
       - name: Fetch FGZO airfield status (fgzo.ch/status/)
+        if: ${{ !cancelled() }}
         continue-on-error: true
         run: python scripts/fetch_fgzo_status.py
 
+      # commit_and_push.sh rebases and retries when the cam-status or METAR job pushed first
       - name: Commit & push if changed
+        if: ${{ !cancelled() }}
         run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/
-          if git diff --cached --quiet; then
-            echo "No changes to commit."
-          else
-            git commit -m "chore(weather): update LSZK $(date -u +'%Y-%m-%dT%H:%MZ')"
-            git push
-          fi
+          bash scripts/commit_and_push.sh "chore(weather): update LSZK $(date -u +'%Y-%m-%dT%H:%MZ')" data/lszk_latest.json data/fgzo_status.json
