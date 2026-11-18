@@ -1291,7 +1291,7 @@
       </h3>
       <div id="brf-modal-content"></div>
       <div class="brf-note">
-        <strong>Quellen &amp; Genauigkeit:</strong> Böen und Niederschlag sind aktuelle Messwerte der Wetterstation Speck am Platz, der Föhn-/Bise-Index aus den METAR-QNH von Lugano-Agno (LSZA) und Zürich-Kloten (LSZH). Thermikfenster, Arbeitshöhe, Charakter, Auslösetemperatur, CAPE und Regenwahrscheinlichkeit sind Modellvorhersagen (Open-Meteo, nächste 12&nbsp;h) bzw. eine vereinfachte Abschätzung aus wenigen Höhenstufen. Das sind grobe Richtwerte zur ersten Orientierung – <strong>kein Ersatz</strong> für ein Emagramm, SoaringMeteo und die offizielle Flugwetterberatung.
+        <strong>Quellen &amp; Genauigkeit:</strong> Wind, Böen und Niederschlag sind Zehnminutenwerte der MeteoSchweiz-Station Pfäffikon&nbsp;ZH, rund 80&nbsp;m neben der Piste (Quelle: MeteoSchweiz) und in der Regel 10 bis 20&nbsp;Minuten alt. Fällt MeteoSchweiz aus, springt die Wetterstation Speck ein, die den Wind meist zu tief misst. Der Föhn-/Bise-Index stammt aus den METAR-QNH von Lugano-Agno (LSZA) und Zürich-Kloten (LSZH). Thermikfenster, Arbeitshöhe, Charakter, Auslösetemperatur, CAPE und Regenwahrscheinlichkeit sind Modellvorhersagen (Open-Meteo, nächste 12&nbsp;h) bzw. eine vereinfachte Abschätzung aus wenigen Höhenstufen. Das sind grobe Richtwerte zur ersten Orientierung – <strong>kein Ersatz</strong> für ein Emagramm, SoaringMeteo und die offizielle Flugwetterberatung.
       </div>
       <div style="text-align:center;margin-top:14px;">
         <button class="top-btn" id="brf-modal-wx" type="button">Alle Wetterdetails öffnen</button>
@@ -1308,13 +1308,14 @@
       </h3>
       <div id="ai-modal-content"></div>
       <div class="brf-note">
-        <strong>KI-generiert, ohne Gewähr.</strong> Automatische Einschätzung aus Webcam-Bildern, Messwerten und Modellprognose (Claude von Anthropic); sie kann falsch oder überholt sein. Massgebend sind die offizielle Flugwetterberatung (MeteoSchweiz, Skybriefing), AIP, NOTAM/DABS, die Flugplatzleitung (fgzo.ch) und die eigene Beobachtung.
+        <strong>KI-generiert, ohne Gewähr.</strong> Automatische Einschätzung aus Webcam-Bildern, Messwerten (am Platz: Quelle MeteoSchweiz) und Modellprognose (Claude von Anthropic); sie kann falsch oder überholt sein. Massgebend sind die offizielle Flugwetterberatung (MeteoSchweiz, Skybriefing), AIP, NOTAM/DABS, die Flugplatzleitung (fgzo.ch) und die eigene Beobachtung.
       </div>
     </div>
   </div>
 
   <footer>
     <p>Letzter Refresh: <span id="last-refresh">–</span> &middot; Aktualisierung alle 90 Sekunden</p>
+    <p>Messwerte am Platz: Quelle MeteoSchweiz (Station Pfäffikon&nbsp;ZH)</p>
     <div class="disclaimer">
       ⚠️ <strong>Wichtiger Hinweis:</strong> Dieses Dashboard dient ausschliesslich zur groben Orientierung und ersetzt in keinem Fall das Einholen offizieller Flugwetter- und NOTAM-Informationen für die Flugvorbereitung. Alle Angaben, Berechnungen und Bilder sind ohne Gewähr.
     </div>
@@ -1646,6 +1647,8 @@
     document.addEventListener('visibilitychange', function () {
       if (!document.hidden) refreshCams();
       if (!document.hidden && Date.now() - ai.loadedAt > 600000) loadAi();
+      // Messwerte nach einer Pause neu laden: sonst stehen bis zum nächsten 10-min-Takt alte Werte da
+      if (!document.hidden && wxLoadedAt && Date.now() - wxLoadedAt > 300000) loadWetter();
     });
     if (lastEl) lastEl.textContent = nowStr();
 
@@ -1807,21 +1810,44 @@
           text:  'Klassischer Föhn-Indikator: Druckdifferenz über den Alpenkamm, gerechnet aus den METAR-QNH von Lugano-Agno (LSZA) minus Zürich-Kloten (LSZH); ganze hPa, neue Meldung alle 30&nbsp;Min. Das KI-Briefing nutzt denselben Wert. Grosse positive Werte = Südföhn auf der Alpennordseite – Turbulenz, Leewellen und kräftiger Höhenwind bis ins Zürcher Oberland. Negativ = Nord-/Bisenlage. Bis ±2&nbsp;hPa unauffällig, ab ±4&nbsp;hPa Föhnlage wahrscheinlich.'
         });
       }
-      if (briefing.gustKt !== undefined && briefing.gustKt !== null) {
-        var g = Math.round(briefing.gustKt);
-        out.push({
-          color: g < 15 ? G : (g < 25 ? Y : R),
-          chip:  'Böen ' + g + ' kt',
-          title: 'Wind / Böen am Platz',
-          value: g + ' kt Böenspitze (Wetterstation Speck)',
-          text:  'Böenspitze (10&nbsp;Min) der Station direkt am Platz. Ab 15&nbsp;kt wird es für Start und Landung anspruchsvoller (gelb), ab 25&nbsp;kt kritisch (rot). Höhenwind und Verlauf: Wetter-Panel und 12-h-Trend.'
-        });
+      var bw = briefing.wx;                 // undefined = Messwerte noch nicht geladen
+      if (bw !== undefined) {
+        var bv = bw.gustKt !== null ? bw.gustKt : bw.windKt;   // ohne Böenwert zählt der Mittelwind
+        var wLimits = 'Ab 15&nbsp;kt wird es für Start und Landung anspruchsvoller (gelb), ab 25&nbsp;kt kritisch (rot). Höhenwind und Verlauf: Wetter-Panel und 12-h-Trend.';
+        if (bv === null) {                  // beide Quellen ohne Wind: grauer Chip, nie «0 kt» und nie grün
+          out.push({
+            color: N, chip: 'Wind: keine Daten', title: 'Wind / Böen am Platz',
+            value: 'keine aktuellen Daten',
+            text:  'Weder die MeteoSchweiz-Station Pfäffikon&nbsp;ZH noch die Wetterstation Speck liefert zurzeit einen aktuellen Windwert. Anhaltspunkte: Windsack auf der Kamera «Speck – Tankstelle» und METAR Dübendorf im Wetter-Panel.'
+          });
+        } else {
+          var g = Math.round(bv), gIsGust = bw.gustKt !== null;
+          var gLate = !bw.ersatz && bw.alterMin !== null && bw.alterMin > PFA_LATE_MIN;
+          var gUm = bw.zeit ? ' · Messung ' + aiHM(bw.zeit) + ' Uhr' + (gLate ? ' (über ' + PFA_LATE_MIN + '&nbsp;min alt)' : '') : '';
+          out.push({
+            // nie grün im Ersatzbetrieb (Speck misst zu tief) und bei einer Messung, die über PFA_LATE_MIN alt ist
+            color: g >= 25 ? R : (g >= 15 ? Y : ((bw.ersatz || gLate) ? N : G)),
+            chip:  (gIsGust ? 'Böen ' : 'Wind ') + g + ' kt' + (bw.ersatz ? ' (Ersatz)' : ''),
+            title: 'Wind / Böen am Platz',
+            value: g + ' kt ' + (gIsGust ? (bw.ersatz ? 'Böenspitze' : 'Böenspitze (1&nbsp;s)') : '10-min-Mittel') + gUm +
+                   (bw.ersatz ? ' · Ersatz: Wetterstation Speck' : ' · MeteoSchweiz Pfäffikon&nbsp;ZH'),
+            text:  bw.ersatz
+              ? 'Die MeteoSchweiz-Station Pfäffikon&nbsp;ZH ist zurzeit nicht verfügbar; der Wert stammt von der Wetterstation Speck am Platz. Sie misst den Wind erfahrungsgemäss deutlich zu tief: als Mindestwert lesen. Darum zeigt die Ampel hier nie Grün. ' + wLimits
+              : 'Höchste Sekundenböe der letzten gemeldeten 10&nbsp;Minuten an der MeteoSchweiz-Station Pfäffikon&nbsp;ZH, rund 80&nbsp;m neben der Piste beim Pistenanfang 12 (Wind auf 10-m-Mast). Der Wert ist in der Regel 10 bis 20&nbsp;Minuten alt; ist er über 30&nbsp;Minuten alt, zeigt die Ampel nie Grün. ' + wLimits + ' Quelle: MeteoSchweiz.'
+          });
+        }
       }
-      if (briefing.rainNow > 0) {
+      var bRain = bw ? (bw.quelle === 'pfa' ? bw.rain10 : bw.rainMmH) : null;
+      if (bRain > 0) {
         out.push({
-          color: R, chip: 'Regen jetzt', title: 'Niederschlag',
-          value: 'es regnet aktuell am Platz',
-          text:  'Aktuelle Regenrate der Wetterstation Speck. Für die Entwicklung: Wetterradar im Wetter-Panel und Regen-Zeile im 12-h-Trend.'
+          color: R, chip: 'Regen am Platz', title: 'Niederschlag',
+          value: bw.quelle === 'pfa'
+            ? bRain.toFixed(1).replace('.', ',') + ' mm in 10&nbsp;min (bis ' + aiHM(bw.rainZeit) + ' Uhr)'
+            : 'Regenrate ' + bRain.toFixed(1).replace('.', ',') + ' mm/h',
+          text:  (bw.quelle === 'pfa'
+            ? 'Niederschlag der letzten gemeldeten 10&nbsp;Minuten an der MeteoSchweiz-Station Pfäffikon&nbsp;ZH neben der Piste (Quelle: MeteoSchweiz).'
+            : 'Regenrate der Wetterstation Speck (Ersatz, weil MeteoSchweiz Pfäffikon nicht verfügbar ist).') +
+            ' Für die Entwicklung: Wetterradar im Wetter-Panel und Regen-Zeile im 12-h-Trend.'
         });
       } else if (briefing.rainProb !== undefined) {
         out.push({
@@ -2278,6 +2304,212 @@
         .catch(function() { return none; });
     }
 
+    /* ── Messwerte am Platz (seit 18.11.2026) ──────────────────────────────────
+       Hauptquelle: MeteoSchweiz-Station Pfäffikon ZH (PFA, SwissMetNet, 537 m), rund 80 m neben der Piste
+       beim Pistenanfang 12, Wind auf 10-m-Mast. Zehnminutenwerte, Zeitstempel = ENDE des Intervalls (UTC).
+       Zwei öffentliche Dateien (CORS offen, Quellenangabe «Quelle: MeteoSchweiz» ist Pflicht):
+         PFA_URL  Stationsdatei mit allen Zeilen seit 00:00 UTC; eine Zeile erscheint frühestens 9 min nach
+                  Intervallende, am 18.11.2026 aber bis 42 min danach (jüngster Wert zeitweise 52 min alt)
+         SMN_URL  Hauptparameter aller Stationen (VQHA80), nur der jüngste Wert, rund 10 min nach Intervallende
+       Beide werden zusammengelegt; es zählt je Messgruppe der jüngste gefüllte Wert.
+       Rückfall: Davis-Station Speck (data/lszk_latest.json), nur solange ihre Aussensensoren leben.
+       Alle Anzeigen (Wetter-Panel, Pistendiagramm, Ampel) lesen nur das Objekt aus pickWx(). */
+    var PFA_URL    = 'https://data.geo.admin.ch/ch.meteoschweiz.ogd-smn/pfa/ogd-smn_pfa_t_now.csv';
+    var SMN_URL    = 'https://data.geo.admin.ch/ch.meteoschweiz.messwerte-aktuell/VQHA80.csv';
+    var PFA_LINK   = 'https://www.meteoschweiz.admin.ch/service-und-publikationen/applikationen/messwerte-und-messnetze.html#param=messnetz-automatisch&station=PFA';
+    var SPECK_LINK = 'https://www.weatherlink.com/embeddablePage/show/411b7945460c42848a14d053bb7c03c0/wide';
+    var PFA_MAX_AGE_MIN   = 60;     // älter: MeteoSchweiz gilt als ausgefallen -> Rückfall auf Speck
+    var PFA_LATE_MIN      = 30;     // älter: Hinweis «Messung über 30 min alt»
+    var SPECK_MAX_AGE_MIN = 30;     // letzter Empfang der Speck-Station
+    var WX_STALE_MIN      = 45;     // ab diesem Alter gilt window.LSZK_WX als veraltet (stale): Rechner sollen dann nicht rechnen
+    var WX_TIMEOUT_MS     = 8000;   // eine hängende Fremdquelle darf Platzstatus und METAR nicht aufhalten
+    var wx = null;                  // normalisiertes Wetterobjekt (siehe wxEmpty), null = noch nicht geladen
+    var wxLoadedAt = 0;
+
+    // fetch als Text mit Zeitlimit (ohne AbortController: fehlt in älterem Safari)
+    function fetchText(url, ms) {
+      return new Promise(function (resolve, reject) {
+        var timer = setTimeout(function () { reject(new Error('Timeout')); }, ms);
+        fetch(url, { cache: 'no-store' })
+          .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+          .then(function (t) { clearTimeout(timer); resolve(t); },
+                function (e) { clearTimeout(timer); reject(e); });
+      });
+    }
+
+    // Zahl aus einer CSV-Zelle; alles andere (leer, «-», Text) ist «kein Wert»
+    function wxNum(v, min, max) {
+      if (typeof v !== 'string' || !/^\s*-?\d+(\.\d+)?\s*$/.test(v)) return null;
+      var n = parseFloat(v);
+      return (n < min || n > max) ? null : n;
+    }
+
+    // Zeilen der Station PFA aus einer MeteoSchweiz-CSV: [{ t: ms UTC, c: zellen, h: { spalte: index } }].
+    // Liest beide Formate: Stationsdatei («DD.MM.YYYY HH:MM») und VQHA80 («YYYYMMDDHHMM»); in beiden steht
+    // das Stationskürzel in der ersten und die Zeit in der zweiten Spalte. Alles Unlesbare ergibt [].
+    function smnRows(txt) {
+      var rows = [];
+      if (typeof txt !== 'string') return rows;
+      var lines = txt.replace(/^\uFEFF/, '').split(/\r?\n/);
+      var names = lines[0].split(';'), h = {}, i, c, m, t;
+      for (i = 0; i < names.length; i++) h[names[i].replace(/^\s+|\s+$/g, '')] = i;
+      if (h.fu3010z0 === undefined) return rows;            // keine Messwert-Datei (z. B. Fehlerseite)
+      for (i = 1; i < lines.length; i++) {
+        c = lines[i].split(';');
+        if (c[0] !== 'PFA' || c.length < 3) continue;
+        m = /^(\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2})$/.exec(c[1]);
+        if (m) {
+          t = Date.UTC(+m[3], +m[2] - 1, +m[1], +m[4], +m[5]);
+        } else {
+          m = /^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})$/.exec(c[1]);
+          if (!m) continue;
+          t = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
+        }
+        rows.push({ t: t, c: c, h: h });
+      }
+      return rows;
+    }
+
+    // Normalisiertes Wetterobjekt. Jedes Feld ist eine Zahl bzw. ein Date oder null (= kein aktueller Wert).
+    //   quelle 'pfa' | 'speck' | null     ersatz true = Rückfall auf die Speck-Station
+    //   datei 'station' | 'vqha80' | null  MeteoSchweiz-Datei, aus der Messzeit und Wind stammen (Diagnose)
+    //   zeit / alterMin                   Messzeit (PFA: Ende des Zehnminutenintervalls) und Alter beim Laden
+    //   windKt, windDir, gustKt           10-min-Mittel, Richtung in Grad, Böenspitze (PFA: 1 s; Speck: 10 Min High)
+    //   tempC, dewC, humPct, qnh, qfe     qnh in hPa (Speck: Stationsbarometer, 2–3 hPa unter dem QNH); qfe nur PFA
+    //   qnhDelta3h, qnhTrend              Änderung in 3 h (nur PFA) und Klasse -2 … +2
+    //   rain10, rainMmH, rainZeit         Summe 10 min in mm (nur PFA), Rate in mm/h, Messzeit des Regenwerts
+    //   rain1h                            Summe der letzten 60 min in mm (nur PFA und nur mit allen sechs Zehnminutenwerten)
+    function wxEmpty(quelle) {
+      return { quelle: quelle, ersatz: quelle === 'speck', datei: null, zeit: null, alterMin: null,
+               windKt: null, windDir: null, gustKt: null, tempC: null, dewC: null, humPct: null,
+               qnh: null, qfe: null, qnhDelta3h: null, qnhTrend: null,
+               rain10: null, rainMmH: null, rainZeit: null, rain1h: null };
+    }
+
+    // MeteoSchweiz PFA: je Messgruppe der jüngste gefüllte Wert der letzten PFA_MAX_AGE_MIN Minuten
+    // (in der jüngsten Zeile der Stationsdatei fehlen oft einzelne Felder, z. B. der Niederschlag)
+    function pfaWx(rows, nowMs) {
+      rows = (rows || []).slice().sort(function (a, b) { return a.t - b.t; });
+      function cell(row, name, min, max) {
+        return row.h[name] === undefined ? null : wxNum(row.c[row.h[name]], min, max);
+      }
+      var wRow = null, tRow = null, qRow = null, rRow = null, i, r;
+      for (i = rows.length - 1; i >= 0 && (nowMs - rows[i].t) / 60000 <= PFA_MAX_AGE_MIN; i--) {
+        r = rows[i];
+        if (!wRow && cell(r, 'fu3010z0', 0, 300) !== null) wRow = r;
+        if (!tRow && cell(r, 'tre200s0', -50, 60) !== null) tRow = r;
+        if (!qRow && cell(r, 'pp0qnhs0', 900, 1100) !== null) qRow = r;
+        if (!rRow && cell(r, 'rre150z0', 0, 100) !== null) rRow = r;
+      }
+      var ref = wRow || tRow || qRow;
+      if (!ref) return null;
+      var o = wxEmpty('pfa');
+      o.datei = ref.h.station_abbr !== undefined ? 'station' : 'vqha80';
+      o.zeit = new Date(ref.t);
+      o.alterMin = (nowMs - ref.t) / 60000;
+      if (wRow) {                                  // Mittel, Richtung und Böe immer aus derselben Zeile
+        o.windKt  = cell(wRow, 'fu3010z0', 0, 300) / 1.852;
+        o.windDir = cell(wRow, 'dkl010z0', 1, 360);   // 0 = keine Richtung (nur bei Flaute; Nord ist 360)
+        var g = cell(wRow, 'fu3010z1', 0, 400);    // Böenspitze 1 s: steht in beiden Dateien
+        o.gustKt  = g === null ? null : g / 1.852;
+      }
+      if (tRow) {
+        o.tempC = cell(tRow, 'tre200s0', -50, 60);
+        o.dewC  = cell(tRow, 'tde200s0', -60, 40);
+        o.humPct = cell(tRow, 'ure200s0', 0, 100);
+      }
+      if (qRow) {
+        o.qnh = cell(qRow, 'pp0qnhs0', 900, 1100);
+        o.qfe = cell(qRow, 'prestas0', 800, 1100);
+        for (i = 0; i < rows.length; i++) {        // Tendenz: Zeile genau 3 h früher (fehlt nach dem Tageswechsel der Datei)
+          if (rows[i].t !== qRow.t - 10800000) continue;
+          var q0 = cell(rows[i], 'pp0qnhs0', 900, 1100);
+          if (q0 === null) continue;
+          var d = Math.round((o.qnh - q0) * 10) / 10;
+          o.qnhDelta3h = d;
+          o.qnhTrend = d >= 2 ? 2 : d >= 0.7 ? 1 : d <= -2 ? -2 : d <= -0.7 ? -1 : 0;
+          break;
+        }
+      }
+      if (rRow) {
+        o.rain10   = cell(rRow, 'rre150z0', 0, 100);
+        o.rainMmH  = o.rain10 * 6;
+        o.rainZeit = new Date(rRow.t);
+        // Summe der letzten 60 min: je Zeitstempel ein Wert (beide Dateien können dasselbe Intervall führen),
+        // und nur wenn alle sechs Zehnminutenwerte da sind (sonst wäre die Summe zu klein)
+        var sum = 0, n = 0, seen = {}, v;
+        for (i = 0; i < rows.length; i++) {
+          if (rows[i].t > rRow.t || rows[i].t <= rRow.t - 3600000 || seen[rows[i].t]) continue;
+          v = cell(rows[i], 'rre150z0', 0, 100);
+          if (v === null) continue;
+          seen[rows[i].t] = true;
+          sum += v;
+          n++;
+        }
+        o.rain1h = n === 6 ? Math.round(sum * 10) / 10 : null;
+      }
+      return o;
+    }
+
+    // Speck (Rückfall): nur echte Zahlen aus summary.currConditionValues[].value.
+    // NIE data.current lesen: dort stehen beim Ausfall die Zeichenketten "0" (Temperatur, Wind, Feuchte).
+    function speckWx(data, nowMs) {
+      if (!data || typeof data !== 'object') return null;
+      var cur = data.current || {}, cv = (data.summary || {}).currConditionValues;
+      if (!cv || !cv.length || typeof cur.lastReceived !== 'number') return null;
+      var age = (nowMs - cur.lastReceived) / 60000;
+      if (age > SPECK_MAX_AGE_MIN) return null;
+      function val(name, min, max) {
+        var e = findValue(cv, name);
+        return (e && typeof e.value === 'number' && e.value >= min && e.value <= max) ? e.value : null;
+      }
+      // Die Aussensensoren fallen jede Nacht aus: Temp ist dann null, kurz davor -68 °C. Ohne gültige
+      // Temperatur gilt die ganze Aussenstation als ausgefallen («Rain Rate» meldet dabei weiter 0).
+      var temp = val('Temp', -40, 50);
+      if (temp === null) return null;
+      var o = wxEmpty('speck');
+      o.zeit = new Date(cur.lastReceived);
+      o.alterMin = age;
+      var a10 = val('10 Min Avg Wind Speed', 0, 150);
+      o.windKt  = a10 !== null ? a10 : val('Wind Speed', 0, 150);
+      o.windDir = o.windKt === null ? null : val('Wind Direction', 1, 360);
+      o.gustKt  = o.windKt === null ? null : val('10 Min High Wind Speed', 0, 200);
+      o.tempC   = temp;
+      o.dewC    = val('Dew Point', -40, 40);
+      o.humPct  = val('Hum', 1, 100);
+      o.qnh     = val('Barometer', 900, 1100);
+      var bt = val('Bar Trend', -100, 100);        // Davis: ±60 rasch, ±20 langsam, 0 gleichbleibend
+      o.qnhTrend = bt === null ? null : (bt >= 60 ? 2 : bt >= 20 ? 1 : bt <= -60 ? -2 : bt <= -20 ? -1 : 0);
+      o.rainMmH = val('Rain Rate', 0, 500);
+      return o;
+    }
+
+    // MeteoSchweiz, solange dort ein aktueller Windwert vorliegt; sonst Speck mit Wind; sonst was bleibt
+    function pickWx(pfa, speck) {
+      if (pfa && pfa.windKt !== null) return pfa;
+      if (speck && speck.windKt !== null) return speck;
+      return pfa || speck || wxEmpty(null);
+    }
+
+    // Feste Schnittstelle für weitere Module der Seite (z. B. Start-/Landestreckenrechner): window.LSZK_WX.
+    // Die Feldnamen sind mit den Nutzern abgesprochen und bleiben stabil. Jedes Zahlenfeld ist eine endliche
+    // Zahl oder null; 0 heisst immer «gemessen 0». Bei stale === true nicht rechnen.
+    //   src 'pfa' | 'speck' | null · time = Messzeit in ms seit Epoche · windDir in Grad rechtweisend
+    //   Bei src 'speck' ist der Wind meist deutlich zu tief und qnhHpa kein amtliches QNH.
+    function wxPublic(w) {
+      return {
+        src: w.quelle,
+        srcLabel: w.quelle === 'pfa' ? 'MeteoSchweiz Pfäffikon ZH' : (w.quelle === 'speck' ? 'Wetterstation Speck (Ersatz)' : null),
+        time: (w.zeit && isFinite(w.zeit.getTime())) ? w.zeit.getTime() : null,
+        ageMin: w.alterMin,
+        stale: !w.quelle || w.alterMin === null || w.alterMin >= WX_STALE_MIN,
+        windKt: w.windKt, windDir: w.windDir, gustKt: w.gustKt,
+        tempC: w.tempC, dewC: w.dewC, humPct: w.humPct,
+        qnhHpa: w.qnh, qfeHpa: w.qfe,
+        rainMmH: w.rainMmH, rain1hMm: w.rain1h
+      };
+    }
+
     /* ── Wetterdaten laden (Station + METAR kombiniert) ──── */
     var _stationData = null;
     var _metarData   = null;
@@ -2309,13 +2541,26 @@
         .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
         .catch(function() { return null; });
 
-      Promise.all([pStation, pMetar, pFoehn, pFgzo]).then(function(results) {
+      // MeteoSchweiz PFA direkt aus dem Browser: Stationsdatei (Verlauf seit 00:00 UTC) und VQHA80 (jüngster Wert).
+      // Fällt eine Datei aus, genügt die andere; fallen beide aus, bleibt die Speck-Station als Rückfall.
+      // Ohne «?t=»: fetchText liest mit cache 'no-store' am Browser-Cache vorbei, und der CDN-Cache von MeteoSchweiz
+      // (max-age 10 s) soll nicht mit jeder Abfrage umgangen werden.
+      var pPfa = fetchText(PFA_URL, WX_TIMEOUT_MS).then(smnRows).catch(function() { return []; });
+      var pSmn = fetchText(SMN_URL, WX_TIMEOUT_MS).then(smnRows).catch(function() { return []; });
+
+      Promise.all([pStation, pMetar, pFoehn, pFgzo, pPfa, pSmn]).then(function(results) {
         _stationData = results[0];
         _metarData   = results[1];
         briefing.platz = results[3];
+        var now = Date.now(), pf = null, sp = null;
+        try { pf = pfaWx(results[4].concat(results[5]), now); } catch (e) { pf = null; }
+        try { sp = speckWx(_stationData, now); } catch (e) { sp = null; }   // ein kaputter Rückfall-Datensatz darf die Anzeige nicht aufhalten
+        wx = pickWx(pf, sp);
+        wxLoadedAt = now;
+        window.LSZK_WX = wxPublic(wx);   // feste Schnittstelle für weitere Module und für Tests (siehe wxPublic)
         renderAiButton();   // Platzsperre auch zwischen den Briefings am KI-Button zeigen
         if (aiModalOpen()) renderAiModal();
-        renderAll(el, _stationData, _metarData, results[2]);
+        renderAll(el, wx, _metarData, results[2]);
       });
     }
 
@@ -2327,46 +2572,21 @@
       return null;
     }
 
-    // Sensor-Fehlerwerte filtern (z.B. -68°C bei Davis = "no data")
-    function sane(v, min, max) {
-      if (v === null || v === undefined) return null;
-      var n = parseFloat(v);
-      if (isNaN(n)) return null;
-      if (min !== undefined && n < min) return null;
-      if (max !== undefined && n > max) return null;
-      return n;
-    }
-
-    function renderAll(el, data, m, foehn) {
-      // ─── Station-Daten ──────────────────────────────
-      var cur = (data && data.current) || {};
-      var sum = (data && data.summary) || {};
-      var cv  = sum.currConditionValues || [];
-      var hlv = sum.highLowValues || [];
-
-      var stationZeit = '–';
-      var stationAgeMin = null;
-      if (cur.lastReceived) {
-        var dS = new Date(cur.lastReceived);
-        stationZeit = dS.toLocaleString('de-CH', {
-          day: '2-digit', month: '2-digit', year: 'numeric',
-          hour: '2-digit', minute: '2-digit',
-          timeZone: 'Europe/Zurich'
-        });
-        if (!isNaN(dS.getTime())) stationAgeMin = (Date.now() - dS.getTime()) / 60000;
-      }
-      var stationStale = stationAgeMin !== null && stationAgeMin >= 30;
-
-      var temp     = sane(cur.temperature, -50, 60);
-      var dewp     = sane(findValue(cv, 'Dew Point') && findValue(cv, 'Dew Point').value, -50, 40);
-      var wspdKt   = sane(cur.wind, 0, 200);
-      var wdir     = sane(cur.windDirection, 0, 360);
-      var wavg10   = findValue(cv, '10 Min Avg Wind Speed');
-      var whigh10  = findValue(cv, '10 Min High Wind Speed');
-      var highWindDir = findValue(hlv, 'High Wind Direction');
-      var altim    = sane(cur.barometer, 900, 1100);
-      var trend    = cur.barometerTrend || '–';
-      var rainRate = sane(findValue(cv, 'Rain Rate') && findValue(cv, 'Rain Rate').value, 0, 500);
+    function renderAll(el, w, m, foehn) {
+      // ─── Messwerte am Platz: normalisiertes Objekt aus pickWx() ──────────────
+      // (MeteoSchweiz PFA, im Rückfall Station Speck, sonst lauter null: dann steht nirgends eine Null als Messwert)
+      var pfa = w.quelle === 'pfa', speck = w.quelle === 'speck';
+      var temp   = w.tempC;
+      var dewp   = w.dewC;
+      var wspdKt = w.windKt;
+      var wdir   = w.windDir;
+      var wgstKt = w.gustKt;
+      var altim  = w.qnh;
+      var wxZeit = w.zeit ? w.zeit.toLocaleString('de-CH', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+        timeZone: 'Europe/Zurich'
+      }) : '–';
 
       var spreadStr = '';
       if (temp !== null && dewp !== null) {
@@ -2374,34 +2594,29 @@
         spreadStr = '<span style="white-space: nowrap;">Spread: ' + spread.replace('.', ',') + '&nbsp;°C</span>';
       }
 
-      // Wind
-      var windColor = (wspdKt !== null && wspdKt >= 15) ? '#ef4444' : 'var(--accent)';
-      var windVal = wspdKt !== null
-        ? '<span style="color:' + windColor + '; white-space: nowrap;">' + Math.round(wspdKt) + '&nbsp;kt</span>'
+      // Wind: 10-min-Mittel. «windstill» nur bei einem echten Messwert, der auf 0 kt rundet.
+      var windKtR = wspdKt !== null ? Math.round(wspdKt) : null;
+      var windColor = (windKtR !== null && windKtR >= 15) ? '#ef4444' : 'var(--accent)';
+      var windVal = windKtR !== null
+        ? '<span style="color:' + windColor + '; white-space: nowrap;">' + windKtR + '&nbsp;kt</span>'
         : '–';
       var windSub = '';
-      if (wdir !== null && wspdKt !== null && wspdKt > 0) {
-        windSub = '<span style="white-space: nowrap;">aus ' + Math.round(wdir) + '°</span>';
-      } else if (wspdKt === 0) {
+      if (windKtR === 0) {
         windSub = '<span style="white-space: nowrap;">windstill</span>';
+      } else if (windKtR !== null && wdir !== null) {
+        windSub = '<span style="white-space: nowrap;">aus ' + Math.round(wdir) + '°</span>';
       }
-      if (wavg10 && wavg10.value !== null) {
-        windSub += (windSub ? '<br>' : '') + '<span style="white-space: nowrap;">10-Min Ø: ' + wavg10.value + '&nbsp;kt</span>';
-      }
+      if (windKtR !== null) windSub += (windSub ? '<br>' : '') + '<span style="white-space: nowrap;">10-min-Mittel</span>';
 
-      // Böen = 10-Min High Wind Speed; Richtung aus High Wind Direction oder aktueller Windrichtung
+      // Böenspitze der letzten 10 Minuten (PFA: Sekundenböe; Speck: «10 Min High Wind Speed»)
       var boeenHtml = '';
-      if (whigh10 && whigh10.value !== null) {
-        var gKt = Math.round(whigh10.value);
+      if (wgstKt !== null) {
+        var gKt = Math.round(wgstKt);
         if (gKt > 0) {
           var gColor = gKt >= 15 ? '#ef4444' : 'var(--accent)';
-          var gDir = null;
-          if (highWindDir && highWindDir.value !== null) gDir = Math.round(highWindDir.value);
-          else if (wdir !== null) gDir = Math.round(wdir);
-          var gSub = gDir !== null ? '<span style="white-space: nowrap;">aus ' + gDir + '°</span>' : '';
-          boeenHtml = '<div class="wx-stat"><div class="wx-stat-label">Böen (10&nbsp;Min)</div>' +
+          boeenHtml = '<div class="wx-stat"><div class="wx-stat-label">' + (pfa ? 'Böenspitze (1&nbsp;s)' : 'Böen (10&nbsp;min)') + '</div>' +
             '<div class="wx-stat-value" style="color:' + gColor + '; white-space: nowrap;">' + gKt + '&nbsp;kt</div>' +
-            (gSub ? '<div class="wx-stat-sub" style="margin-top: 4px;">' + gSub + '</div>' : '') +
+            (pfa ? '<div class="wx-stat-sub" style="margin-top: 4px;"><span style="white-space: nowrap;">in 10&nbsp;min</span></div>' : '') +
             '</div>';
         }
       }
@@ -2409,19 +2624,33 @@
       var tempVal = temp !== null ? temp.toFixed(1).replace('.',',') + '&nbsp;°C' : '–';
       var dewpVal = dewp !== null ? dewp.toFixed(1).replace('.',',') + '&nbsp;°C' : '–';
 
-      var trendArrow = { 'Rising': ' ↑', 'Falling': ' ↓', 'Steady': ' →' }[trend] || '';
-      var qnhVal = altim !== null ? Math.round(altim) + '&nbsp;hPa' : '–';
-      var qnhSub = '<span style="white-space: nowrap;">Trend: ' + trend + trendArrow + '</span>';
+      // QNH mit Tendenz: PFA rechnet sie aus dem Wert vor 3 h, Speck liefert nur die Klasse
+      var trendTxt = { '-2': 'fällt rasch ↓', '-1': 'fällt ↓', '0': 'gleichbleibend →', '1': 'steigt ↑', '2': 'steigt rasch ↑' };
+      // Das QNH von MeteoSchweiz wird wie im METAR auf ganze hPa abgerundet; der Speck-Luftdruck ist kein QNH
+      var qnhVal = altim !== null ? (pfa ? Math.floor(altim) : Math.round(altim)) + '&nbsp;hPa' : '–';
+      var qnhSub = '';
+      if (w.qnhTrend !== null) qnhSub = '<span style="white-space: nowrap;">' + trendTxt[w.qnhTrend] + '</span>';   // ohne Vorwort «Tendenz:», sonst ragt der Text bei 375 px aus der Kachel
+      if (w.qnhDelta3h !== null) {
+        qnhSub += (qnhSub ? '<br>' : '') + '<span style="white-space: nowrap;">' + (w.qnhDelta3h > 0 ? '+' : (w.qnhDelta3h < 0 ? '−' : '±')) +
+          Math.abs(w.qnhDelta3h).toFixed(1).replace('.', ',') + '&nbsp;hPa in 3&nbsp;h</span>';
+      }
+      if (speck && altim !== null) qnhSub += (qnhSub ? '<br>' : '') + '<span>kein amtliches QNH</span>';
 
-      // Regenrate
+      // Niederschlag: PFA = Summe der letzten gemeldeten 10 Minuten, Speck = Regenrate
       var regenrateHtml = '';
-      if (rainRate !== null) {
-        var isRaining = rainRate > 0;
+      if (pfa && w.rain10 !== null) {
+        var wet = w.rain10 > 0;
+        regenrateHtml = '<div class="wx-stat"><div class="wx-stat-label">Regen (10&nbsp;min)</div>' +
+          '<div class="wx-stat-value" style="color:' + (wet ? '#38bdf8' : 'var(--accent)') + '; white-space: nowrap;">' +
+          w.rain10.toFixed(1).replace('.',',') + '&nbsp;mm</div>' +
+          '<div class="wx-stat-sub" style="white-space: nowrap;">' + (wet ? 'Regen' : 'Kein Regen') + ' bis ' + aiHM(w.rainZeit) + '</div></div>';
+      } else if (speck && w.rainMmH !== null) {
+        var isRaining = w.rainMmH > 0;
         var rainColor = isRaining ? '#38bdf8' : 'var(--accent)';
         var rainLabel = isRaining ? 'Es regnet' : 'Kein Regen';
         regenrateHtml = '<div class="wx-stat"><div class="wx-stat-label">Regenrate</div>' +
           '<div class="wx-stat-value" style="color:' + rainColor + '; white-space: nowrap;">' +
-          rainRate.toFixed(1).replace('.',',') + '&nbsp;mm/h</div>' +
+          w.rainMmH.toFixed(1).replace('.',',') + '&nbsp;mm/h</div>' +
           '<div class="wx-stat-sub" style="white-space: nowrap;">' + rainLabel + '</div></div>';
       }
 
@@ -2466,13 +2695,11 @@
           '<div class="wx-stat-sub"><span style="white-space:nowrap;">LSZA − LSZH' + fObs + '</span><br>' + fTxt + '</div></div>';
       }
 
-      // Runway Diagram aus Stationsdaten – nur rendern, wenn echte Winddaten da sind
-      var bearing = wdir !== null ? Math.round(wdir) : 0;
-      var diagWspd = (wspdKt !== null ? wspdKt : 0) * 1.852;
-      var diagWgst = (whigh10 && whigh10.value !== null ? whigh10.value : 0) * 1.852;
+      // Pistendiagramm – nur mit echtem Wind: Stärke und Richtung (bei Windstille genügt die Stärke)
       var diagramHtml;
-      if (wspdKt !== null) {
-        diagramHtml = buildRunwayDiagram(bearing, diagWspd, diagWgst);
+      if (wspdKt !== null && (wdir !== null || Math.round(wspdKt) < 2)) {
+        diagramHtml = buildRunwayDiagram(wdir !== null ? Math.round(wdir) : 0, wspdKt * 1.852,
+                                         (wgstKt !== null ? wgstKt : 0) * 1.852);
       } else {
         diagramHtml = '<div style="flex-shrink:0;width:180px;min-height:250px;margin:0 auto;border-radius:10px;' +
           'background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;' +
@@ -2552,18 +2779,30 @@
           '</div>';
       }
 
-      // ─── Sub-Header Station + METAR ───
-      var stationHeader;
-      if (!data) {
+      // ─── Sub-Header: Quelle der Messwerte am Platz + METAR ───
+      var warnStyle = 'color:#f59e0b;font-weight:600;';
+      var stationHeader, quelleHtml = '';
+      if (pfa) {
+        var late = w.alterMin > PFA_LATE_MIN;
         stationHeader =
-          '<div class="wx-subheader">' +
-            '<span class="wx-subheader-text" style="color:#f87171;"><strong><a href="https://www.weatherlink.com/embeddablePage/show/411b7945460c42848a14d053bb7c03c0/wide" target="_blank" rel="noopener">Wetterstation LSZK</a></strong> · nicht verfügbar</span>' +
+          '<div class="wx-subheader"' + (late ? ' style="border-color:#f59e0b;"' : '') + '>' +
+            '<span class="wx-subheader-text"><strong><a href="' + PFA_LINK + '" target="_blank" rel="noopener">MeteoSchweiz Pfäffikon&nbsp;ZH:</a></strong><span class="wx-date"> ' + wxZeit + '</span></span>' +
+            (late ? '<span style="' + warnStyle + 'white-space:nowrap;">⚠ Messung über ' + PFA_LATE_MIN + '&nbsp;min alt</span>'
+                  : '<span style="color:var(--text-muted);white-space:nowrap;">Zehnminutenwerte</span>') +
+          '</div>';
+        quelleHtml = '<div class="wx-updated">Quelle: <a href="' + PFA_LINK + '" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;">MeteoSchweiz</a>' +
+          ' · Station Pfäffikon&nbsp;ZH, rund 80&nbsp;m neben der Piste</div>';
+      } else if (speck) {
+        stationHeader =
+          '<div class="wx-subheader" style="border-color:#f59e0b;">' +
+            '<span class="wx-subheader-text"><strong><a href="' + SPECK_LINK + '" target="_blank" rel="noopener">Ersatzquelle Wetterstation Speck:</a></strong><span class="wx-date"> ' + wxZeit + '</span></span>' +
+            '<span style="' + warnStyle + '">⚠ MeteoSchweiz Pfäffikon nicht verfügbar. Die Station Speck misst den Wind meist zu tief.</span>' +
           '</div>';
       } else {
         stationHeader =
-          '<div class="wx-subheader"' + (stationStale ? ' style="border-color:#f87171;"' : '') + '>' +
-            '<span class="wx-subheader-text"><strong><a href="https://www.weatherlink.com/embeddablePage/show/411b7945460c42848a14d053bb7c03c0/wide" target="_blank" rel="noopener">Wetterstation LSZK:</a></strong><span class="wx-date"> ' + stationZeit + '</span></span>' +
-            (stationStale ? '<span style="color:#f87171;font-weight:600;white-space:nowrap;">⚠ Daten evtl. veraltet</span>' : '') +
+          '<div class="wx-subheader" style="border-color:#f87171;">' +
+            '<span class="wx-subheader-text" style="color:#f87171;"><strong>Messwerte am Platz</strong> · keine aktuellen Daten</span>' +
+            '<span style="white-space:nowrap;"><a href="' + PFA_LINK + '" target="_blank" rel="noopener">MeteoSchweiz</a> · <a href="' + SPECK_LINK + '" target="_blank" rel="noopener">Station Speck</a></span>' +
           '</div>';
       }
 
@@ -2576,9 +2815,7 @@
           '</div>';
 
       // Briefing-Ampel füttern
-      briefing.gustKt  = (whigh10 && whigh10.value !== null && whigh10.value !== undefined)
-        ? sane(whigh10.value, 0, 200) : wspdKt;
-      briefing.rainNow = rainRate;
+      briefing.wx = w;
       briefing.foehnDp = (foehn && foehn.sued !== null && foehn.sued !== undefined && foehn.nord !== null && foehn.nord !== undefined)
         ? (foehn.sued - foehn.nord) : null;
       renderBriefing();
@@ -2593,23 +2830,32 @@
             boeenHtml +
             stat('Temperatur', tempVal) +
             stat('Taupunkt', dewpVal, spreadStr) +
-            stat('QNH', qnhVal, qnhSub) +
+            stat(speck ? 'Luftdruck (Speck)' : 'QNH', qnhVal, qnhSub) +
             regenrateHtml +
             daHtml +
             cbHtml +
             foehnHtml +
           '</div>' +
         '</div>' +
+        quelleHtml +
         metarHeader +
         '<div class="wx-stats" style="margin-bottom:0;">' +
           catHtml +
           sichtHtml +
           wolkenHtml +
         '</div>';
+
+      // Weitere Module (Start-/Landestreckenrechner) über neue Werte informieren; ein Fehler dort darf das Panel nicht stören
+      if (window.LszkPerf && typeof window.LszkPerf.update === 'function') {
+        try { window.LszkPerf.update(window.LSZK_WX); }
+        catch (e) { if (window.console && console.warn) console.warn('LszkPerf.update:', e); }
+      }
     }
 
     function buildRunwayDiagram(bearing, wspeed, wgust) {
-      var RWY = 120;
+      // Pistenachse rechtweisend: 124°/304° (AD INFO LSZK; missweisend 120°/300°, Variation 4° E).
+      // MeteoSchweiz liefert die Windrichtung rechtweisend, darum wird mit 124° gerechnet und gezeichnet.
+      var RWY = 124;
       var diff    = (bearing - RWY + 360) % 360;
       var diffRad = diff * Math.PI / 180;
       var head  = Math.round(wspeed * Math.cos(diffRad));
