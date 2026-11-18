@@ -948,6 +948,17 @@
       </div>
     </div>
 
+    <!-- Start-/Landestrecke nach AFM. Inhalt, Texte und CSS kommen aus perf/perf-ui.js, die Rechnung aus perf/perf.js. -->
+    <div class="wx-card" id="perf-card" data-airfield="lszk" style="display:none;">
+      <div class="wx-card-title">
+        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 20h20"/><path d="M5 20v-3"/><path d="M10 20v-2"/><path d="M15 20v-3"/><path d="M20 20v-2"/><path d="M3 13l6-2 12-7"/>
+        </svg>
+        Start- und Landestrecke – Richtwert nach AFM
+      </div>
+      <div id="perf-content"></div>
+    </div>
+
     <div class="wx-card" id="om-card" style="display:none;">
       <div class="wx-card-title">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -4268,6 +4279,10 @@ load();
     });
   })();
   </script>
+
+  <!-- Start-/Landestreckenrechner (#perf-card): erst Rechenkern, dann Anzeige. ?v= bei jeder Änderung an perf/*.js in beiden Zeilen erhöhen. -->
+  <script defer src="perf/perf.js?v=1"></script>
+  <script defer src="perf/perf-ui.js?v=1"></script>
 
   <!-- GoatCounter: cookielose Aufruf-Statistik (strohmeierh.goatcounter.com) -->
   <!-- Pfad-Präfix: Unter lszk.strowa.ch wäre der Pfad nur "/" (wie bei EDSF). Mit Präfix zählt LSZK weiter als /LSZK-Webcams/ wie vor dem Domainwechsel (16.11.2026). -->
