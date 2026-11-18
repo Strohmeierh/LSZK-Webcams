@@ -1,6 +1,6 @@
 {
-  "fetched_at_utc": "2026-11-18T06:51:20+00:00",
-  "station_last_received_utc": "2026-11-18T06:51:13+00:00",
+  "fetched_at_utc": "2026-11-18T07:01:19+00:00",
+  "station_last_received_utc": "2026-11-18T07:01:16+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
     "windDirection": null,
@@ -8,19 +8,19 @@
       {
         "date": "2026-11-18",
         "morning": {
+          "weatherCode": 48,
+          "weatherDesc": "A Few Thunderstorms",
+          "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Patchylightrainwiththunder.png",
+          "temp": 10,
+          "chanceofrain": 53,
+          "rainInInches": 0.05
+        },
+        "afternoon": {
           "weatherCode": 34,
           "weatherDesc": "A Few Showers",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
-          "temp": 10,
-          "chanceofrain": 54,
-          "rainInInches": 0.06
-        },
-        "afternoon": {
-          "weatherCode": 31,
-          "weatherDesc": "Drizzle",
-          "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
           "temp": 9,
-          "chanceofrain": 54,
+          "chanceofrain": 53,
           "rainInInches": 0.12
         },
         "evening": {
@@ -28,15 +28,15 @@
           "weatherDesc": "Drizzle",
           "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
           "temp": 7,
-          "chanceofrain": 24,
-          "rainInInches": 0.07
+          "chanceofrain": 37,
+          "rainInInches": 0.11
         },
         "night": {
-          "weatherCode": 31,
-          "weatherDesc": "Drizzle",
-          "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/LightRain.png",
+          "weatherCode": 14,
+          "weatherDesc": "Overcast",
+          "weatherIconUrl": "https://s3.amazonaws.com/static.weatherlink.com/images/forecast/Cloudy.png",
           "temp": 5,
-          "chanceofrain": 35,
+          "chanceofrain": 0,
           "rainInInches": 0.0
         }
       }
@@ -52,18 +52,18 @@
     "temperatureFeelLike": null,
     "temperature": "0",
     "hiTemp": "13",
-    "hiTempDate": 1794960739663,
+    "hiTempDate": 1794960738724,
     "loTemp": "-68",
-    "loTempDate": 1794966619663,
+    "loTempDate": 1794966618724,
     "wind": "0",
     "gust": "23",
-    "gustAt": 1794963019663,
+    "gustAt": 1794963018724,
     "humidity": "0",
     "rain": "0.0",
     "seasonalRain": "601.4",
-    "barometer": "993.5",
-    "barometerTrend": "Steady",
-    "lastReceived": 1794984673000,
+    "barometer": "994.1",
+    "barometerTrend": "Rising Slowly",
+    "lastReceived": 1794985276000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1794984673000,
+    "lastReceived": 1794985276000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
@@ -225,9 +225,9 @@
         "sensorDataTypeId": 26,
         "sensorDataName": "Barometer",
         "displayName": "Barometer",
-        "reportedValue": 993.5,
-        "value": 993.5,
-        "convertedValue": "993.5",
+        "reportedValue": 994.1,
+        "value": 994.1,
+        "convertedValue": "994.1",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -238,9 +238,9 @@
         "sensorDataTypeId": null,
         "sensorDataName": "Bar Trend",
         "displayName": null,
-        "reportedValue": 0,
-        "value": 0,
-        "convertedValue": "Steady",
+        "reportedValue": 20,
+        "value": 20,
+        "convertedValue": "Rising Slowly",
         "depthLabel": null,
         "category": null,
         "assocSensorDataTypeId": null,
@@ -487,8 +487,8 @@
         "sensorDataTypeId": null,
         "sensorDataName": "High Bar",
         "displayName": null,
-        "reportedValue": 993.7,
-        "value": 993.7,
+        "reportedValue": 994.1,
+        "value": 994.1,
         "convertedValue": null,
         "depthLabel": null,
         "category": null,
@@ -643,8 +643,8 @@
         "sensorDataTypeId": null,
         "sensorDataName": "High Bar Time",
         "displayName": null,
-        "reportedValue": 739,
-        "value": 739,
+        "reportedValue": 800,
+        "value": 800,
         "convertedValue": null,
         "depthLabel": null,
         "category": null,
