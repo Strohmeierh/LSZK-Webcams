@@ -2,16 +2,16 @@
  "schema_version": 1,
  "sued": {
   "icao": "LSZA",
-  "obs_utc": "2026-11-18T18:20:00+00:00",
+  "obs_utc": "2026-11-18T18:50:00+00:00",
   "qnh": 1000,
-  "raw": "METAR LSZA 181820Z 02003KT 350V080 CAVOK 07/06 Q1000",
+  "raw": "METAR LSZA 181850Z VRB03KT CAVOK 07/06 Q1000",
   "source": "aviationweather.gov"
  },
  "nord": {
   "icao": "LSZH",
-  "obs_utc": "2026-11-18T18:20:00+00:00",
+  "obs_utc": "2026-11-18T18:50:00+00:00",
   "qnh": 1001,
-  "raw": "METAR LSZH 181820Z 31008KT 250V050 8000 SHRA VCTS FEW018 SCT028CB BKN031 08/07 Q1001 TEMPO TSRA",
+  "raw": "METAR LSZH 181850Z 25008KT 210V280 9999 FEW044CB BKN070 10/07 Q1001 TEMPO TSRA",
   "source": "aviationweather.gov"
  },
  "index_hpa": -1
