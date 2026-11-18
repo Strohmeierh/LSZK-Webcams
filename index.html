@@ -1714,7 +1714,10 @@
     var FGZO_SEEN_KEY = 'lszk-fgzo-seen';
     var FGZO_URL = 'https://fgzo.ch/status/';
     // fgzo.ch liefert dem Job ab und zu eine Bot-Abfrage statt der Seite (ok=false, letzter Stand bleibt).
-    // Massgebend ist das Alter des letzten erfolgreichen Abrufs: bis 45 min (zwei, drei Fehlabrufe) gilt er noch.
+    // Massgebend ist das Alter des letzten erfolgreichen Abrufs: bis 45 min (zwei, drei Fehlabrufe) gilt er als aktuell.
+    // Danach zeigt der Chip weiter den letzten bekannten Stand (Wunsch 18.11.: der Status ändert selten), solange der
+    // Abruf von heute ist; das Alter nennt der Hinweis im Detail-Fenster. Ein Stand von gestern oder ohne Abrufzeit
+    // erscheint nicht mehr im Chip. Die Sperre am KI-Knopf (aiFgzoSperre) zählt nur einen aktuellen Stand.
     var FGZO_FRESH_MIN = 45;
 
     function fgzoItem(G, Y, R, N) {
@@ -1742,13 +1745,17 @@
       var fetchedZeit = ageMin === null ? '–' : new Date(p.fetched_at_utc).toLocaleString('de-CH', {
         day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich'
       });
-      var color = failed ? N : ({ gruen: G, gelb: Y, rot: R })[p.ampel] || N;
+      // Farbe und Text des letzten bekannten Stands, auch wenn er veraltet ist (failed): dann warnt das Detail-Fenster.
+      // Obergrenze: Ist der letzte erfolgreiche Abruf nicht von heute (Zürich) oder fehlt seine Zeit, kein Stand im Chip.
+      var fgzoDay = function (ms) { return new Date(ms).toLocaleDateString('de-CH', { timeZone: 'Europe/Zurich' }); };
+      var tooOld = failed && (ageMin === null || fgzoDay(Date.now() - ageMin * 60000) !== fgzoDay(Date.now()));
+      var color = tooOld ? N : ({ gruen: G, gelb: Y, rot: R })[p.ampel] || N;
       var closed = /CLOSED|CLSD/i.test(p.status || '');
       // Sicht der Flächenflieger (vom Job abgeleitet): nur Helikopterbetrieb = gesperrt, rot statt FGZO-Gelb
       var heli = !closed && p.flaeche === 'gesperrt';
-      if (heli && !failed) color = R;
+      if (heli && !tooOld) color = R;
       var chip;
-      if (failed) {
+      if (tooOld) {
         chip = 'Platz: Daten veraltet';
       } else if (closed) {
         chip = 'Platz ' + escHtml(p.status);
@@ -1760,7 +1767,7 @@
         if (rwy.length > 24) rwy = rwy.slice(0, 23) + '…';
         chip = 'Platz · ' + escHtml(p.traffic || p.status || '?') + (rwy ? ' · ' + escHtml(rwy) : '');
       }
-      if (isNew && !failed) chip += ' · <span class="brf-new">neu</span>';
+      if (isNew && !tooOld) chip += ' · <span class="brf-new">neu</span>';
 
       var value = escHtml(p.status || '?') +
         (heli ? ' – für Flächenflugzeuge gesperrt' + (p.flaeche_grund ? ' (' + escHtml(p.flaeche_grund) + ')' : '')
