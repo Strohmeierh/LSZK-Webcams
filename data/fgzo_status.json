@@ -1,8 +1,8 @@
 {
-  "ok": false,
-  "fetched_at_utc": "2026-11-18T09:31:12+00:00",
-  "failed_at_utc": "2026-11-18T10:01:25+00:00",
-  "error": "ValueError: bot challenge page received",
+  "ok": true,
+  "fetched_at_utc": "2026-11-18T10:11:13+00:00",
+  "failed_at_utc": null,
+  "error": null,
   "source": "https://fgzo.ch/status/",
   "ampel": "gelb",
   "status": "OPEN",
@@ -11,8 +11,8 @@
   "notice": "Nur Helikopter-Betrieb erlaubt!\n\nRunway condition LSZK / 18.11.2026 / 0700 LT / STANDING WATER",
   "runway_line": "Runway condition LSZK / 18.11.2026 / 0700 LT / STANDING WATER",
   "runway_condition": "STANDING WATER",
-  "contact": "Kontakt: +41 44 954 12 53 / Office, allenfalls +41 44 954 12 52 / C-Büro",
-  "updated": "18.11.2026, 07:14",
+  "contact": "Kontakt: +41 76 397 72 99 / P. Kummer, allenfalls +41 44 954 12 52 / C-Büro",
+  "updated": "18.11.2026, 10:38",
   "flaeche": "gesperrt",
   "flaeche_grund": "nur Helikopterbetrieb"
 }
