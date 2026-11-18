@@ -37,7 +37,8 @@
   var LABEL_MAX = 60;
   // Entscheid F-C: Regen von MeteoSchweiz macht die Piste nass (neben einer FGZO-Meldung ungleich DRY)
   var WET_BY_RAIN = true;
-  // Entscheid des Benutzers offen: «Richtwert AFM» sichtbar in der Kurzzeile (nur mit Zahlen, direkt nach dem Kopf).
+  // Entscheid des Benutzers offen: «Richtwert AFM» sichtbar in der Kurzzeile (direkt nach dem Kopf, nur wenn mindestens
+  // eine Zeile eine Zahl zeigt).
   // Ausgeliefert aus. Umschalten = diese Zeile und den Test der ausgelieferten Stellung in tests/perf-teaser.test.js ändern.
   var TEASER_AFM_TAG = false;
 
@@ -1048,10 +1049,15 @@
      die gezeigte Länge übersteigt; fehlt einer Piste der Wert, steht «kein Wert». So ist die Zeile nie günstiger als
      die Karte. Ein Vorbehalt (⚠) steht genau dann, wenn die Karte ein gelbes Element zeigt oder ohne Windrichtung
      gerechnet wurde (bis 3 kt Rückenwind möglich). Farben nur über Klassen. */
+  // Zeigt die Zeile dieser Phase eine Zahl? Nur wenn jede gerechnete Piste in der Phase einen Wert hat, sonst «kein Wert».
+  function phaseHasValue(ph, computed) {
+    return computed.every(function (r) { return r[ph] && r[ph].ok; });
+  }
+
   function teaserRowHtml(ph, computed) {
     var label = '<span class="perf-nw">' + PHASE_LABEL[ph] + ' über 15&nbsp;m: ';
     var ps = computed.map(function (r) { return r[ph]; });
-    if (!ps.every(function (p) { return p && p.ok; })) {
+    if (!phaseHasValue(ph, computed)) {
       return '<span class="perf-t-row">' + label + '<span class="perf-nov">' + TEASER.noValue + '</span></span></span>';
     }
     var vals = ps.map(function (p) { return p.m.overObstacle; });
@@ -1106,15 +1112,17 @@
   }
 
   // Kopf: Muster, «windstill» bzw. «Wind quer», Pisten. Ohne Windrichtung steht kein Wort im Kopf, das sagt die
-  // Vorbehaltszeile. Mit m.afmTag folgt «Richtwert AFM» als eigenes Element (nur mit Zahlen).
+  // Vorbehaltszeile. Mit m.afmTag folgt «Richtwert AFM» als eigenes Element, aber nur, wenn mindestens eine Zeile eine
+  // Zahl zeigt (nicht bei zweimal «kein Wert»).
   function teaserHtml(m) {
     var h, warn;
     if (m.kind === 'result') {
       var c = m.computed;
       var where = c.length === 1 ? 'Piste&nbsp;' + esc(c[0].id) : (c.length === 2 ? 'beide Pisten' : c.length + ' Pisten');
       var word = m.hintKind === 'calm' ? TEASER.calm : (m.hintKind === 'cross' ? TEASER.cross : '');
+      var tag = m.afmTag && core.PHASES.some(function (ph) { return phaseHasValue(ph, c); });
       h = '<span class="perf-t-head">' + esc(clip(m.ac.label, LABEL_MAX)) + ' · ' + (word ? word + ' · ' : '') + where + '</span>' +
-        (m.afmTag ? '<span class="perf-t-tag">' + TEASER.afmTag + '</span>' : '') +
+        (tag ? '<span class="perf-t-tag">' + TEASER.afmTag + '</span>' : '') +
         core.PHASES.map(function (ph) { return teaserRowHtml(ph, c); }).join('');
       warn = teaserWarnings(m);
     } else {

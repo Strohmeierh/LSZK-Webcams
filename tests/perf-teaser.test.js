@@ -183,6 +183,8 @@ test('Kurzzeile mit Ergebnis: Kopf, je Phase «über 15 m» gegen «verfügbar»
         row('Landung über 15 m: 520 m · verfügbar ab 520 m')]],
     ['eine Piste, windstill (Hinweis im Kopf)', parts(wxPfa({ tempC: 20, qnhHpa: 1013.25, windDir: null, windKt: 0 }), { airfield: one }),
       [HEAD + 'Cessna 172 Diesel · windstill · Piste 12', row('Start über 15 m: [amber]525 m · verfügbar 520 m'), row('Landung über 15 m: 520 m · verfügbar 625 m')]],
+    ['eine Piste, ohne Windrichtung: Vorbehalt auch bei nur einer gerechneten Piste', parts(wxPfa({ tempC: 3, qnhHpa: 1022, windDir: null, windKt: 2 }), { airfield: one }),
+      [HEAD + 'Cessna 172 Diesel · Piste 12', row('Start über 15 m: 489 m · verfügbar 520 m'), row('Landung über 15 m: 506 m · verfügbar 625 m'), warn(DIR)]],
     ['eine Piste ohne Wert, die andere mit: «kein Wert», nie die Zahl der anderen Piste',
       parts(wxPfa({ tempC: 20, qnhHpa: 1013.25, windDir: null, windKt: 0 }), { aircraft: withoutGrass(C172D, 'takeoff'), airfield: mixed }),
       [HEAD + 'Cessna 172 Diesel · windstill · beide Pisten', row('Start über 15 m: [nov]kein Wert'), row('Landung über 15 m: bis 520 m · verfügbar ab 520 m')]]
@@ -446,6 +448,7 @@ test('Gleichlauf: Kurzzeile und Karte aus einer Rechnung, über alle LSZK-Kontro
       gleichlauf(ctxOf(w, { aircraft: ac, airfield: mixed }), 'gemischter Belag' + tag, stats);
       gleichlauf(ctxOf(w, { aircraft: ac, airfield: pavedFirst }), 'gemischter Belag gespiegelt' + tag, stats);
       gleichlauf(ctxOf(w, { aircraft: ac, airfield: three }), 'drei Pisten' + tag, stats);
+      gleichlauf(ctxOf(w, { aircraft: ac, airfield: one }), 'eine Piste' + tag, stats);
       core.PHASES.forEach((ph) => {
         gleichlauf(ctxOf(w, { aircraft: withoutGrass(ac, ph), airfield: mixed }), 'eine Piste ohne Wert ' + ph + tag, stats);
         gleichlauf(ctxOf(w, { aircraft: withoutGrass(ac, ph), airfield: pavedFirst }), 'eine Piste ohne Wert, gespiegelt ' + ph + tag, stats);
@@ -622,7 +625,7 @@ test('Schalter «Richtwert AFM»: ausgeliefert aus (Umschalten ändert genau die
   assert.equal(p.teaser.includes('perf-t-tag'), ui.TEASER_AFM_TAG);
 });
 
-test('Schalter «Richtwert AFM» eingeschaltet: eigenes Element direkt nach dem Kopf, nur mit Zahlen; Karte und übrige Kurzzeile unverändert', () => {
+test('Schalter «Richtwert AFM» eingeschaltet: eigenes Element direkt nach dem Kopf, nur wenn eine Zeile eine Zahl zeigt; Karte und übrige Kurzzeile unverändert', () => {
   const TAG = '<span class="perf-t-tag">Richtwert AFM</span>';
   const ctxs = [];
   CASES.forEach(([id, acId, field, inp]) => {
@@ -639,24 +642,30 @@ test('Schalter «Richtwert AFM» eingeschaltet: eigenes Element direkt nach dem 
   ctxs.push(['FGZO lädt', ctxOf(wxPfa(), { fgzoPending: true })], ['Daten laden', ctxOf(wxPfa(), { dataState: 'loading', aircraft: null })],
     ['Datenfehler', ctxOf(wxPfa(), { dataState: 'error', aircraft: null, notice: 'x' })], ['keine Gegenwindpiste', ctxOf(wxPfa(), { airfield: one })],
     ['drei Pisten', ctxOf(wxPfa({ tempC: 20, qnhHpa: 1013.25, windDir: null, windKt: 0 }), { airfield: three })]);
-  let results = 0, others = 0;
+  let results = 0, others = 0, noNumber = 0;
   ctxs.forEach(([label, ctx]) => {
     const off = ui.renderParts(Object.assign({}, ctx, { afmTag: false }));
     const on = ui.renderParts(Object.assign({}, ctx, { afmTag: true }));
     assert.equal(on.sel + on.body, off.sel + off.body, label + ': Karte');
     assert.ok(!off.teaser.includes('perf-t-tag'), label + ': Zusatz trotz Stellung aus');
-    if (off.kind === 'result') {
+    // Eine Zeile zeigt eine Zahl genau dann, wenn sie ein <b> enthält; bei zweimal «kein Wert» kein Zusatz
+    if (off.kind === 'result' && off.teaser.includes('<b')) {
       results++;
       const end = off.teaser.indexOf('</span>') + '</span>'.length;           // Ende des Kopfs (ohne innere Elemente)
       assert.ok(off.teaser.startsWith('<span class="perf-t-head">'), label);
       assert.equal(on.teaser, off.teaser.slice(0, end) + TAG + off.teaser.slice(end), label + ': Zusatz direkt nach dem Kopf');
       assertCleanTeaser(on.teaser, label);
     } else {
-      others++;
-      assert.equal(on.teaser, off.teaser, label + ': Zusatz in einem Zustand ohne Zahlen');
+      if (off.kind === 'result') noNumber++; else others++;
+      assert.equal(on.teaser, off.teaser, label + ': Zusatz ohne Zahl in der Kurzzeile');
     }
   });
-  assert.ok(results >= 150 && others >= 20, results + ' mit Ergebnis, ' + others + ' ohne');
+  assert.ok(results >= 140 && others >= 20 && noNumber >= 2, results + ' mit Zahl, ' + noNumber + ' Ergebnis ohne Zahl, ' + others + ' ohne Ergebnis');
+  // Zweimal «kein Wert» (304°/41 kt): kein Zusatz; eine Zeile mit Zahl (Tecnam K10a): Zusatz
+  assert.deepEqual(marked(parts(wxPfa({ qnhHpa: 1013.25, windDir: 304, windKt: 41 }), { afmTag: true }).teaser),
+    [HEAD + 'Cessna 172 Diesel · Piste 30', row('Start über 15 m: [nov]kein Wert'), row('Landung über 15 m: [nov]kein Wert')]);
+  assert.deepEqual(marked(parts(wxPfa({ tempC: 10, qnhHpa: 1013.25, windDir: 304, windKt: 22 }), { aircraft: P2010, afmTag: true }).teaser),
+    [HEAD + 'Tecnam P2010 · Piste 30', 'perf-t-tag: Richtwert AFM', row('Start über 15 m: [nov]kein Wert'), row('Landung über 15 m: [amber]789 m · verfügbar 520 m')]);
   // Beispiele: eine Piste (Kopfzeile), windstill nass (eigene Zeile), ohne Windrichtung
   assert.deepEqual(marked(parts(wxPfa(), { afmTag: true }).teaser), [HEAD + 'Cessna 172 Diesel · Piste 30', 'perf-t-tag: Richtwert AFM',
     row('Start über 15 m: 492 m · verfügbar 625 m'), row('Landung über 15 m: 489 m · verfügbar 520 m')]);
