@@ -1,0 +1,321 @@
+{
+  "schema_version": 1,
+  "quelle": "https://www.skybriefing.com/o/dabs?today",
+  "abgerufen_utc": "2026-11-18T09:29:05+00:00",
+  "datum": "2026-11-18",
+  "version": 2,
+  "stand_utc": "2026-11-18T07:45:00+00:00",
+  "fehler": null,
+  "eintraege": [
+    {
+      "sec": 1,
+      "notam": "W0319/26",
+      "gebiet": "LSD12",
+      "fenster": [
+        [
+          "2026-11-18T07:00:00+00:00",
+          "2026-11-18T11:00:00+00:00"
+        ],
+        [
+          "2026-11-18T12:00:00+00:00",
+          "2026-11-18T21:00:00+00:00"
+        ]
+      ],
+      "zeit_roh": "0700 - 1100, 1200 - 2100",
+      "unten": "GND",
+      "oben": "3000m / 9850ft",
+      "unten_ft": 0,
+      "mitte": [
+        47.02777777777778,
+        8.857222222222221
+      ],
+      "radius_km": 3.6,
+      "text": "D-AREA LSD12 SIHLTAL ACT.",
+      "unsicher": false
+    },
+    {
+      "sec": 1,
+      "notam": "W3005/26",
+      "gebiet": "LSR7",
+      "fenster": [
+        [
+          "2026-11-18T06:30:00+00:00",
+          "2026-11-18T21:00:00+00:00"
+        ]
+      ],
+      "zeit_roh": "0630 - 2100",
+      "unten": "GND",
+      "oben": "4700m / 15500ft",
+      "unten_ft": 0,
+      "mitte": [
+        46.40222222222222,
+        7.029166666666667
+      ],
+      "radius_km": 6.5,
+      "text": "R-AREA LSR7 HONGRIN ACT DUE TO FRNG.",
+      "unsicher": false
+    },
+    {
+      "sec": 1,
+      "notam": "W3108/26",
+      "gebiet": "LSR11",
+      "fenster": [
+        [
+          "2026-11-18T13:00:00+00:00",
+          "2026-11-18T17:30:00+00:00"
+        ]
+      ],
+      "zeit_roh": "1300 - 1730",
+      "unten": "GND",
+      "oben": "9600m / 31500ft",
+      "unten_ft": 0,
+      "mitte": [
+        46.681666666666665,
+        9.951666666666666
+      ],
+      "radius_km": 8.9,
+      "text": "R-AREA LSR11 S-CHANF ACT.",
+      "unsicher": false
+    },
+    {
+      "sec": 1,
+      "notam": "W3110/26",
+      "gebiet": "LSR11A",
+      "fenster": [
+        [
+          "2026-11-18T13:00:00+00:00",
+          "2026-11-18T17:30:00+00:00"
+        ]
+      ],
+      "zeit_roh": "1300 - 1730",
+      "unten": "2150m / 7000ft",
+      "oben": "9600m / 31500ft",
+      "unten_ft": 7000,
+      "mitte": [
+        46.60138888888889,
+        9.999722222222221
+      ],
+      "radius_km": 8.3,
+      "text": "R-AREA LSR11A S-CHANF ACT.",
+      "unsicher": false
+    },
+    {
+      "sec": 1,
+      "notam": "W3087/26",
+      "gebiet": "LSR16",
+      "fenster": [
+        [
+          "2026-11-18T07:00:00+00:00",
+          "2026-11-18T16:30:00+00:00"
+        ]
+      ],
+      "zeit_roh": "0700 - 1630",
+      "unten": "GND",
+      "oben": "3200m / 10500ft",
+      "unten_ft": 0,
+      "mitte": [
+        46.126666666666665,
+        9.033333333333333
+      ],
+      "radius_km": 3.7,
+      "text": "R-AREA LSR16 ISONE 1 ACT DUE TO MIL UAV.",
+      "unsicher": false
+    },
+    {
+      "sec": 1,
+      "notam": "W3089/26",
+      "gebiet": "LSR17",
+      "fenster": [
+        [
+          "2026-11-18T07:00:00+00:00",
+          "2026-11-18T16:30:00+00:00"
+        ]
+      ],
+      "zeit_roh": "0700 - 1630",
+      "unten": "GND",
+      "oben": "3200m / 10500ft",
+      "unten_ft": 0,
+      "mitte": [
+        46.10777777777778,
+        8.994444444444444
+      ],
+      "radius_km": 2.6,
+      "text": "R-AREA LSR17 ISONE 2 ACT DUE TO MIL UAV.",
+      "unsicher": false
+    },
+    {
+      "sec": 1,
+      "notam": "W2991/26",
+      "gebiet": "LSR18",
+      "fenster": [
+        [
+          "2026-11-18T07:00:00+00:00",
+          "2026-11-18T22:00:00+00:00"
+        ]
+      ],
+      "zeit_roh": "0700 - 2200",
+      "unten": "GND",
+      "oben": "1350m / 4500ft",
+      "unten_ft": 0,
+      "mitte": [
+        47.43666666666666,
+        7.003055555555555
+      ],
+      "radius_km": 3.8,
+      "text": "R-AREA LSR18 BURE ACT DUE TO MIL UAV ACT.",
+      "unsicher": false
+    },
+    {
+      "sec": 1,
+      "notam": "W3104/26",
+      "gebiet": "LSR39B",
+      "fenster": [
+        [
+          "2026-11-18T08:00:00+00:00",
+          "2026-11-18T10:00:00+00:00"
+        ],
+        [
+          "2026-11-18T13:00:00+00:00",
+          "2026-11-18T15:00:00+00:00"
+        ]
+      ],
+      "zeit_roh": "0800 - 1000, 1300 - 1500",
+      "unten": "2750m / 9000ft",
+      "oben": "FL130",
+      "unten_ft": 9000,
+      "mitte": [
+        46.897777777777776,
+        8.420277777777777
+      ],
+      "radius_km": 10.1,
+      "text": "R-AREA LSR39B BRISEN ACT. LOWER LIMIT 9000FT AMSL OR 2000FT GND WHICHEVER IS HIGHER.",
+      "unsicher": false
+    },
+    {
+      "sec": 1,
+      "notam": "W3103/26",
+      "gebiet": "LSR39C",
+      "fenster": [
+        [
+          "2026-11-18T08:00:00+00:00",
+          "2026-11-18T10:00:00+00:00"
+        ],
+        [
+          "2026-11-18T13:00:00+00:00",
+          "2026-11-18T15:00:00+00:00"
+        ]
+      ],
+      "zeit_roh": "0800 - 1000, 1300 - 1500",
+      "unten": "2750m / 9000ft",
+      "oben": "FL130",
+      "unten_ft": 9000,
+      "mitte": [
+        46.94777777777777,
+        8.675833333333333
+      ],
+      "radius_km": 14.2,
+      "text": "R-AREA LSR39C STOOS ACT. LOWER LIMIT 9000FT AMSL OR 2000FT GND WHICHEVER IS HIGHER.",
+      "unsicher": false
+    },
+    {
+      "sec": 1,
+      "notam": "B1990/26",
+      "gebiet": "",
+      "fenster": [
+        [
+          "2026-11-18T07:30:00+00:00",
+          "2026-11-18T11:00:00+00:00"
+        ],
+        [
+          "2026-11-18T12:30:00+00:00",
+          "2026-11-18T16:00:00+00:00"
+        ]
+      ],
+      "zeit_roh": "0730 - 1100, 1230 - 1600",
+      "unten": "900m / 3000ft",
+      "oben": "FL130",
+      "unten_ft": 3000,
+      "mitte": [
+        46.269444444444446,
+        7.4944444444444445
+      ],
+      "radius_km": 4.7,
+      "text": "SION TEMPO MIL TMA SECT 1 ACT.",
+      "unsicher": false
+    },
+    {
+      "sec": 1,
+      "notam": "B1991/26",
+      "gebiet": "",
+      "fenster": [
+        [
+          "2026-11-18T07:30:00+00:00",
+          "2026-11-18T11:00:00+00:00"
+        ],
+        [
+          "2026-11-18T12:30:00+00:00",
+          "2026-11-18T16:00:00+00:00"
+        ]
+      ],
+      "zeit_roh": "0730 - 1100, 1230 - 1600",
+      "unten": "3050m / 10000ft",
+      "oben": "FL130",
+      "unten_ft": 10000,
+      "mitte": [
+        46.341944444444444,
+        7.743611111111111
+      ],
+      "radius_km": 6.4,
+      "text": "SION TEMPO MIL TMA SECT 3 ACT.",
+      "unsicher": false
+    },
+    {
+      "sec": 1,
+      "notam": "B1992/26",
+      "gebiet": "",
+      "fenster": [
+        [
+          "2026-11-18T07:30:00+00:00",
+          "2026-11-18T11:00:00+00:00"
+        ],
+        [
+          "2026-11-18T12:30:00+00:00",
+          "2026-11-18T16:00:00+00:00"
+        ]
+      ],
+      "zeit_roh": "0730 - 1100, 1230 - 1600",
+      "unten": "1850m / 6000ft",
+      "oben": "FL130",
+      "unten_ft": 6000,
+      "mitte": [
+        46.30583333333333,
+        7.610277777777777
+      ],
+      "radius_km": 7.4,
+      "text": "SION TEMPO MIL TMA SECT 2 ACT.",
+      "unsicher": false
+    },
+    {
+      "sec": 1,
+      "notam": "W3015/26",
+      "gebiet": "",
+      "fenster": [
+        [
+          "2026-11-18T22:30:00+00:00",
+          "2026-11-18T23:59:00+00:00"
+        ]
+      ],
+      "zeit_roh": "2230 - 2359",
+      "unten": "GND",
+      "oben": "FL195",
+      "unten_ft": 0,
+      "mitte": [
+        47.573888888888895,
+        9.047777777777778
+      ],
+      "radius_km": 0.3,
+      "text": "TEMPO R-AREA AMLIKON ESTABLISHED RADIUS 0.2KM (473426N0090252E RADIUS 0.2NM). WX MEASUREMENTS BY REMOTELY PILOTED AERIAL SYSTEM WILL TAKE PLACE. WHITE BLINKING PSN LGT WITH VISUAL RANGE OF AT LEAST 3KM. ENTRY PROHIBITED WHEN ACT EXC HEL EMERG MEDICAL SER (HEMS). FOR INFO ON ACT AND HEMS CTC TEL +41 79 772 93 32 AND REFER TO WWW.MAP.GEO.ADMIN.CH TOPIC AVIATION UAS AWARENESS MAP.",
+      "unsicher": false
+    }
+  ]
+}
