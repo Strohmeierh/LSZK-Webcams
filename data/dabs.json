@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "quelle": "https://www.skybriefing.com/o/dabs?today",
-  "abgerufen_utc": "2026-11-18T12:03:58+00:00",
+  "abgerufen_utc": "2026-11-18T15:03:51+00:00",
   "datum": "2026-11-18",
-  "version": 3,
-  "stand_utc": "2026-11-18T11:45:00+00:00",
+  "version": 4,
+  "stand_utc": "2026-11-18T14:45:00+00:00",
   "fehler": null,
   "eintraege": [
     {
@@ -291,6 +291,28 @@
       ],
       "radius_km": 0.3,
       "text": "TEMPO R-AREA AMLIKON ESTABLISHED RADIUS 0.2KM (473426N0090252E RADIUS 0.2NM). WX MEASUREMENTS BY REMOTELY PILOTED AERIAL SYSTEM WILL TAKE PLACE. WHITE BLINKING PSN LGT WITH VISUAL RANGE OF AT LEAST 3KM. ENTRY PROHIBITED WHEN ACT EXC HEL EMERG MEDICAL SER (HEMS). FOR INFO ON ACT AND HEMS CTC TEL +41 79 772 93 32 AND REFER TO WWW.MAP.GEO.ADMIN.CH TOPIC AVIATION UAS AWARENESS MAP.",
+      "unsicher": false
+    },
+    {
+      "sec": 2,
+      "notam": "W3120/26",
+      "gebiet": "",
+      "fenster": [
+        [
+          "2026-11-18T16:26:00+00:00",
+          "2026-11-18T21:00:00+00:00"
+        ]
+      ],
+      "zeit_roh": "1626 - 2100",
+      "unten": "GND",
+      "oben": "FL130",
+      "unten_ft": 0,
+      "mitte": [
+        46.75,
+        8.133333333333333
+      ],
+      "radius_km": 181.5,
+      "text": "MIL NGT FLT WITH HEL WI FLW TRG AREAS: WOLHUSEN, OLTEN, ZUGERSEE, TRIENGEN, SUSTEN, GRAUBUNDEN, KLAUSEN, SCHANGNAU REF VFR MANUAL RAC 3-2-3 (MIL NGT FLT CHART). UPPER LIMIT: AIRSPACE CLASS E OR MAX ACCORDING TO ITEM G.",
       "unsicher": false
     }
   ]
