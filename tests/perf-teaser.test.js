@@ -116,8 +116,14 @@ const C172 = 'Start- und Landestrecke · Cessna 172 Diesel';
 const state = (t) => 'perf-t-state: ' + t;
 const row = (t) => 'perf-t-row: ' + t;
 const warn = (t) => 'perf-t-warn: ' + WARN + t;
+const DIR = 'Windrichtung unbekannt: Rückenwind möglich';
+const WET = 'Piste nass: Strecken deutlich länger möglich';
+// Gemischter Belag: Graspiste 12 zuerst, Hartbelagpiste 30 danach; gespiegelt mit der Hartbelagpiste an erster Stelle,
+// damit die längste Strecke einmal von der zweiten Piste kommt
 const mixed = clone(AF);
 mixed.runways[1].surface = 'paved';
+const pavedFirst = clone(AF);
+pavedFirst.runways[0].surface = 'paved';
 const one = clone(AF);
 one.runways = one.runways.filter((r) => r.id === '12');
 const three = clone(AF);
@@ -140,9 +146,9 @@ test('Kurzzeile mit Ergebnis: Kopf, je Phase «über 15 m» gegen «verfügbar»
     ['K5 windstill', parts(wxPfa({ tempC: 20, qnhHpa: 1013.25, windDir: null, windKt: 0 })),
       [HEAD + 'Cessna 172 Diesel · windstill · beide Pisten', row('Start über 15 m: [amber]525 m · verfügbar ab 520 m'),
         row('Landung über 15 m: 520 m · verfügbar ab 520 m')]],
-    ['K12 ohne Richtung 2 kt', parts(wxPfa({ tempC: 3, qnhHpa: 1022, windDir: null, windKt: 2 })),
+    ['K12 ohne Richtung 2 kt: Rückenwind möglich', parts(wxPfa({ tempC: 3, qnhHpa: 1022, windDir: null, windKt: 2 })),
       [HEAD + 'Cessna 172 Diesel · ohne Windrichtung · beide Pisten', row('Start über 15 m: 489 m · verfügbar ab 520 m'),
-        row('Landung über 15 m: 506 m · verfügbar ab 520 m')]],
+        row('Landung über 15 m: 506 m · verfügbar ab 520 m'), warn(DIR)]],
     ['K6 quer', parts(wxPfa({ tempC: 25, qnhHpa: 1015, windDir: 214, windKt: 10 })),
       [HEAD + 'Cessna 172 Diesel · Wind quer · beide Pisten', row('Start über 15 m: [amber]560 m · verfügbar ab 520 m'),
         row('Landung über 15 m: [amber]533 m · verfügbar ab 520 m')]],
@@ -168,6 +174,9 @@ test('Kurzzeile mit Ergebnis: Kopf, je Phase «über 15 m» gegen «verfügbar»
     ['gemischter Belag: «bis» und «ab»', parts(wxPfa({ tempC: 20, qnhHpa: 1013.25, windDir: null, windKt: 0 }), { airfield: mixed }),
       [HEAD + 'Cessna 172 Diesel · windstill · beide Pisten', row('Start über 15 m: bis [amber]525 m · verfügbar ab 520 m'),
         row('Landung über 15 m: bis 520 m · verfügbar ab 520 m')]],
+    ['gemischter Belag gespiegelt: längste Strecke von der zweiten Piste', parts(wxPfa({ tempC: 20, qnhHpa: 1013.25, windDir: null, windKt: 0 }), { airfield: pavedFirst }),
+      [HEAD + 'Cessna 172 Diesel · windstill · beide Pisten', row('Start über 15 m: bis [amber]525 m · verfügbar ab 520 m'),
+        row('Landung über 15 m: bis 520 m · verfügbar ab 520 m')]],
     ['drei Pisten', parts(wxPfa({ tempC: 20, qnhHpa: 1013.25, windDir: null, windKt: 0 }), { airfield: three }),
       [HEAD + 'Cessna 172 Diesel · windstill · 3 Pisten', row('Start über 15 m: [amber]525 m · verfügbar ab 520 m'),
         row('Landung über 15 m: 520 m · verfügbar ab 520 m')]],
@@ -189,7 +198,7 @@ test('Kurzzeile mit Ergebnis: Kopf, je Phase «über 15 m» gegen «verfügbar»
     '<span class="perf-t-row"><span class="perf-nw">Landung über 15&nbsp;m: <b>489&nbsp;m</b></span> <span class="perf-nw">· verfügbar 520&nbsp;m</span></span>');
 });
 
-test('Kurzzeile: Vorbehalte ausgeschrieben (Sperre, veraltete Sperre, Nässe, unbekannt), sonst «Hinweis in der Karte»', () => {
+test('Kurzzeile: Vorbehalte in fester Reihenfolge (Sperre, Windrichtung, Nässe bzw. unbekannt, Hinweis in den Details)', () => {
   const R = [row('Start über 15 m: 492 m · verfügbar 625 m'), row('Landung über 15 m: 489 m · verfügbar 520 m')];
   const RW = [row('Start über 15 m: 590 m · verfügbar 625 m'), row('Landung über 15 m: 489 m · verfügbar 520 m')];
   const H = HEAD + 'Cessna 172 Diesel · Piste 30';
@@ -203,29 +212,47 @@ test('Kurzzeile: Vorbehalte ausgeschrieben (Sperre, veraltete Sperre, Nässe, un
     ['geschlossen frisch und nass', parts(wxPfa(), { fgzo: fgzo({ flaeche: 'gesperrt', flaeche_grund: 'geschlossen', runway_condition: 'WET' }) }),
       [H].concat(RW, warn('Platz geschlossen'), warn('Piste nass: Strecken deutlich länger möglich'))],
     ['Sperre veraltet (DRY veraltet: Hinweis)', parts(wxPfa(), { fgzo: fgzo({ flaeche: 'gesperrt', flaeche_grund: 'x', fetched_at_utc: OLD }) }),
-      [H].concat(R, warn('Platz gesperrt (veraltete Meldung)'), warn('Hinweis in der Karte'))],
+      [H].concat(R, warn('Platz gesperrt (veraltete Meldung)'), warn('Hinweis in den Details'))],
     ['geschlossen veraltet', parts(wxPfa(), { fgzo: fgzo({ flaeche: 'gesperrt', flaeche_grund: 'geschlossen', ok: false, fetched_at_utc: null }) }),
-      [H].concat(R, warn('Platz geschlossen (veraltete Meldung)'), warn('Hinweis in der Karte'))],
+      [H].concat(R, warn('Platz geschlossen (veraltete Meldung)'), warn('Hinweis in den Details'))],
     ['Sperre veraltet, Regen unbekannt', parts(wxPfa({ rain1hMm: null, rainMmH: null }), { fgzo: fgzo({ flaeche: 'gesperrt', flaeche_grund: 'x', fetched_at_utc: OLD }) }),
       [H].concat(R, warn('Platz gesperrt (veraltete Meldung)'), warn('Pistenzustand unbekannt'))],
-    ['DRY von gestern', parts(wxPfa(), { fgzo: fgzo({ updated: '17.11.2026, 16:20' }) }), [H].concat(R, warn('Hinweis in der Karte'))],
-    ['DRY mit unklarem Datum', parts(wxPfa(), { fgzo: fgzo({ updated: 'heute früh' }) }), [H].concat(R, warn('Hinweis in der Karte'))],
-    ['DRY veraltet, Regen bekannt', parts(wxPfa(), { fgzo: fgzo({ fetched_at_utc: OLD }) }), [H].concat(R, warn('Hinweis in der Karte'))],
+    ['DRY von gestern', parts(wxPfa(), { fgzo: fgzo({ updated: '17.11.2026, 16:20' }) }), [H].concat(R, warn('Hinweis in den Details'))],
+    ['DRY mit unklarem Datum', parts(wxPfa(), { fgzo: fgzo({ updated: 'heute früh' }) }), [H].concat(R, warn('Hinweis in den Details'))],
+    ['DRY veraltet, Regen bekannt', parts(wxPfa(), { fgzo: fgzo({ fetched_at_utc: OLD }) }), [H].concat(R, warn('Hinweis in den Details'))],
     ['DRY veraltet, Regen unbekannt', parts(wxPfa({ rain1hMm: null, rainMmH: null }), { fgzo: fgzo({ fetched_at_utc: OLD }) }),
       [H].concat(R, warn('Pistenzustand unbekannt'))],
-    ['DRY ohne Zeitstempel', parts(wxPfa(), { fgzo: fgzo({ updated: '' }) }), [H].concat(R, warn('Hinweis in der Karte'))],
+    ['DRY ohne Zeitstempel', parts(wxPfa(), { fgzo: fgzo({ updated: '' }) }), [H].concat(R, warn('Hinweis in den Details'))],
     ['DRY ohne Zeitstempel, Regen unbekannt', parts(wxPfa({ rain1hMm: null, rainMmH: null }), { fgzo: fgzo({ updated: '' }) }),
       [H].concat(R, warn('Pistenzustand unbekannt'))],
     ['kein FGZO, kein Regenwert', parts(wxPfa({ rain1hMm: null, rainMmH: null }), { fgzo: null }), [H].concat(R, warn('Pistenzustand unbekannt'))],
     ['kein FGZO, Regen 0', parts(wxPfa(), { fgzo: null }), [H].concat(R)],
     ['DRY frisch von heute, Regenwert fehlt', parts(wxPfa({ rain1hMm: null, rainMmH: null })), [H].concat(R)],
     ['Standardmuster gewählt', parts(wxPfa(), { notice: 'Flugzeugdaten für «Tecnam P2010» nicht verfügbar – Standardmuster gewählt.' }),
-      [H].concat(R, warn('Hinweis in der Karte'))],
+      [H].concat(R, warn('Hinweis in den Details'))],
     ['Standardmuster und DRY von gestern: ein Hinweis', parts(wxPfa(), { notice: 'x', fgzo: fgzo({ updated: '17.11.2026, 16:20' }) }),
-      [H].concat(R, warn('Hinweis in der Karte'))],
+      [H].concat(R, warn('Hinweis in den Details'))],
     ['Standardmuster, Sperre und unbekannt', parts(wxPfa({ rain1hMm: null, rainMmH: null }), { notice: 'x', fgzo: fgzo({ flaeche: 'gesperrt', fetched_at_utc: OLD }) }),
-      [H].concat(R, warn('Platz gesperrt (veraltete Meldung)'), warn('Pistenzustand unbekannt'), warn('Hinweis in der Karte'))]
+      [H].concat(R, warn('Platz gesperrt (veraltete Meldung)'), warn('Pistenzustand unbekannt'), warn('Hinweis in den Details'))]
   ];
+  // Ohne Windrichtung (bis 3 kt) gerechnet: Rückenwind möglich, auch ohne gelbes Element der Karte; Reihenfolge fest
+  const N = HEAD + 'Cessna 172 Diesel · ohne Windrichtung · beide Pisten';
+  const RN = [row('Start über 15 m: 489 m · verfügbar ab 520 m'), row('Landung über 15 m: 506 m · verfügbar ab 520 m')];
+  const nodir = (over) => wxPfa(Object.assign({ tempC: 3, qnhHpa: 1022, windDir: null, windKt: 2 }, over));
+  cases.push(
+    ['ohne Windrichtung, DRY frisch', parts(nodir()), [N].concat(RN, warn(DIR))],
+    ['ohne Windrichtung, nass und Sperre', parts(nodir({ rain1hMm: 0.4 }), { fgzo: fgzo({ flaeche: 'gesperrt', flaeche_grund: 'x' }) }),
+      [N, row('Start über 15 m: [amber]587 m · verfügbar ab 520 m'), row('Landung über 15 m: 506 m · verfügbar ab 520 m'),
+        warn('Platz gesperrt'), warn(DIR), warn(WET)]],
+    ['ohne Windrichtung, Sperre veraltet, unbekannt', parts(nodir({ rain1hMm: null, rainMmH: null }), { fgzo: fgzo({ flaeche: 'gesperrt', flaeche_grund: 'x', fetched_at_utc: OLD }) }),
+      [N].concat(RN, warn('Platz gesperrt (veraltete Meldung)'), warn(DIR), warn('Pistenzustand unbekannt'))],
+    ['ohne Windrichtung, Hinweis', parts(nodir(), { notice: 'x' }), [N].concat(RN, warn(DIR), warn('Hinweis in den Details'))],
+    ['ohne Windrichtung, DRY von gestern', parts(nodir(), { fgzo: fgzo({ updated: '17.11.2026, 16:20' }) }), [N].concat(RN, warn(DIR), warn('Hinweis in den Details'))],
+    ['windstill: kein Vorbehalt zur Windrichtung', parts(nodir({ windKt: 0 })),
+      [HEAD + 'Cessna 172 Diesel · windstill · beide Pisten'].concat(RN)],
+    ['Wind genau quer: kein Vorbehalt zur Windrichtung', parts(nodir({ windDir: 214, windKt: 10 })),
+      [HEAD + 'Cessna 172 Diesel · Wind quer · beide Pisten'].concat(RN)]
+  );
   cases.forEach(([label, p, expected]) => {
     assert.deepEqual(marked(p.teaser), expected, label);
     assertCleanTeaser(p.teaser, label);
@@ -251,17 +278,18 @@ test('Kurzzeile ohne Ergebnis: keine Zahlen, Text je Zustand, Kopf mit Muster so
     ['Richtung fehlt über 3 kt', parts(wxPfa({ windDir: null, windKt: 6 })), [HEAD + C172, state('Windrichtung fehlt – keine Berechnung')]],
     ['keine Gegenwindpiste', parts(wxPfa(), { airfield: one }), [HEAD + C172, state('Keine Piste mit Gegenwind – keine Berechnung')]],
     ['FGZO-Abruf läuft', parts(wxPfa(), { fgzoPending: true }), [HEAD + C172, load('Lade Flugplatzstatus …')]],
+    ['keine Messwerte, FGZO-Abruf läuft (Messwerte zuerst)', parts(undefined, { fgzoPending: true }), [HEAD + C172, state('Keine aktuellen Messwerte – keine Berechnung')]],
     ['Daten laden', parts(wxPfa(), { dataState: 'loading', aircraft: null, selectedId: 'p2010' }),
       [HEAD + 'Start- und Landestrecke', load('Lade Flugzeug- und Platzdaten …')]],
     ['Daten laden mit Hinweis (die Karte zeigt ihn nicht)', parts(wxPfa(), { dataState: 'loading', notice: 'x' }),
       [HEAD + 'Start- und Landestrecke', load('Lade Flugzeug- und Platzdaten …')]],
     ['Datenfehler', parts(wxPfa(), { dataState: 'error', aircraft: null }), [HEAD + 'Start- und Landestrecke', state('Daten nicht verfügbar – keine Berechnung')]],
     ['Datenfehler mit Hinweis', parts(wxPfa(), { dataState: 'error', aircraft: null, notice: 'x' }),
-      [HEAD + 'Start- und Landestrecke', state('Daten nicht verfügbar – keine Berechnung'), warn('Hinweis in der Karte')]],
+      [HEAD + 'Start- und Landestrecke', state('Daten nicht verfügbar – keine Berechnung'), warn('Hinweis in den Details')]],
     ['ungültige Flugzeugdaten', parts(wxPfa(), { aircraft: Object.assign(clone(C172D), { schema: 1 }) }),
       [HEAD + 'Start- und Landestrecke', state('Daten nicht verfügbar – keine Berechnung')]],
     ['veraltet mit Hinweis', parts(wxPfa({ time: NOW - 46 * MIN }), { notice: 'x' }),
-      [HEAD + C172, state('Messwerte veraltet – keine Berechnung'), warn('Hinweis in der Karte')]]
+      [HEAD + C172, state('Messwerte veraltet – keine Berechnung'), warn('Hinweis in den Details')]]
   ];
   cases.forEach(([label, p, expected]) => {
     assert.notEqual(p.kind, 'result', label);
@@ -309,7 +337,8 @@ const FG = {
 const RAIN = { no: [0, 0], unknown: [null, null], hour: [0.4, 0], rateOnly0: [null, 0], rate: [null, 0.6] };
 
 // Prüft eine Darstellung: Zahlen nur mit Pistenblöcken, je Phase grösste «über 15 m» und kleinste «verfügbar» der
-// Karte, Farbe nie schwächer als die Karte, «–» ergibt «kein Wert», Vorbehalt genau bei gelbem Element.
+// Karte, Farbe nie schwächer als die Karte, «–» ergibt «kein Wert», Vorbehalt genau bei gelbem Element der Karte
+// oder bei Rechnung ohne Windrichtung (grauer Hinweis der Karte), in fester Reihenfolge.
 function gleichlauf(ctx, label, stats) {
   const p = ui.renderParts(ctx);
   stats.n++;
@@ -321,7 +350,8 @@ function gleichlauf(ctx, label, stats) {
   warns.forEach((w) => assert.ok(w.startsWith(WARN), label + ': ' + w));
   assert.equal(new Set(warns).size, warns.length, label + ': Vorbehalt doppelt');
   const yellowCard = /class="perf-cond perf-warn"|class="perf-note"/.test(p.body);
-  assert.equal(warns.length > 0, yellowCard, label + ': Vorbehalt ⟺ gelbes Element der Karte');
+  const nodirCard = p.body.includes('<div class="perf-hint">' + ui.TEXT.nodir + '</div>');
+  assert.equal(warns.length > 0, yellowCard || nodirCard, label + ': Vorbehalt ⟺ gelbes Element der Karte oder ohne Windrichtung');
   if (!hasGrid) {
     assert.ok(!p.teaser.includes('perf-t-row') && !p.teaser.includes('<b') && !p.teaser.includes('&nbsp;m'), label + ': Zahl ohne Ergebnis');
     assert.deepEqual(it.map(([c]) => c).slice(0, 2), ['perf-t-head', p.kind === 'loading' || p.kind === 'fgzo-pending' ? 'perf-t-load' : 'perf-t-state'], label);
@@ -363,22 +393,30 @@ function gleichlauf(ctx, label, stats) {
     if (sev > sevCard) stats.bumped++;
     if (sev) stats.colored++;
   });
-  // Vorbehalte einzeln gegen die Karte
+  // Vorbehalte gegen die Karte, einzeln und in der festen Reihenfolge Sperre, Windrichtung, Nässe bzw. unbekannt, Hinweis
   const closedWord = p.body.includes('Platz laut FGZO geschlossen') ? 'Platz geschlossen' : 'Platz gesperrt';
   const has = (t) => warns.includes(WARN + t);
-  assert.equal(has(closedWord), /<div class="perf-cond perf-warn" role="note"><div>Platz laut FGZO/.test(p.body), label + ': Sperre frisch');
-  assert.equal(has(closedWord + ' (veraltete Meldung)'), /<div class="perf-note">Platz laut FGZO[^<]*\(veraltete Meldung\)\.<\/div>/.test(p.body),
-    label + ': Sperre veraltet');
-  assert.equal(has('Piste nass: Strecken deutlich länger möglich'), p.body.includes('Piste gilt als nass:'), label + ': nass');
-  assert.equal(has('Pistenzustand unbekannt'), p.body.includes('Pistenzustand unbekannt:'), label + ': unbekannt');
-  const dryNote = /<div class="perf-note">(?:Pistenzustand laut FGZO: DRY|Letzte FGZO-Meldung DRY|FGZO meldet DRY ohne Zeitstempel)/.test(p.body);
-  const noticeDiv = p.body.includes('<div class="perf-note" role="status">');
-  assert.equal(has('Hinweis in der Karte'), noticeDiv || (dryNote && !p.body.includes('Pistenzustand unbekannt:')), label + ': Hinweis in der Karte');
-  ['closed', 'closedStale', 'wet', 'unknown', 'inCard'].forEach((k) => { if (has(k === 'closed' ? closedWord : k === 'closedStale' ? closedWord + ' (veraltete Meldung)' : ui.TEASER[k])) stats.warn[k]++; });
+  const card = {
+    closed: /<div class="perf-cond perf-warn" role="note"><div>Platz laut FGZO/.test(p.body),
+    closedStale: /<div class="perf-note">Platz laut FGZO[^<]*\(veraltete Meldung\)\.<\/div>/.test(p.body),
+    dirUnknown: nodirCard,
+    wet: p.body.includes('Piste gilt als nass:'),
+    unknown: p.body.includes('Pistenzustand unbekannt:'),
+    inDetails: p.body.includes('<div class="perf-note" role="status">') ||
+      (/<div class="perf-note">(?:Pistenzustand laut FGZO: DRY|Letzte FGZO-Meldung DRY|FGZO meldet DRY ohne Zeitstempel)/.test(p.body) &&
+        !p.body.includes('Pistenzustand unbekannt:'))
+  };
+  const words = { closed: closedWord, closedStale: closedWord + ' (veraltete Meldung)', dirUnknown: DIR, wet: WET, unknown: 'Pistenzustand unbekannt',
+    inDetails: 'Hinweis in den Details' };
+  const order = ['closed', 'closedStale', 'dirUnknown', 'wet', 'unknown', 'inDetails'];
+  order.forEach((k) => assert.equal(has(words[k]), card[k], label + ': ' + k));
+  assert.deepEqual(warns, order.filter((k) => card[k]).map((k) => WARN + words[k]), label + ': Reihenfolge der Vorbehalte');
+  order.forEach((k) => { if (card[k]) stats.warn[k]++; });
 }
 
 test('Gleichlauf: Kurzzeile und Karte aus einer Rechnung, über alle LSZK-Kontrollfälle × FGZO × Regen × Hinweis', () => {
-  const stats = { n: 0, results: 0, noValue: 0, noValueMixed: 0, colored: 0, bumped: 0, warn: { closed: 0, closedStale: 0, wet: 0, unknown: 0, inCard: 0 } };
+  const stats = { n: 0, results: 0, noValue: 0, noValueMixed: 0, colored: 0, bumped: 0,
+    warn: { closed: 0, closedStale: 0, dirUnknown: 0, wet: 0, unknown: 0, inDetails: 0 } };
   let lszk = 0;
   CASES.forEach(([id, acId, field, inp]) => {
     if (field !== 'lszk') return;
@@ -401,11 +439,16 @@ test('Gleichlauf: Kurzzeile und Karte aus einer Rechnung, über alle LSZK-Kontro
   gleichlauf(ctxOf(wxPfa(), { fgzoPending: true }), 'FGZO lädt', stats);
   gleichlauf(ctxOf(wxPfa(), { airfield: one }), 'eine Piste, Rückenwind', stats);
   [C172D, P2010, C152].forEach((ac) => [[20, 1013.25], [40, 1000], [-5, 1030]].forEach(([t, q]) => {
-    const w = wxPfa({ tempC: t, qnhHpa: q, windDir: null, windKt: 0 });
-    gleichlauf(ctxOf(w, { aircraft: ac, airfield: mixed }), 'gemischter Belag ' + ac.id + ' ' + t, stats);
-    gleichlauf(ctxOf(w, { aircraft: ac, airfield: three }), 'drei Pisten ' + ac.id + ' ' + t, stats);
-    core.PHASES.forEach((ph) => {
-      gleichlauf(ctxOf(w, { aircraft: withoutGrass(ac, ph), airfield: mixed }), 'eine Piste ohne Wert ' + ac.id + ' ' + ph + ' ' + t, stats);
+    [[0, null], [2, null]].forEach(([kt, dir]) => {
+      const w = wxPfa({ tempC: t, qnhHpa: q, windDir: dir, windKt: kt });
+      const tag = (kt ? ' ohne Richtung ' : ' windstill ') + ac.id + ' ' + t;
+      gleichlauf(ctxOf(w, { aircraft: ac, airfield: mixed }), 'gemischter Belag' + tag, stats);
+      gleichlauf(ctxOf(w, { aircraft: ac, airfield: pavedFirst }), 'gemischter Belag gespiegelt' + tag, stats);
+      gleichlauf(ctxOf(w, { aircraft: ac, airfield: three }), 'drei Pisten' + tag, stats);
+      core.PHASES.forEach((ph) => {
+        gleichlauf(ctxOf(w, { aircraft: withoutGrass(ac, ph), airfield: mixed }), 'eine Piste ohne Wert ' + ph + tag, stats);
+        gleichlauf(ctxOf(w, { aircraft: withoutGrass(ac, ph), airfield: pavedFirst }), 'eine Piste ohne Wert, gespiegelt ' + ph + tag, stats);
+      });
     });
   }));
   // Abdeckung: jeder Zweig kommt vor
@@ -497,10 +540,10 @@ test('Maskierung: Marke in Name, Pistenkennung, Liste, FGZO-Feldern und Hinweis 
     raw(p, 'FGZO ' + i);
     assert.ok(!p.teaser.includes('&lt;img'), 'FGZO ' + i + ': Text der FGZO in der Kurzzeile');
   });
-  // Hinweis: nur «Hinweis in der Karte», nie sein Text
+  // Hinweis: nur «Hinweis in den Details», nie sein Text
   p = parts(wxPfa(), { notice: MARK });
   raw(p, 'Hinweis');
-  assert.ok(p.teaser.endsWith('<span class="perf-t-warn">' + WARN + 'Hinweis in der Karte</span>') && !p.teaser.includes('&lt;img'));
+  assert.ok(p.teaser.endsWith('<span class="perf-t-warn">' + WARN + 'Hinweis in den Details</span>') && !p.teaser.includes('&lt;img'));
 });
 
 /* ── Seite ────────────────────────────────────────────────── */
@@ -523,6 +566,8 @@ test('Seite: <details id="perf-box"> einmal zwischen Ampel und Wetter-Panel, Kar
   assert.ok(/^\s*(?:<!--[\s\S]*?-->\s*)?$/.test(html.slice(iEnd + '</details>'.length, iPanel)), 'zwischen Box und Wetter-Panel steht nur ein Kommentar');
   const box = html.slice(iBox, iEnd);
   assert.ok(/<summary class="perf-teaser" id="perf-teaser" title="[^"]+">\s*<span class="perf-t">\s*<svg class="perf-t-ico" aria-hidden="true"[^>]*>[\s\S]*?<\/svg>\s*<span class="perf-t-body" id="perf-teaser-text"><\/span>\s*<svg class="perf-t-chev" aria-hidden="true"[^>]*>[\s\S]*?<\/svg>\s*<\/span>\s*<\/summary>/.test(box), box);
+  // «Details» statt «Karte» (Pilot liest «Karte» als Luftfahrtkarte)
+  assert.ok(box.includes(' title="Start- und Landestrecke – Richtwert nach AFM. Klick öffnet oder schliesst die Details mit Rechenweg und Hinweisen.">'), 'Tooltip');
   assert.ok(box.includes('<div class="wx-card" id="perf-card" data-airfield="lszk">'), 'Karte in der Box');
   assert.ok(box.includes('<div id="perf-content"></div>'), '#perf-content leer (Unterbehälter legt das Skript an)');
   assert.ok(!/id="perf-card"[^>]*display/.test(html), 'Karte mit eigenem display');
@@ -546,10 +591,20 @@ test('CSS der Kurzzeile: kein Dreieck, Flex im inneren span, Umbruch statt Über
   assert.equal(rule('.perf-t'), 'display: flex; align-items: flex-start; gap: 8px;');
   const body = rule('.perf-t-body');
   ['flex: 1;', 'min-width: 0;', 'display: flex;', 'flex-wrap: wrap;', 'overflow-wrap: break-word;'].forEach((x) => assert.ok(body.includes(x), x));
+  // Ein langer Name ohne Leerzeichen darf die Seite nicht seitlich schieben: die Elemente dürfen schmaler werden als ihr längstes Wort
+  assert.equal(rule('.perf-t-body > span'), 'min-width: 0;');
   assert.equal(rule('.perf-box[open] .perf-t-chev'), 'transform: rotate(180deg);');
+  assert.equal(rule('.perf-box[open] > .perf-teaser'), 'margin-bottom: 8px;');
+  assert.equal(rule('.perf-t-head'), 'font-weight: 600;');
   assert.equal(rule('.perf-t-state'), 'color: #f87171;');
+  assert.equal(rule('.perf-t-load'), 'color: var(--text-muted);');
   assert.equal(rule('.perf-t-warn'), 'color: #fcd34d;');
+  // Farben der Zahlen und von «kein Wert»: dieselben Regeln wie in der Karte
+  assert.equal(rule('.perf-amber'), 'color: #f59e0b; font-weight: 700;');
+  assert.equal(rule('.perf-red'), 'color: #ef4444; font-weight: 700;');
+  assert.equal(rule('.perf-nov'), 'color: #f87171;');
   assert.ok(/@media \(max-width: 600px\) \{\n {2}\.perf-box \{ margin-bottom: 10px; \}/.test(ui.CSS), 'mobil 10 px wie die Ampel');
+  assert.ok(/@media \(max-width: 340px\) \{\n {2}\.perf-t-ico \{ display: none; \}\n\}/.test(ui.CSS), 'Symbol unter 340 px ausgeblendet');
   assert.ok(/@media \(prefers-reduced-motion: reduce\) \{\n {2}\.perf-t-chev \{ transition: none; \}/.test(ui.CSS));
   assert.ok(!/outline:\s*(?:none|0)\b/.test(ui.CSS));
 });

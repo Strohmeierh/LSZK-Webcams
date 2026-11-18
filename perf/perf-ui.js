@@ -95,9 +95,10 @@
     closed: 'Platz gesperrt',
     closedAll: 'Platz geschlossen',
     closedStale: ' (veraltete Meldung)',
+    dirUnknown: 'Windrichtung unbekannt: Rückenwind möglich',
     wet: 'Piste nass: Strecken deutlich länger möglich',
     unknown: 'Pistenzustand unbekannt',
-    inCard: 'Hinweis in der Karte'
+    inDetails: 'Hinweis in den Details'
   };
   // Warnzeichen wie auf der übrigen Seite: einfaches U+26A0, ohne Variantenwähler
   var WARN_SIGN = '⚠';
@@ -178,6 +179,9 @@
     '.perf-t-chev { transition: transform 0.2s ease; }',
     '.perf-box[open] .perf-t-chev { transform: rotate(180deg); }',
     '.perf-t-body { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 1px 18px; font-size: 0.8rem; line-height: 1.45; color: var(--text); overflow-wrap: break-word; }',
+    // Elemente dürfen schmaler werden als ihr längstes Wort (sonst schiebt ein langer Name ohne Leerzeichen die Seite
+    // seitlich); umbrochen wird dann per overflow-wrap
+    '.perf-t-body > span { min-width: 0; }',
     '.perf-t-head { font-weight: 600; }',
     '.perf-t-state { color: #f87171; }',
     '.perf-t-load { color: var(--text-muted); }',
@@ -1038,7 +1042,8 @@
      Länge. Bei mehreren gerechneten Pisten die grösste Strecke («bis …», falls verschieden) gegen die kleinste Länge
      («ab …», falls verschieden), Farbe die schwerste Stufe aller Pisten, mindestens amber, wenn die gezeigte Strecke
      die gezeigte Länge übersteigt; fehlt einer Piste der Wert, steht «kein Wert». So ist die Zeile nie günstiger als
-     die Karte. Ein Vorbehalt (⚠) steht genau dann, wenn die Karte ein gelbes Element zeigt. Farben nur über Klassen. */
+     die Karte. Ein Vorbehalt (⚠) steht genau dann, wenn die Karte ein gelbes Element zeigt oder ohne Windrichtung
+     gerechnet wurde (bis 3 kt Rückenwind möglich). Farben nur über Klassen. */
   function teaserRowHtml(ph, computed) {
     var label = '<span class="perf-nw">' + PHASE_LABEL[ph] + ' über 15&nbsp;m: ';
     var ps = computed.map(function (r) { return r[ph]; });
@@ -1057,18 +1062,20 @@
       (avail.some(function (x) { return x !== av; }) ? 'ab ' : '') + fmtInt(av) + '&nbsp;m</span></span>';
   }
 
-  // Vorbehalte im Zustand result aus denselben Flags wie conditionHtml: ausgeschrieben werden frische und veraltete
-  // Sperre, Nässe und «unbekannt»; jedes andere gelbe Element der Karte (unsichere DRY-Meldung, Hinweis) einmal als
-  // «Hinweis in der Karte».
+  // Vorbehalte im Zustand result, feste Reihenfolge: Sperre (frisch, veraltet), Windrichtung, Nässe bzw. «unbekannt»,
+  // Hinweis. Sperre, Nässe und «unbekannt» aus denselben Flags wie conditionHtml. «Windrichtung unbekannt» bei
+  // Rechnung ohne Windrichtung: die Zahlen gelten ohne Wind, bis 3 kt Rückenwind sind möglich (in der Karte der graue
+  // Hinweis). Jedes andere gelbe Element der Karte (unsichere DRY-Meldung, Hinweis) einmal als «Hinweis in den Details».
   function teaserWarnings(m) {
     var f = condFlags(m.fg, m.ws);
     var closed = m.fg.closedReason === 'geschlossen' ? TEASER.closedAll : TEASER.closed;
     var out = [];
     if (f.closed) out.push(closed);
     if (f.closedStale) out.push(closed + TEASER.closedStale);
+    if (m.hintKind === 'nodir') out.push(TEASER.dirUnknown);
     if (f.wet) out.push(TEASER.wet);
     if (f.unknown) out.push(TEASER.unknown);
-    if (m.notice || ((f.dryNotToday || f.dryStale || f.dryNoStamp) && !f.unknown)) out.push(TEASER.inCard);
+    if (m.notice || ((f.dryNotToday || f.dryStale || f.dryNoStamp) && !f.unknown)) out.push(TEASER.inDetails);
     return out;
   }
 
@@ -1106,7 +1113,7 @@
       var load = m.kind === 'loading' || m.kind === 'fgzo-pending';
       h = '<span class="perf-t-head">' + TEASER.title + (m.ac ? ' · ' + esc(clip(m.ac.label, LABEL_MAX)) : '') + '</span>' +
         '<span class="' + (load ? 'perf-t-load' : 'perf-t-state') + '">' + teaserStateText(m) + '</span>';
-      warn = m.notice ? [TEASER.inCard] : [];
+      warn = m.notice ? [TEASER.inDetails] : [];
     }
     return h + warn.map(function (w) { return '<span class="perf-t-warn">' + WARN_SIGN + ' ' + w + '</span>'; }).join('');
   }

@@ -1054,7 +1054,7 @@ function fakeBrowser(opts) {
   if (opts.noContent) delete env.nodes['perf-content'];
   const styles = [];
   const doc = {
-    readyState: 'interactive', hidden: false,
+    readyState: opts.readyState || 'interactive', hidden: false,
     head: { appendChild: (el) => { styles.push(el); } },
     getElementById: (id) => {
       if (opts.noCard) return null;
@@ -1216,6 +1216,56 @@ test('boot: kaputtes update wirft nicht, Rechenfehler in Karte und Kurzzeile ble
   [42, 'x', undefined, null, []].forEach((v) => assert.doesNotThrow(() => env.win.LszkPerf.update(v)));
   assert.ok(shown(env).includes('Keine aktuellen Messwerte vom Platz – keine Berechnung.'));
   assert.equal(teaserText(env), 'Start- und Landestrecke · Cessna 172 Diesel Keine aktuellen Messwerte – keine Berechnung');
+  // Derselbe Messwert vor und nach einem Rechenfehler: die Karte zeigt danach wieder die Zahlen, nicht «Rechenfehler»
+  const same = wxPfa({ time: env.clock - 10 * MIN });
+  env.win.LszkPerf.update(same);
+  await settle();
+  assert.ok(shown(env).includes('Start 331 m 492 m'), 'vor dem Rechenfehler');
+  env.win.LszkPerf.update(evilWx());
+  env.win.LszkPerf.update(same);
+  await settle();
+  assert.ok(shown(env).includes('Start 331 m 492 m') && !shown(env).includes('Rechenfehler'), 'Karte nach dem Rechenfehler: ' + shown(env).slice(0, 200));
+  assert.ok(teaserText(env).includes('492 m'));
+});
+
+test('boot: Rechenfehler als erstes update zeigt die Box; ein update vor DOMContentLoaded wird beim Start nachgeholt', async (t) => {
+  let env = startBrowser(t);
+  await settle();
+  assert.equal(env.box.style.display, 'none');
+  env.win.LszkPerf.update(evilWx());
+  assert.equal(env.box.style.display, 'block', 'Box beim Rechenfehler als erstem update');
+  assert.equal(teaserText(env), 'Start- und Landestrecke Rechenfehler – keine Berechnung');
+  // Seite noch im Aufbau: update kommt vor dem Start, die Anzeige folgt beim Start ohne Rechenfehler
+  env = fakeBrowser({ readyState: 'loading' });
+  ui.boot(env.win);
+  assert.equal(typeof env.docListeners.DOMContentLoaded, 'function');
+  assert.doesNotThrow(() => env.win.LszkPerf.update(wxPfa()));
+  assert.equal(env.box.style.display, 'none', 'vor dem Start angezeigt');
+  assert.equal(env.fetchUrls.length, 0, 'vor dem Start geladen');
+  env.docListeners.DOMContentLoaded();
+  assert.equal(env.box.style.display, 'block');
+  await settle();
+  assert.ok(teaserText(env).includes('492 m') && !shown(env).includes('Rechenfehler'), teaserText(env));
+});
+
+test('boot: Übergang vom Ergebnis zu Rechenabbruch und fehlender Windrichtung – die Kurzzeile zeigt keine alten Zahlen', async (t) => {
+  const env = startBrowser(t);
+  await settle();
+  const cases = [
+    [wxPfa({ qnhHpa: 850 }), 'Messwert unplausibel – keine Berechnung'],
+    [wxPfa({ tempC: 45 }), 'Über dem Tabellenbereich des AFM – kein Wert'],
+    [wxPfa({ windDir: null, windKt: 6 }), 'Windrichtung fehlt – keine Berechnung']
+  ];
+  for (const [w, state] of cases) {
+    env.win.LszkPerf.update(wxPfa());
+    await settle();
+    assert.ok(teaserText(env).includes('492 m'), 'Ergebnis vor «' + state + '»');
+    env.win.LszkPerf.update(w);
+    await settle();
+    assert.equal(teaserText(env), 'Start- und Landestrecke · Cessna 172 Diesel ' + state);
+    assert.ok(!env.teaser.innerHTML.includes('perf-t-row') && !/\d&nbsp;m/.test(env.teaser.innerHTML), state + ': ' + env.teaser.innerHTML);
+    assert.ok(!env.content.innerHTML.includes('perf-grid'), state + ': Karte');
+  }
 });
 
 test('boot: Ladefehler, neuer Versuch frühestens nach 60 s', async (t) => {
@@ -1302,10 +1352,15 @@ test('boot: Auf- und Zuklappen der Kurzzeile gemerkt (lszk-perf-open), beim Star
   assert.equal(next.box.style.display, 'block');
   assert.ok(teaserText(next).includes('492 m') && next.box.open === true);
   assert.equal(next.writesBy['perf-box'], undefined);
-  // ohne gespeicherten Zustand zu; privater Modus (localStorage wirft): kein Fehler, zu
+  // ohne gespeicherten Zustand zu, ebenso bei einem anderen Wert als '1'; privater Modus (localStorage wirft): kein Fehler, zu
   const closed = fakeBrowser({ initialWx: wxPfa() });
   ui.boot(closed.win);
   assert.equal(closed.box.open, false);
+  ['0', 'true', 'ja', ''].forEach((v) => {
+    const other = fakeBrowser({ store: { 'lszk-perf-open': v } });
+    ui.boot(other.win);
+    assert.equal(other.box.open, false, 'gespeichert ' + JSON.stringify(v));
+  });
   const priv = fakeBrowser({ storeThrows: true, initialWx: wxPfa() });
   assert.doesNotThrow(() => ui.boot(priv.win));
   assert.equal(priv.box.open, false);
@@ -1416,7 +1471,7 @@ test('boot: nicht ladbare Wahl fällt auf den Standard zurück, Speicher geleert
   assert.ok(env.content.innerHTML.includes('<option value="c172d" selected>'));
   assert.ok(shown(env).includes('Flugzeugdaten für «Fehlt» nicht verfügbar – Standardmuster gewählt.'));
   assert.ok(shown(env).includes('Start 331 m'));
-  assert.ok(teaserText(env).endsWith('⚠ Hinweis in der Karte'), 'Hinweis «Standardmuster gewählt» als Vorbehalt');
+  assert.ok(teaserText(env).endsWith('⚠ Hinweis in den Details'), 'Hinweis «Standardmuster gewählt» als Vorbehalt');
   const node = env.sel.querySelector('select'), selWrites = env.writesBy['perf-sel'];
   choose(env, 'x');
   assert.equal(node.value, 'x');
@@ -1427,7 +1482,7 @@ test('boot: nicht ladbare Wahl fällt auf den Standard zurück, Speicher geleert
   assert.equal(env.sel.querySelector('select'), node);
   assert.equal(node.value, 'c172d', 'Rückfall auf den Standard setzt value');
   assert.equal(env.writesBy['perf-sel'], selWrites);
-  assert.ok(teaserText(env).startsWith('Cessna 172 Diesel · Piste 30') && teaserText(env).endsWith('⚠ Hinweis in der Karte'));
+  assert.ok(teaserText(env).startsWith('Cessna 172 Diesel · Piste 30') && teaserText(env).endsWith('⚠ Hinweis in den Details'));
 });
 
 test('boot: Flugzeugdatei mit falscher id gilt als nicht ladbar', async (t) => {
