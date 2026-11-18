@@ -6,6 +6,8 @@ Runs as steps of the cam-status workflow (every 5 min via the external pinger):
     python scripts/ai_briefing.py --reserve  -> books the attempt (+ a cost reservation) in data/ai_status.json;
                                                the workflow pushes this BEFORE the paid call
     python scripts/ai_briefing.py            -> runs the briefing and writes data/ai_status.json
+    python scripts/ai_briefing.py --dabs     -> fetches the DABS if a fetch is due and stores the parsed list in
+                                               data/dabs.json (own step in every run; the briefing reads that file)
 
 The briefing runs at three slots per day (Europe/Zurich): SUNRISE_OFFSET_MIN after sunrise, 10:00
 and 15:00. Each slot is attempted at most once; a failed attempt is not repeated.
@@ -1271,33 +1273,201 @@ def dabs_hits(parsed: dict, now: datetime, until: datetime) -> list:
     return hits
 
 
+# ── DABS store (data/dabs.json) ── this block is identical in the EDSF and the LSZK repository ──────────────────
+# Some GitHub runners cannot reach skybriefing.com (connect timeout on 16.-18.11.), and a retry in the same run
+# comes from the same IP. So the cam-status job (every 5 min, a new runner each time) fetches the DABS whenever a
+# fetch is due (`--dabs`) and stores the parsed list of the whole day; the briefing reads that file and applies its
+# own filter (area, height, time). Publication: version 1 at 16:00 local time for the next day, updates (version
+# 2 / 3 / 4) at 09:00, 13:00 and 16:00.
+DABS_FILE = ROOT / "data" / "dabs.json"
+DABS_TZ = ZoneInfo("Europe/Zurich")       # publication times and the DABS day are Swiss local time
+DABS_FETCH_FROM = (4, 30)                 # local time: no fetch before (version 1 of today exists since the day before)
+DABS_FETCH_UNTIL = (18, 0)                # local time: no fetch from here on
+DABS_MARKS = ((9, 0), (13, 0), (16, 0))   # local time: publication of the updates
+DABS_VERSION_LEAD_MIN = 60                # a version generated up to this long before a publication time belongs to it
+                                          # (seen 15.-17.11.: 15 to 19 min before)
+DABS_RECHECK_MIN = 30                     # still the previous version after a publication time: look again after this
+DABS_ERROR_PAUSE_MIN = 30                 # pause after a PDF that could not be used (layout, wrong day, not published)
+DABS_TIMEOUT = (5, 30)                    # connect, read (s): a runner that cannot connect does not get through later
+DABS_MAX_BYTES = 5_000_000
+DABS_ENTRY_KEYS = ("sec", "notam", "gebiet", "fenster", "zeit_roh", "unten", "oben", "unten_ft", "mitte",
+                   "radius_km", "text", "unsicher")
+
+
 def fetch_dabs(session) -> bytes:
-    for attempt_no in (1, 2):   # one retry: the sunrise run of 16.11. lost the DABS to a single connect timeout
-        try:
-            r = session.get(DABS_URL, timeout=30, headers={"User-Agent": UA})
-            break
-        except Exception as e:  # noqa: BLE001
-            if attempt_no == 2:
-                raise
-            print(f"DABS attempt 1 failed ({type(e).__name__}: {e}), retrying", file=sys.stderr)
-            time.sleep(5)
+    """One attempt. Raises unless a PDF came back (network error, HTTP status, error page)."""
+    r = session.get(DABS_URL, timeout=DABS_TIMEOUT, headers={"User-Agent": UA})
     if r.status_code != 200:
         raise DabsError(f"HTTP {r.status_code}")
-    if len(r.content) > 5_000_000:
-        raise DabsError(f"PDF zu gross ({len(r.content)} Bytes)")
+    if not r.content.startswith(b"%PDF"):
+        raise DabsError("Antwort ist kein PDF")
     return r.content
 
 
+def dabs_to_cache(parsed: dict, now: datetime) -> dict:
+    """parse_dabs() result as JSON for DABS_FILE: the unfiltered list of the day (the filter depends on the time)."""
+    entries = [{**e, "fenster": [[iso(w[0]), iso(w[1])] if w else None for w in e["fenster"]],
+                "mitte": list(e["mitte"]) if e["mitte"] else None} for e in parsed["eintraege"]]
+    return {"schema_version": 1, "quelle": DABS_URL, "abgerufen_utc": iso(now),
+            "datum": parsed["datum"].isoformat(), "version": parsed["version"], "stand_utc": iso(parsed["stand"]),
+            "fehler": None, "eintraege": entries}
+
+
+def dabs_from_cache(cache):
+    """Inverse of dabs_to_cache(): the dict parse_dabs() returns, plus "abgerufen". None if nothing usable is stored."""
+    try:
+        entries = []
+        for e in cache["eintraege"]:
+            if any(k not in e for k in DABS_ENTRY_KEYS):
+                raise ValueError("entry")
+            wins = [(parse_iso(w[0]), parse_iso(w[1])) if w else None for w in e["fenster"]]
+            if any(w is not None and None in w for w in wins):
+                raise ValueError("window")
+            entries.append({**e, "fenster": wins, "mitte": tuple(e["mitte"]) if e["mitte"] else None})
+        doc = {"datum": date.fromisoformat(cache["datum"]), "version": int(cache["version"]),
+               "stand": parse_iso(cache["stand_utc"]), "abgerufen": parse_iso(cache["abgerufen_utc"]),
+               "eintraege": entries}
+        if doc["stand"] is None or doc["abgerufen"] is None:
+            raise ValueError("time")
+        return doc
+    except (KeyError, IndexError, TypeError, ValueError, AttributeError):
+        return None
+
+
+def write_dabs_cache(cache: dict) -> bool:
+    """Atomic write like write_json(); nothing is written if the content is unchanged. -> True if written."""
+    text = json.dumps(cache, indent=2, ensure_ascii=False) + "\n"
+    try:
+        if DABS_FILE.read_text(encoding="utf-8") == text:
+            return False
+    except (OSError, ValueError):
+        pass
+    DABS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    tmp = DABS_FILE.with_suffix(".json.tmp")
+    tmp.write_text(text, encoding="utf-8")
+    os.replace(tmp, DABS_FILE)
+    return True
+
+
+def _dabs_at(day: date, hm) -> datetime:
+    return datetime(day.year, day.month, day.day, hm[0], hm[1], tzinfo=DABS_TZ).astimezone(timezone.utc)
+
+
+def _dabs_today(cache, now: datetime):
+    """-> (fetched, stand, mark): fetch time and generation time of the stored DABS if it is the one of today
+    (else None, None), and the latest publication time (UTC) that has passed today (None before the first one)."""
+    day = now.astimezone(DABS_TZ).date()
+    doc = dabs_from_cache(cache)
+    fetched, stand = (doc["abgerufen"], doc["stand"]) if doc and doc["datum"] == day else (None, None)
+    passed = [m for m in (_dabs_at(day, hm) for hm in DABS_MARKS) if m <= now]
+    return fetched, stand, (passed[-1] if passed else None)
+
+
+def dabs_current(cache, now: datetime) -> bool:
+    """True if the stored DABS is the one of today and was fetched after the latest publication time, or is
+    already the version generated for it."""
+    fetched, stand, mark = _dabs_today(cache, now)
+    if fetched is None:
+        return False
+    return mark is None or fetched >= mark or stand >= mark - timedelta(minutes=DABS_VERSION_LEAD_MIN)
+
+
+def dabs_due(cache, now: datetime, for_briefing: bool = False):
+    """-> (due, reason). A fetch is due inside the fetch window if no DABS of today is stored, or if the stored one
+    was fetched before the latest publication time and is not yet its version. If it is still the previous version
+    after that time, the job looks once more DABS_RECHECK_MIN after it; the briefing (for_briefing) looks again
+    whenever the last fetch is that old. After a PDF that could not be used, attempts pause."""
+    day = now.astimezone(DABS_TZ).date()
+
+    def lt(t):
+        return f"{t.astimezone(DABS_TZ):%H:%M}"
+
+    if not _dabs_at(day, DABS_FETCH_FROM) <= now < _dabs_at(day, DABS_FETCH_UNTIL):
+        return False, (f"outside the fetch window {DABS_FETCH_FROM[0]:02d}:{DABS_FETCH_FROM[1]:02d}-"
+                       f"{DABS_FETCH_UNTIL[0]:02d}:{DABS_FETCH_UNTIL[1]:02d}")
+    err = cache.get("fehler") if isinstance(cache, dict) else None
+    err_at = parse_iso(err.get("zeit_utc")) if isinstance(err, dict) else None
+    if err_at and timedelta(0) <= now - err_at < timedelta(minutes=DABS_ERROR_PAUSE_MIN):
+        return False, f"pause after an unusable PDF at {lt(err_at)}"
+    fetched, stand, mark = _dabs_today(cache, now)
+    if fetched is None:
+        return True, "no DABS of today stored"
+    if mark is None:
+        return False, f"DABS of today stored, first update at {DABS_MARKS[0][0]:02d}:{DABS_MARKS[0][1]:02d}"
+    if stand >= mark - timedelta(minutes=DABS_VERSION_LEAD_MIN):
+        return False, f"version of the {lt(mark)} publication stored"
+    if fetched < mark:
+        return True, f"not fetched since the {lt(mark)} publication"
+    recheck = timedelta(minutes=DABS_RECHECK_MIN)
+    if (now - fetched >= recheck) if for_briefing else (fetched < mark + recheck <= now):
+        return True, f"still the previous version after {lt(mark)}, looking again"
+    return False, f"fetched at {lt(fetched)}, no new version since {lt(mark)}"
+
+
+def dabs_refresh(session, now: datetime, for_briefing: bool = False):
+    """Fetches the DABS if a fetch is due and stores the parsed list of the day in DABS_FILE.
+    -> (cache or None, status, detail). status: "kept" (nothing due), "stored", "failed" (no PDF: network error,
+    HTTP status, error page - nothing is written, the next run tries again from another runner) or "unusable" (a
+    PDF came but cannot be used - noted with the time, so the next attempt waits DABS_ERROR_PAUSE_MIN).
+    session=None: a requests session is created only if a fetch is due."""
+    cache = load_json(DABS_FILE)
+    cache = cache if isinstance(cache, dict) else None
+    due, reason = dabs_due(cache, now, for_briefing)
+    if not due:
+        return cache, "kept", reason
+    try:
+        if session is None:
+            import requests  # installed by the workflow
+            session = requests.Session()
+        pdf = fetch_dabs(session)
+    except Exception as e:  # noqa: BLE001
+        return cache, "failed", clip(f"{type(e).__name__}: {e}", 160)
+    try:
+        if len(pdf) > DABS_MAX_BYTES:
+            raise DabsError(f"PDF zu gross ({len(pdf)} Bytes)")
+        parsed = parse_dabs(pdf)
+        if parsed["datum"] != now.astimezone(DABS_TZ).date():
+            raise DabsError(f'DABS-Datum {parsed["datum"]:%d.%m.%Y} ist nicht heute')
+        new, status = dabs_to_cache(parsed, now), "stored"
+        detail = f'version {new["version"]} of {new["datum"]}, generated {new["stand_utc"]} ({reason})'
+    except Exception as e:  # noqa: BLE001
+        status, detail = "unusable", clip(f"{type(e).__name__}: {e}", 160)
+        new = dict(cache) if cache else {"schema_version": 1, "quelle": DABS_URL, "abgerufen_utc": None, "datum": None,
+                                         "version": None, "stand_utc": None, "fehler": None, "eintraege": []}
+        new["fehler"] = {"zeit_utc": iso(now), "text": detail}
+    try:
+        write_dabs_cache(new)
+    except OSError as e:   # the briefing of this run can still use what was fetched
+        print(f"DABS: {DABS_FILE.name} not written ({type(e).__name__}: {e})", file=sys.stderr)
+    return new, status, detail
+
+
 def dabs_block(session, now: datetime, sset: datetime) -> dict:
-    """Record field "dabs". Raises on any problem; run_briefing() records the reason."""
-    parsed = parse_dabs(fetch_dabs(session))
-    if parsed["datum"] != now.astimezone(TZ).date():
-        raise DabsError(f'DABS-Datum {parsed["datum"]:%d.%m.%Y} ist nicht heute')
+    """Record field "dabs" from the stored DABS, fetched here first if a fetch is due (one attempt).
+    Raises if no DABS of today is stored; run_briefing() records the reason."""
+    cache, status, detail = dabs_refresh(session, now, for_briefing=True)
+    print(f"DABS: {status} ({detail})", file=sys.stderr)
+    problem = detail if status in ("failed", "unusable") else None
+    doc = dabs_from_cache(cache)
+    if doc is None or doc["datum"] != now.astimezone(DABS_TZ).date():
+        noted = cache.get("fehler") if isinstance(cache, dict) else None   # reason of the last unusable PDF (pause)
+        why = problem or (noted.get("text") if isinstance(noted, dict) else None) or "kein Abruf fällig"
+        raise DabsError(f"kein DABS von heute gespeichert ({why})")
     until = sset.astimezone(timezone.utc) + timedelta(minutes=DABS_AFTER_SUNSET_MIN)
-    return {"ok": True, "datum": parsed["datum"].isoformat(), "version": parsed["version"],
-            "stand_utc": iso(parsed["stand"]), "abgerufen_utc": iso(now), "quelle": DABS_URL,
-            "filter": DABS_FILTER_TEXT, "eintraege_total": len(parsed["eintraege"]),
-            "treffer": dabs_hits(parsed, now, until), "fehler": None}
+    return {"ok": True, "datum": doc["datum"].isoformat(), "version": doc["version"],
+            "stand_utc": iso(doc["stand"]), "abgerufen_utc": iso(doc["abgerufen"]), "quelle": DABS_URL,
+            "filter": DABS_FILTER_TEXT, "eintraege_total": len(doc["eintraege"]),
+            "treffer": dabs_hits(doc, now, until), "fehler": None,
+            # zwischenspeicher: not fetched by this run itself; aktuell: fetched after the latest publication time
+            "zwischenspeicher": status != "stored", "aktuell": dabs_current(cache, now), "abruf_fehler": problem}
+
+
+def dabs_main(now: datetime) -> int:
+    """`--dabs`, a step of the cam-status job in every run: fetches only when a fetch is due.
+    Exit code 1: a fetch was tried and brought nothing usable (the step has continue-on-error)."""
+    _, status, detail = dabs_refresh(None, now)
+    print(f"DABS: {status} ({detail})")
+    return 0 if status in ("kept", "stored") else 1
 
 
 def dabs_text(dabs: dict) -> str:
@@ -1691,6 +1861,8 @@ def close_attempt(record: dict, now: datetime, exc: BaseException) -> bool:
 
 def main(argv) -> int:
     now = now_utc()
+    if "--dabs" in argv:   # DABS store only: needs neither the briefing record nor the API key
+        return dabs_main(now)
     prev = load_json(OUT_FILE)
     if prev is None and OUT_FILE.exists():
         # unreadable state file: never start paid calls with reset counters

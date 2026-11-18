@@ -30,6 +30,13 @@ jobs:
       - name: Refresh cam status
         run: python scripts/update_cam_status.py
 
+      # DABS (skybriefing.com) für das KI-Briefing: nur wenn fällig, ein Versuch je Lauf, Ergebnis in data/dabs.json.
+      # Darf den Kamera-Status nie stören (continue-on-error, kurzes Zeitlimit).
+      - name: DABS refresh (if due)
+        continue-on-error: true
+        timeout-minutes: 2
+        run: python scripts/ai_briefing.py --dabs
+
       # KI-Briefing (3x täglich: Sonnenaufgang + 30 min, 10:00, 15:00): erst den Versuch buchen und pushen, dann bezahlen.
       # Scheitert der Push, läuft der Claude-Aufruf nicht.
       - name: AI briefing - due?
@@ -45,7 +52,7 @@ jobs:
 
       - name: Commit status files if changed
         run: |
-          bash scripts/commit_and_push.sh "chore: update cam status [skip ci]" data/cam-status.json data/ai_status.json
+          bash scripts/commit_and_push.sh "chore: update cam status [skip ci]" data/cam-status.json data/ai_status.json data/dabs.json
 
       - name: AI briefing (Claude)
         if: steps.ai_reserve.outcome == 'success'
@@ -60,4 +67,4 @@ jobs:
       - name: Commit AI briefing
         if: steps.ai_reserve.outcome == 'success'
         run: |
-          bash scripts/commit_and_push.sh "chore: AI briefing [skip ci]" data/ai_status.json
+          bash scripts/commit_and_push.sh "chore: AI briefing [skip ci]" data/ai_status.json data/dabs.json
