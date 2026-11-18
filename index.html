@@ -2374,6 +2374,7 @@
     //   quelle 'pfa' | 'speck' | null     ersatz true = Rückfall auf die Speck-Station
     //   datei 'station' | 'vqha80' | null  MeteoSchweiz-Datei, aus der Messzeit und Wind stammen (Diagnose)
     //   zeit / alterMin                   Messzeit (PFA: Ende des Zehnminutenintervalls) und Alter beim Laden
+    //   zeitAelteste / alterMaxMin        Messzeit und Alter des ältesten der Werte Wind, Temperatur, QNH (für window.LSZK_WX)
     //   windKt, windDir, gustKt           10-min-Mittel, Richtung in Grad, Böenspitze (PFA: 1 s; Speck: 10 Min High)
     //   tempC, dewC, humPct, qnh, qfe     qnh in hPa (Speck: Stationsbarometer, 2–3 hPa unter dem QNH); qfe nur PFA
     //   qnhDelta3h, qnhTrend              Änderung in 3 h (nur PFA) und Klasse -2 … +2
@@ -2381,6 +2382,7 @@
     //   rain1h                            Summe der letzten 60 min in mm (nur PFA und nur mit allen sechs Zehnminutenwerten)
     function wxEmpty(quelle) {
       return { quelle: quelle, ersatz: quelle === 'speck', datei: null, zeit: null, alterMin: null,
+               zeitAelteste: null, alterMaxMin: null,
                windKt: null, windDir: null, gustKt: null, tempC: null, dewC: null, humPct: null,
                qnh: null, qfe: null, qnhDelta3h: null, qnhTrend: null,
                rain10: null, rainMmH: null, rainZeit: null, rain1h: null };
@@ -2407,6 +2409,11 @@
       o.datei = ref.h.station_abbr !== undefined ? 'station' : 'vqha80';
       o.zeit = new Date(ref.t);
       o.alterMin = (nowMs - ref.t) / 60000;
+      // Wind, Temperatur und QNH können aus verschieden alten Zeilen stammen. Die älteste davon gilt für
+      // window.LSZK_WX (time, ageMin, stale), damit dort niemand mit einem älteren Wert rechnet, als die Messzeit sagt.
+      var alt = Math.min(wRow ? wRow.t : Infinity, tRow ? tRow.t : Infinity, qRow ? qRow.t : Infinity);
+      o.zeitAelteste = new Date(alt);
+      o.alterMaxMin = (nowMs - alt) / 60000;
       if (wRow) {                                  // Mittel, Richtung und Böe immer aus derselben Zeile
         o.windKt  = cell(wRow, 'fu3010z0', 0, 300) / 1.852;
         o.windDir = cell(wRow, 'dkl010z0', 1, 360);   // 0 = keine Richtung (nur bei Flaute; Nord ist 360)
@@ -2470,6 +2477,8 @@
       var o = wxEmpty('speck');
       o.zeit = new Date(cur.lastReceived);
       o.alterMin = age;
+      o.zeitAelteste = o.zeit;
+      o.alterMaxMin = age;
       var a10 = val('10 Min Avg Wind Speed', 0, 150);
       o.windKt  = a10 !== null ? a10 : val('Wind Speed', 0, 150);
       o.windDir = o.windKt === null ? null : val('Wind Direction', 1, 360);
@@ -2495,14 +2504,18 @@
     // Die Feldnamen sind mit den Nutzern abgesprochen und bleiben stabil. Jedes Zahlenfeld ist eine endliche
     // Zahl oder null; 0 heisst immer «gemessen 0». Bei stale === true nicht rechnen.
     //   src 'pfa' | 'speck' | null · time = Messzeit in ms seit Epoche · windDir in Grad rechtweisend
+    //   time, ageMin und stale gelten für den ÄLTESTEN der Werte Wind, Temperatur und QNH (bei MeteoSchweiz können
+    //   sie aus verschiedenen Zeilen stammen). Der Niederschlag kann bis PFA_MAX_AGE_MIN Minuten älter sein.
     //   Bei src 'speck' ist der Wind meist deutlich zu tief und qnhHpa kein amtliches QNH.
     function wxPublic(w) {
+      var z = w.zeitAelteste || w.zeit;
+      var a = (typeof w.alterMaxMin === 'number') ? w.alterMaxMin : w.alterMin;
       return {
         src: w.quelle,
         srcLabel: w.quelle === 'pfa' ? 'MeteoSchweiz Pfäffikon ZH' : (w.quelle === 'speck' ? 'Wetterstation Speck (Ersatz)' : null),
-        time: (w.zeit && isFinite(w.zeit.getTime())) ? w.zeit.getTime() : null,
-        ageMin: w.alterMin,
-        stale: !w.quelle || w.alterMin === null || w.alterMin >= WX_STALE_MIN,
+        time: (z && isFinite(z.getTime())) ? z.getTime() : null,
+        ageMin: a,
+        stale: !w.quelle || a === null || a >= WX_STALE_MIN,
         windKt: w.windKt, windDir: w.windDir, gustKt: w.gustKt,
         tempC: w.tempC, dewC: w.dewC, humPct: w.humPct,
         qnhHpa: w.qnh, qfeHpa: w.qfe,
