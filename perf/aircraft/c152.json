@@ -1,0 +1,99 @@
+{
+  "schema": 2,
+  "id": "c152",
+  "label": "Cessna 152",
+  "mass": { "kg": 758, "lb": 1670 },
+  "massNoteDe": "Maximum Takeoff Weight und Maximum Landing Weight 1670 lbs (Section 2, S. 2-5). Das Handbuch nennt nur Pfund; umgerechnet sind es 757,5 kg.",
+  "variantDe": "Motor Lycoming O-235-L2C, Festpropeller",
+  "techniqueDe": "Kurzstart- und Kurzlandetechnik",
+  "readingRuleDe": "Ablesung beim nächsthöheren Tabellenwert von Höhe und Temperatur, keine Interpolation (so auch das Sample Problem im Handbuch, Section 5, S. 5-4 und 5-7).",
+  "footerDe": "Richtwert nach AFM ohne eigenen Sicherheitszuschlag: maximales Abfluggewicht, Kurzstart- und Kurzlandetechnik, ebene Graspiste. Für nasses Gras nennt das AFM weder beim Start noch bei der Landung einen Wert; die Strecken können dann deutlich länger sein. Nicht berücksichtigt sind Pistenneigung, Zustand von Flugzeug und Motor sowie die Pilotentechnik. Massgebend sind das AFM der jeweiligen Maschine und die eigene Beurteilung.",
+  "sources": {
+    "poh": {
+      "labelDe": "Handbuch",
+      "title": "Pilot's Operating Handbook and FAA Approved Airplane Flight Manual, 1980 Model 152",
+      "publisher": "Cessna Aircraft Company",
+      "number": "D1170-1-13PH",
+      "issue": "Original Issue 1 July 1979 mit Revision 1 vom 31 March 1983; die Blätter 5-11 und 5-19 tragen das Datum 1 July 1979",
+      "applicabilityDe": "Handbuch der HB-CYF (Titelblatt: Serial No. F1521792). Gilt gleich für die baugleichen HB-CFA und HB-CYP.",
+      "caveatDe": "Stand der vorliegenden Kopie; massgebend ist das Handbuch der jeweiligen Maschine."
+    }
+  },
+  "charts": {
+    "takeoff": {
+      "source": "poh",
+      "title": "Takeoff Distance, Short Field, 1670 lbs",
+      "ref": { "figure": "Figure 5-4", "page": "5-11" },
+      "conditionsDe": "Kurzstarttechnik (Section 4): Klappen 10°, Vollgas vor dem Lösen der Bremsen, Abheben mit 50 KIAS, 54 KIAS in 15 m Höhe; Hartbelag, eben, trocken, kein Wind.",
+      "notesDe": [
+        "Gegenwind: −10 % je 9 kt.",
+        "Trockene Graspiste: +15 % des Ground-Roll-Werts auf beide Strecken.",
+        "Für nasses Gras nennt das AFM beim Start keinen Wert.",
+        "Über 3000 ft Platzhöhe das Gemisch vor dem Start auf maximale Drehzahl abmagern.",
+        "Nicht gerechnet: Rückenwind (im AFM bis 10 kt: +10 % je 2 kt)."
+      ],
+      "base": { "surface": "paved", "surfaceCondition": "dry" },
+      "table": {
+        "type": "grid",
+        "axes": [
+          { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000], "read": "nextHigher", "below": "lowest", "above": "none" },
+          { "quantity": "temperature", "unit": "degC", "values": [0, 10, 20, 30, 40], "read": "nextHigher", "below": "lowest", "above": "none" }
+        ],
+        "outputs": [{ "id": "groundRoll", "unit": "ft" }, { "id": "overObstacle", "unit": "ft" }],
+        "obstacle": { "value": 50, "unit": "ft" },
+        "cells": [
+          [[640, 1190], [695, 1290], [755, 1390], [810, 1495], [875, 1605]],
+          [[705, 1310], [765, 1420], [825, 1530], [890, 1645], [960, 1770]],
+          [[775, 1445], [840, 1565], [910, 1690], [980, 1820], [1055, 1960]],
+          [[855, 1600], [925, 1730], [1000, 1870], [1080, 2020], [1165, 2185]],
+          [[940, 1775], [1020, 1920], [1100, 2080], [1190, 2250], [1285, 2440]],
+          [[1040, 1970], [1125, 2140], [1215, 2320], [1315, 2525], [1420, 2750]],
+          [[1145, 2200], [1245, 2395], [1345, 2610], [1455, 2855], [1570, 3125]],
+          [[1270, 2470], [1375, 2705], [1490, 2960], [1615, 3255], [1745, 3590]],
+          [[1405, 2800], [1525, 3080], [1655, 3395], [1795, 3765], [1940, 4195]]
+        ]
+      },
+      "corrections": [
+        { "kind": "headwind", "type": "percentPer", "percent": -10, "per": 9, "unit": "kt" },
+        { "kind": "surface", "type": "addPercentOf", "surface": "grass", "surfaceCondition": "dry", "percent": 15, "of": "groundRoll" }
+      ]
+    },
+    "landing": {
+      "source": "poh",
+      "title": "Landing Distance, Short Field, 1670 lbs",
+      "ref": { "figure": "Figure 5-10", "page": "5-19" },
+      "conditionsDe": "Kurzlandetechnik (Section 4): Klappen 30°, Leerlauf, maximales Bremsen, 54 KIAS in 15 m Höhe; Hartbelag, eben, trocken, kein Wind.",
+      "notesDe": [
+        "Gegenwind: −10 % je 9 kt.",
+        "Trockene Graspiste: +45 % des Ground-Roll-Werts auf beide Strecken.",
+        "Für nasses Gras nennt das AFM bei der Landung keinen Wert.",
+        "Nicht gerechnet: Rückenwind (im AFM bis 10 kt: +10 % je 2 kt)."
+      ],
+      "base": { "surface": "paved", "surfaceCondition": "dry" },
+      "table": {
+        "type": "grid",
+        "axes": [
+          { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000], "read": "nextHigher", "below": "lowest", "above": "none" },
+          { "quantity": "temperature", "unit": "degC", "values": [0, 10, 20, 30, 40], "read": "nextHigher", "below": "lowest", "above": "none" }
+        ],
+        "outputs": [{ "id": "groundRoll", "unit": "ft" }, { "id": "overObstacle", "unit": "ft" }],
+        "obstacle": { "value": 50, "unit": "ft" },
+        "cells": [
+          [[450, 1160], [465, 1185], [485, 1215], [500, 1240], [515, 1265]],
+          [[465, 1185], [485, 1215], [500, 1240], [520, 1270], [535, 1295]],
+          [[485, 1215], [500, 1240], [520, 1270], [535, 1300], [555, 1330]],
+          [[500, 1240], [520, 1275], [540, 1305], [560, 1335], [575, 1360]],
+          [[520, 1275], [540, 1305], [560, 1335], [580, 1370], [600, 1400]],
+          [[540, 1305], [560, 1335], [580, 1370], [600, 1400], [620, 1435]],
+          [[560, 1340], [580, 1370], [605, 1410], [625, 1440], [645, 1475]],
+          [[585, 1375], [605, 1410], [625, 1440], [650, 1480], [670, 1515]],
+          [[605, 1410], [630, 1450], [650, 1480], [675, 1520], [695, 1555]]
+        ]
+      },
+      "corrections": [
+        { "kind": "headwind", "type": "percentPer", "percent": -10, "per": 9, "unit": "kt" },
+        { "kind": "surface", "type": "addPercentOf", "surface": "grass", "surfaceCondition": "dry", "percent": 45, "of": "groundRoll" }
+      ]
+    }
+  }
+}

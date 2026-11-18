@@ -12,6 +12,7 @@ const core = require(path.join(ROOT, 'perf', 'perf.js'));
 const readJson = (rel) => JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
 const C172D = readJson('perf/aircraft/c172d.json');
 const P2010 = readJson('perf/aircraft/p2010.json');
+const C152 = readJson('perf/aircraft/c152.json');
 const AF = readJson('perf/airfields/lszk.json');
 const INDEX_RAW = readJson('perf/aircraft/index.json');
 const LIST = ui.parseIndex(INDEX_RAW).list;
@@ -243,7 +244,8 @@ test('Cessna trocken (K2): Auswahl, Kopf, Messwerte, nur Gegenwindpiste, Zustand
   assertClean(html, 'K2');
   const t = text(html);
   assert.ok(html.includes('<label class="perf-ac-label" for="perf-ac">Flugzeug</label><select id="perf-ac" class="perf-select">'));
-  assert.ok(html.includes('<option value="c172d" selected>Cessna 172 Diesel · HB-TDA, HB-TDB, HB-TDC, HB-TDD</option><option value="p2010">Tecnam P2010 · HB-KMD</option>'), html);
+  assert.ok(html.includes('<select id="perf-ac" class="perf-select"><option value="c172d" selected>Cessna 172 Diesel · HB-TDA, HB-TDB, HB-TDC, HB-TDD</option>' +
+    '<option value="p2010">Tecnam P2010 · HB-KMD</option><option value="c152">Cessna 152 · HB-CFA, HB-CYF, HB-CYP</option></select>'), html);
   assert.ok(t.includes("Maximales Abfluggewicht 1'157 kg (2'550 lb) · Kurzstart- und Kurzlandetechnik · Motor TAE 125-02-114, Propeller MTV-6-A/190-69"), t);
   assert.ok(t.includes("Messwerte MeteoSchweiz Pfäffikon ZH, 09:00 Uhr (vor 15 min): 15,0 °C · QNH 1018,0 hPa · Wind 290° / 8,0 kt, Böen 14 kt · Druckhöhe 1'630 ft"), t);
   assert.ok(t.includes('Pistenzustand laut FGZO: DRY (Stand 18.11.2026, 07:14). MeteoSchweiz hat in der letzten Stunde keinen Regen gemessen. Gerechnet für trockenes Gras. Tau, Reif, eben einsetzenden Regen und Nässe von früherem Regen erkennt die Karte nicht.'), t);
@@ -336,6 +338,55 @@ test('Tecnam nass durch Regen: Hinweis ohne Zuschlag, Zahlen unverändert, Gewic
   assert.ok(text(block(html, '30')).includes('Start 468 m 821 m') && text(block(html, '30')).includes('Landung 453 m 927 m'));
   html = render(wxPfa({ tempC: -30, windKt: 0 }), { aircraft: P2010 });                                  // T3
   assert.ok(has(html, 'Temperatur −30,0 °C → Tabellenspalte −25 °C (kleinster Tabellenwert)'), text(html));
+});
+
+/* ── Anzeige Cessna 152 ────────────────────────────────────── */
+
+test('Cessna 152 trocken (C2): Auswahl mit drei Mustern, Kopf, Zahlen, Rechenweg in ft, Quellen, Fusszeile', () => {
+  const html = render(wxPfa(), { aircraft: C152 });
+  assertClean(html, 'C2');
+  const t = text(html);
+  assert.equal((html.match(/<option /g) || []).length, 3);
+  assert.ok(html.includes('<option value="c172d">Cessna 172 Diesel · HB-TDA, HB-TDB, HB-TDC, HB-TDD</option><option value="p2010">Tecnam P2010 · HB-KMD</option>' +
+    '<option value="c152" selected>Cessna 152 · HB-CFA, HB-CYF, HB-CYP</option>'), html);
+  assert.ok(t.includes("Maximales Abfluggewicht 758 kg (1'670 lb) · Kurzstart- und Kurzlandetechnik · Motor Lycoming O-235-L2C, Festpropeller"), t);
+  assert.equal(block(html, '12'), null, 'Rückenwindpiste ohne Block');
+  const b30 = text(block(html, '30'));
+  assert.ok(b30.includes('Piste 30 · Gegenwind 7 kt'), b30);
+  assert.ok(b30.includes('Start 300 m 521 m 625 m') && b30.includes('Landung 219 m 432 m 520 m'), b30);
+  assert.ok(t.includes("Druckhöhe 1'630 ft (aus QNH 1018,0 hPa und Platzhöhe 1'759 ft) → Tabellenzeile 2'000 ft · Temperatur 15,0 °C → Tabellenspalte 20 °C"), t);
+  assert.ok(t.includes("Start: Tabelle 910 / 1'690 ft · Gegenwind 7 kt: −7 % → 846,3 / 1'571,7 ft · Gras +15 % von 910 ft = +136,5 ft → 982,8 / 1'708,2 ft = 299,56 / 520,66 m → aufgerundet 300 / 521 m"), t);
+  assert.ok(t.includes("Landung: Tabelle 520 / 1'270 ft · Gegenwind 7 kt: −7 % → 483,6 / 1'181,1 ft · Gras +45 % von 520 ft = +234 ft → 717,6 / 1'415,1 ft = 218,73 / 431,33 m → aufgerundet 219 / 432 m"), t);
+  ['Start (Handbuch): Takeoff Distance, Short Field, 1670 lbs, Figure 5-4, Seite 5-11.',
+    'Landung (Handbuch): Landing Distance, Short Field, 1670 lbs, Figure 5-10, Seite 5-19.',
+    "Handbuch: Pilot's Operating Handbook and FAA Approved Airplane Flight Manual, 1980 Model 152, Cessna Aircraft Company, D1170-1-13PH",
+    'Handbuch der HB-CYF (Titelblatt: Serial No. F1521792). Gilt gleich für die baugleichen HB-CFA und HB-CYP.',
+    'Abheben mit 50 KIAS, 54 KIAS in 15 m Höhe', 'Klappen 30°, Leerlauf, maximales Bremsen, 54 KIAS in 15 m Höhe',
+    'Für nasses Gras nennt das AFM beim Start keinen Wert.', 'Für nasses Gras nennt das AFM bei der Landung keinen Wert.',
+    C152.readingRuleDe + ' Rundung immer zur längeren Strecke',
+    "Gewicht 758 kg (1'670 lb): " + C152.massNoteDe].forEach((s) => assert.ok(t.includes(s), 'fehlt: ' + s));
+  assert.ok(!html.includes('perf-factor'), 'keine Faktorzeile');
+  assert.ok(!html.includes('perf-warn') && !html.includes('perf-note'));
+  assert.ok(t.includes(C152.footerDe));
+  ['TAE 125', 'MTV-', 'Supplement', 'Doc.-No.', 'APV5', '172S', "1'157", "1'160"].forEach((s) => assert.ok(!t.includes(s), 'Text eines anderen Musters: ' + s));
+});
+
+test('Cessna 152 nass und über dem Tabellenbereich: Hinweis ohne Zuschlag, Zahlen unverändert; 40,1 °C ohne Wert', () => {
+  let html = render(wxPfa(), { aircraft: C152, fgzo: fgzo({ runway_condition: 'STANDING WATER', updated: '18.11.2026, 10:38' }) });
+  assert.ok(html.includes('class="perf-cond perf-warn"'));
+  assert.ok(has(html, 'Piste gilt als nass: FGZO meldet «STANDING WATER» (Stand 18.11.2026, 10:38). Das AFM nennt für nasses Gras keinen Wert; Start- und Landestrecke können deutlich länger sein.'), text(html));
+  assert.ok(!has(html, 'eingerechnet') && !has(html, '× 1,'), 'kein Zuschlag');
+  assert.ok(text(block(html, '30')).includes('Start 300 m 521 m 625 m') && text(block(html, '30')).includes('Landung 219 m 432 m 520 m'));
+  html = render(wxPfa({ rain1hMm: 0.4 }), { aircraft: C152 });
+  assert.ok(has(html, 'Piste gilt als nass: MeteoSchweiz hat in der letzten Stunde 0,4 mm Regen gemessen. Das AFM nennt für nasses Gras keinen Wert; Start- und Landestrecke können deutlich länger sein.'));
+  html = render(wxPfa({ tempC: 40.1 }), { aircraft: C152 });
+  assertNoResult(html, '40,1 °C');
+  assert.ok(has(html, 'Temperatur 40,1 °C liegt über dem Tabellenbereich des AFM (bis 40 °C) – kein Wert.'), text(html));
+  assert.ok(has(html, "Maximales Abfluggewicht 758 kg (1'670 lb)") && has(html, C152.footerDe));
+  html = render(wxPfa({ tempC: 40, qnhHpa: 1013.25, windDir: null, windKt: 0 }), { aircraft: C152 });          // C5
+  assert.ok(block(html, '30').includes('<span class="perf-amber">646&nbsp;m</span>') && has(block(html, '30'), 'Start: Strecke über 15 m länger als die verfügbare Länge.'));
+  html = render(wxPfa({ tempC: -5, qnhHpa: 1004.5, windDir: null, windKt: 0 }), { aircraft: C152 });         // C7b
+  assert.ok(has(html, 'Temperatur −5,0 °C → Tabellenspalte 0 °C (kleinster Tabellenwert)'), text(html));
 });
 
 /* ── Pistenwahl, Feststellungen ────────────────────────────── */
@@ -552,7 +603,7 @@ test('Maskierung: Marke in jedem Textfeld von Flugzeug-, Platz- und Listendatei,
     return html;
   };
   // 1) jedes Textfeld einzeln
-  [C172D, P2010].forEach((acBase) => stringPaths(acBase).forEach((p) => {
+  [C172D, P2010, C152].forEach((acBase) => stringPaths(acBase).forEach((p) => {
     const ac = clone(acBase);
     setPath(ac, p, MARK + getPath(ac, p));
     maskVariants(ac, AF, LIST).forEach((ctx) => check(ctx, acBase.id + ' ' + p));
@@ -560,7 +611,7 @@ test('Maskierung: Marke in jedem Textfeld von Flugzeug-, Platz- und Listendatei,
   stringPaths(AF).forEach((p) => {
     const af = clone(AF);
     setPath(af, p, MARK + getPath(af, p));
-    [C172D, P2010].forEach((ac) => maskVariants(ac, af, LIST).forEach((ctx) => check(ctx, 'Platz ' + p)));
+    [C172D, P2010, C152].forEach((ac) => maskVariants(ac, af, LIST).forEach((ctx) => check(ctx, 'Platz ' + p)));
   });
   stringPaths(INDEX_RAW).forEach((p) => {
     const idx = clone(INDEX_RAW);
@@ -578,7 +629,7 @@ test('Maskierung: Marke in jedem Textfeld von Flugzeug-, Platz- und Listendatei,
   const HEAD = ['techniqueDe', 'variantDe', 'footerDe', 'readingRuleDe', 'wetNoteDe', 'massNoteDe'];
   const afAll = markAll(AF, ['unit']);
   assert.equal(core.validateAirfield(afAll).ok, true);
-  [C172D, P2010].forEach((acBase) => {
+  [C172D, P2010, C152].forEach((acBase) => {
     const full = clone(acBase);
     Object.keys(full.sources).forEach((k) => SRC.forEach((f) => { if (typeof full.sources[k][f] !== 'string') full.sources[k][f] = f; }));
     HEAD.forEach((f) => { if (typeof full[f] !== 'string') full[f] = f; });
@@ -751,7 +802,8 @@ test('Rechenweg geht exakt auf: jede Zeile aller Kontrollfälle nachgerechnet, l
   sample.charts.takeoff.table.cells = readJson('tests/fixtures/c172d_5a_1111kg_m.json').cells;
   let lines = 0, values = 0;
   CASES.forEach(([id, acId, field, inp]) => {
-    const ac = acId === 'c172d' ? C172D : (acId === 'p2010' ? P2010 : sample);
+    assert.ok(['c172d', 'p2010', 'c152', 'sample5a1111'].includes(acId), id + ': unbekanntes Muster ' + acId);
+    const ac = acId === 'c172d' ? C172D : (acId === 'p2010' ? P2010 : (acId === 'c152' ? C152 : sample));
     const af = field === 'lszk' ? AF : pavedTestField(field);
     const html = render(wxPfa({ tempC: inp[0], qnhHpa: inp[1], windDir: inp[2], windKt: inp[3], rain1hMm: inp[4] ? 0.4 : 0 }),
       { aircraft: ac, airfield: af, detailsOpen: true });
@@ -779,7 +831,7 @@ test('Rechenweg geht exakt auf: jede Zeile aller Kontrollfälle nachgerechnet, l
       });
     }
   });
-  assert.deepEqual([lines, values], [134, 127], 'Zeilen und Werte im Rechenweg');
+  assert.deepEqual([lines, values], [174, 165], 'Zeilen und Werte im Rechenweg');
 });
 
 test('Versionsprüfung: Kern und Anzeige müssen gleich sein', () => {
@@ -796,7 +848,7 @@ test('Versionsprüfung: Kern und Anzeige müssen gleich sein', () => {
 });
 
 test('Durchlauf: nie NaN, undefined, null oder Infinity im HTML', () => {
-  [C172D, P2010].forEach((ac) => [null, 0, 34, 124, 214, 304].forEach((dir) => [0, 0.6, 2, 8.7, 22, 45].forEach((kt) => [-30, 0, 10.8, 25.1, 39.9].forEach((t) => {
+  [C172D, P2010, C152].forEach((ac) => [null, 0, 34, 124, 214, 304].forEach((dir) => [0, 0.6, 2, 8.7, 22, 45].forEach((kt) => [-30, 0, 10.8, 25.1, 39.9].forEach((t) => {
     [[fgzo(), 0], [fgzo({ runway_condition: 'WET', flaeche: 'gesperrt' }), null], [null, null]].forEach(([f, rain]) => {
       const html = render(wxPfa({ windDir: dir, windKt: kt, gustKt: kt ? kt * 1.5 : null, tempC: t, rain1hMm: rain }), { aircraft: ac, fgzo: f, detailsOpen: true });
       assertClean(html, ac.id + ' ' + dir + '/' + kt + '/' + t);
@@ -855,6 +907,7 @@ function fakeBrowser(opts) {
       'perf/airfields/lszk.json': AF,
       'perf/aircraft/c172d.json': C172D,
       'perf/aircraft/p2010.json': P2010,
+      'perf/aircraft/c152.json': C152,
       'data/fgzo_status.json': fgzo()
     }, opts.files)
   };
@@ -1063,6 +1116,34 @@ test('boot: Wechsel Cessna ↔ Tecnam, Wahl erst nach erfolgreichem Laden gespei
   env.content.listeners.change({ target: { id: 'anderes', value: 'p2010' } });
   await settle();
   assert.equal(env.store['lszk-perf-aircraft'], 'c172d');
+});
+
+test('boot: Wechsel zur Cessna 152 und zurück; die gespeicherte Wahl gilt beim nächsten Start', async (t) => {
+  const env = startBrowser(t);
+  await settle();
+  env.win.LszkPerf.update(wxPfa());
+  await settle();
+  assert.equal((env.content.innerHTML.match(/<option /g) || []).length, 3);
+  env.content.listeners.change({ target: { id: 'perf-ac', value: 'c152' } });
+  assert.ok(env.content.innerHTML.includes('<option value="c152" selected>'), 'Auswahl während des Ladens');
+  assert.ok(!shown(env).includes('331 m'), 'Zahlen der Cessna 172 während des Ladens');
+  await settle();
+  assert.equal(env.store['lszk-perf-aircraft'], 'c152');
+  assert.ok(env.fetchUrls.some((u) => u.startsWith('perf/aircraft/c152.json?t=')));
+  assert.ok(env.content.innerHTML.includes('<option value="c152" selected>Cessna 152 · HB-CFA, HB-CYF, HB-CYP</option>'));
+  let s = shown(env);
+  assert.ok(s.includes('Start 300 m 521 m 625 m') && s.includes('Landung 219 m 432 m 520 m') && s.includes("758 kg (1'670 lb)") && s.includes(C152.footerDe), s);
+  // nächster Seitenaufruf mit der gespeicherten Wahl
+  const next = fakeBrowser({ store: { 'lszk-perf-aircraft': 'c152' }, initialWx: wxPfa() });
+  ui.boot(next.win);
+  await settle();
+  assert.ok(next.content.innerHTML.includes('<option value="c152" selected>'), next.content.innerHTML.slice(0, 400));
+  assert.ok(shown(next).includes('Start 300 m 521 m 625 m'));
+  env.content.listeners.change({ target: { id: 'perf-ac', value: 'c172d' } });
+  await settle();
+  s = shown(env);
+  assert.equal(env.store['lszk-perf-aircraft'], 'c172d');
+  assert.ok(s.includes('Start 331 m 492 m') && s.includes(C172D.footerDe) && !s.includes('O-235'), s);
 });
 
 test('boot: nicht ladbare Wahl fällt auf den Standard zurück, Speicher geleert, Hinweis', async (t) => {

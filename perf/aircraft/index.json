@@ -3,6 +3,7 @@
   "default": "c172d",
   "aircraft": [
     { "id": "c172d", "label": "Cessna 172 Diesel", "registrations": ["HB-TDA", "HB-TDB", "HB-TDC", "HB-TDD"], "file": "c172d.json" },
-    { "id": "p2010", "label": "Tecnam P2010", "registrations": ["HB-KMD"], "file": "p2010.json" }
+    { "id": "p2010", "label": "Tecnam P2010", "registrations": ["HB-KMD"], "file": "p2010.json" },
+    { "id": "c152", "label": "Cessna 152", "registrations": ["HB-CFA", "HB-CYF", "HB-CYP"], "file": "c152.json" }
   ]
 }

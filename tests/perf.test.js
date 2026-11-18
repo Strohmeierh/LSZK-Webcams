@@ -15,6 +15,7 @@ function readJson(rel) {
 }
 const C172D = readJson('perf/aircraft/c172d.json').data;
 const P2010 = readJson('perf/aircraft/p2010.json').data;
+const C152 = readJson('perf/aircraft/c152.json').data;
 const INDEX = readJson('perf/aircraft/index.json').data;
 const AF = readJson('perf/airfields/lszk.json').data;
 const LYC = readJson('tests/fixtures/c172s_lycoming.json').data;
@@ -60,33 +61,45 @@ function sample5a1111() {
 /* ── Daten ─────────────────────────────────────────────────── */
 
 test('Daten: JSON ohne BOM, Schema 2, Validierung ok', () => {
-  ['perf/aircraft/c172d.json', 'perf/aircraft/p2010.json', 'perf/aircraft/index.json', 'perf/airfields/lszk.json',
+  ['perf/aircraft/c172d.json', 'perf/aircraft/p2010.json', 'perf/aircraft/c152.json', 'perf/aircraft/index.json', 'perf/airfields/lszk.json',
     'tests/fixtures/c172s_lycoming.json', 'tests/fixtures/c172d_5b_1157kg_ft.json', 'tests/fixtures/c172d_5a_1111kg_m.json',
     'tests/fixtures/p2010_ft.json', 'tests/fixtures/p2010_isa.json', 'tests/fixtures/kontrollfaelle.json'].forEach((rel) => {
     const { buf } = readJson(rel);
     assert.ok(!(buf[0] === 0xef && buf[1] === 0xbb && buf[2] === 0xbf), rel + ' hat ein BOM');
   });
-  [C172D, P2010, LYC].forEach((ac) => assert.deepEqual(core.validateAircraft(ac), { ok: true, errors: [] }, ac.id));
+  [C172D, P2010, C152, LYC].forEach((ac) => assert.deepEqual(core.validateAircraft(ac), { ok: true, errors: [] }, ac.id));
   assert.deepEqual(core.validateAirfield(AF), { ok: true, errors: [] });
   assert.equal(AF.schema, 2);
   assert.equal(INDEX.schema, 2);
 });
 
-test('Daten: Auswahl mit zwei Mustern und Kennzeichen, Lycoming nicht mehr in perf/aircraft', () => {
+test('Daten: Auswahl mit drei Mustern und Kennzeichen, Lycoming nicht mehr in perf/aircraft', () => {
   assert.equal(INDEX.default, 'c172d');
   assert.deepEqual(INDEX.aircraft.map((a) => [a.id, a.label, a.file, a.registrations]), [
     ['c172d', 'Cessna 172 Diesel', 'c172d.json', ['HB-TDA', 'HB-TDB', 'HB-TDC', 'HB-TDD']],
-    ['p2010', 'Tecnam P2010', 'p2010.json', ['HB-KMD']]
+    ['p2010', 'Tecnam P2010', 'p2010.json', ['HB-KMD']],
+    ['c152', 'Cessna 152', 'c152.json', ['HB-CFA', 'HB-CYF', 'HB-CYP']]
   ]);
   assert.equal(C172D.label, 'Cessna 172 Diesel');
   assert.equal(P2010.label, 'Tecnam P2010');
-  assert.deepEqual(fs.readdirSync(path.join(ROOT, 'perf', 'aircraft')).sort(), ['c172d.json', 'index.json', 'p2010.json']);
+  assert.deepEqual([C152.id, C152.label], ['c152', 'Cessna 152']);
+  assert.deepEqual(fs.readdirSync(path.join(ROOT, 'perf', 'aircraft')).sort(), ['c152.json', 'c172d.json', 'index.json', 'p2010.json']);
 });
 
 test('Daten: keine Rückenwind-Regel, Quelle je Chart, Masse wie gedruckt', () => {
-  ['perf/aircraft/c172d.json', 'perf/aircraft/p2010.json', 'tests/fixtures/c172s_lycoming.json'].forEach((rel) => {
+  ['perf/aircraft/c172d.json', 'perf/aircraft/p2010.json', 'perf/aircraft/c152.json', 'tests/fixtures/c172s_lycoming.json'].forEach((rel) => {
     assert.ok(!/tailwind/.test(fs.readFileSync(path.join(ROOT, rel), 'utf8')), rel);
   });
+  // Cessna 152: ein Handbuch für Start und Landung, Gewicht im Handbuch nur in Pfund
+  assert.deepEqual([C152.charts.takeoff.source, C152.charts.landing.source, Object.keys(C152.sources)], ['poh', 'poh', ['poh']]);
+  assert.equal(C152.sources.poh.title, "Pilot's Operating Handbook and FAA Approved Airplane Flight Manual, 1980 Model 152");
+  assert.equal(C152.sources.poh.number, 'D1170-1-13PH');
+  ['1 July 1979', 'Revision 1', '31 March 1983', '5-11', '5-19'].forEach((s) => assert.ok(C152.sources.poh.issue.includes(s), s));
+  ['HB-CYF', 'F1521792', 'HB-CFA', 'HB-CYP'].forEach((s) => assert.ok(C152.sources.poh.applicabilityDe.includes(s), s));
+  assert.deepEqual(C152.mass, { kg: 758, lb: 1670 });
+  assert.ok(Math.abs(C152.mass.lb * core.LB_KG - C152.mass.kg) < 0.51, 'kg passt zu den gedruckten Pfund');
+  assert.deepEqual(C152.charts.takeoff.ref, { figure: 'Figure 5-4', page: '5-11' });
+  assert.deepEqual(C152.charts.landing.ref, { figure: 'Figure 5-10', page: '5-19' });
   assert.equal(C172D.charts.takeoff.source, 'supplement');
   assert.equal(C172D.charts.landing.source, 'poh');
   assert.equal(P2010.charts.takeoff.source, 'afm');
@@ -147,8 +160,35 @@ const P2010_LANDING = [
   [[245, 529], [270, 554], [295, 579], [320, 604]],
   [[255, 539], [280, 564], [306, 590], [332, 616]]
 ];
+// Cessna 152, Pilot's Operating Handbook 1980 Model 152 [ft], 1670 lbs, am Seitenbild gelesen (der Scan hat keine Textebene).
+// Zeilen S.L. bis 8000 ft, Spalten 0, 10, 20, 30, 40 °C. Figure 5-4, S. 5-11 (Takeoff Distance, Short Field):
+const C152_TAKEOFF = [
+  [[640, 1190], [695, 1290], [755, 1390], [810, 1495], [875, 1605]],
+  [[705, 1310], [765, 1420], [825, 1530], [890, 1645], [960, 1770]],
+  [[775, 1445], [840, 1565], [910, 1690], [980, 1820], [1055, 1960]],
+  [[855, 1600], [925, 1730], [1000, 1870], [1080, 2020], [1165, 2185]],
+  [[940, 1775], [1020, 1920], [1100, 2080], [1190, 2250], [1285, 2440]],
+  [[1040, 1970], [1125, 2140], [1215, 2320], [1315, 2525], [1420, 2750]],
+  [[1145, 2200], [1245, 2395], [1345, 2610], [1455, 2855], [1570, 3125]],
+  [[1270, 2470], [1375, 2705], [1490, 2960], [1615, 3255], [1745, 3590]],
+  [[1405, 2800], [1525, 3080], [1655, 3395], [1795, 3765], [1940, 4195]]
+];
+// Figure 5-10, S. 5-19 (Landing Distance, Short Field):
+const C152_LANDING = [
+  [[450, 1160], [465, 1185], [485, 1215], [500, 1240], [515, 1265]],
+  [[465, 1185], [485, 1215], [500, 1240], [520, 1270], [535, 1295]],
+  [[485, 1215], [500, 1240], [520, 1270], [535, 1300], [555, 1330]],
+  [[500, 1240], [520, 1275], [540, 1305], [560, 1335], [575, 1360]],
+  [[520, 1275], [540, 1305], [560, 1335], [580, 1370], [600, 1400]],
+  [[540, 1305], [560, 1335], [580, 1370], [600, 1400], [620, 1435]],
+  [[560, 1340], [580, 1370], [605, 1410], [625, 1440], [645, 1475]],
+  [[585, 1375], [605, 1410], [625, 1440], [650, 1480], [670, 1515]],
+  [[605, 1410], [630, 1450], [650, 1480], [675, 1520], [695, 1555]]
+];
 
-test('Daten: alle Tabellenwerte wörtlich (c172d 154 + 90, p2010 56 + 56)', () => {
+test('Daten: alle Tabellenwerte wörtlich (c172d 154 + 90, p2010 56 + 56, c152 90 + 90)', () => {
+  assert.deepEqual(C152.charts.takeoff.table.cells, C152_TAKEOFF);
+  assert.deepEqual(C152.charts.landing.table.cells, C152_LANDING);
   assert.deepEqual(C172D.charts.takeoff.table.cells, C172D_TAKEOFF);
   assert.deepEqual(C172D.charts.landing.table.cells, C172D_LANDING);
   assert.deepEqual(P2010.charts.takeoff.table.cells, P2010_TAKEOFF);
@@ -170,6 +210,11 @@ test('Daten: Achsen, Einheiten und Ablesung je Tabelle', () => {
   assert.deepEqual(units(C172D.charts.landing), ['ft', 'ft']);
   assert.deepEqual(units(P2010.charts.takeoff), ['m', 'm']);
   assert.deepEqual(units(P2010.charts.landing), ['m', 'm']);
+  [C152.charts.takeoff, C152.charts.landing].forEach((ch) => {
+    assert.deepEqual(ax(ch), [['pressureAltitude', [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000], 'nextHigher'], ['temperature', [0, 10, 20, 30, 40], 'nextHigher']]);
+    assert.deepEqual(units(ch), ['ft', 'ft']);
+    assert.deepEqual(ch.base, { surface: 'paved', surfaceCondition: 'dry' });
+  });
 });
 
 function fp(cells, o, cols) {
@@ -189,6 +234,28 @@ test('Daten: Fingerabdrücke (Summe und gewichtete Summe) wie aus der PDF-Texteb
   assert.deepEqual([fp(LYC.charts.takeoff.table.cells, 0, 5)[0], fp(LYC.charts.takeoff.table.cells, 1, 5)[0]], [67205, 117830]);
 });
 
+test('Daten: Cessna 152 – Fingerabdrücke aus zwei Lesungen am Seitenbild, Proben gegen andere Blätter des Handbuchs', () => {
+  assert.deepEqual(fp(C152_TAKEOFF, 0, 5), [51730, 1366485]);
+  assert.deepEqual(fp(C152_TAKEOFF, 1, 5), [100100, 2692830]);
+  assert.deepEqual(fp(C152_LANDING, 0, 5), [25315, 615480]);
+  assert.deepEqual(fp(C152_LANDING, 1, 5), [60340, 1441315]);
+  // alle Werte auf 5 ft gerundet gedruckt
+  [C152_TAKEOFF, C152_LANDING].forEach((c) => c.forEach((row) => row.forEach((cell) => cell.forEach((v) => assert.equal(v % 5, 0, String(v))))));
+  // Sample Problem (S. 5-4 und 5-7): Zelle 2000 ft / 30 °C
+  assert.deepEqual([C152_TAKEOFF[2][3], C152_LANDING[2][3]], [[980, 1820], [535, 1300]]);
+  // Performance-Specifications (S. ii): Meereshöhe, Standardtemperatur 15 °C = Mitte zwischen den Spalten 10 und 20 °C
+  const mid = (c, o) => (c[0][1][o] + c[0][2][o]) / 2;
+  assert.deepEqual([mid(C152_TAKEOFF, 0), mid(C152_TAKEOFF, 1), mid(C152_LANDING, 0), mid(C152_LANDING, 1)], [725, 1340, 475, 1200]);
+  // Glatter Verlauf (zweite Differenzen in Höhe und Temperatur, Werte auf 5 ft gerundet): der Start wächst immer
+  // schneller (konvex, −5 bis +140 ft), die Landung fast linear (höchstens ±10 ft). Ein verlesener Zehner fällt so auf.
+  [[C152_TAKEOFF, -5, 140], [C152_LANDING, -10, 10]].forEach(([c, lo, hi], t) => [0, 1].forEach((o) => {
+    for (let i = 0; i < 9; i++) for (let j = 0; j < 5; j++) {
+      const d2 = [i > 1 ? c[i][j][o] - 2 * c[i - 1][j][o] + c[i - 2][j][o] : 0, j > 1 ? c[i][j][o] - 2 * c[i][j - 1][o] + c[i][j - 2][o] : 0];
+      d2.forEach((d, k) => assert.ok(d >= lo && d <= hi, (t ? 'Landung' : 'Start') + ' ' + (k ? 'Temperatur' : 'Höhe') + ' ' + i + '/' + j + '/' + o + ': ' + d));
+    }
+  }));
+});
+
 test('Daten: m-Tabellen gegen die gedruckten ft-Werte (höchstens 1 m Rundungsunterschied)', () => {
   C172D_TAKEOFF.forEach((row, i) => row.forEach((c, j) => [0, 1].forEach((o) => {
     close(c[o], FT_5B.cells[i][j][o] * 0.3048, 1, 'c172d ' + i + '/' + j + '/' + o);
@@ -203,7 +270,7 @@ test('Daten: Tecnam-Landung hat überall 284 m Luftstrecke', () => {
 });
 
 test('Daten: Monotonie und 15-m-Strecke grösser als Rollstrecke', () => {
-  [C172D_TAKEOFF, C172D_LANDING, P2010_TAKEOFF, P2010_LANDING].forEach((c, t) => {
+  [C172D_TAKEOFF, C172D_LANDING, P2010_TAKEOFF, P2010_LANDING, C152_TAKEOFF, C152_LANDING].forEach((c, t) => {
     for (let i = 0; i < c.length; i++) {
       for (let j = 0; j < c[i].length; j++) {
         for (let o = 0; o < 2; o++) {
@@ -233,6 +300,15 @@ test('Daten: Korrekturregeln wie in den AFM-Notes', () => {
     { kind: 'factor', when: 'wet', surface: 'grass', factor: 1.2, minimum: true, labelDe: 'nasse Piste', refDe: 'Supplement, Note 4' }
   ]);
   assert.deepEqual(rules(C172D.charts.landing), [
+    { kind: 'headwind', type: 'percentPer', percent: -10, per: 9, unit: 'kt' },
+    { kind: 'surface', type: 'addPercentOf', surface: 'grass', surfaceCondition: 'dry', percent: 45, of: 'groundRoll' }
+  ]);
+  // Cessna 152 (Figure 5-4 Notes 3 und 4, Figure 5-10 Notes 2 und 3): kein Wert für nasses Gras, also kein Faktor
+  assert.deepEqual(rules(C152.charts.takeoff), [
+    { kind: 'headwind', type: 'percentPer', percent: -10, per: 9, unit: 'kt' },
+    { kind: 'surface', type: 'addPercentOf', surface: 'grass', surfaceCondition: 'dry', percent: 15, of: 'groundRoll' }
+  ]);
+  assert.deepEqual(rules(C152.charts.landing), [
     { kind: 'headwind', type: 'percentPer', percent: -10, per: 9, unit: 'kt' },
     { kind: 'surface', type: 'addPercentOf', surface: 'grass', surfaceCondition: 'dry', percent: 45, of: 'groundRoll' }
   ]);
@@ -519,10 +595,12 @@ test('Belag: Gras aus der Tabellen-Rollstrecke (bei Interpolation der interpolie
 //  je Piste: Grund (nicht gerechnet) oder [Gegenwind kt, Start, Landung] mit [m Roll, m 15 m, exceeds Roll, exceeds 15 m] oder Grund]
 const CASES = readJson('tests/fixtures/kontrollfaelle.json').data;
 
-function caseAircraft(id) { return id === 'c172d' ? C172D : (id === 'p2010' ? P2010 : sample5a1111()); }
+function caseAircraft(id) { return id === 'c172d' ? C172D : (id === 'p2010' ? P2010 : (id === 'c152' ? C152 : sample5a1111())); }
 
-test('Kontrollbeispiele des Planers: 46 Fälle, Meter, exceeds und Gründe', () => {
-  assert.equal(CASES.length, 46);
+test('Kontrollbeispiele des Planers: 64 Fälle (davon 18 Cessna 152), Meter, exceeds und Gründe', () => {
+  assert.equal(CASES.length, 64);
+  assert.deepEqual(CASES.filter((c) => c[1] === 'c152').map((c) => c[0]),
+    ['C1', 'C1b', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C7b', 'C8', 'C9', 'C10a', 'C10b', 'C11', 'C12', 'C13', 'C13b', 'C14']);
   CASES.forEach(([id, ac, field, inp, exp]) => {
     const r = core.compute(caseAircraft(ac), field === 'lszk' ? AF : pavedField(field), wx(inp[0], inp[1], inp[2], inp[3], inp[4]));
     if (exp === 'above-range') {
@@ -574,6 +652,41 @@ test('Kontrollbeispiele: ungerundete Zwischenwerte (K1, K3, K8, K20a, K21)', () 
   assert.deepEqual([k21.lookup.columns.lowerValue, k21.lookup.columns.upperValue], [0, 25]);
   close(k21.lookup.columns.weight, 0.432, 1e-12);
   close(k21.final.groundRoll, 467.6848, 1e-9);
+});
+
+/* ── Cessna 152: Sample Problem des Handbuchs, nasse Piste ─── */
+
+test('Cessna 152: Sample Problem des Handbuchs (S. 5-3, 5-4 und 5-7) mit ungerundeten Zwischenwerten', () => {
+  // Start: Druckhöhe 1500 ft, 28 °C, 12 kt Gegenwind, Hartbelag. Handbuch: Zelle 2000 ft / 30 °C = 980 / 1820 ft,
+  // 12 kt / 9 kt × 10 % = 13 % weniger, 853 / 1583 ft.
+  let p = run(wx(28, 1013.25, 360, 12), C152, pavedField(1500)).runways[0].takeoff;
+  assert.deepEqual([p.lookup.axisValues, p.table, p.wind.percent, p.unit, p.surface],
+    [[2000, 30], { groundRoll: 980, overObstacle: 1820 }, 13, 'ft', null]);
+  close(p.final.groundRoll, 852.6, 1e-9);
+  close(p.final.overObstacle, 1583.4, 1e-9);
+  assert.deepEqual([Math.round(p.final.groundRoll), Math.round(p.final.overObstacle)], [853, 1583], 'wie im Handbuch gedruckt');
+  assert.deepEqual(meters(p), [260, 483]);
+  // Landung: Druckhöhe 2000 ft, 25 °C, ohne Wind. Handbuch: Zelle 2000 ft / 30 °C = 535 / 1300 ft.
+  p = run(wx(25, 1013.25, 360, 0), C152, pavedField(2000)).runways[0].landing;
+  assert.deepEqual([p.lookup.axisValues, p.final, meters(p)], [[2000, 30], { groundRoll: 535, overObstacle: 1300 }, [164, 397]]);
+});
+
+test('Cessna 152 auf Gras: Start +15 %, Landung +45 % der Rollstrecke; nass ohne Wert des Handbuchs, Zahlen unverändert', () => {
+  const dry = rwy(run(wx(15, 1018, 290, 8), C152), '30'), wet = rwy(run(wx(15, 1018, 290, 8, true), C152), '30');
+  assert.deepEqual([meters(dry.takeoff), meters(dry.landing)], [[300, 521], [219, 432]]);
+  assert.deepEqual([dry.takeoff.surface.percent, dry.takeoff.surface.base, dry.landing.surface.percent, dry.landing.surface.base], [15, 910, 45, 520]);
+  close(dry.takeoff.surface.inc, 136.5, 1e-9);
+  close(dry.landing.surface.inc, 234, 1e-9);
+  close(dry.takeoff.final.groundRoll, 982.8, 1e-9);
+  close(dry.takeoff.final.overObstacle, 1708.2, 1e-9);
+  close(dry.landing.final.groundRoll, 717.6, 1e-9);
+  close(dry.landing.final.overObstacle, 1415.1, 1e-9);
+  assert.deepEqual([meters(wet.takeoff), meters(wet.landing)], [meters(dry.takeoff), meters(dry.landing)]);
+  assert.deepEqual([wet.takeoff.factors, wet.landing.factors], [[], []]);
+  assert.deepEqual([dry.takeoff.wetFactorMissing, wet.takeoff.wetFactorMissing, wet.landing.wetFactorMissing], [false, true, true]);
+  // Tabellenbereich: bis 40 °C und 8000 ft, darunter die kleinste Spalte
+  assert.deepEqual(core.compute(C152, AF, wx(40.1, 1013.25, null, 0)).error.above, [{ quantity: 'temperature', unit: 'degC', value: 40.1, max: 40 }]);
+  assert.deepEqual(meters(rwy(run(wx(-25, 1013.25, null, 0), C152), '30').takeoff), meters(rwy(run(wx(0, 1013.25, null, 0), C152), '30').takeoff));
 });
 
 /* ── Lycoming-Regression (Fixture, alte Startzahlen) und Landezahlen c172d ── */
@@ -667,9 +780,9 @@ test('Durchlauf: nie NaN, ganze Meter, 15 m ≥ Rollstrecke, nie kürzer als ung
   const qnhs = [960, 985, 1004.45, 1004.46, 1013.25, 1030, 1050];
   const dirs = [null, 0, 34, 79, 124, 169, 214, 247, 290, 304, 349, 360];
   const winds = [0, 0.6, 1, 2.5, 3.5, 8.7, 14, 21, 25, 39];
-  const snaps = [C172D, P2010, AF].map((o) => JSON.stringify(o));
+  const snaps = [C172D, P2010, C152, AF].map((o) => JSON.stringify(o));
   let n = 0, values = 0;
-  [C172D, P2010].forEach((ac) => temps.forEach((t) => qnhs.forEach((q) => dirs.forEach((d) => winds.forEach((w) => [false, true].forEach((wet) => {
+  [C172D, P2010, C152].forEach((ac) => temps.forEach((t) => qnhs.forEach((q) => dirs.forEach((d) => winds.forEach((w) => [false, true].forEach((wet) => {
     const input = wx(t, q, d, w, wet);
     const snap = JSON.stringify(input);
     const r = core.compute(ac, AF, input);
@@ -700,8 +813,8 @@ test('Durchlauf: nie NaN, ganze Meter, 15 m ≥ Rollstrecke, nie kürzer als ung
       });
     });
   }))))));
-  assert.deepEqual([C172D, P2010, AF].map((o) => JSON.stringify(o)), snaps);
-  assert.ok(n > 30000 && values > 30000, n + ' Rechnungen, ' + values + ' Werte');
+  assert.deepEqual([C172D, P2010, C152, AF].map((o) => JSON.stringify(o)), snaps);
+  assert.ok(n > 45000 && values > 45000, n + ' Rechnungen, ' + values + ' Werte');
 });
 
 function allMeters(res) {
@@ -724,7 +837,7 @@ function assertSeries(series, cmp, label) {
 
 test('Durchlauf: monoton in Temperatur und QNH, beide Muster, trocken und nass', () => {
   const ge = (a, b) => a >= b, le = (a, b) => a <= b;
-  [C172D, P2010].forEach((ac) => [null, 124, 247, 304].forEach((d) => [0, 2, 9].forEach((w) => [false, true].forEach((wet) => {
+  [C172D, P2010, C152].forEach((ac) => [null, 124, 247, 304].forEach((d) => [0, 2, 9].forEach((w) => [false, true].forEach((wet) => {
     for (const q of [990, 1013.25, 1035]) {
       const s = [];
       for (let t = -35; t <= 52; t += 0.5) s.push({ x: t, m: allMeters(core.compute(ac, AF, wx(t, q, d, w, wet))) });
@@ -737,7 +850,7 @@ test('Durchlauf: monoton in Temperatur und QNH, beide Muster, trocken und nass',
     }
   }))));
   // nass ist nie kürzer als trocken
-  [C172D, P2010].forEach((ac) => {
+  [C172D, P2010, C152].forEach((ac) => {
     const a = allMeters(core.compute(ac, AF, wx(15, 1018, 290, 8, false)));
     const b = allMeters(core.compute(ac, AF, wx(15, 1018, 290, 8, true)));
     b.forEach((pair, k) => assert.ok(pair[0] >= a[k][0] && pair[1] >= a[k][1]));
