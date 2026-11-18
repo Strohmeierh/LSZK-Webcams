@@ -162,8 +162,8 @@ Du erhältst dreimal täglich (kurz nach Sonnenaufgang, um 10 Uhr und um 15 Uhr)
 
 Grundsätze
 - Beobachtung vor Prognose: Was Bilder und Messwerte jetzt zeigen, hat Vorrang. Die Prognose nutzt du nur für die Entwicklung der nächsten Stunden und kennzeichnest sie im Text als Prognose.
-- Messwerte vor Bild: Wind, Böen, Temperatur, Taupunkt, Druck und Niederschlag am Platz stammen aus der Wetterstation. Die Bilder nutzt du für das, was nur sie zeigen: Bewölkung, Wolkenbasis, Sicht, Nebel und Hochnebel, ob die Alpen frei sind, Schneegrenze, Niederschlag in der Ferne und den Zustand der Piste.
-- Steht bei der Wetterstation «kein Messwert» für den Wind, leitest du den Wind am Platz aus dem Windsack der Kamera «Speck – Tankstelle» (Richtung und Stärke gemäss Kamerabeschreibung) und aus dem METAR Dübendorf ab und nennst ihn als Schätzung, zum Beispiel «laut Windsack schwach aus Südwest». Fehlen Temperatur und Taupunkt, nimmst du die Spreizung aus dem METAR Dübendorf. Dass Messwerte der Station fehlen, erwähnst du nirgends.
+- Messwerte vor Bild: Wind, Böen, Temperatur, Taupunkt, Druck und Niederschlag am Platz stammen aus der Wetterstation, in der Regel der MeteoSchweiz-Station Pfäffikon ZH direkt neben der Piste. Es sind Zehnminutenwerte, meist 10 bis 20 Minuten alt: Den Wind nennst du als Mittel mit Böenspitze, zum Beispiel «Wind aus Südwest mit 9 kt, Böen bis 16 kt». Die Bilder nutzt du für das, was nur sie zeigen: Bewölkung, Wolkenbasis, Sicht, Nebel und Hochnebel, ob die Alpen frei sind, Schneegrenze, Niederschlag in der Ferne und den Zustand der Piste.
+- Steht bei der Wetterstation «kein Messwert» für den Wind, leitest du den Wind am Platz aus dem Windsack der Kamera «Speck – Tankstelle» (Richtung und Stärke gemäss Kamerabeschreibung) und aus dem METAR Dübendorf ab und nennst ihn als Schätzung, zum Beispiel «laut Windsack schwach aus Südwest». Fehlen Temperatur und Taupunkt, nimmst du die Spreizung aus dem METAR Dübendorf. Steht dort «Ersatzquelle Station Speck», misst diese den Wind zu tief: Nenne Wind und Böen dann als Mindestwerte, zum Beispiel «Wind mindestens 6 kt aus West», und gleiche sie mit dem Windsack und dem METAR Dübendorf ab. Dass Messwerte fehlen oder aus der Ersatzquelle stammen, erwähnst du nirgends.
 - Höhen gibst du in Metern über Meer an. Die Wolkenbasis leitest du aus Landmarken mit bekannter Höhe ab (siehe Kamerabeschreibungen), mit dem METAR als Gegencheck: Wolkenhöhen im METAR sind Fuss über Grund in Dübendorf (436 m), also Basis = 436 m + Fuss × 0,3048. Die Spreizung Temperatur minus Taupunkt am Platz ergibt eine grobe Kumulusbasis: 536 m + 125 m pro Grad.
 - Föhn-Index = QNH Lugano-Agno (LSZA) minus QNH Zürich-Kloten (LSZH) aus den METAR, in ganzen hPa (derselbe Wert wie im Dashboard): zwischen −2 und +2 hPa unauffällig; ab +4 hPa Südföhn wahrscheinlich, ab +8 hPa kräftig; ab −4 hPa Nordlage (Bise bzw. Stau an der Alpennordseite, Nordföhn im Süden). Nenne den Wert so, wie er geliefert wird, ohne Nachkommastelle.
 - briefing.lage bewertet die Bedingungen für Lokalflüge: Sicht, Bewölkung, Föhn und Niederschlag. Bei einem Föhn-Index von +4 hPa oder mehr oder bei einer Regenwahrscheinlichkeit von 50 % oder mehr in den nächsten 3 Stunden ist die Lage höchstens "maessig", auch bei guter Sicht und hoher Basis. Steht bei den Messwerten eine «Obergrenze für briefing.lage», gilt sie. Die Lage bewertest du nach dem Wetter, auch wenn der Platz gesperrt ist.
@@ -518,6 +518,7 @@ GERMAN_STATION = [
 
 STATION_WIND = ("Wind Direction", "10 Min Avg Wind Speed", "10 Min High Wind Speed")
 STATION_THERMO = ("Temp", "Dew Point", "Hum")
+STATION_RAIN = ("Rain Rate", "60 Min Rain Total")
 WIND_HINT = ("Wind: kein Messwert. Wind am Platz aus dem Windsack (Kamera «Speck – Tankstelle») "
              "und dem METAR Dübendorf ableiten.")
 THERMO_HINT = "Temperatur, Taupunkt, Feuchte: kein Messwert (Spreizung aus dem METAR Dübendorf nehmen)."
@@ -544,7 +545,7 @@ def station_text(station, now: datetime) -> str:
     # (temperature "0", loTemp "-68"); the summary then shows "--" or bogus numbers
     if (isinstance(cur, dict) and cur and cur.get("windDirection") is None
             and str(cur.get("humidity")).strip() in ("0", "0.0", "", "--", "None")):
-        for k in STATION_WIND + STATION_THERMO:
+        for k in STATION_WIND + STATION_THERMO + STATION_RAIN:   # the rain gauge is out as well and keeps reporting 0
             vals.pop(k, None)
     hum, temp = nums.get("Hum"), nums.get("Temp")
     if (hum is not None and hum <= 0) or (temp is not None and not -40 <= temp <= 45):
@@ -562,6 +563,153 @@ def station_text(station, now: datetime) -> str:
     stale = " (VERALTET)" if age is not None and age >= 30 else ""
     when = f"Stand vor {age} min{stale}" if age is not None else "Stand unbekannt"
     return f"Wetterstation am Platz (Speck, 536 m), {when}: " + ("; ".join(parts) or "keine Werte")
+
+
+# ── Messwerte am Platz: MeteoSchweiz Pfäffikon ZH (PFA); the Speck station above is only the fallback ──
+# PFA (SwissMetNet, 537 m) stands about 80 m beside the runway near threshold 12, wind on a 10 m mast.
+# Ten-minute values, the timestamp is the END of the interval (UTC). Two public files without a key
+# (terms of use: the source «MeteoSchweiz» must be named, the page does that); the newest filled value of both counts:
+#   station file  all rows since 00:00 UTC; a row appears 9 min after the interval ended at the earliest,
+#                 on 18.11.2026 up to 42 min after it (the newest value was up to 52 min old)
+#   VQHA80        main parameters of all stations, latest value only, about 10 min after the interval ended
+PFA_URLS = ("https://data.geo.admin.ch/ch.meteoschweiz.ogd-smn/pfa/ogd-smn_pfa_t_now.csv",
+            "https://data.geo.admin.ch/ch.meteoschweiz.messwerte-aktuell/VQHA80.csv")
+PFA_MAX_AGE_MIN = 60         # older: MeteoSwiss counts as unavailable -> Speck station (same limit as the page)
+SPECK_MAX_AGE_MIN = 30       # older snapshot of the Speck station: no data (same limit as the page)
+SMN_TIME_RES = (re.compile(r"(\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2})"),   # station file: DD.MM.YYYY HH:MM
+                re.compile(r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})"))          # VQHA80: YYYYMMDDHHMM
+SPECK_NOTE = ("MeteoSchweiz Pfäffikon ZH ist nicht verfügbar. Ersatzquelle Station Speck: Sie misst den Wind "
+              "erfahrungsgemäss deutlich zu tief (Mindestwerte), und ihr Luftdruck ist kein QNH. ")
+
+
+def smn_rows(text: str, station: str = "PFA") -> list:
+    """Rows of one station from a MeteoSwiss CSV as dicts column -> cell, plus "_t" (datetime, UTC).
+    Reads both formats (station file and VQHA80); anything unreadable gives []."""
+    lines = text.lstrip("\ufeff").splitlines()
+    if not lines:
+        return []
+    head = [h.strip() for h in lines[0].split(";")]
+    rows = []
+    for line in lines[1:]:
+        cells = [c.strip() for c in line.split(";")]
+        if len(cells) < 3 or cells[0] != station:
+            continue
+        m = SMN_TIME_RES[0].fullmatch(cells[1])
+        if m:
+            day, month, year, hour, minute = map(int, m.groups())
+        else:
+            m = SMN_TIME_RES[1].fullmatch(cells[1])
+            if not m:
+                continue
+            year, month, day, hour, minute = map(int, m.groups())
+        try:
+            when = datetime(year, month, day, hour, minute, tzinfo=timezone.utc)
+        except ValueError:
+            continue
+        row = dict(zip(head, cells))
+        row["_t"] = when
+        rows.append(row)
+    return rows
+
+
+def _smn(row, key, lo, hi):
+    """Cell as float within [lo, hi]; empty cells, «-» and anything else unreadable give None."""
+    try:
+        v = float(row.get(key) or "")
+    except (TypeError, ValueError):
+        return None
+    return v if math.isfinite(v) and lo <= v <= hi else None
+
+
+def fetch_pfa(session) -> list:
+    """Rows of PFA from both files, oldest first. One retry per file; raises only if no row came at all."""
+    rows, problems = [], []
+    for url in PFA_URLS:
+        name = url.rsplit("/", 1)[-1]
+        for attempt_no in (1, 2):
+            try:
+                r = session.get(url, timeout=(5, 10), headers={"User-Agent": UA})
+                r.raise_for_status()
+                found = smn_rows(r.content.decode("utf-8", "replace"))
+                if not found:
+                    raise ValueError("keine Zeile der Station PFA")
+                rows += found
+                break
+            except Exception as e:  # noqa: BLE001
+                if attempt_no == 2:
+                    problems.append(f"{name}: {type(e).__name__}: {e}")
+                    print(f"MeteoSchweiz {name} failed twice ({type(e).__name__}: {e})", file=sys.stderr)
+                else:
+                    time.sleep(2)
+    if not rows:
+        raise RuntimeError("; ".join(problems))
+    rows.sort(key=lambda row: row["_t"])
+    return rows
+
+
+def pfa_text(rows: list, now: datetime) -> str:
+    """Station block for the model from MeteoSwiss PFA. Per group the newest filled value of the last
+    PFA_MAX_AGE_MIN minutes counts (the newest row of the station file often lacks single fields).
+    Raises ValueError without a recent wind value: run_briefing() then falls back to the Speck station."""
+    fresh = [r for r in rows if (now - r["_t"]).total_seconds() <= PFA_MAX_AGE_MIN * 60]
+
+    def newest(key, lo, hi):
+        return next((r for r in reversed(fresh) if _smn(r, key, lo, hi) is not None), None)
+
+    wind = newest("fu3010z0", 0, 300)
+    if wind is None:
+        last = f'{rows[-1]["_t"]:%d.%m. %H:%M} UTC' if rows else "keine"
+        raise ValueError(f"kein Windwert der letzten {PFA_MAX_AGE_MIN} min (jüngste Zeile: {last})")
+    kt = _smn(wind, "fu3010z0", 0, 300) / 1.852
+    direction, gust = _smn(wind, "dkl010z0", 1, 360), _smn(wind, "fu3010z1", 0, 400)   # 0 = no direction (near calm)
+    parts = [f"Wind 10-min-Mittel: {kt:.0f} kt" + (f" aus {direction:.0f}°" if direction is not None and round(kt) else "")]
+    if gust is not None:
+        parts.append(f"Böenspitze (1 s) dieser 10 min: {gust / 1.852:.0f} kt")
+    thermo = newest("tre200s0", -50, 60)
+    if thermo is None:
+        parts.append(THERMO_HINT)
+    else:
+        parts.append(f'Temperatur: {_smn(thermo, "tre200s0", -50, 60):.1f} °C')
+        dew, hum = _smn(thermo, "tde200s0", -60, 40), _smn(thermo, "ure200s0", 0, 100)
+        if dew is not None:
+            parts.append(f"Taupunkt: {dew:.1f} °C")
+        if hum is not None:
+            parts.append(f"Feuchte: {hum:.0f} %")
+    qnh_row = newest("pp0qnhs0", 900, 1100)
+    if qnh_row is not None:
+        qnh = _smn(qnh_row, "pp0qnhs0", 900, 1100)
+        before = [_smn(r, "pp0qnhs0", 900, 1100) for r in rows if r["_t"] == qnh_row["_t"] - timedelta(hours=3)]
+        before = [v for v in before if v is not None]
+        parts.append(f"QNH: {qnh:.1f} hPa" + (f", Tendenz {qnh - before[0]:+.1f} hPa in 3 h" if before else ""))
+    rain = newest("rre150z0", 0, 100)
+    if rain is not None:
+        end, sums = rain["_t"], {}
+        for r in rows:   # both files can carry the same interval: one value per timestamp
+            v = _smn(r, "rre150z0", 0, 100)
+            if v is not None and timedelta(0) <= end - r["_t"] < timedelta(hours=1):
+                sums[r["_t"]] = v
+        hour = (f"letzte 60 min {sum(sums.values()):.1f} mm" if len(sums) == 6 else
+                f"letzte 60 min mindestens {sum(sums.values()):.1f} mm ({len(sums)} von 6 Zehnminutenwerten vorhanden)")
+        parts.append(f"Niederschlag bis {end.astimezone(TZ):%H:%M}: letzte 10 min {sums[end]:.1f} mm, {hour}")
+    when = wind["_t"]
+    return ("Wetterstation am Platz (MeteoSchweiz Pfäffikon ZH, 537 m, rund 80 m neben der Piste beim Pistenanfang 12, "
+            f"Wind auf 10-m-Mast), Zehnminutenwerte, Messung {when.astimezone(TZ):%H:%M} Lokalzeit "
+            f"(vor {minutes_since(when, now)} min): " + "; ".join(parts))
+
+
+def pfa_block(session, now: datetime) -> str:
+    """Fetch + text; raises when MeteoSwiss is unreachable or too old (reason -> inputs.fehler, then Speck)."""
+    return pfa_text(fetch_pfa(session), now)
+
+
+def speck_text(station, now: datetime) -> str:
+    """The Speck station as fallback: the text as before, preceded by its known bias. A snapshot older
+    than SPECK_MAX_AGE_MIN (weather job or WeatherLink down) counts as no data, like on the page."""
+    received = (station.get("current") or {}).get("lastReceived") if isinstance(station, dict) else None
+    if (not isinstance(received, (int, float))
+            or minutes_since(datetime.fromtimestamp(received / 1000, tz=timezone.utc), now) > SPECK_MAX_AGE_MIN):
+        station = None
+    return SPECK_NOTE + station_text(station, now)
 
 
 def metar_text(metar, now: datetime) -> str:
@@ -1607,6 +1755,7 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
 
     foehn_idx, foehn_txt = attempt("Föhn-Index", foehn_index, load_json(FOEHN_FILE), now,
                                    default=(None, "Föhn-Index: nicht verfügbar."))
+    platz_wetter = attempt("MeteoSchweiz PFA", pfa_block, session, now)   # None: Speck station as fallback (context below)
     hourly = attempt("Prognose Open-Meteo", fetch_forecast, session)
     rain3 = attempt("Regenwahrscheinlichkeit 3 h", rain_next_3h, hourly, now)
     thermik = attempt("Thermikprognose", thermik_forecast, session, now, sset, hourly is not None)
@@ -1630,7 +1779,7 @@ def run_briefing(client, anthropic, record: dict, now: datetime) -> bool:
     context = "\n\n".join(part for part in [
         f"Zeitpunkt: {local:%d.%m.%Y %H:%M} Lokalzeit (Europe/Zurich). "
         f'Sonnenaufgang {record["sun"]["rise"]}, Sonnenuntergang {record["sun"]["set"]}.',
-        safe_text("Wetterstation am Platz", station_text, load_json(STATION_FILE), now),
+        platz_wetter or safe_text("Wetterstation am Platz", speck_text, load_json(STATION_FILE), now),
         safe_text("METAR Dübendorf (LSMD)", metar_text, load_json(METAR_FILE), now),
         foehn_txt,
         f'Platz für Flächenflugzeuge (verbindlich): {FLAECHE_TEXT[platz["flaeche"]]}'
