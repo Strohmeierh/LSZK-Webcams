@@ -1,0 +1,12 @@
+{
+  "noteDe": "Tecnam P2010 AFM, APV5-8 und APV5-17, Spalte ISA bei 1160 kg in m. ISA-Temperatur = 15 °C − 1,98 °C je 1000 ft. Nur zur Probe der linearen Interpolation: Start interpoliert 0,4 bis 2,2 m über dem gedruckten Wert, Landung −0,8 bis +0,8 m.",
+  "rows": [
+    { "pressureAltitudeFt": 0, "isaTempC": 15, "takeoff": [336, 595], "landing": [237, 521]},
+    { "pressureAltitudeFt": 1000, "isaTempC": 13.02, "takeoff": [360, 637], "landing": [244, 528]},
+    { "pressureAltitudeFt": 2000, "isaTempC": 11.04, "takeoff": [387, 682], "landing": [251, 535]},
+    { "pressureAltitudeFt": 3000, "isaTempC": 9.06, "takeoff": [415, 731], "landing": [259, 543]},
+    { "pressureAltitudeFt": 4000, "isaTempC": 7.08, "takeoff": [446, 783], "landing": [267, 551]},
+    { "pressureAltitudeFt": 5000, "isaTempC": 5.1, "takeoff": [480, 840], "landing": [275, 559]},
+    { "pressureAltitudeFt": 6000, "isaTempC": 3.12, "takeoff": [516, 901], "landing": [284, 568]}
+  ]
+}

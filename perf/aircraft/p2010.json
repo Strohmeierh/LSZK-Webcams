@@ -1,0 +1,111 @@
+{
+  "schema": 2,
+  "id": "p2010",
+  "label": "Tecnam P2010",
+  "mass": { "kg": 1160, "lb": 2557 },
+  "massNoteDe": "Maximales Abfluggewicht und maximales Landegewicht (AFM, Section 2).",
+  "variantDe": "Lycoming IO-360-M1A, Verstellpropeller MTV-15-B/193-52",
+  "techniqueDe": "Klappen T/O beim Start und LAND bei der Landung, Geschwindigkeiten nach AFM",
+  "readingRuleDe": "Druckhöhe: nächsthöherer Tabellenwert. Temperatur: linear zwischen den Tabellenspalten interpoliert; unter −25 °C gilt die Spalte −25 °C, über 50 °C gibt es keinen Wert. Die Spalte ISA wird nicht verwendet.",
+  "footerDe": "Richtwert nach AFM ohne eigenen Sicherheitszuschlag: maximales Abfluggewicht, Klappen T/O beim Start und LAND bei der Landung, Geschwindigkeiten nach AFM, ebene Graspiste. Die Temperatur ist zwischen den Tabellenspalten linear interpoliert, die Druckhöhe auf den nächsthöheren Tabellenwert gerundet. Eingerechnet sind die Faktoren des AFM für Abweichungen im Betrieb (Start 1,10, Landung 1,67). Für nasses Gras nennt das AFM keinen Wert. Nicht berücksichtigt sind die Pistenneigung (laut AFM beim Start +10 % der Rollstrecke je 1 % Steigung), Zustand von Flugzeug und Motor sowie die Pilotentechnik. Massgebend sind das AFM der Maschine und die eigene Beurteilung.",
+  "wetNoteDe": "Laut AFM (Section 4, Ziffer 5.16) verschlechtert Regen die Leistung, besonders die Startstrecke.",
+  "sources": {
+    "afm": {
+      "labelDe": "AFM",
+      "title": "Tecnam P2010 Aircraft Flight Manual",
+      "number": "Doc. No. 2010/100",
+      "issue": "Ed. 2 Rev. 16, 13 September 2021; Section 5 nach AFMS N°D07 (Autopilot Garmin GFC700 und Verstellpropeller), Seiten APV5, Ed. 2 Rev. 0",
+      "approval": "EASA Type Certificate EASA.A.576",
+      "applicabilityDe": "Handbuch der Maschine Serial 024, HB-KMD.",
+      "caveatDe": "Stand der vorliegenden Kopie; massgebend ist das AFM im Flugzeug."
+    }
+  },
+  "charts": {
+    "takeoff": {
+      "source": "afm",
+      "title": "Take-Off Performances, Weight 1160 kg (2557 lb)",
+      "ref": { "figure": "Section 5, Ziffer 7", "page": "APV5-8" },
+      "conditionsDe": "Klappen T/O, Abheben mit 60 KIAS, 65 KIAS in 15 m Höhe, Gas- und Propellerhebel ganz vorn; Hartbelag. Die Tabelle gilt ohne Wind auf ebener Piste; trockener Belag ist angenommen (das AFM nennt nur «Paved»).",
+      "notesDe": [
+        "Gegenwind: −10 m je kt, auf beide Strecken.",
+        "Graspiste: +10 % der Rollstrecke, auf beide Strecken gerechnet.",
+        "NOTE: Faktor 1,10 auf die Strecken, um Abweichungen im Betrieb zu berücksichtigen.",
+        "Nicht gerechnet: Rückenwind (+20 m je kt) und Pistenneigung (+10 % der Rollstrecke je 1 % Steigung)."
+      ],
+      "base": { "surface": "paved", "surfaceCondition": "dry" },
+      "table": {
+        "type": "grid",
+        "axes": [
+          { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000], "read": "nextHigher", "below": "lowest", "above": "none" },
+          { "quantity": "temperature", "unit": "degC", "values": [-25, 0, 25, 50], "read": "linear", "below": "lowest", "above": "none" }
+        ],
+        "outputs": [{ "id": "groundRoll", "unit": "m" }, { "id": "overObstacle", "unit": "m" }],
+        "obstacle": { "value": 50, "unit": "ft" },
+        "cells": [
+          [[234, 421], [295, 526], [364, 644], [442, 776]],
+          [[256, 458], [322, 572], [397, 701], [482, 844]],
+          [[279, 499], [352, 622], [434, 762], [526, 918]],
+          [[305, 543], [384, 678], [474, 830], [575, 1000]],
+          [[333, 591], [420, 738], [518, 904], [628, 1089]],
+          [[364, 645], [459, 805], [566, 986], [687, 1188]],
+          [[399, 703], [502, 878], [620, 1075], [752, 1296]]
+        ]
+      },
+      "corrections": [
+        { "kind": "headwind", "type": "absolutePer", "amount": -10, "amountUnit": "m", "per": 1, "unit": "kt" },
+        { "kind": "surface", "type": "addPercentOf", "surface": "grass", "surfaceCondition": "dry", "percent": 10, "of": "groundRoll" },
+        {
+          "kind": "factor",
+          "when": "always",
+          "factor": 1.1,
+          "minimum": false,
+          "labelDe": "Faktor für Abweichungen im Betrieb",
+          "refDe": "NOTE, APV5-8"
+        }
+      ]
+    },
+    "landing": {
+      "source": "afm",
+      "title": "Landing Performances, Weight 1160 kg (2557 lb)",
+      "ref": { "figure": "Section 5, Ziffer 11", "page": "APV5-17" },
+      "conditionsDe": "Klappen LAND, 66 KIAS im kurzen Endanflug, Gashebel im Leerlauf; Hartbelag. Die Tabelle gilt ohne Wind auf ebener Piste; trockener Belag ist angenommen (das AFM nennt nur «Paved»).",
+      "notesDe": [
+        "Gegenwind: −4 m je kt, auf beide Strecken.",
+        "Graspiste: +10 % der Rollstrecke, auf beide Strecken gerechnet.",
+        "NOTE: Faktor 1,67 auf die Strecken, um Abweichungen im Betrieb zu berücksichtigen.",
+        "Nicht gerechnet: Rückenwind (+13 m je kt) und Pistenneigung (−3 % der Rollstrecke je 1 % Steigung)."
+      ],
+      "base": { "surface": "paved", "surfaceCondition": "dry" },
+      "table": {
+        "type": "grid",
+        "axes": [
+          { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000], "read": "nextHigher", "below": "lowest", "above": "none" },
+          { "quantity": "temperature", "unit": "degC", "values": [-25, 0, 25, 50], "read": "linear", "below": "lowest", "above": "none" }
+        ],
+        "outputs": [{ "id": "groundRoll", "unit": "m" }, { "id": "overObstacle", "unit": "m" }],
+        "obstacle": { "value": 50, "unit": "ft" },
+        "cells": [
+          [[204, 488], [225, 509], [245, 529], [266, 550]],
+          [[212, 496], [233, 517], [254, 538], [276, 560]],
+          [[220, 504], [242, 526], [264, 548], [286, 570]],
+          [[228, 512], [251, 535], [274, 558], [297, 581]],
+          [[236, 520], [260, 544], [284, 568], [308, 592]],
+          [[245, 529], [270, 554], [295, 579], [320, 604]],
+          [[255, 539], [280, 564], [306, 590], [332, 616]]
+        ]
+      },
+      "corrections": [
+        { "kind": "headwind", "type": "absolutePer", "amount": -4, "amountUnit": "m", "per": 1, "unit": "kt" },
+        { "kind": "surface", "type": "addPercentOf", "surface": "grass", "surfaceCondition": "dry", "percent": 10, "of": "groundRoll" },
+        {
+          "kind": "factor",
+          "when": "always",
+          "factor": 1.67,
+          "minimum": false,
+          "labelDe": "Faktor für Abweichungen im Betrieb",
+          "refDe": "NOTE, APV5-17"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "schema": 2,
+  "icao": "LSZK",
+  "name": "Speck-Fehraltorf",
+  "source": {
+    "title": "VFR Manual Schweiz, AD INFO 1 LSZK",
+    "edition": "COR: OBST (WEF 22 JAN 2026)",
+    "transcribed": "2026-11-18, aus AD INFO 1 abgelesen",
+    "lengthsRef": "VFR AGA 3-0, § 3"
+  },
+  "elevation": { "value": 1759, "unit": "ft" },
+  "arp": "47°22'35\"N 008°45'27\"E",
+  "variation": "4° E (26.5)",
+  "dimensions": "625 x 18 m",
+  "strength": "0.25 MPa",
+  "runways": [
+    { "id": "12", "bearingTrue": 124, "bearingMag": 120, "surface": "grass", "takeoffAvailable": { "value": 520, "unit": "m" }, "landingAvailable": { "value": 625, "unit": "m" } },
+    { "id": "30", "bearingTrue": 304, "bearingMag": 300, "surface": "grass", "takeoffAvailable": { "value": 625, "unit": "m" }, "landingAvailable": { "value": 520, "unit": "m" } }
+  ],
+  "remarks": ["Karte: MNM 15 ft bei der Strasse am Nordwestende"]
+}

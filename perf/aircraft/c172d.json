@@ -1,0 +1,120 @@
+{
+  "schema": 2,
+  "id": "c172d",
+  "label": "Cessna 172 Diesel",
+  "mass": { "kg": 1157, "lb": 2550 },
+  "massNoteDe": "Maximales Abfluggewicht und maximales Landegewicht der C172 S, Normal Category (Supplement, Section 2).",
+  "variantDe": "Motor TAE 125-02-114, Propeller MTV-6-A/190-69",
+  "techniqueDe": "Kurzstart- und Kurzlandetechnik",
+  "readingRuleDe": "Ablesung beim nächsthöheren Tabellenwert von Höhe und Temperatur, keine Interpolation (so auch die Beispielrechnungen im Supplement, Section 5, S. 5-2, und im Grundhandbuch, S. 5-5).",
+  "footerDe": "Richtwert nach AFM ohne eigenen Sicherheitszuschlag: maximales Abfluggewicht, Kurzstart- und Kurzlandetechnik, ebene Graspiste. Start nach dem Supplement für den Dieselmotor TAE 125-02-114 mit Propeller MTV-6-A/190-69, Landung nach dem Grundhandbuch. Gilt die Piste als nass, ist beim Start der Mindestzuschlag des Supplements von 20 % eingerechnet; für die Landung nennt das AFM keinen Wert. Nicht berücksichtigt sind Pistenneigung, Zustand von Flugzeug und Motor sowie die Pilotentechnik. Massgebend sind das AFM der jeweiligen Maschine und die eigene Beurteilung.",
+  "sources": {
+    "supplement": {
+      "labelDe": "Supplement",
+      "title": "Supplement Pilot's Operating Handbook for the Cessna 172 R & S Equipped with TAE 125-02-114 Installation",
+      "publisher": "Technify Motors GmbH",
+      "number": "Doc.-No. 20-0310-22122",
+      "issue": "Issue 2 (Section 5: Revision 9, May 2018; Section 5b: Revision -, April 2015)",
+      "approval": "EASA STC 10014287",
+      "applicabilityDe": "Section 5b gilt für Flugzeuge mit Propeller MTV-6-A/190-69 (die Bezeichnung steht auf den Blättern).",
+      "caveatDe": "Massgebend ist das Supplement im Handbuch der jeweiligen Maschine."
+    },
+    "poh": {
+      "labelDe": "Grundhandbuch",
+      "title": "Cessna Information Manual, Model 172S NAV III, GFC 700 AFCS",
+      "number": "172SIMBUS-00",
+      "issue": "Original Issue, 20 December 2007",
+      "pageMark": "172SPHBUS-00",
+      "pageMarkDe": "Teilenummer des Pilot's Operating Handbook und FAA-genehmigten AFM (Original Issue), dessen Inhalt das Information Manual wiedergibt; steht in den Seitenfüssen.",
+      "applicability": "Serials 172S10468, 172S10507, 172S10640 and 172S10656 and On",
+      "caveatDe": "Information Manual: wird nicht nachgeführt und ersetzt das AFM der Maschine nicht."
+    }
+  },
+  "charts": {
+    "takeoff": {
+      "source": "supplement",
+      "title": "Ground Roll and Take-Off Distance at 1157 kg (2550 lbs), Short Field Takeoff",
+      "ref": { "figure": "Figure 5-1a (Section 5b)", "page": "5b-3" },
+      "conditionsDe": "Kurzstarttechnik: Klappen 10°, volle Leistung vor dem Lösen der Bremsen, Abheben mit 51 KIAS, 56 KIAS in 15 m Höhe; Hartbelag, eben, trocken, kein Wind (Bedingungen und Notes auf S. 5b-2).",
+      "notesDe": [
+        "Gegenwind: −10 % je 9 kt.",
+        "Trockene Graspiste: +15 % des Ground-Roll-Werts auf beide Strecken.",
+        "Nasse Graspiste, weicher Boden oder Schnee: zusätzliche Strecke von mindestens 20 % berücksichtigen.",
+        "Nicht gerechnet: Rückenwind (im AFM bis 10 kt: +10 % je 2 kt)."
+      ],
+      "base": { "surface": "paved", "surfaceCondition": "dry" },
+      "table": {
+        "type": "grid",
+        "axes": [
+          { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000], "read": "nextHigher", "below": "lowest", "above": "none" },
+          { "quantity": "temperature", "unit": "degC", "values": [-20, 0, 10, 20, 30, 40, 50], "read": "nextHigher", "below": "lowest", "above": "none" }
+        ],
+        "outputs": [{ "id": "groundRoll", "unit": "m" }, { "id": "overObstacle", "unit": "m" }],
+        "obstacle": { "value": 50, "unit": "ft" },
+        "cells": [
+          [[201, 314], [232, 362], [248, 388], [266, 417], [284, 445], [313, 491], [352, 555]],
+          [[215, 336], [248, 388], [266, 416], [285, 447], [305, 477], [335, 526], [377, 594]],
+          [[230, 360], [266, 416], [285, 446], [306, 479], [326, 511], [359, 564], [404, 637]],
+          [[247, 386], [285, 446], [306, 478], [328, 513], [350, 548], [385, 604], [434, 683]],
+          [[265, 414], [306, 479], [328, 513], [352, 551], [376, 588], [413, 649], [465, 733]],
+          [[284, 445], [329, 514], [352, 550], [378, 591], [403, 631], [444, 696], [499, 787]],
+          [[305, 478], [353, 552], [378, 591], [406, 635], [433, 678], [477, 748], [536, 845]],
+          [[335, 524], [387, 605], [414, 648], [445, 696], [475, 743], [522, 819], [588, 926]],
+          [[367, 574], [424, 663], [454, 710], [487, 763], [520, 814], [573, 898], [644, 1015]],
+          [[406, 636], [470, 735], [503, 787], [540, 845], [576, 902], [634, 996], [713, 1125]],
+          [[450, 705], [520, 815], [557, 873], [598, 937], [638, 1000], [703, 1104], [790, 1247]]
+        ]
+      },
+      "corrections": [
+        { "kind": "headwind", "type": "percentPer", "percent": -10, "per": 9, "unit": "kt" },
+        { "kind": "surface", "type": "addPercentOf", "surface": "grass", "surfaceCondition": "dry", "percent": 15, "of": "groundRoll" },
+        {
+          "kind": "factor",
+          "when": "wet",
+          "surface": "grass",
+          "factor": 1.2,
+          "minimum": true,
+          "labelDe": "nasse Piste",
+          "refDe": "Supplement, Note 4"
+        }
+      ]
+    },
+    "landing": {
+      "source": "poh",
+      "title": "Short Field Landing Distance at 2550 Pounds",
+      "ref": { "figure": "Figure 5-11", "page": "5-24" },
+      "conditionsDe": "Kurzlandetechnik (Section 4): Klappen voll, Leerlauf, maximales Bremsen, 61 KIAS in 15 m Höhe; Hartbelag, eben, trocken, kein Wind. Das Supplement verweist für die Landestrecke auf das Grundhandbuch (Section 5, S. 5-5).",
+      "notesDe": [
+        "Gegenwind: −10 % je 9 kt.",
+        "Trockene Graspiste: +45 % des Ground-Roll-Werts auf beide Strecken.",
+        "Für nasses Gras nennt das AFM bei der Landung keinen Wert.",
+        "Nicht gerechnet: Rückenwind (im AFM bis 10 kt: +10 % je 2 kt) und die Landung ohne Klappen (+35 %)."
+      ],
+      "base": { "surface": "paved", "surfaceCondition": "dry" },
+      "table": {
+        "type": "grid",
+        "axes": [
+          { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000], "read": "nextHigher", "below": "lowest", "above": "none" },
+          { "quantity": "temperature", "unit": "degC", "values": [0, 10, 20, 30, 40], "read": "nextHigher", "below": "lowest", "above": "none" }
+        ],
+        "outputs": [{ "id": "groundRoll", "unit": "ft" }, { "id": "overObstacle", "unit": "ft" }],
+        "obstacle": { "value": 50, "unit": "ft" },
+        "cells": [
+          [[545, 1290], [565, 1320], [585, 1350], [605, 1380], [625, 1415]],
+          [[565, 1320], [585, 1350], [605, 1385], [625, 1420], [650, 1450]],
+          [[585, 1355], [610, 1385], [630, 1420], [650, 1455], [670, 1490]],
+          [[610, 1385], [630, 1425], [655, 1460], [675, 1495], [695, 1530]],
+          [[630, 1425], [655, 1460], [675, 1495], [700, 1535], [725, 1570]],
+          [[655, 1460], [680, 1500], [705, 1535], [725, 1575], [750, 1615]],
+          [[680, 1500], [705, 1540], [730, 1580], [755, 1620], [780, 1660]],
+          [[705, 1545], [730, 1585], [760, 1625], [785, 1665], [810, 1705]],
+          [[735, 1585], [760, 1630], [790, 1670], [815, 1715], [840, 1755]]
+        ]
+      },
+      "corrections": [
+        { "kind": "headwind", "type": "percentPer", "percent": -10, "per": 9, "unit": "kt" },
+        { "kind": "surface", "type": "addPercentOf", "surface": "grass", "surfaceCondition": "dry", "percent": 45, "of": "groundRoll" }
+      ]
+    }
+  }
+}
