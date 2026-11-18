@@ -994,10 +994,48 @@ test('Version: perf.js, perf-ui.js und index.html stimmen überein', () => {
 
 const INDEX_3 = { schema: 2, default: 'c172d', aircraft: INDEX_RAW.aircraft.concat([{ id: 'x', label: 'Fehlt', registrations: ['HB-XXX'], file: 'x.json' }]) };
 
+// Nachgebautes Element: innerHTML mit Schreibzähler (gesamt und je id); ein geschriebenes <details class="perf-details">
+// und ein <select id="perf-ac"> werden zu Objekten (open bzw. value, wie im Browser aus dem Markup vorbelegt).
+// Jedes Schreiben mit <select> legt einen neuen Knoten an (env.selectNodes). Ein Element mit Kindern liefert als
+// innerHTML deren Inhalt hintereinander (so zeigt #perf-content Auswahl und Karte zusammen).
+function fakeEl(env, id, style) {
+  return {
+    id, html: '', style: Object.assign({}, style), listeners: {}, children: [], details: null, select: null, open: false,
+    get innerHTML() { return this.children.length ? this.children.map((c) => c.innerHTML).join('') : this.html; },
+    set innerHTML(v) {
+      this.html = String(v);
+      env.writes++;
+      env.writesBy[this.id] = (env.writesBy[this.id] || 0) + 1;
+      this.details = this.html.includes('<details class="perf-details"')
+        ? { open: this.html.includes('<details class="perf-details" open>') } : null;
+      const s = /<select id="perf-ac"[^>]*>(.*?)<\/select>/.exec(this.html);
+      this.select = null;
+      if (s) {
+        const opts = [...s[1].matchAll(/<option value="([^"]*)"( selected)?>/g)];
+        const pick = opts.find((o) => o[2]) || opts[0];
+        this.select = { id: 'perf-ac', value: pick ? pick[1] : '' };
+        env.selectNodes++;
+      }
+    },
+    querySelector(q) {
+      if (q === 'details.perf-details') return this.details;
+      if (q === 'select') return this.select;
+      return null;
+    },
+    addEventListener(type, fn) { this.listeners[type] = fn; },
+    appendChild(c) { this.children.push(c); if (c.id) env.nodes[c.id] = c; return c; },
+    getAttribute: (n) => (n === 'data-airfield' ? 'lszk' : null)
+  };
+}
+
+// Seite wie index.html: <details id="perf-box" style="display:none"> mit #perf-teaser-text, darin #perf-card mit leerem
+// #perf-content. oldPage: alte Seite aus dem Cache (Karte mit display:none, ohne Box und Kurzzeile).
+// noCard / noContent: ohne #perf-card bzw. #perf-content. storeThrows: localStorage wirft (privater Modus).
 function fakeBrowser(opts) {
   opts = opts || {};
   const env = {
-    clock: NOW, fetchUrls: [], failPerf: !!opts.failPerf, intervals: [], timeouts: [], docListeners: {}, writes: 0,
+    clock: NOW, fetchUrls: [], failPerf: !!opts.failPerf, intervals: [], timeouts: [], docListeners: {},
+    writes: 0, writesBy: {}, selectNodes: 0, nodes: {},
     store: Object.assign({}, opts.store),
     files: Object.assign({
       'perf/aircraft/index.json': INDEX_RAW,
@@ -1008,37 +1046,29 @@ function fakeBrowser(opts) {
       'data/fgzo_status.json': fgzo()
     }, opts.files)
   };
-  const content = {
-    html: '', details: null, listeners: {},
-    get innerHTML() { return this.html; },
-    set innerHTML(v) {
-      this.html = String(v);
-      env.writes++;
-      this.details = this.html.includes('<details class="perf-details"')
-        ? { open: this.html.includes('<details class="perf-details" open>') } : null;
-    },
-    querySelector(sel) { return sel === 'details.perf-details' ? this.details : null; },
-    addEventListener(type, fn) { this.listeners[type] = fn; }
-  };
-  const card = { style: { display: 'none' }, getAttribute: (n) => (n === 'data-airfield' ? 'lszk' : null) };
+  const card = fakeEl(env, 'perf-card', opts.oldPage ? { display: 'none' } : {});
+  const content = fakeEl(env, 'perf-content');
+  const box = opts.oldPage ? null : fakeEl(env, 'perf-box', { display: 'none' });
+  const teaser = opts.oldPage ? null : fakeEl(env, 'perf-teaser-text');
+  [card, content, box, teaser].forEach((el) => { if (el) env.nodes[el.id] = el; });
+  if (opts.noContent) delete env.nodes['perf-content'];
   const styles = [];
   const doc = {
     readyState: 'interactive', hidden: false,
     head: { appendChild: (el) => { styles.push(el); } },
     getElementById: (id) => {
       if (opts.noCard) return null;
-      if (id === 'perf-card') return card;
-      if (id === 'perf-content') return content;
       if (id === 'perf-style') return styles.find((s) => s.id === 'perf-style') || null;
-      return null;
+      return env.nodes[id] || null;
     },
-    createElement: (tag) => ({ tagName: tag, id: '', textContent: '' }),
+    createElement: (tag) => (tag === 'style' ? { tagName: 'STYLE', id: '', textContent: '' } : fakeEl(env, '')),
     addEventListener: (type, fn) => { env.docListeners[type] = fn; }
   };
+  const fail = () => { throw new Error('SecurityError'); };
   const win = {
     document: doc,
     LSZK_WX: opts.initialWx,
-    localStorage: {
+    localStorage: opts.storeThrows ? { getItem: fail, setItem: fail, removeItem: fail } : {
       getItem: (k) => (Object.prototype.hasOwnProperty.call(env.store, k) ? env.store[k] : null),
       setItem: (k, v) => { env.store[k] = String(v); },
       removeItem: (k) => { delete env.store[k]; }
@@ -1055,7 +1085,11 @@ function fakeBrowser(opts) {
       return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(JSON.parse(JSON.stringify(data))) });
     }
   };
-  return Object.assign(env, { win, doc, card, content, styles });
+  Object.assign(env, { win, doc, card, content, box, teaser, styles });
+  // vom Skript angelegt: #perf-sel (Auswahl) und #perf-body (Karteninhalt)
+  Object.defineProperty(env, 'sel', { get: () => env.nodes['perf-sel'] || null });
+  Object.defineProperty(env, 'body', { get: () => env.nodes['perf-body'] || null });
+  return env;
 }
 async function settle() { for (let i = 0; i < 4; i++) await new Promise((r) => setImmediate(r)); }
 function startBrowser(t, opts) {
@@ -1066,26 +1100,38 @@ function startBrowser(t, opts) {
 }
 const perfFetches = (env) => env.fetchUrls.filter((u) => u.startsWith('perf/')).length;
 const shown = (env) => text(env.content.innerHTML);
+const teaserText = (env) => text(env.teaser.innerHTML).trim();
+// Wahl wie im Browser: value des bestehenden <select> setzen, dann change auf #perf-sel
+function choose(env, id) {
+  const s = env.sel.querySelector('select');
+  s.value = id;
+  env.sel.listeners.change({ target: s });
+}
 function evilWx() {
   const evil = {};
   Object.defineProperty(evil, 'tempC', { enumerable: true, get() { throw new Error('kaputt'); } });
   return evil;
 }
 
-test('boot: Karte versteckt bis zum ersten update, dann Zahlen nach dem FGZO-Abruf', async (t) => {
+test('boot: Kurzzeile und Karte versteckt bis zum ersten update, dann Zahlen nach dem FGZO-Abruf', async (t) => {
   const env = startBrowser(t);
   await settle();
-  assert.equal(env.card.style.display, 'none');
+  assert.equal(env.box.style.display, 'none');
   assert.equal(env.content.innerHTML, '');
+  assert.equal(env.teaser.innerHTML, '');
+  assert.deepEqual(env.content.children.map((c) => c.id), ['perf-sel', 'perf-body'], 'Unterbehälter in #perf-content angelegt');
   assert.equal(env.styles.length, 1);
   assert.equal(env.styles[0].textContent, ui.CSS);
   assert.equal(env.win.LszkPerf.version, ui.VERSION);
   assert.deepEqual(env.intervals.map((i) => i.ms), [60000]);
   env.win.LszkPerf.update(wxPfa());
-  assert.equal(env.card.style.display, 'block');
+  assert.equal(env.box.style.display, 'block');
+  assert.equal(env.card.style.display, undefined, 'die Karte selbst bekommt kein display');
   assert.ok(shown(env).includes('Lade Flugplatzstatus …'), 'vor dem FGZO-Abruf keine Trockenrechnung');
+  assert.equal(teaserText(env), 'Start- und Landestrecke · Cessna 172 Diesel Lade Flugplatzstatus …');
   await settle();
   assert.ok(shown(env).includes('Start 331 m 492 m 625 m'), shown(env));
+  assert.equal(teaserText(env), 'Cessna 172 Diesel · Piste 30 Start über 15 m: 492 m · verfügbar 625 m Landung über 15 m: 489 m · verfügbar 520 m');
   assert.ok(env.fetchUrls.some((u) => u.startsWith('data/fgzo_status.json?t=')));
 });
 
@@ -1099,44 +1145,54 @@ test('boot: FGZO antwortet nicht – nach höchstens 5 s Rechnung ohne Meldung',
   env.clock += 4900;
   env.win.LszkPerf._tick();
   assert.ok(shown(env).includes('Lade Flugplatzstatus …'));
+  assert.ok(!env.teaser.innerHTML.includes('perf-t-row'), 'Kurzzeile mit Zahlen vor dem FGZO-Abruf');
   env.clock += 200;
   env.timeouts[0].fn();
   assert.ok(shown(env).includes('Pistenzustand: keine aktuelle Meldung der FGZO.'), shown(env));
   assert.ok(shown(env).includes('Start 331 m'));
+  assert.ok(teaserText(env).includes('Start über 15 m: 492 m'), teaserText(env));
 });
 
-test('boot: LSZK_WX beim Start einmal gelesen; ohne #perf-card nichts tun', async (t) => {
+test('boot: LSZK_WX beim Start einmal gelesen; ohne #perf-card oder #perf-content nichts tun', async (t) => {
   let env = startBrowser(t, { initialWx: wxPfa() });
   await settle();
-  assert.equal(env.card.style.display, 'block');
+  assert.equal(env.box.style.display, 'block');
   assert.ok(shown(env).includes('Start 331 m'));
-  env = fakeBrowser({ noCard: true });
-  ui.boot(env.win);
-  assert.doesNotThrow(() => env.win.LszkPerf.update(wxPfa()));
-  assert.doesNotThrow(() => env.win.LszkPerf._tick());
-  await settle();
-  assert.equal(env.fetchUrls.length, 0);
+  assert.ok(teaserText(env).includes('Start über 15 m: 492 m'));
+  for (const o of [{ noCard: true }, { noContent: true }]) {
+    env = fakeBrowser(o);
+    ui.boot(env.win);
+    assert.doesNotThrow(() => env.win.LszkPerf.update(wxPfa()));
+    assert.doesNotThrow(() => env.win.LszkPerf._tick());
+    await settle();
+    assert.equal(env.fetchUrls.length, 0, JSON.stringify(o));
+    assert.equal(env.writes, 0, JSON.stringify(o));
+    if (env.box) assert.equal(env.box.style.display, 'none', JSON.stringify(o));
+  }
 });
 
-test('boot: Altern über Takt, Sichtbarkeit und _tick lässt die Zahlen verschwinden', async (t) => {
+test('boot: Altern über Takt, Sichtbarkeit und _tick lässt die Zahlen in Karte und Kurzzeile verschwinden', async (t) => {
   const env = startBrowser(t);
   await settle();
   env.win.LszkPerf.update(wxPfa({ time: NOW - 44 * MIN }));
   await settle();
   assert.ok(env.content.innerHTML.includes('perf-grid'));
+  assert.ok(env.teaser.innerHTML.includes('perf-t-row'));
   env.clock = NOW + 2 * MIN;
   env.intervals[0].fn();
   assert.ok(!env.content.innerHTML.includes('perf-grid'));
   assert.ok(shown(env).includes('Messwerte veraltet'));
+  assert.equal(teaserText(env), 'Start- und Landestrecke · Cessna 172 Diesel Messwerte veraltet – keine Berechnung');
   env.win.LszkPerf.update(wxPfa({ time: env.clock - 44 * MIN }));
   await settle();
-  assert.ok(env.content.innerHTML.includes('perf-grid'));
+  assert.ok(env.content.innerHTML.includes('perf-grid') && env.teaser.innerHTML.includes('perf-t-row'));
   env.clock += 2 * MIN;
   env.docListeners.visibilitychange();
   assert.ok(!env.content.innerHTML.includes('perf-grid'));
+  assert.ok(!env.teaser.innerHTML.includes('perf-t-row') && !/\d&nbsp;m/.test(env.teaser.innerHTML), env.teaser.innerHTML);
 });
 
-test('boot: kaputtes update wirft nicht, Rechenfehler bleibt bis zum nächsten gültigen update', async (t) => {
+test('boot: kaputtes update wirft nicht, Rechenfehler in Karte und Kurzzeile bleibt bis zum nächsten gültigen update', async (t) => {
   const env = startBrowser(t);
   await settle();
   env.win.LszkPerf.update(wxPfa());
@@ -1144,16 +1200,22 @@ test('boot: kaputtes update wirft nicht, Rechenfehler bleibt bis zum nächsten g
   assert.ok(shown(env).includes('331 m'));
   assert.doesNotThrow(() => env.win.LszkPerf.update(evilWx()));
   assert.ok(shown(env).includes('Rechenfehler – keine Berechnung.'));
+  assert.equal(teaserText(env), 'Start- und Landestrecke Rechenfehler – keine Berechnung');
+  assert.equal(env.sel.innerHTML, '', 'Auswahl im Zustand Rechenfehler');
+  assert.equal(env.box.style.display, 'block');
   env.clock += MIN;
   env.win.LszkPerf._tick();
   env.intervals[0].fn();
   await settle();
   assert.ok(shown(env).includes('Rechenfehler – keine Berechnung.') && !shown(env).includes('331 m'), 'alte Zahlen zurück');
+  assert.ok(teaserText(env).includes('Rechenfehler') && !/\d&nbsp;m/.test(env.teaser.innerHTML), 'alte Zahlen in der Kurzzeile');
   env.win.LszkPerf.update(wxPfa({ time: env.clock - 10 * MIN }));
   await settle();
-  assert.ok(shown(env).includes('331 m'));
+  assert.ok(shown(env).includes('331 m') && teaserText(env).includes('492 m'));
+  assert.ok(env.content.innerHTML.includes('<select id="perf-ac"'), 'Auswahl wieder da');
   [42, 'x', undefined, null, []].forEach((v) => assert.doesNotThrow(() => env.win.LszkPerf.update(v)));
   assert.ok(shown(env).includes('Keine aktuellen Messwerte vom Platz – keine Berechnung.'));
+  assert.equal(teaserText(env), 'Start- und Landestrecke · Cessna 172 Diesel Keine aktuellen Messwerte – keine Berechnung');
 });
 
 test('boot: Ladefehler, neuer Versuch frühestens nach 60 s', async (t) => {
@@ -1162,6 +1224,7 @@ test('boot: Ladefehler, neuer Versuch frühestens nach 60 s', async (t) => {
   env.win.LszkPerf.update(wxPfa());
   await settle();
   assert.ok(shown(env).includes('Flugzeug- oder Platzdaten nicht verfügbar – keine Berechnung.'));
+  assert.equal(teaserText(env), 'Start- und Landestrecke Daten nicht verfügbar – keine Berechnung');
   const n0 = perfFetches(env);
   env.failPerf = false;
   env.clock = NOW + 30 * 1000;
@@ -1184,11 +1247,95 @@ test('boot: offenes <details> bleibt offen, gleiches HTML wird nicht neu gesetzt
   const w0 = env.writes;
   env.win.LszkPerf._tick();
   assert.equal(env.writes, w0, 'gleiches HTML neu gesetzt');
-  env.content.details.open = true;
+  env.body.details.open = true;
   env.clock += MIN;
   env.win.LszkPerf._tick();
   assert.ok(env.writes > w0);
   assert.ok(env.content.innerHTML.includes('<details class="perf-details" open>'));
+});
+
+test('boot: Der Takt schreibt die Karte neu, das Auswahlfeld nicht (gleicher Knoten); Kurzzeile nur bei geändertem Inhalt', async (t) => {
+  const env = startBrowser(t);
+  await settle();
+  env.win.LszkPerf.update(wxPfa());
+  await settle();
+  const node = env.sel.querySelector('select');
+  assert.ok(node && node.value === 'c172d');
+  const nodes0 = env.selectNodes, w = Object.assign({}, env.writesBy);
+  env.clock += MIN;                                     // «vor 16 min»: nur die Karte ändert sich
+  env.win.LszkPerf._tick();
+  assert.equal(env.writesBy['perf-body'], w['perf-body'] + 1, 'Karte mit neuem Alter');
+  assert.equal(env.writesBy['perf-sel'], w['perf-sel'], 'Auswahl neu geschrieben');
+  assert.equal(env.writesBy['perf-teaser-text'], w['perf-teaser-text'], 'Kurzzeile ohne Änderung neu geschrieben');
+  assert.equal(env.sel.querySelector('select'), node);
+  // Neuer Messwert mit anderem Ergebnis: Karte und Kurzzeile neu, die Auswahl bleibt derselbe Knoten
+  env.win.LszkPerf.update(wxPfa({ time: env.clock - 5 * MIN, tempC: 25, qnhHpa: 1015, windDir: 214, windKt: 10 }));     // K6
+  await settle();
+  assert.equal(teaserText(env), 'Cessna 172 Diesel · Wind quer · beide Pisten Start über 15 m: 560 m · verfügbar ab 520 m ' +
+    'Landung über 15 m: 533 m · verfügbar ab 520 m');
+  assert.ok(env.teaser.innerHTML.includes('<b class="perf-amber">560&nbsp;m</b>'));
+  assert.equal(env.writesBy['perf-sel'], w['perf-sel']);
+  assert.equal(env.selectNodes, nodes0);
+  assert.equal(env.sel.querySelector('select'), node);
+  assert.equal(env.box.style.display, 'block');
+  assert.equal(env.writesBy['perf-box'], undefined, 'die Box selbst wird nie geschrieben');
+});
+
+test('boot: Auf- und Zuklappen der Kurzzeile gemerkt (lszk-perf-open), beim Start wiederhergestellt, Standard zu', async (t) => {
+  const env = startBrowser(t);
+  await settle();
+  assert.equal(env.box.open, false, 'Standard zu');
+  assert.equal(typeof env.box.listeners.toggle, 'function');
+  env.box.open = true;
+  env.box.listeners.toggle();
+  assert.equal(env.store['lszk-perf-open'], '1');
+  env.box.open = false;
+  env.box.listeners.toggle();
+  assert.ok(!Object.prototype.hasOwnProperty.call(env.store, 'lszk-perf-open'), 'beim Zuklappen entfernt');
+  env.box.open = true;
+  env.box.listeners.toggle();
+  // nächster Seitenaufruf: offen, bevor die Box erscheint; Neuschreiben von Karte und Kurzzeile lässt sie offen
+  const next = fakeBrowser({ store: env.store, initialWx: wxPfa() });
+  ui.boot(next.win);
+  assert.equal(next.box.open, true, 'nach Neuladen offen');
+  await settle();
+  assert.equal(next.box.style.display, 'block');
+  assert.ok(teaserText(next).includes('492 m') && next.box.open === true);
+  assert.equal(next.writesBy['perf-box'], undefined);
+  // ohne gespeicherten Zustand zu; privater Modus (localStorage wirft): kein Fehler, zu
+  const closed = fakeBrowser({ initialWx: wxPfa() });
+  ui.boot(closed.win);
+  assert.equal(closed.box.open, false);
+  const priv = fakeBrowser({ storeThrows: true, initialWx: wxPfa() });
+  assert.doesNotThrow(() => ui.boot(priv.win));
+  assert.equal(priv.box.open, false);
+  priv.box.open = true;
+  assert.doesNotThrow(() => priv.box.listeners.toggle());
+  await settle();
+  assert.ok(teaserText(priv).includes('492 m'), 'Kurzzeile im privaten Modus');
+});
+
+test('boot: alte Seite aus dem Cache (Karte im Panel, ohne Box und Kurzzeile) – die Karte erscheint und funktioniert', async (t) => {
+  const env = startBrowser(t, { oldPage: true });
+  await settle();
+  assert.equal(env.box, null);
+  assert.equal(env.card.style.display, 'none');
+  assert.deepEqual(env.content.children.map((c) => c.id), ['perf-sel', 'perf-body']);
+  assert.equal(env.card.listeners.toggle, undefined, 'kein toggle auf der Karte');
+  env.win.LszkPerf.update(wxPfa());
+  assert.equal(env.card.style.display, 'block', 'Karte beim ersten update sichtbar');
+  await settle();
+  assert.ok(shown(env).includes('Start 331 m 492 m 625 m'), shown(env));
+  assert.ok(env.content.innerHTML.includes('<select id="perf-ac"'));
+  choose(env, 'p2010');
+  await settle();
+  assert.ok(shown(env).includes('Start 409 m 744 m'), shown(env));
+  assert.equal(env.store['lszk-perf-aircraft'], 'p2010');
+  env.clock += MIN;
+  assert.doesNotThrow(() => env.win.LszkPerf._tick());
+  assert.doesNotThrow(() => env.win.LszkPerf.update(evilWx()));
+  assert.ok(shown(env).includes('Rechenfehler – keine Berechnung.') && !shown(env).includes('744 m'));
+  assert.equal(env.store['lszk-perf-open'], undefined);
 });
 
 test('boot: Wechsel Cessna ↔ Tecnam, Wahl erst nach erfolgreichem Laden gespeichert', async (t) => {
@@ -1197,22 +1344,34 @@ test('boot: Wechsel Cessna ↔ Tecnam, Wahl erst nach erfolgreichem Laden gespei
   env.win.LszkPerf.update(wxPfa());
   await settle();
   assert.ok(env.content.innerHTML.includes('<option value="c172d" selected>'));
-  env.content.listeners.change({ target: { id: 'perf-ac', value: 'p2010' } });
-  assert.ok(env.content.innerHTML.includes('<option value="p2010" selected>'), 'Auswahl während des Ladens');
+  const node = env.sel.querySelector('select'), selWrites = env.writesBy['perf-sel'];
+  choose(env, 'p2010');
+  // Der Wechsel schreibt das Auswahlfeld nicht neu: derselbe Knoten zeigt die neue Wahl
+  assert.equal(env.sel.querySelector('select'), node);
+  assert.equal(env.writesBy['perf-sel'], selWrites, 'Auswahl beim Wechsel neu geschrieben');
+  assert.equal(node.value, 'p2010', 'Auswahl während des Ladens');
   assert.ok(!shown(env).includes('331 m'), 'Cessna-Zahlen während des Ladens');
+  assert.equal(teaserText(env), 'Start- und Landestrecke Lade Flugzeug- und Platzdaten …', 'Kurzzeile während des Ladens');
+  assert.ok(!/\d&nbsp;m/.test(env.teaser.innerHTML), 'alte Zahlen in der Kurzzeile während des Ladens');
+  assert.ok(shown(env).includes('HB-KMD') && !shown(env).includes('HB-TDA'), 'Unterzeile zeigt die Kennzeichen der neuen Wahl');
   assert.equal(env.store['lszk-perf-aircraft'], undefined);
   await settle();
   assert.equal(env.store['lszk-perf-aircraft'], 'p2010');
   assert.ok(shown(env).includes('Start 409 m 744 m') && shown(env).includes("1'160 kg"), shown(env));
   assert.ok(shown(env).includes(P2010.footerDe));
-  env.content.listeners.change({ target: { id: 'perf-ac', value: 'c172d' } });
+  assert.equal(teaserText(env), 'Tecnam P2010 · Piste 30 Start über 15 m: 744 m · verfügbar 625 m Landung über 15 m: 897 m · verfügbar 520 m');
+  assert.equal(env.sel.querySelector('select'), node);
+  assert.equal(env.writesBy['perf-sel'], selWrites);
+  choose(env, 'c172d');
   await settle();
   assert.equal(env.store['lszk-perf-aircraft'], 'c172d');
   assert.ok(shown(env).includes('Start 331 m 492 m') && shown(env).includes(C172D.footerDe));
-  env.content.listeners.change({ target: { id: 'perf-ac', value: '../x' } });
-  env.content.listeners.change({ target: { id: 'anderes', value: 'p2010' } });
+  assert.ok(teaserText(env).startsWith('Cessna 172 Diesel · Piste 30'));
+  env.sel.listeners.change({ target: { id: 'perf-ac', value: '../x' } });
+  env.sel.listeners.change({ target: { id: 'anderes', value: 'p2010' } });
   await settle();
   assert.equal(env.store['lszk-perf-aircraft'], 'c172d');
+  assert.equal(env.sel.querySelector('select'), node);
 });
 
 test('boot: Wechsel zur Cessna 152 und zurück; die gespeicherte Wahl gilt beim nächsten Start', async (t) => {
@@ -1221,24 +1380,27 @@ test('boot: Wechsel zur Cessna 152 und zurück; die gespeicherte Wahl gilt beim 
   env.win.LszkPerf.update(wxPfa());
   await settle();
   assert.equal((env.content.innerHTML.match(/<option /g) || []).length, 3);
-  env.content.listeners.change({ target: { id: 'perf-ac', value: 'c152' } });
-  assert.ok(env.content.innerHTML.includes('<option value="c152" selected>'), 'Auswahl während des Ladens');
+  choose(env, 'c152');
+  assert.equal(env.sel.querySelector('select').value, 'c152', 'Auswahl während des Ladens');
   assert.ok(!shown(env).includes('331 m'), 'Zahlen der Cessna 172 während des Ladens');
   await settle();
   assert.equal(env.store['lszk-perf-aircraft'], 'c152');
   assert.ok(env.fetchUrls.some((u) => u.startsWith('perf/aircraft/c152.json?t=')));
-  assert.ok(env.content.innerHTML.includes('<option value="c152" selected>Cessna 152</option>'));
+  assert.equal(env.sel.querySelector('select').value, 'c152');
   assert.ok(env.content.innerHTML.includes('<div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-CFA</span> · <span class="perf-nw">HB-CYF</span> · ' +
     '<span class="perf-nw">HB-CYP</span> · 758&nbsp;kg</div>'));
   let s = shown(env);
   assert.ok(s.includes('Start 300 m 521 m 625 m') && s.includes('Landung 219 m 432 m 520 m') && s.includes("758 kg (1'670 lb)") && s.includes(C152.footerDe), s);
-  // nächster Seitenaufruf mit der gespeicherten Wahl
+  assert.equal(teaserText(env), 'Cessna 152 · Piste 30 Start über 15 m: 521 m · verfügbar 625 m Landung über 15 m: 432 m · verfügbar 520 m');
+  // nächster Seitenaufruf mit der gespeicherten Wahl: die Auswahl entsteht gleich mit der gespeicherten Wahl
   const next = fakeBrowser({ store: { 'lszk-perf-aircraft': 'c152' }, initialWx: wxPfa() });
   ui.boot(next.win);
   await settle();
-  assert.ok(next.content.innerHTML.includes('<option value="c152" selected>'), next.content.innerHTML.slice(0, 400));
+  assert.ok(next.content.innerHTML.includes('<option value="c152" selected>Cessna 152</option>'), next.content.innerHTML.slice(0, 400));
+  assert.equal(next.sel.querySelector('select').value, 'c152');
   assert.ok(shown(next).includes('Start 300 m 521 m 625 m'));
-  env.content.listeners.change({ target: { id: 'perf-ac', value: 'c172d' } });
+  assert.ok(teaserText(next).startsWith('Cessna 152 · Piste 30'));
+  choose(env, 'c172d');
   await settle();
   s = shown(env);
   assert.equal(env.store['lszk-perf-aircraft'], 'c172d');
@@ -1254,10 +1416,18 @@ test('boot: nicht ladbare Wahl fällt auf den Standard zurück, Speicher geleert
   assert.ok(env.content.innerHTML.includes('<option value="c172d" selected>'));
   assert.ok(shown(env).includes('Flugzeugdaten für «Fehlt» nicht verfügbar – Standardmuster gewählt.'));
   assert.ok(shown(env).includes('Start 331 m'));
-  env.content.listeners.change({ target: { id: 'perf-ac', value: 'x' } });
+  assert.ok(teaserText(env).endsWith('⚠ Hinweis in der Karte'), 'Hinweis «Standardmuster gewählt» als Vorbehalt');
+  const node = env.sel.querySelector('select'), selWrites = env.writesBy['perf-sel'];
+  choose(env, 'x');
+  assert.equal(node.value, 'x');
   await settle();
   assert.equal(env.store['lszk-perf-aircraft'], undefined, 'fehlgeschlagene Wahl gespeichert');
   assert.ok(shown(env).includes('Standardmuster gewählt') && shown(env).includes('Start 331 m'));
+  // Rückfall auf den Standard: derselbe Knoten, value zurückgesetzt, nicht neu geschrieben
+  assert.equal(env.sel.querySelector('select'), node);
+  assert.equal(node.value, 'c172d', 'Rückfall auf den Standard setzt value');
+  assert.equal(env.writesBy['perf-sel'], selWrites);
+  assert.ok(teaserText(env).startsWith('Cessna 172 Diesel · Piste 30') && teaserText(env).endsWith('⚠ Hinweis in der Karte'));
 });
 
 test('boot: Flugzeugdatei mit falscher id gilt als nicht ladbar', async (t) => {
@@ -1266,11 +1436,11 @@ test('boot: Flugzeugdatei mit falscher id gilt als nicht ladbar', async (t) => {
   await settle();
   env.win.LszkPerf.update(wxPfa());
   await settle();
-  env.content.listeners.change({ target: { id: 'perf-ac', value: 'p2010' } });
+  choose(env, 'p2010');
   await settle();
   assert.equal(env.store['lszk-perf-aircraft'], undefined);
   assert.ok(shown(env).includes('Flugzeugdaten für «Tecnam P2010» nicht verfügbar – Standardmuster gewählt.'), shown(env));
-  assert.ok(env.content.innerHTML.includes('<option value="c172d" selected>'));
+  assert.equal(env.sel.querySelector('select').value, 'c172d');
 });
 
 test('boot: Wahl und Standard nicht ladbar – kein «Standardmuster gewählt», Auswahl bleibt', async (t) => {
@@ -1282,10 +1452,12 @@ test('boot: Wahl und Standard nicht ladbar – kein «Standardmuster gewählt»,
   assert.ok(s.includes('Flugzeug- oder Platzdaten nicht verfügbar – keine Berechnung.'), s);
   assert.ok(!s.includes('Standardmuster gewählt'), 'Widerspruch');
   assert.ok(env.content.innerHTML.includes('<select id="perf-ac"'));
-  env.content.listeners.change({ target: { id: 'perf-ac', value: 'p2010' } });
+  assert.equal(teaserText(env), 'Start- und Landestrecke Daten nicht verfügbar – keine Berechnung');
+  choose(env, 'p2010');
   await settle();
   assert.equal(env.store['lszk-perf-aircraft'], 'p2010');
   assert.ok(shown(env).includes('Start 409 m'));
+  assert.ok(teaserText(env).startsWith('Tecnam P2010 · Piste 30 Start über 15 m: 744 m'), teaserText(env));
 });
 
 test('boot: FGZO-Status mit jedem update; ein fehlgeschlagener Abruf lässt den letzten Stand stehen, der dann altert', async (t) => {
@@ -1348,15 +1520,17 @@ test('boot: veraltete Antworten werden verworfen (Musterwechsel und FGZO-Abruf)'
   env.win.LszkPerf.update(wxPfa());
   await settle();
   // Tecnam gewählt (Antwort hängt), dann zurück zur Cessna; die späte Tecnam-Antwort darf nichts ändern
-  env.content.listeners.change({ target: { id: 'perf-ac', value: 'p2010' } });
+  choose(env, 'p2010');
   await settle();
-  env.content.listeners.change({ target: { id: 'perf-ac', value: 'c172d' } });
+  assert.equal(teaserText(env), 'Start- und Landestrecke Lade Flugzeug- und Platzdaten …');
+  choose(env, 'c172d');
   await settle();
   assert.ok(shown(env).includes('Start 331 m 492 m'));
   slow.resolve(okResponse(P2010));
   await settle();
   assert.ok(shown(env).includes('Start 331 m 492 m') && !shown(env).includes('409 m'), shown(env));
-  assert.ok(env.content.innerHTML.includes('<option value="c172d" selected>'));
+  assert.ok(teaserText(env).startsWith('Cessna 172 Diesel · Piste 30') && !teaserText(env).includes('744'), teaserText(env));
+  assert.equal(env.sel.querySelector('select').value, 'c172d');
   assert.notEqual(env.store['lszk-perf-aircraft'], 'p2010');
   // FGZO: die Antwort des älteren Abrufs (nass, gesperrt) kommt nach der des neueren (DRY)
   const first = deferred();

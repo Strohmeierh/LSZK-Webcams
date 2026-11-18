@@ -1,8 +1,13 @@
-/* Start- und Landestreckenrechner – Anzeige in #perf-card / #perf-content (Datenschema 2).
+/* Start- und Landestreckenrechner – Kurzzeile unter der Briefing-Ampel (<details id="perf-box">, Text in
+   #perf-teaser-text) und Karte #perf-card / #perf-content darin (Datenschema 2).
    Liest window.LSZK_WX (vom Wetterteil der Seite gesetzt) und bekommt Updates über window.LszkPerf.update(wx).
    Lädt perf/aircraft/index.json, die gewählte Flugzeugdatei, perf/airfields/<data-airfield>.json und
-   data/fgzo_status.json, rechnet mit window.LszkPerfCore (perf/perf.js) und schreibt die Karte.
-   Grundsatz: lieber kein Wert als ein falscher. Ohne gültige, frische Messwerte keine Zahlen.
+   data/fgzo_status.json, rechnet mit window.LszkPerfCore (perf/perf.js) und schreibt Kurzzeile und Karte aus einem
+   Modell (buildModel, eine Rechnung). In #perf-content legt das Skript #perf-sel (Auswahl, nur bei geänderter Liste
+   neu geschrieben) und #perf-body (Karteninhalt) an. Auf- und Zuklappen merkt sich lszk-perf-open.
+   Fehlen Box und Kurzzeile (alte Seite aus dem Cache), erscheint wie bisher nur die Karte.
+   Grundsatz: lieber kein Wert als ein falscher. Ohne gültige, frische Messwerte keine Zahlen, auch nicht in der
+   Kurzzeile; sie wirkt nie günstiger als die Karte.
    Gezeigt wird nur die Piste mit Gegenwind. Nass gilt die Piste bei einer FGZO-Meldung ungleich DRY oder bei Regen.
    Browser: window.LszkPerf = { update, version, _tick }. Node: reine Funktionen für die Tests.
    VERSION gleich dem ?v= in index.html und in perf/perf.js halten.
@@ -16,7 +21,7 @@
 }(typeof self !== 'undefined' ? self : this, function (core) {
   'use strict';
 
-  var VERSION = 2;
+  var VERSION = 3;
 
   var STALE_MIN = 45;          // Messwerte älter: keine Zahlen
   var FUTURE_MIN = 5;          // Messzeit weiter in der Zukunft: keine Zahlen
@@ -25,6 +30,7 @@
   var RETRY_MS = 60000;        // neuer Ladeversuch der Daten frühestens nach 60 s
   var TICK_MS = 60000;         // Alter neu rechnen
   var STORE_KEY = 'lszk-perf-aircraft';
+  var OPEN_KEY = 'lszk-perf-open';     // '1' = Kurzzeile aufgeklappt; zugeklappt: Schlüssel entfernt (Standard zu)
   var TZ = 'Europe/Zurich';
   var FGZO_TEXT_MAX = 40;      // Pistenzustand und Zeitstempel der FGZO
   var FGZO_REASON_MAX = 60;    // Grund einer Platzsperre (flaeche_grund)
@@ -65,6 +71,36 @@
       'letzten Stunde oder in den letzten 10 min Regen gemessen hat. Der Regenwert kann bis zu 60 min alt sein. Tau, Reif, eben ' +
       'einsetzenden Regen und Nässe von früherem Regen erkennt die Karte nicht.'
   };
+
+  // Kurzzeile unter der Ampel: Zustände ohne Zahlen und Vorbehalte (ohne Satzpunkt, ohne HTML)
+  var TEASER = {
+    title: 'Start- und Landestrecke',
+    internal: 'Rechenfehler – keine Berechnung',
+    loading: TEXT.loading,
+    dataError: 'Daten nicht verfügbar – keine Berechnung',
+    noData: 'Keine aktuellen Messwerte – keine Berechnung',
+    stale: 'Messwerte veraltet – keine Berechnung',
+    future: 'Messzeit unplausibel – keine Berechnung',
+    missing: 'Messwert fehlt – keine Berechnung',
+    speck: 'Nur Werte der Station Speck – keine Berechnung',
+    fgzoLoading: TEXT.fgzoLoading,
+    invalid: 'Messwert unplausibel – keine Berechnung',
+    aboveRange: 'Über dem Tabellenbereich des AFM – kein Wert',
+    noDirection: 'Windrichtung fehlt – keine Berechnung',
+    noRunway: 'Keine Piste mit Gegenwind – keine Berechnung',
+    calm: 'windstill',
+    nodir: 'ohne Windrichtung',
+    cross: 'Wind quer',
+    noValue: 'kein Wert',
+    closed: 'Platz gesperrt',
+    closedAll: 'Platz geschlossen',
+    closedStale: ' (veraltete Meldung)',
+    wet: 'Piste nass: Strecken deutlich länger möglich',
+    unknown: 'Pistenzustand unbekannt',
+    inCard: 'Hinweis in der Karte'
+  };
+  // Warnzeichen wie auf der übrigen Seite: einfaches U+26A0, ohne Variantenwähler
+  var WARN_SIGN = '⚠';
 
   // Feldnamen stammen aus dem Adapter bzw. dem Kern, nie aus Daten; unbekannte heissen «Messwert»
   var FIELD_LABEL = {
@@ -129,6 +165,38 @@
     '.perf-calc li { margin: 2px 0; }',
     '.perf-calc-h { color: var(--text); font-weight: 600; }',
     '.perf-foot { font-size: 0.72rem; color: var(--text-muted); line-height: 1.5; border-top: 1px solid var(--card-border); padding-top: 8px; margin-top: 4px; }',
+    // Kurzzeile unter der Ampel: <details class="perf-box"> mit <summary class="perf-teaser">; gleiche Aussenmasse wie die Ampel.
+    // display:block auf dem summary blendet das Dreieck aus (Safari: ::-webkit-details-marker); Flex sitzt im inneren span,
+    // weil display:flex direkt auf <summary> in älterem Safari nicht greift.
+    '.perf-box { max-width: 1600px; margin: 0 auto 16px; }',
+    '.perf-teaser { display: block; list-style: none; cursor: pointer; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; padding: 8px 12px; }',
+    '.perf-teaser::-webkit-details-marker { display: none; }',
+    '.perf-teaser:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }',
+    '.perf-box[open] > .perf-teaser { margin-bottom: 8px; }',
+    '.perf-t { display: flex; align-items: flex-start; gap: 8px; }',
+    '.perf-t-ico, .perf-t-chev { flex: none; width: 18px; height: 18px; color: var(--accent); }',
+    '.perf-t-chev { transition: transform 0.2s ease; }',
+    '.perf-box[open] .perf-t-chev { transform: rotate(180deg); }',
+    '.perf-t-body { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 1px 18px; font-size: 0.8rem; line-height: 1.45; color: var(--text); overflow-wrap: break-word; }',
+    '.perf-t-head { font-weight: 600; }',
+    '.perf-t-state { color: #f87171; }',
+    '.perf-t-load { color: var(--text-muted); }',
+    '.perf-t-warn { color: #fcd34d; }',
+    '@media (hover: hover) {',
+    '  .perf-teaser:hover { border-color: var(--accent); }',
+    '}',
+    '@media (max-width: 600px) {',
+    '  .perf-box { margin-bottom: 10px; }',
+    '  .perf-teaser { padding: 8px; border-radius: 6px; }',
+    '  .perf-t { gap: 6px; }',
+    '  .perf-t-ico, .perf-t-chev { width: 16px; height: 16px; }',
+    '}',
+    '@media (max-width: 340px) {',
+    '  .perf-t-ico { display: none; }',
+    '}',
+    '@media (prefers-reduced-motion: reduce) {',
+    '  .perf-t-chev { transition: none; }',
+    '}',
     '@media (max-width: 400px) {',
     '  .perf-block { padding: 8px; }',
     '  .perf-table th, .perf-table td { padding: 3px; }',
@@ -964,18 +1032,107 @@
     return selectHtml(m) + bodyHtml(m);
   }
 
+  /* ── Kurzzeile unter der Ampel (rein, für Node-Tests) ───────────
+     Folge von <span> im Flex-Behälter #perf-teaser-text: Kopf, je Phase eine Zeile, Vorbehalte. Zahlen nur im Zustand
+     result, also genau dann, wenn die Karte Pistenblöcke zeigt; je Phase die Strecke über 15 m gegen die verfügbare
+     Länge. Bei mehreren gerechneten Pisten die grösste Strecke («bis …», falls verschieden) gegen die kleinste Länge
+     («ab …», falls verschieden), Farbe die schwerste Stufe aller Pisten, mindestens amber, wenn die gezeigte Strecke
+     die gezeigte Länge übersteigt; fehlt einer Piste der Wert, steht «kein Wert». So ist die Zeile nie günstiger als
+     die Karte. Ein Vorbehalt (⚠) steht genau dann, wenn die Karte ein gelbes Element zeigt. Farben nur über Klassen. */
+  function teaserRowHtml(ph, computed) {
+    var label = '<span class="perf-nw">' + PHASE_LABEL[ph] + ' über 15&nbsp;m: ';
+    var ps = computed.map(function (r) { return r[ph]; });
+    if (!ps.every(function (p) { return p && p.ok; })) {
+      return '<span class="perf-t-row">' + label + '<span class="perf-nov">' + TEASER.noValue + '</span></span></span>';
+    }
+    var vals = ps.map(function (p) { return p.m.overObstacle; });
+    var avail = ps.map(function (p) { return p.availableM; });
+    var v = Math.max.apply(null, vals), av = Math.min.apply(null, avail);
+    var sev = 0;
+    ps.forEach(function (p) { sev = Math.max(sev, p.exceeds.groundRoll ? 2 : (p.exceeds.overObstacle ? 1 : 0)); });
+    if (sev === 0 && v > av) sev = 1;
+    var cls = sev === 2 ? ' class="perf-red"' : (sev === 1 ? ' class="perf-amber"' : '');
+    return '<span class="perf-t-row">' + label + (vals.some(function (x) { return x !== v; }) ? 'bis ' : '') +
+      '<b' + cls + '>' + fmtInt(v) + '&nbsp;m</b></span> <span class="perf-nw">· verfügbar ' +
+      (avail.some(function (x) { return x !== av; }) ? 'ab ' : '') + fmtInt(av) + '&nbsp;m</span></span>';
+  }
+
+  // Vorbehalte im Zustand result aus denselben Flags wie conditionHtml: ausgeschrieben werden frische und veraltete
+  // Sperre, Nässe und «unbekannt»; jedes andere gelbe Element der Karte (unsichere DRY-Meldung, Hinweis) einmal als
+  // «Hinweis in der Karte».
+  function teaserWarnings(m) {
+    var f = condFlags(m.fg, m.ws);
+    var closed = m.fg.closedReason === 'geschlossen' ? TEASER.closedAll : TEASER.closed;
+    var out = [];
+    if (f.closed) out.push(closed);
+    if (f.closedStale) out.push(closed + TEASER.closedStale);
+    if (f.wet) out.push(TEASER.wet);
+    if (f.unknown) out.push(TEASER.unknown);
+    if (m.notice || ((f.dryNotToday || f.dryStale || f.dryNoStamp) && !f.unknown)) out.push(TEASER.inCard);
+    return out;
+  }
+
+  function teaserStateText(m) {
+    switch (m.kind) {
+      case 'loading': return TEASER.loading;
+      case 'data-error': return TEASER.dataError;
+      case 'no-wx':
+        if (m.a.code === 'source-speck') return TEASER.speck;
+        if (m.a.code === 'stale') return m.a.future ? TEASER.future : TEASER.stale;
+        if (m.a.code === 'missing') return TEASER.missing;
+        return TEASER.noData;                     // no-data, no-source, no-time
+      case 'fgzo-pending': return TEASER.fgzoLoading;
+      case 'calc-error':
+        var code = m.res.error ? m.res.error.code : null;
+        if (code === 'invalid-input') return TEASER.invalid;
+        if (code === 'above-range') return TEASER.aboveRange;
+        if (code === 'bad-data') return TEASER.dataError;
+        return TEASER.internal;
+      case 'no-direction': return TEASER.noDirection;
+      case 'no-runway': return TEASER.noRunway;
+      default: return TEASER.internal;
+    }
+  }
+
+  function teaserHtml(m) {
+    var h, warn;
+    if (m.kind === 'result') {
+      var c = m.computed;
+      var where = c.length === 1 ? 'Piste&nbsp;' + esc(c[0].id) : (c.length === 2 ? 'beide Pisten' : c.length + ' Pisten');
+      h = '<span class="perf-t-head">' + esc(clip(m.ac.label, LABEL_MAX)) + ' · ' + (m.hintKind ? TEASER[m.hintKind] + ' · ' : '') + where + '</span>' +
+        core.PHASES.map(function (ph) { return teaserRowHtml(ph, c); }).join('');
+      warn = teaserWarnings(m);
+    } else {
+      var load = m.kind === 'loading' || m.kind === 'fgzo-pending';
+      h = '<span class="perf-t-head">' + TEASER.title + (m.ac ? ' · ' + esc(clip(m.ac.label, LABEL_MAX)) : '') + '</span>' +
+        '<span class="' + (load ? 'perf-t-load' : 'perf-t-state') + '">' + teaserStateText(m) + '</span>';
+      warn = m.notice ? [TEASER.inCard] : [];
+    }
+    return h + warn.map(function (w) { return '<span class="perf-t-warn">' + WARN_SIGN + ' ' + w + '</span>'; }).join('');
+  }
+
+  // Karte und Kurzzeile aus einer Rechnung: { sel, body, teaser, selectedId, kind }; sel + body === renderHtml(ctx)
+  function renderParts(ctx) {
+    var m = buildModel(ctx);
+    return { sel: selectHtml(m), body: bodyHtml(m), teaser: teaserHtml(m), selectedId: m.selectedId, kind: m.kind };
+  }
+
   /* ── Browser ───────────────────────────────────────────────── */
   function boot(win) {
     var doc = win.document;
+    // box: <details id="perf-box"> mit der Kurzzeile, auf einer alten Seite die Karte selbst; teaser darf fehlen.
+    // sel und body liegen in #perf-content; lastSelKey ist das HTML der Auswahl ohne die Markierung «selected».
     var S = {
-      card: null, content: null, started: false,
+      card: null, content: null, box: null, sel: null, body: null, teaser: null, started: false,
       index: null, aircraft: null, airfield: null, selectedId: null, pendingId: null, notice: null,
       dataState: 'loading', lastLoadAttempt: 0, loadSeq: 0,
       wx: null, hasUpdate: false, fatal: false,
       fgzo: null, fgzoSeq: 0, fgzoLoaded: false, fgzoDeadline: 0,
-      lastHtml: null
+      lastSelKey: null, lastBody: null, lastTeaser: null
     };
-    var FATAL_HTML = stateHtml(TEXT.internal) + footerHtml(null);
+    var FATAL_MODEL = { kind: 'internal', ac: null, notice: null };
+    var FATAL_BODY = bodyHtml(FATAL_MODEL);
+    var FATAL_TEASER = teaserHtml(FATAL_MODEL);
 
     function storeGet(k) { try { return win.localStorage.getItem(k); } catch (e) { return null; } }
     function storeSet(k, v) { try { win.localStorage.setItem(k, v); } catch (e) { /* privat: nur im Speicher */ } }
@@ -989,13 +1146,19 @@
         });
     }
 
+    // Erst alles mit Zahlen leeren (Karte, Kurzzeile), dann «Rechenfehler» in Karte und Kurzzeile; Auswahl leer
     function showFatal() {
       if (!S.content) return;
       try {
-        S.content.innerHTML = '';
-        S.content.innerHTML = FATAL_HTML;
+        S.body.innerHTML = '';
+        if (S.teaser) S.teaser.innerHTML = '';
+        S.sel.innerHTML = '';
+        S.body.innerHTML = FATAL_BODY;
+        if (S.teaser) S.teaser.innerHTML = FATAL_TEASER;
       } catch (e) { /* nichts mehr zu tun */ }
-      S.lastHtml = FATAL_HTML;
+      S.lastSelKey = '';
+      S.lastBody = FATAL_BODY;
+      S.lastTeaser = FATAL_TEASER;
     }
 
     // Fehler in update: alten Wetterstand verwerfen, «Rechenfehler» bleibt bis zum nächsten gültigen update
@@ -1003,29 +1166,49 @@
       S.wx = null;
       S.hasUpdate = true;
       S.fatal = true;
-      try { if (S.card) S.card.style.display = 'block'; } catch (e) { /* weiter */ }
+      try { if (S.box) S.box.style.display = 'block'; } catch (e) { /* weiter */ }
       showFatal();
+    }
+
+    // Die Auswahl wird nur bei geänderter Liste neu geschrieben (Vergleich ohne «selected»). Sonst bleibt das <select>
+    // derselbe Knoten: Fokus und eine offene Auswahlliste gehen beim Neuschreiben der Karte nicht verloren. Ändert sich
+    // nur die Wahl (Rückfall auf den Standard), wird höchstens value gesetzt.
+    function writeSel(html, selectedId) {
+      var key = html.replace(/ selected(?=>)/, '');
+      if (key !== S.lastSelKey) {
+        S.sel.innerHTML = html;
+        S.lastSelKey = key;
+        return;
+      }
+      var el = S.sel.querySelector('select');
+      if (el && typeof selectedId === 'string' && el.value !== selectedId) el.value = selectedId;
     }
 
     function render() {
       if (!S.content || !S.hasUpdate) return;
       if (S.fatal) {
-        if (S.lastHtml !== FATAL_HTML) showFatal();
+        if (S.lastBody !== FATAL_BODY || S.lastSelKey !== '') showFatal();
         return;
       }
       try {
-        var d = S.content.querySelector('details.perf-details');
-        var html = renderHtml({
+        var d = S.body.querySelector('details.perf-details');
+        var p = renderParts({
           dataState: S.dataState, list: S.index ? S.index.list : null,
           selectedId: S.pendingId || S.selectedId || (S.index ? S.index.def : null), notice: S.notice,
           aircraft: S.aircraft, airfield: S.airfield,
           wx: S.wx, fgzo: S.fgzo, fgzoPending: !S.fgzoLoaded && Date.now() < S.fgzoDeadline,
           nowMs: Date.now(), detailsOpen: !!(d && d.open)
         });
-        // Nur bei geändertem HTML neu setzen, damit ein offenes <details> offen bleibt
-        if (html !== S.lastHtml) {
-          S.content.innerHTML = html;
-          S.lastHtml = html;
+        writeSel(p.sel, p.selectedId);
+        // Karte und Kurzzeile nur bei geändertem HTML neu setzen, damit ein offenes <details> offen bleibt.
+        // Die Box selbst wird nie neu geschrieben und bleibt darum offen oder zu.
+        if (p.body !== S.lastBody) {
+          S.body.innerHTML = p.body;
+          S.lastBody = p.body;
+        }
+        if (S.teaser && p.teaser !== S.lastTeaser) {
+          S.teaser.innerHTML = p.teaser;
+          S.lastTeaser = p.teaser;
         }
       } catch (e) {
         showFatal();
@@ -1131,7 +1314,7 @@
         S.hasUpdate = true;
         S.fatal = false;
         if (!S.started) return;          // start() holt das nach
-        S.card.style.display = 'block';
+        S.box.style.display = 'block';
         if (!S.fgzoLoaded && !S.fgzoDeadline) {
           // bis zum ersten FGZO-Abruf höchstens FGZO_WAIT_MS «Lade Flugplatzstatus …», dann ohne Meldung weiter
           S.fgzoDeadline = Date.now() + FGZO_WAIT_MS;
@@ -1169,19 +1352,43 @@
       chooseAircraft(entry, seq, true);
     }
 
+    // Auf- und Zuklappen der Kurzzeile merken (Standard zu), wie lszk-wx-open in index.html
+    function onToggle() {
+      if (S.box.open) storeSet(OPEN_KEY, '1');
+      else storeRemove(OPEN_KEY);
+    }
+
+    function child(parent, id) {
+      var el = doc.getElementById(id);
+      if (el) return el;
+      el = doc.createElement('div');
+      el.id = id;
+      parent.appendChild(el);
+      return el;
+    }
+
     function start() {
       var card = doc.getElementById('perf-card');
       var content = doc.getElementById('perf-content');
       if (!card || !content) return;          // ohne Karte nichts tun
       S.card = card;
       S.content = content;
+      // Alte Seite aus dem Cache (Karte im Wetter-Panel, ohne Box und Kurzzeile): dann die Karte selbst zeigen
+      S.box = doc.getElementById('perf-box') || card;
+      S.teaser = doc.getElementById('perf-teaser-text');
+      S.sel = child(content, 'perf-sel');
+      S.body = child(content, 'perf-body');
       if (!doc.getElementById('perf-style')) {
         var st = doc.createElement('style');
         st.id = 'perf-style';
         st.textContent = CSS;
         (doc.head || doc.documentElement).appendChild(st);
       }
-      content.addEventListener('change', onChange);
+      S.sel.addEventListener('change', onChange);
+      if (S.box !== card) {
+        if (storeGet(OPEN_KEY) === '1') S.box.open = true;   // vor dem ersten Anzeigen
+        S.box.addEventListener('toggle', onToggle);
+      }
       S.started = true;
       loadData();
       if (S.fatal) fatal();
@@ -1204,6 +1411,7 @@
     FGZO_WAIT_MS: FGZO_WAIT_MS,
     WET_BY_RAIN: WET_BY_RAIN,
     TEXT: TEXT,
+    TEASER: TEASER,
     CSS: CSS,
     escapeHtml: esc,
     fmtInt: fmtInt,
@@ -1219,6 +1427,7 @@
     wetState: wetState,
     parseIndex: parseIndex,
     renderHtml: renderHtml,
+    renderParts: renderParts,
     boot: boot
   };
 }));
