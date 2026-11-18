@@ -563,27 +563,40 @@
     return rn.basis === 'hour' ? TEXT.noRainHour : TEXT.noRainRate;
   }
 
+  // Welche Zustandszeilen die Karte zeigt; dieselben Flags bestimmen die Vorbehalte der Kurzzeile.
+  // Gelb (Kasten): closed, wet. Hinweisfarbe: closedStale, dryNotToday, dryStale, dryNoStamp, unknown.
+  // Gedämpft: dryToday. Die DRY-Flags und unknown gelten nur, wenn die Piste nicht als nass gilt.
+  function condFlags(fg, ws) {
+    var dry = !ws.wet && fg.kind === 'dry';
+    return {
+      closed: fg.closed, closedStale: fg.closedStale, wet: ws.wet,
+      dryToday: dry && fg.fresh && fg.today, dryNotToday: dry && fg.fresh && !fg.today, dryStale: dry && !fg.fresh,
+      dryNoStamp: !ws.wet && fg.dryNoStamp, unknown: !ws.wet && ws.unknown
+    };
+  }
+
   // Gelber Kasten: frische Sperre und Nässe. Hinweisfarbe: veraltete Sperre, unsichere DRY-Meldung, unbekannter Zustand.
   // Gedämpft: frische DRY-Meldung von heute, Regensatz, «Gerechnet für …» und Vorbehalt.
   function conditionHtml(fg, rn, ws, ac, af, res) {
+    var f = condFlags(fg, ws);
     var h = '';
     var warn = [];
-    if (fg.closed) warn.push('<div>' + closureText(fg, false) + '</div>');
-    if (ws.wet) {
+    if (f.closed) warn.push('<div>' + closureText(fg, false) + '</div>');
+    if (f.wet) {
       var wet = [wetSourceText(fg, rn, ws)].concat(wetConsequences(res));
       if (str(ac.wetNoteDe)) wet.push(esc(ac.wetNoteDe));
       warn.push('<div>' + wet.join(' ') + '</div>');
     }
     if (warn.length) h += '<div class="perf-cond perf-warn" role="note">' + warn.join('') + '</div>';
-    if (fg.closedStale) h += '<div class="perf-note">' + closureText(fg, true) + '</div>';
-    if (!ws.wet) {
+    if (f.closedStale) h += '<div class="perf-note">' + closureText(fg, true) + '</div>';
+    if (!f.wet) {
       var notes = [], muted = [];
       var dry = 'Pistenzustand laut FGZO: DRY (' + stampText(fg) + ')';
-      if (fg.kind === 'dry' && fg.fresh && fg.today) muted.push(dry + '.');
-      else if (fg.kind === 'dry' && fg.fresh) notes.push(dry + ' – ' + (fg.dayKnown ? 'Meldung nicht von heute.' : 'Datum der Meldung unklar.'));
-      else if (fg.kind === 'dry') notes.push('Letzte FGZO-Meldung DRY ist veraltet (' + stampText(fg) + ', ' + fetchAgeText(fg) + ').');
-      else if (fg.dryNoStamp) notes.push('FGZO meldet DRY ohne Zeitstempel – gilt als unbekannt.');
-      if (ws.unknown) {
+      if (f.dryToday) muted.push(dry + '.');
+      else if (f.dryNotToday) notes.push(dry + ' – ' + (fg.dayKnown ? 'Meldung nicht von heute.' : 'Datum der Meldung unklar.'));
+      else if (f.dryStale) notes.push('Letzte FGZO-Meldung DRY ist veraltet (' + stampText(fg) + ', ' + fetchAgeText(fg) + ').');
+      else if (f.dryNoStamp) notes.push('FGZO meldet DRY ohne Zeitstempel – gilt als unbekannt.');
+      if (f.unknown) {
         notes.push(TEXT.unknown);
       } else {
         if (fg.kind !== 'dry' && !fg.dryNoStamp) muted.push(TEXT.noFgzo);
@@ -836,45 +849,96 @@
     return h.join('');
   }
 
-  /* ── Gesamte Karte als HTML (rein, für Node-Tests) ──────────── */
+  /* ── Modell: eine Rechnung für alle Darstellungen (rein, für Node-Tests) ── */
   // ctx: { dataState: 'loading'|'ready'|'error', list, selectedId, notice, aircraft, airfield,
   //        wx (window.LSZK_WX), fgzo, fgzoPending, nowMs, detailsOpen }
-  function renderHtml(ctx) {
+  // kind: internal | loading | data-error | no-wx | fgzo-pending | calc-error | no-direction | no-runway | result.
+  // core.compute läuft höchstens einmal. notice steht nur in den Zuständen, in denen die Karte ihn zeigt;
+  // selectedId ist ab geladenen Daten die id des geladenen Musters.
+  function buildModel(ctx) {
     ctx = ctx || {};
-    var nowMs = isNum(ctx.nowMs) ? ctx.nowMs : Date.now();
-    if (!core || core.VERSION !== VERSION) return stateHtml(TEXT.internal) + footerHtml(null);
-    var sel = selectionHtml(ctx.list, ctx.selectedId);
-    if (ctx.dataState === 'loading') return sel + '<div class="perf-loading">' + TEXT.loading + '</div>' + footerHtml(null);
+    var m = {
+      kind: 'internal', nowMs: isNum(ctx.nowMs) ? ctx.nowMs : Date.now(), list: ctx.list, selectedId: ctx.selectedId,
+      notice: null, detailsOpen: !!ctx.detailsOpen,
+      ac: null, af: null, a: null, fg: null, rn: null, ws: null, res: null, hintKind: null, computed: null, skipped: null
+    };
+    if (!core || core.VERSION !== VERSION) return m;
+    if (ctx.dataState === 'loading') {
+      m.kind = 'loading';
+      return m;
+    }
+    m.notice = ctx.notice;
     var ac = ctx.aircraft, af = ctx.airfield;
     if (ctx.dataState !== 'ready' || !core.validateAircraft(ac).ok || !core.validateAirfield(af).ok) {
-      return sel + noticeHtml(ctx.notice) + stateHtml(TEXT.dataError) + footerHtml(null);
+      m.kind = 'data-error';
+      return m;
     }
-    if (ctx.list && ctx.list.length >= 2) sel = selectionHtml(ctx.list, ac.id);
-    var head = sel + headHtml(ac) + noticeHtml(ctx.notice);
-    var foot = footerHtml(ac);
-    var a = adaptLszkWx(ctx.wx, nowMs);
-    if (!a.ok) return head + stateHtml(adapterText(a, nowMs)) + foot;
-    if (ctx.fgzoPending) return head + '<div class="perf-loading">' + TEXT.fgzoLoading + '</div>' + foot;
-    var fg = fgzoState(ctx.fgzo, nowMs);
-    var rn = rainState(a);
-    var ws = wetState(fg, rn);
-    var input = { tempC: a.wx.tempC, qnhHpa: a.wx.qnhHpa, windDirTrue: a.wx.windDirTrue, windKt: a.wx.windKt, runwayWet: ws.wet };
-    var res = core.compute(ac, af, input);
-    if (!res.ok) return head + errorTexts(res).map(stateHtml).join('') + foot;
-    if (res.mode === 'no-direction') return head + stateHtml(TEXT.noDirection) + foot;
-    if (res.computedCount === 0) return head + stateHtml(TEXT.noHeadwindRunway) + foot;
-    var hint = '';
-    if (res.mode === 'calm') hint = TEXT.calm;
-    else if (res.mode === 'nodir') hint = TEXT.nodir;
-    else if (isCross(res)) hint = TEXT.cross;
-    var computed = res.runways.filter(function (r) { return r.computed; });
-    var skipped = res.runways.filter(function (r) { return !r.computed && r.reason === 'tailwind'; });
-    return head + measHtml(a, res, nowMs) + conditionHtml(fg, rn, ws, ac, af, res) +
+    m.ac = ac;
+    m.af = af;
+    m.selectedId = ac.id;
+    var a = m.a = adaptLszkWx(ctx.wx, m.nowMs);
+    if (!a.ok) {
+      m.kind = 'no-wx';
+      return m;
+    }
+    if (ctx.fgzoPending) {
+      m.kind = 'fgzo-pending';
+      return m;
+    }
+    m.fg = fgzoState(ctx.fgzo, m.nowMs);
+    m.rn = rainState(a);
+    m.ws = wetState(m.fg, m.rn);
+    var input = { tempC: a.wx.tempC, qnhHpa: a.wx.qnhHpa, windDirTrue: a.wx.windDirTrue, windKt: a.wx.windKt, runwayWet: m.ws.wet };
+    var res = m.res = core.compute(ac, af, input);
+    if (!res.ok) m.kind = 'calc-error';
+    else if (res.mode === 'no-direction') m.kind = 'no-direction';
+    else if (res.computedCount === 0) m.kind = 'no-runway';
+    else {
+      if (res.mode === 'calm') m.hintKind = 'calm';
+      else if (res.mode === 'nodir') m.hintKind = 'nodir';
+      else if (isCross(res)) m.hintKind = 'cross';
+      m.computed = res.runways.filter(function (r) { return r.computed; });
+      m.skipped = res.runways.filter(function (r) { return !r.computed && r.reason === 'tailwind'; });
+      m.kind = 'result';
+    }
+    return m;
+  }
+
+  /* ── Karte als HTML: Auswahl und Inhalt ────────────────────── */
+  function selectHtml(m) {
+    return m.kind === 'internal' ? '' : selectionHtml(m.list, m.selectedId);
+  }
+
+  var HINT_TEXT = { calm: TEXT.calm, nodir: TEXT.nodir, cross: TEXT.cross };
+
+  function bodyHtml(m) {
+    if (m.kind === 'loading') return '<div class="perf-loading">' + TEXT.loading + '</div>' + footerHtml(null);
+    if (m.kind === 'data-error') return noticeHtml(m.notice) + stateHtml(TEXT.dataError) + footerHtml(null);
+    if (m.kind === 'internal' || !m.ac) return stateHtml(TEXT.internal) + footerHtml(null);
+    var head = headHtml(m.ac) + noticeHtml(m.notice);
+    var foot = footerHtml(m.ac);
+    switch (m.kind) {
+      case 'no-wx': return head + stateHtml(adapterText(m.a, m.nowMs)) + foot;
+      case 'fgzo-pending': return head + '<div class="perf-loading">' + TEXT.fgzoLoading + '</div>' + foot;
+      case 'calc-error': return head + errorTexts(m.res).map(stateHtml).join('') + foot;
+      case 'no-direction': return head + stateHtml(TEXT.noDirection) + foot;
+      case 'no-runway': return head + stateHtml(TEXT.noHeadwindRunway) + foot;
+      case 'result': break;
+      default: return stateHtml(TEXT.internal) + footerHtml(null);
+    }
+    var hint = m.hintKind ? HINT_TEXT[m.hintKind] : '';
+    return head + measHtml(m.a, m.res, m.nowMs) + conditionHtml(m.fg, m.rn, m.ws, m.ac, m.af, m.res) +
       (hint ? '<div class="perf-hint">' + hint + '</div>' : '') +
-      '<div class="perf-grid">' + computed.map(blockHtml).join('') + '</div>' +
-      skipped.map(function (r) { return '<div class="perf-skip">Piste ' + esc(r.id) + ': Rückenwind – nicht berechnet.</div>'; }).join('') +
-      factorLineHtml(ac) +
-      detailsHtml(ac, af, res, !!ctx.detailsOpen) + foot;
+      '<div class="perf-grid">' + m.computed.map(blockHtml).join('') + '</div>' +
+      m.skipped.map(function (r) { return '<div class="perf-skip">Piste ' + esc(r.id) + ': Rückenwind – nicht berechnet.</div>'; }).join('') +
+      factorLineHtml(m.ac) +
+      detailsHtml(m.ac, m.af, m.res, m.detailsOpen) + foot;
+  }
+
+  // Gesamte Karte als HTML (rein, für Node-Tests)
+  function renderHtml(ctx) {
+    var m = buildModel(ctx);
+    return selectHtml(m) + bodyHtml(m);
   }
 
   /* ── Browser ───────────────────────────────────────────────── */
