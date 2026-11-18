@@ -210,7 +210,23 @@
     if (headwind > 1) err(path + ': Gegenwind-Regel doppelt');
   }
 
-  function validateAircraft(ac) {
+  // Text einer Ausnahme; wirft selbst nie (auch nicht bei einer Ausnahme mit Fallen)
+  function errText(e) {
+    try { return String(e && e.message || e); } catch (e2) { return 'unbekannter Fehler'; }
+  }
+
+  // Die Prüfungen werfen nie: auch ein Objekt mit Fallen (Getter, die werfen) ergibt nur «bad-data».
+  function safeValidate(fn, obj, what) {
+    try {
+      return fn(obj);
+    } catch (e) {
+      return { ok: false, errors: [what + ' nicht lesbar: ' + errText(e)] };
+    }
+  }
+  function validateAircraft(ac) { return safeValidate(validateAircraftUnsafe, ac, 'Flugzeugdaten'); }
+  function validateAirfield(af) { return safeValidate(validateAirfieldUnsafe, af, 'Platzdaten'); }
+
+  function validateAircraftUnsafe(ac) {
     var errors = [];
     function err(m) { errors.push(m); }
     if (!isObj(ac)) return { ok: false, errors: ['Flugzeugdaten fehlen'] };
@@ -235,7 +251,7 @@
     return { ok: errors.length === 0, errors: errors };
   }
 
-  function validateAirfield(af) {
+  function validateAirfieldUnsafe(af) {
     var errors = [];
     function err(m) { errors.push(m); }
     if (!isObj(af)) return { ok: false, errors: ['Platzdaten fehlen'] };
@@ -438,7 +454,7 @@
     try {
       return computeUnsafe(aircraft, airfield, input);
     } catch (e) {
-      return { ok: false, error: { code: 'internal', message: String(e && e.message || e) } };
+      return { ok: false, error: { code: 'internal', message: errText(e) } };
     }
   }
 
@@ -511,6 +527,8 @@
     checkInput: checkInput,
     lookupTable: lookupTable,
     windForRunway: windForRunway,
-    compute: compute
+    compute: compute,
+    // nur für Tests: eine Phase direkt rechnen (Schlussprobe ist mit geprüften Daten nicht erreichbar)
+    _computePhase: computePhase
   };
 }));

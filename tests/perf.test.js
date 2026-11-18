@@ -62,7 +62,7 @@ function sample5a1111() {
 test('Daten: JSON ohne BOM, Schema 2, Validierung ok', () => {
   ['perf/aircraft/c172d.json', 'perf/aircraft/p2010.json', 'perf/aircraft/index.json', 'perf/airfields/lszk.json',
     'tests/fixtures/c172s_lycoming.json', 'tests/fixtures/c172d_5b_1157kg_ft.json', 'tests/fixtures/c172d_5a_1111kg_m.json',
-    'tests/fixtures/p2010_ft.json', 'tests/fixtures/p2010_isa.json'].forEach((rel) => {
+    'tests/fixtures/p2010_ft.json', 'tests/fixtures/p2010_isa.json', 'tests/fixtures/kontrollfaelle.json'].forEach((rel) => {
     const { buf } = readJson(rel);
     assert.ok(!(buf[0] === 0xef && buf[1] === 0xbb && buf[2] === 0xbf), rel + ' hat ein BOM');
   });
@@ -392,6 +392,26 @@ test('Wind: Prozent (Cessna) und absolut (Tecnam) je kt, abgerundet', () => {
   assert.deepEqual([p.wind.reduction, p.wind.perKt], [28, 4]);
 });
 
+test('Wind: genau 1 kt Gegenwind wird angerechnet (Cessna −1 %, Tecnam −10 m)', () => {
+  let p = rwy(run(wx(15, 1013.25, 304, 1)), '30').takeoff;       // 10 % × 1/9 = 1,1 % → 1 %
+  assert.deepEqual([p.wind.kt, p.wind.applied, p.wind.type, p.wind.percent], [1, true, 'percentPer', 1]);
+  close(p.afterWind.groundRoll, p.table.groundRoll * 0.99, 1e-9);
+  close(p.afterWind.overObstacle, p.table.overObstacle * 0.99, 1e-9);
+  p = rwy(run(wx(15, 1013.25, 304, 1), P2010), '30').landing;    // 1 kt × 4 m
+  assert.deepEqual([p.wind.kt, p.wind.applied, p.wind.reduction], [1, true, 4]);
+  close(p.afterWind.groundRoll, p.table.groundRoll - 4, 1e-9);
+});
+
+test('Wind: absolute Korrektur mit gebrochenem Wert wird abgerundet (−15 m je 2 kt, 3 kt → −22 m)', () => {
+  const ac = clone(P2010);
+  Object.assign(ac.charts.takeoff.corrections.find((c) => c.kind === 'headwind'), { amount: -15, per: 2 });
+  assert.equal(core.validateAircraft(ac).ok, true);
+  const p = rwy(run(wx(15, 1013.25, 304, 3), ac), '30').takeoff;   // 15 × 3 / 2 = 22,5 → 22
+  assert.deepEqual([p.wind.kt, p.wind.perKt, p.wind.per, p.wind.reduction], [3, 15, 2, 22]);
+  close(p.afterWind.groundRoll, p.table.groundRoll - 22, 1e-9);
+  close(p.afterWind.overObstacle, p.table.overObstacle - 22, 1e-9);
+});
+
 test('Wind: Gegenwind 40 kt Wert, 41 kt kein Wert (K11a, K11b)', () => {
   const a = rwy(run(wx(15, 1013.25, 304, 40)), '30');
   assert.deepEqual([meters(a.takeoff), meters(a.landing)], [[218, 315], [194, 329]]);
@@ -460,6 +480,16 @@ test('Faktoren: immer (Tecnam), nur nass und nur auf Gras (Cessna), Reihenfolge 
   close(r.takeoff.factors[1].after.groundRoll, 371.32 * 1.1 * 1.25, 1e-9);
 });
 
+test('Faktoren: auf 1/1000 gerundet (1,015 wirkt als 1015/1000, nicht abgeschnitten als 1014/1000)', () => {
+  assert.ok(1.015 * 1000 < 1015, 'Voraussetzung: Gleitkommarest unter der ganzen Zahl');
+  const ac = clone(P2010);
+  ac.charts.takeoff.corrections.find((c) => c.kind === 'factor').factor = 1.015;
+  const p = rwy(run(wx(15, 1018, 290, 8), ac), '30').takeoff;      // K8 vor dem Faktor: 371,32 / 676,12 m
+  close(p.final.groundRoll, 371.32 * 1015 / 1000, 1e-9);
+  close(p.final.overObstacle, 676.12 * 1015 / 1000, 1e-9);
+  assert.deepEqual(meters(p), [377, 687]);
+});
+
 test('Einheiten: Tabelle in m ohne Umrechnung, in ft mit 0,3048', () => {
   const r = rwy(run(wx(15, 1018, 290, 8)), '30');
   assert.equal(r.takeoff.unit, 'm');
@@ -484,60 +514,15 @@ test('Belag: Gras aus der Tabellen-Rollstrecke (bei Interpolation der interpolie
 
 /* ── Kontrollbeispiele des Planers (K1–K21, T1–T16) ───────── */
 
+// tests/fixtures/kontrollfaelle.json (auch für den Rechenweg-Test der Anzeige):
 // [id, Muster, Platz ('lszk' oder Höhe des Hartbelag-Testplatzes), [tempC, QNH, Richtung, Wind, nass],
 //  je Piste: Grund (nicht gerechnet) oder [Gegenwind kt, Start, Landung] mit [m Roll, m 15 m, exceeds Roll, exceeds 15 m] oder Grund]
-const CASES = [
-  ['K1', 'sample5a1111', 1500, [28, 1013.25, 360, 12, false], { '36': [12, [289, 496, 0, 0], null] }],
-  ['K2', 'c172d', 'lszk', [15, 1018, 290, 8, false], { '12': 'tailwind', '30': [7, [331, 492, 0, 0], [265, 489, 0, 0]] }],
-  ['K3', 'c172d', 'lszk', [15, 1018, 290, 8, true], { '12': 'tailwind', '30': [7, [397, 590, 0, 0], [265, 489, 0, 0]] }],
-  ['K5', 'c172d', 'lszk', [20, 1013.25, null, 0, false], { '12': [0, [352, 525, 0, 1], [279, 520, 0, 0]], '30': [0, [352, 525, 0, 0], [279, 520, 0, 0]] }],
-  ['K5n', 'c172d', 'lszk', [20, 1013.25, null, 0, true], { '12': [0, [423, 630, 0, 1], [279, 520, 0, 0]], '30': [0, [423, 630, 0, 1], [279, 520, 0, 0]] }],
-  ['K6', 'c172d', 'lszk', [25, 1015, 214, 10, false], { '12': [0, [375, 560, 0, 1], [288, 533, 0, 0]], '30': [0, [375, 560, 0, 0], [288, 533, 0, 1]] }],
-  ['K7', 'c172d', 'lszk', [20.1, 1004.4, null, 0, false], { '12': [0, [403, 601, 0, 1], [299, 549, 0, 0]], '30': [0, [403, 601, 0, 0], [299, 549, 0, 1]] }],
-  ['K7b', 'c172d', 'lszk', [-5, 1004.5, null, 0, false], { '12': [0, [306, 456, 0, 0], [259, 494, 0, 0]], '30': [0, [306, 456, 0, 0], [259, 494, 0, 0]] }],
-  ['K7c', 'c172d', 'lszk', [-25, 1013.25, null, 0, false], { '12': [0, [265, 395, 0, 0], [259, 494, 0, 0]], '30': [0, [265, 395, 0, 0], [259, 494, 0, 0]] }],
-  ['K8', 'p2010', 'lszk', [15, 1018, 290, 8, false], { '12': 'tailwind', '30': [7, [409, 744, 0, 1], [423, 897, 0, 1]] }],
-  ['K9', 'p2010', 'lszk', [20, 1013.25, null, 0, false], { '12': [0, [506, 854, 0, 1], [477, 952, 0, 1]], '30': [0, [506, 854, 0, 1], [477, 952, 0, 1]] }],
-  ['K10a', 'p2010', 'lszk', [10, 1013.25, 304, 22, false], { '12': 'tailwind', '30': [22, 'wind-credit-limit', [314, 789, 0, 1]] }],
-  ['K10b', 'p2010', 'lszk', [10, 1013.25, 304, 21, false], { '12': 'tailwind', '30': [21, 'wind-credit-limit', [321, 795, 0, 1]] }],
-  ['K11a', 'c172d', 'lszk', [15, 1013.25, 304, 40, false], { '12': 'tailwind', '30': [40, [218, 315, 0, 0], [194, 329, 0, 0]] }],
-  ['K11b', 'c172d', 'lszk', [15, 1013.25, 304, 41, false], { '12': 'tailwind', '30': [41, 'headwind-limit', 'headwind-limit'] }],
-  ['K12', 'c172d', 'lszk', [3, 1022, null, 2, false], { '12': [0, [328, 489, 0, 0], [270, 506, 0, 0]], '30': [0, [328, 489, 0, 0], [270, 506, 0, 0]] }],
-  ['K12b', 'c172d', 'lszk', [15, 1015, null, 6, false], { '12': 'no-direction', '30': 'no-direction' }],
-  ['K13', 'c172d', 'lszk', [3, 1022, 90, 0.6, false], { '12': [0, [328, 489, 0, 0], [270, 506, 0, 0]], '30': [0, [328, 489, 0, 0], [270, 506, 0, 0]] }],
-  ['K14', 'c172d', 'lszk', [10.8, 998.2, 247, 8.7, false], { '12': 'tailwind', '30': [4, [365, 542, 0, 0], [282, 518, 0, 0]] }],
-  ['K14n', 'c172d', 'lszk', [10.8, 998.2, 247, 8.7, true], { '12': 'tailwind', '30': [4, [437, 651, 0, 1], [282, 518, 0, 0]] }],
-  ['K15a', 'p2010', 'lszk', [0, 1013.25, null, 0, false], { '12': [0, [426, 723, 0, 1], [445, 919, 0, 1]], '30': [0, [426, 723, 0, 1], [445, 919, 0, 1]] }],
-  ['K15b', 'p2010', 'lszk', [0.1, 1013.25, null, 0, false], { '12': [0, [427, 724, 0, 1], [445, 919, 0, 1]], '30': [0, [427, 724, 0, 1], [445, 919, 0, 1]] }],
-  ['K15c', 'p2010', 'lszk', [25.1, 1013.25, null, 0, false], { '12': [0, [526, 887, 1, 1], [486, 960, 0, 1]], '30': [0, [526, 887, 0, 1], [486, 960, 0, 1]] }],
-  ['K16', 'c172d', 'lszk', [30, 1010, 304, 18, false], { '12': 'tailwind', '30': [18, [310, 458, 0, 0], [248, 444, 0, 0]] }],
-  ['K17', 'c172d', 'lszk', [25, 1015, 215, 10, false], { '12': 'tailwind', '30': [0, [375, 560, 0, 0], [288, 533, 0, 1]] }],
-  ['K18', 'p2010', 'lszk', [15, 1018, 290, 8, true], { '12': 'tailwind', '30': [7, [409, 744, 0, 1], [423, 897, 0, 1]] }],
-  ['K19', 'c172d', 'lszk', [40, 1013.25, null, 0, false], { '12': [0, [413, 618, 0, 1], [297, 547, 0, 0]], '30': [0, [413, 618, 0, 0], [297, 547, 0, 1]] }],
-  ['K20a', 'p2010', 4000, [0, 1013.25, 360, 21, false], { '36': [21, [231, 581, 0, 0], [294, 769, 0, 0]] }],
-  ['K20b', 'p2010', 4000, [0, 1013.25, 360, 22, false], { '36': [22, 'wind-credit-limit', [288, 762, 0, 0]] }],
-  ['K21', 'p2010', 'lszk', [10.8, 998.2, 247, 8.7, false], { '12': 'tailwind', '30': [4, [468, 821, 0, 1], [453, 927, 0, 1]] }],
-  ['T1', 'p2010', 'lszk', [25, 1013.25, null, 0, false], { '12': [0, [526, 886, 1, 1], [485, 960, 0, 1]], '30': [0, [526, 886, 0, 1], [485, 960, 0, 1]] }],
-  ['T2', 'p2010', 'lszk', [-25, 1013.25, null, 0, false], { '12': [0, [338, 580, 0, 1], [405, 879, 0, 1]], '30': [0, [338, 580, 0, 0], [405, 879, 0, 1]] }],
-  ['T3', 'p2010', 'lszk', [-30, 1013.25, null, 0, false], { '12': [0, [338, 580, 0, 1], [405, 879, 0, 1]], '30': [0, [338, 580, 0, 0], [405, 879, 0, 1]] }],
-  ['T4', 'p2010', 'lszk', [50, 1013.25, null, 0, false], { '12': [0, [637, 1068, 1, 1], [526, 1000, 0, 1]], '30': [0, [637, 1068, 1, 1], [526, 1000, 1, 1]] }],
-  ['T5', 'p2010', 'lszk', [50.1, 1013.25, null, 0, false], 'above-range'],
-  ['T6', 'p2010', 'lszk', [24.9, 1013.25, null, 0, false], { '12': [0, [525, 886, 1, 1], [485, 960, 0, 1]], '30': [0, [525, 886, 0, 1], [485, 960, 0, 1]] }],
-  ['T7', 'p2010', 'lszk', [-0.1, 1013.25, null, 0, false], { '12': [0, [426, 723, 0, 1], [445, 919, 0, 1]], '30': [0, [426, 723, 0, 1], [445, 919, 0, 1]] }],
-  ['T8', 'p2010', 'lszk', [10, 1013.25, 304, 19, false], { '12': 'tailwind', '30': [19, [257, 580, 0, 0], [334, 809, 0, 1]] }],
-  ['T9', 'p2010', 'lszk', [10, 1013.25, 304, 20, false], { '12': 'tailwind', '30': [20, 'wind-credit-limit', [328, 802, 0, 1]] }],
-  ['T10', 'p2010', 3000, [10, 1013.25, 360, 21, false], { '36': [21, [231, 582, 0, 0], [295, 769, 0, 0]] }],
-  ['T11', 'p2010', 3000, [10, 1013.25, 360, 22, false], { '36': [22, 'wind-credit-limit', [288, 762, 0, 0]] }],
-  ['T12', 'p2010', 'lszk', [10, 1013.25, null, 0, false], { '12': [0, [466, 789, 0, 1], [461, 935, 0, 1]], '30': [0, [466, 789, 0, 1], [461, 935, 0, 1]] }],
-  ['T13', 'p2010', 'lszk', [12.5, 1013.25, null, 0, false], { '12': [0, [476, 805, 0, 1], [465, 940, 0, 1]], '30': [0, [476, 805, 0, 1], [465, 940, 0, 1]] }],
-  ['T14', 'p2010', 'lszk', [20, 1000, null, 0, false], { '12': [0, [552, 930, 1, 1], [495, 970, 0, 1]], '30': [0, [552, 930, 0, 1], [495, 970, 0, 1]] }],
-  ['T15', 'p2010', 'lszk', [28, 1016, 300, 6, false], { '12': 'tailwind', '30': [5, [484, 853, 0, 1], [457, 931, 0, 1]] }],
-  ['T16', 'p2010', 'lszk', [30, 1013.25, null, 0, false], { '12': [0, [548, 923, 1, 1], [494, 968, 0, 1]], '30': [0, [548, 923, 0, 1], [494, 968, 0, 1]] }]
-];
+const CASES = readJson('tests/fixtures/kontrollfaelle.json').data;
 
 function caseAircraft(id) { return id === 'c172d' ? C172D : (id === 'p2010' ? P2010 : sample5a1111()); }
 
 test('Kontrollbeispiele des Planers: 46 Fälle, Meter, exceeds und Gründe', () => {
+  assert.equal(CASES.length, 46);
   CASES.forEach(([id, ac, field, inp, exp]) => {
     const r = core.compute(caseAircraft(ac), field === 'lszk' ? AF : pavedField(field), wx(inp[0], inp[1], inp[2], inp[3], inp[4]));
     if (exp === 'above-range') {
@@ -792,7 +777,7 @@ test('Fail-closed: unbekannte oder unplausible Schema-Werte ergeben bad-data', (
     'ft-Wert 30001': (ac) => { ac.charts[L].table.cells[8][4][1] = 30001; },
     'NaN-Zelle': (ac) => { ac.charts[T].table.cells[2][3][0] = NaN; },
     'Zeile zu kurz': (ac) => { ac.charts[T].table.cells[4].pop(); },
-    'nicht monoton': (ac) => { ac.charts[T].table.cells[3][2][1] = 100; },
+    '15 m kürzer als Rollstrecke': (ac) => { ac.charts[T].table.cells[3][2][1] = 100; },
     'Rückenwind-Regel': (ac) => { ac.charts[T].corrections.push({ kind: 'tailwind', type: 'percentPer', percent: 10, per: 2, unit: 'kt', max: 10 }); },
     'kind unbekannt': (ac) => { ac.charts[L].corrections.push({ kind: 'slope', percent: 10 }); },
     'per 0,5': (ac) => { rule(ac, T, 'headwind').per = 0.5; },
@@ -841,9 +826,56 @@ test('Fail-closed: fehlende Gras-Regel ergibt für diese Phase keinen Wert, fehl
   close(p.afterWind.groundRoll, p.table.groundRoll, 0);
 });
 
-test('Interner Fehler wird abgefangen', () => {
+test('Fail-closed: Monotonieprüfung allein (eine fallende Zelle, sonst gültig)', () => {
   const ac = clone(C172D);
-  Object.defineProperty(ac.charts.takeoff, 'corrections', { get() { throw new Error('kaputt'); } });
+  // 3000 ft / 10 °C: [306, 478] → [280, 470]. Kleiner als 2000 ft / 10 °C [285, 446], 15 m bleibt über der Rollstrecke.
+  ac.charts.takeoff.table.cells[3][2] = [280, 470];
+  assert.deepEqual(core.validateAircraft(ac), { ok: false, errors: ['charts.takeoff.table.cells nicht monoton'] });
   const r = core.compute(ac, AF, wx(15, 1013.25, 304, 5));
+  assert.deepEqual([r.ok, r.error.code], [false, 'bad-data']);
+});
+
+test('Schlussprobe im Kern: unplausible Zwischenwerte ergeben internal (direkt aufgerufen)', () => {
+  // Mit geprüften Daten unerreichbar; darum computePhase direkt mit konstruierter Ablesung.
+  const chart = C172D.charts.takeoff;                     // Hartbelag, Tabelle in m, Nässefaktor nur auf Gras
+  const lk = (gr, ob) => ({ values: { groundRoll: gr, overObstacle: ob } });
+  const rw = { surface: 'paved' }, calm = { kt: 0 };
+  let p = core._computePhase(chart, lk(300, 450.2), rw, calm, false, 1000);
+  assert.deepEqual([p.ok, p.reason, p.m], [true, null, { groundRoll: 300, overObstacle: 451 }]);
+  // [300,5, 300,2]: beide ergeben 301 m, nur der Vergleich der ungerundeten Werte fängt es
+  [[450, 300], [300.5, 300.2], [NaN, 450], [300, NaN], [300, Infinity], [0, 450], [-5, 450]].forEach(([gr, ob]) => {
+    p = core._computePhase(chart, lk(gr, ob), rw, calm, false, 1000);
+    assert.deepEqual([p.ok, p.reason, p.m, p.final], [false, 'internal', null, null], gr + ' / ' + ob);
+  });
+});
+
+test('Validierung wirft nie (bad-data), Ausnahmen in der Rechnung ergeben internal', () => {
+  const trap = clone(C172D);
+  Object.defineProperty(trap.charts.takeoff, 'corrections', { get() { throw new Error('kaputt'); } });
+  const fail = () => { throw new Error('Falle'); };
+  const hostile = new Proxy({}, { get: fail, has: fail, ownKeys: fail, getOwnPropertyDescriptor: fail });
+  // Ausnahme, deren Text selbst wirft
+  const nasty = clone(C172D);
+  Object.defineProperty(nasty, 'schema', { get() { throw { get message() { throw new Error('m'); }, toString() { throw new Error('s'); } }; } });
+  // Eigener Fang: eine geworfene Falle darf nie bis zum Testrunner gelangen (sein Fehlerbericht würde sie anfassen)
+  const attempt = (fn) => { try { return fn(); } catch (e) { return 'geworfen'; } };
+  assert.deepEqual(attempt(() => core.validateAircraft(nasty)), { ok: false, errors: ['Flugzeugdaten nicht lesbar: unbekannter Fehler'] });
+  [trap, hostile, nasty, undefined, null, 0, 'x', [], {}, { schema: 2, charts: [] }, { schema: 2, runways: [null] }].forEach((x, i) => {
+    let v = attempt(() => core.validateAircraft(x));
+    assert.ok(v !== 'geworfen' && v.ok === false && v.errors.length > 0, 'Flugzeug ' + i + ': ' + (v === 'geworfen' ? 'Ausnahme' : 'ok'));
+    v = attempt(() => core.validateAirfield(x));
+    assert.ok(v !== 'geworfen' && v.ok === false && v.errors.length > 0, 'Platz ' + i + ': ' + (v === 'geworfen' ? 'Ausnahme' : 'ok'));
+  });
+  let r = attempt(() => core.compute(trap, AF, wx(15, 1013.25, 304, 5)));
+  assert.deepEqual([r.ok, r.error && r.error.code], [false, 'bad-data']);
+  r = attempt(() => core.compute(C172D, hostile, wx(15, 1013.25, 304, 5)));
+  assert.deepEqual([r.ok, r.error && r.error.code], [false, 'bad-data']);
+  // Ausnahme erst in der Rechnung: der Getter wirft ab dem zweiten Zugriff (nach der Validierung)
+  const late = clone(C172D);
+  const corr = late.charts.takeoff.corrections;
+  let reads = 0;
+  Object.defineProperty(late.charts.takeoff, 'corrections', { get() { reads++; if (reads > 1) throw new Error('kaputt'); return corr; } });
+  r = core.compute(late, AF, wx(15, 1013.25, 304, 5));
   assert.deepEqual([r.ok, r.error.code], [false, 'internal']);
+  assert.equal(reads, 2);
 });

@@ -42,7 +42,8 @@
     noHeadwindRunway: 'Keine Piste mit Gegenwind in den Platzdaten – keine Berechnung.',
     footerGeneric: 'Richtwert nach AFM ohne eigenen Sicherheitszuschlag. Massgebend sind das AFM der jeweiligen Maschine und die eigene Beurteilung.',
     selectLabel: 'Flugzeug',
-    calm: 'Windstill (Mittelwind unter 1 kt): keine Gegenwindpiste. Beide Pisten ohne Windkorrektur gerechnet.',
+    calm: 'Windstill (Mittelwind unter 1 kt): keine Gegenwindpiste. Beide Pisten ohne Windkorrektur gerechnet; mit Rückenwind sind die Strecken länger.',
+    noDirection: 'Windrichtung fehlt bei mehr als 3 kt Wind: Die Gegenwindpiste lässt sich nicht bestimmen – keine Berechnung.',
     nodir: 'Windrichtung nicht gemeldet: keine Gegenwindpiste bestimmbar. Beide Pisten ohne Windkorrektur gerechnet; mit Rückenwind sind die Strecken länger.',
     cross: 'Wind genau quer zur Piste: keine Gegenwindpiste. Beide Pisten ohne Windkorrektur gerechnet; mit Rückenwind sind die Strecken länger.',
     noFgzo: 'Pistenzustand: keine aktuelle Meldung der FGZO.',
@@ -52,11 +53,12 @@
     unknown: 'Pistenzustand unbekannt: keine aktuelle Meldung der FGZO und kein Regenwert von MeteoSchweiz.',
     reserve: 'Tau, Reif, eben einsetzenden Regen und Nässe von früherem Regen erkennt die Karte nicht.',
     ruleWind: 'Wind: Gerechnet wird nur die Piste mit Gegenwind. Der Gegenwind stammt aus dem 10-min-Mittelwind, wird auf ganze kt ' +
-      'abgerundet und voll angerechnet. Bei Windstille (Mittelwind unter 1 kt), ohne gemeldete Windrichtung oder bei Wind genau quer ' +
-      'werden beide Pisten ohne Windkorrektur gerechnet. Rückenwind wird nicht gerechnet. Kein Wert bei Gegenwind über 40 kt oder wenn ' +
-      'die Windkorrektur des AFM eine Strecke um mehr als die Hälfte verkürzen würde.',
+      'abgerundet und voll angerechnet. Bei Windstille (Mittelwind unter 1 kt), ohne gemeldete Windrichtung nur bis 3 kt Mittelwind, ' +
+      'oder bei Wind genau quer werden beide Pisten ohne Windkorrektur gerechnet. Rückenwind wird nicht gerechnet. Kein Wert bei ' +
+      'fehlender Windrichtung und mehr als 3 kt, bei Gegenwind über 40 kt oder wenn die Windkorrektur des AFM eine Strecke um mehr ' +
+      'als die Hälfte verkürzen würde.',
     ruleRound: 'Rundung immer zur längeren Strecke: Gegenwind abgerundet, Ergebnis auf ganze Meter aufgerundet. Die Zwischenwerte im ' +
-      'Rechenweg sind auf 0,01 aufgerundet angezeigt; gerechnet wird ungerundet.',
+      'Rechenweg sind exakt (höchstens vier Nachkommastellen); nur der letzte Wert vor dem Aufrunden ist auf 0,01 aufgerundet.',
     ruleGrass: 'Gras: Zuschlag laut AFM in Prozent der Tabellen-Rollstrecke (bei Interpolation der interpolierten), auf beide Strecken. ' +
       'Faktoren des AFM wirken auf beide Strecken nach Wind- und Graskorrektur. Kein eigener Sicherheitszuschlag.',
     ruleWet: 'Nasse Piste: Die Piste gilt als nass, wenn die FGZO einen anderen Pistenzustand als DRY meldet oder MeteoSchweiz in der ' +
@@ -64,9 +66,11 @@
       'einsetzenden Regen und Nässe von früherem Regen erkennt die Karte nicht.'
   };
 
+  // Feldnamen stammen aus dem Adapter bzw. dem Kern, nie aus Daten; unbekannte heissen «Messwert»
   var FIELD_LABEL = {
     tempC: 'Temperatur', qnhHpa: 'QNH', windKt: 'Wind', windDir: 'Windrichtung', windDirTrue: 'Windrichtung'
   };
+  function fieldLabel(f) { return Object.prototype.hasOwnProperty.call(FIELD_LABEL, f) ? FIELD_LABEL[f] : 'Messwert'; }
   var SURFACE_LABEL = { grass: 'Gras', paved: 'Hartbelag' };
   var SURFACE_TEXT = { 'grass/dry': 'trockenes Gras', 'paved/dry': 'trockenen Hartbelag' };
   var SURFACE_WET = { grass: 'nasses Gras', paved: 'nassen Hartbelag' };
@@ -166,8 +170,24 @@
     return s.indexOf(',') < 0 ? s : s.replace(/0+$/, '').replace(/,$/, '');
   }
 
-  // Zwischenwert im Rechenweg: auf 0,01 aufgerundet, höchstens zwei Nachkommastellen
+  // Letzter Wert vor dem Aufrunden im Rechenweg: auf 0,01 aufgerundet (ceil(ceil_0,01(x)) = ceil(x))
   function fmtUp2(x) { return fmtTrim(Math.ceil(x * 100 - 1e-6) / 100, 2); }
+
+  // Zwischenwert im Rechenweg: exakt, höchstens vier Nachkommastellen, ohne nachgestellte Nullen.
+  // Mit Tabellenwerten, Prozenten und Faktoren der Daten und Temperaturen mit höchstens zwei Dezimalen sind alle
+  // Zwischenwerte Vielfache von 0,0001; das Runden auf 0,0001 entfernt nur Gleitkommareste. Wäre ein Wert so nicht
+  // exakt darstellbar, steht «≈» davor.
+  function fmtExact(x) {
+    var s = x * 10000, r = Math.round(s);
+    return (Math.abs(s - r) > 1e-3 ? '≈' : '') + fmtTrim(r / 10000, 4);
+  }
+
+  // Mittelwind: auf eine Nachkommastelle abgeschnitten, nicht gerundet (0,97 kt → 0,9 kt passt zu «unter 1 kt»)
+  function fmtWind(v) { return fmtDec(Math.floor(v * 10 + 1e-9) / 10, 1); }
+
+  // Wind im Rechenweg (Mittelwind und Gegenwindkomponente): auf zwei Nachkommastellen abgeschnitten
+  // (6,996 kt → 6,99 kt passt zu «abgerundet 6 kt», 0,999 kt → 0,99 kt zu «unter 1 kt»)
+  function fmtKt2(v) { return fmtDec(Math.floor(v * 100 + 1e-7) / 100, 2); }
 
   // Faktor mit zwei Stellen (1,10), bei drei Dezimalen mit drei
   function fmtFactor(f) { return Math.abs(f * 100 - Math.round(f * 100)) < 1e-9 ? fmtDec(f, 2) : fmtDec(f, 3); }
@@ -245,23 +265,66 @@
 
   /* ── FGZO-Status: Pistenzustand und Platzsperre ─────────────
      Frisch heisst wie in index.html: letzter erfolgreicher Abruf (fetched_at_utc) jünger als 45 min; ok=false zählt nicht.
-     Sperre wie aiFgzoSperre: frischer Abruf und flaeche «gesperrt». Pistenzustand wie fgzoItem: mit FGZO-Zeitstempel. */
+     Die letzte bekannte Meldung gilt weiter, in die vorsichtige Richtung:
+     – «nicht DRY» zählt als nass, auch veraltet, bei ok=false oder ohne Zeitstempel (updated);
+     – DRY gilt nur frisch und mit Zeitstempel als gesichert; veraltet oder nicht von heute erscheint sie als Hinweis,
+       ohne Zeitstempel gilt sie als unbekannt;
+     – eine Sperre aus einer frischen Meldung steht im gelben Kasten, aus einer veralteten als Hinweis.
+     Texte der FGZO (updated, runway_condition, flaeche_grund) werden nur als String übernommen. */
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+
+  // Datum im FGZO-Zeitstempel «18.11.2026, 07:14» als «18.11.2026», sonst null
+  function stampDay(stamp) {
+    var m = /^\s*(\d{1,2})\.(\d{1,2})\.(\d{4})(?!\d)/.exec(stamp);
+    return m ? pad2(Number(m[1])) + '.' + pad2(Number(m[2])) + '.' + m[3] : null;
+  }
+
+  // Zeit des letzten erfolgreichen FGZO-Abrufs (fetched_at_utc) in ms, sonst NaN; nur ein String zählt
+  function fgzoFetchedMs(p) {
+    return p && typeof p === 'object' && typeof p.fetched_at_utc === 'string' && p.fetched_at_utc
+      ? new Date(p.fetched_at_utc).getTime() : NaN;
+  }
+
+  // Ein neuer FGZO-Datensatz (Objekt) wird übernommen, wenn noch kein Satz mit lesbarer Abrufzeit gespeichert ist.
+  // Sonst nur mit lesbarer Abrufzeit, die nicht älter ist: So verdrängt ein leerer oder älterer Satz
+  // (z. B. uneinheitliche Auslieferung) keine gespeicherte Meldung «nicht DRY».
+  function fgzoAccept(prev, next) {
+    if (!next || typeof next !== 'object' || Array.isArray(next)) return false;
+    var tPrev = fgzoFetchedMs(prev);
+    if (!isNum(tPrev)) return true;
+    var tNext = fgzoFetchedMs(next);
+    return isNum(tNext) && tNext >= tPrev;
+  }
+
   function fgzoState(p, nowMs) {
-    var st = { kind: 'unknown', closed: false, closedReason: '' };
-    if (!p || typeof p !== 'object') return st;
-    var t = p.fetched_at_utc ? new Date(p.fetched_at_utc).getTime() : NaN;
-    if (!isNum(t)) return st;
-    if ((nowMs - t) / 60000 >= FGZO_FRESH_MIN) { st.stale = true; return st; }
+    var st = { kind: 'unknown', fresh: false, ageMin: null, condition: null, updated: null, today: false, dayKnown: false,
+      dryNoStamp: false, closed: false, closedStale: false, closedReason: '' };
+    if (!p || typeof p !== 'object' || Array.isArray(p)) return st;
+    var t = fgzoFetchedMs(p);
+    if (isNum(t)) st.ageMin = (nowMs - t) / 60000;
+    st.fresh = st.ageMin !== null && st.ageMin < FGZO_FRESH_MIN;
     if (p.flaeche === 'gesperrt') {
-      st.closed = true;
+      st.closed = st.fresh;
+      st.closedStale = !st.fresh;
       st.closedReason = typeof p.flaeche_grund === 'string' ? p.flaeche_grund : '';
     }
-    if (!p.updated) return st;
-    var cond = p.runway_condition == null ? '' : String(p.runway_condition).replace(/\s+/g, ' ').trim().toUpperCase();
+    st.updated = typeof p.updated === 'string' && p.updated.trim() ? p.updated : null;
+    // Ein vorhandener Zustand, der kein String ist, zählt vorsichtshalber als «nicht DRY»
+    var rc = p.runway_condition;
+    var cond = typeof rc === 'string' ? rc.replace(/\s+/g, ' ').trim().toUpperCase()
+      : (rc === null || rc === undefined ? '' : 'UNLESBAR');
     if (!cond) return st;
-    st.kind = cond === 'DRY' ? 'dry' : 'notdry';
     st.condition = cond;
-    st.updated = String(p.updated);
+    if (cond !== 'DRY') {
+      st.kind = 'notdry';
+    } else if (!st.updated) {
+      st.dryNoStamp = true;                       // DRY ohne Zeitstempel: unbekannt
+    } else {
+      st.kind = 'dry';
+      var day = stampDay(st.updated);
+      st.dayKnown = day !== null;
+      st.today = day !== null && day === dayKey(nowMs);
+    }
     return st;
   }
 
@@ -278,12 +341,14 @@
     return { rain: false, known: false, basis: null, mm: null, mmH: null };
   }
 
-  // Nass: frische FGZO-Meldung ungleich DRY oder Regen. Unbekannt: keine frische Meldung und kein Regenwert.
+  // Nass: letzte FGZO-Meldung ungleich DRY (auch veraltet) oder Regen.
+  // Unbekannt: nicht nass, keine frische DRY-Meldung mit Zeitstempel und kein Regenwert.
   function wetState(fg, rn) {
     var byFgzo = fg.kind === 'notdry';
     var byRain = WET_BY_RAIN && rn.rain;
     var wet = byFgzo || byRain;
-    return { wet: wet, byFgzo: byFgzo, byRain: byRain, unknown: !wet && fg.kind === 'unknown' && (!WET_BY_RAIN || !rn.known) };
+    var freshDry = fg.kind === 'dry' && fg.fresh;
+    return { wet: wet, byFgzo: byFgzo, byRain: byRain, unknown: !wet && !freshDry && (!WET_BY_RAIN || !rn.known) };
   }
 
   /* ── Flugzeugliste ─────────────────────────────────────────── */
@@ -363,7 +428,8 @@
         var key = r.surface + '/' + cond;
         if (seen[key]) return;
         seen[key] = true;
-        out.push(SURFACE_TEXT[key] || esc(r.surface) + ' (' + esc(cond) + ')');
+        // Der Kern lässt als Zustand nur «dry» zu; ein unbekannter Belag erscheint mit seinem Namen
+        out.push(SURFACE_TEXT[key] || 'trockenen Belag «' + esc(r.surface) + '»');
       });
     });
     return out.join(', ');
@@ -376,13 +442,13 @@
         if (a.future) return 'Messzeit unplausibel (Stand ' + fmtStamp(a.time, nowMs) + ', liegt in der Zukunft) – keine Berechnung.';
         return 'Messwerte veraltet (Stand ' + fmtStamp(a.time, nowMs) + ', ' + fmtAge(a.ageMin) + ') – keine Berechnung.';
       case 'missing':
-        return 'Messwert fehlt (' + a.fields.map(function (f) { return FIELD_LABEL[f] || esc(f); }).join(', ') + ') – keine Berechnung.';
+        return 'Messwert fehlt (' + a.fields.map(fieldLabel).join(', ') + ') – keine Berechnung.';
       default: return TEXT.noData;          // no-data, no-source, no-time
     }
   }
 
   function fieldValueText(f, v) {
-    var label = FIELD_LABEL[f] || esc(f);
+    var label = fieldLabel(f);
     if (!isNum(v)) return label;
     switch (f) {
       case 'tempC': return label + ' ' + fmtDec(v, 1) + '&nbsp;°C';
@@ -417,25 +483,34 @@
     var w = a.wx;
     var s = 'Messwerte' + (a.srcLabel ? ' ' + esc(clip(a.srcLabel, LABEL_MAX)) : '') + ', ' + fmtStamp(a.time, nowMs) +
       ' (' + fmtAge(a.ageMin) + '): ' + fmtDec(w.tempC, 1) + '&nbsp;°C · QNH ' + fmtQnh(w.qnhHpa) + '&nbsp;hPa · Wind ';
-    if (w.windDirTrue === null) s += fmtKt(w.windKt) + '&nbsp;kt, Richtung unbestimmt';
-    else s += fmtInt(w.windDirTrue) + '° / ' + fmtKt(w.windKt) + '&nbsp;kt';
+    if (w.windDirTrue === null) s += fmtWind(w.windKt) + '&nbsp;kt, Richtung unbestimmt';
+    else s += fmtInt(w.windDirTrue) + '° / ' + fmtWind(w.windKt) + '&nbsp;kt';
     if (a.gustKt !== null) s += ', Böen ' + fmtKt(a.gustKt) + '&nbsp;kt';
     s += ' · Druckhöhe ' + fmtInt(ceilEps(res.pressureAltitudeFt)) + '&nbsp;ft';
     return '<div class="perf-meas">' + s + '</div>';
   }
 
   /* ── Pistenzustand, Sperre und Nässe ───────────────────────── */
-  function closureText(fg) {
-    if (fg.closedReason === 'geschlossen') return 'Platz laut FGZO geschlossen.';
+  function closureText(fg, stale) {
+    var tail = stale ? ' (veraltete Meldung).' : '.';
+    if (fg.closedReason === 'geschlossen') return 'Platz laut FGZO geschlossen' + tail;
     var reason = clip(fg.closedReason, FGZO_REASON_MAX);
-    return 'Platz laut FGZO für Flächenflugzeuge gesperrt' + (reason ? ' (' + esc(reason) + ')' : '') + '.';
+    return 'Platz laut FGZO für Flächenflugzeuge gesperrt' + (reason ? ' (' + esc(reason) + ')' : '') + tail;
   }
 
   function fmtMm(v) { return fmtTrim(v, 2); }
 
+  // «Stand 18.11.2026, 10:38» oder «ohne Zeitstempel»
+  function stampText(fg) { return fg.updated ? 'Stand ' + esc(clip(fg.updated, FGZO_TEXT_MAX)) : 'ohne Zeitstempel'; }
+  // Alter des letzten erfolgreichen Abrufs
+  function fetchAgeText(fg) { return fg.ageMin === null ? 'Abrufzeit unbekannt' : 'Abruf ' + fmtAge(fg.ageMin); }
+
   function wetSourceText(fg, rn, ws) {
     var parts = [];
-    if (ws.byFgzo) parts.push('FGZO meldet «' + esc(clip(fg.condition, FGZO_TEXT_MAX)) + '» (Stand ' + esc(clip(fg.updated, FGZO_TEXT_MAX)) + ')');
+    if (ws.byFgzo) {
+      var c = '«' + esc(clip(fg.condition, FGZO_TEXT_MAX)) + '» (' + stampText(fg) + ')';
+      parts.push(fg.fresh ? 'FGZO meldet ' + c : 'letzte FGZO-Meldung ' + c + ', ' + fetchAgeText(fg) + ' – vorsichtshalber weiter nass gerechnet');
+    }
     if (ws.byRain) {
       parts.push(rn.basis === 'hour'
         ? 'MeteoSchweiz hat in der letzten Stunde ' + fmtMm(rn.mm) + '&nbsp;mm Regen gemessen'
@@ -487,25 +562,36 @@
     return rn.basis === 'hour' ? TEXT.noRainHour : TEXT.noRainRate;
   }
 
+  // Gelber Kasten: frische Sperre und Nässe. Hinweisfarbe: veraltete Sperre, unsichere DRY-Meldung, unbekannter Zustand.
+  // Gedämpft: frische DRY-Meldung von heute, Regensatz, «Gerechnet für …» und Vorbehalt.
   function conditionHtml(fg, rn, ws, ac, af, res) {
     var h = '';
     var warn = [];
-    if (fg.closed) warn.push('<div>' + closureText(fg) + '</div>');
+    if (fg.closed) warn.push('<div>' + closureText(fg, false) + '</div>');
     if (ws.wet) {
       var wet = [wetSourceText(fg, rn, ws)].concat(wetConsequences(res));
       if (str(ac.wetNoteDe)) wet.push(esc(ac.wetNoteDe));
       warn.push('<div>' + wet.join(' ') + '</div>');
     }
     if (warn.length) h += '<div class="perf-cond perf-warn" role="note">' + warn.join('') + '</div>';
+    if (fg.closedStale) h += '<div class="perf-note">' + closureText(fg, true) + '</div>';
     if (!ws.wet) {
-      var surf = surfaceText(ac, af);
-      var tail = (surf ? 'Gerechnet für ' + surf + '. ' : '') + TEXT.reserve;
+      var notes = [], muted = [];
+      var dry = 'Pistenzustand laut FGZO: DRY (' + stampText(fg) + ')';
+      if (fg.kind === 'dry' && fg.fresh && fg.today) muted.push(dry + '.');
+      else if (fg.kind === 'dry' && fg.fresh) notes.push(dry + ' – ' + (fg.dayKnown ? 'Meldung nicht von heute.' : 'Datum der Meldung unklar.'));
+      else if (fg.kind === 'dry') notes.push('Letzte FGZO-Meldung DRY ist veraltet (' + stampText(fg) + ', ' + fetchAgeText(fg) + ').');
+      else if (fg.dryNoStamp) notes.push('FGZO meldet DRY ohne Zeitstempel – gilt als unbekannt.');
       if (ws.unknown) {
-        h += '<div class="perf-note">' + TEXT.unknown + '</div><div class="perf-cond">' + tail + '</div>';
+        notes.push(TEXT.unknown);
       } else {
-        var state = fg.kind === 'dry' ? 'Pistenzustand laut FGZO: DRY (Stand ' + esc(clip(fg.updated, FGZO_TEXT_MAX)) + ').' : TEXT.noFgzo;
-        h += '<div class="perf-cond">' + state + ' ' + rainSentence(rn) + ' ' + tail + '</div>';
+        if (fg.kind !== 'dry' && !fg.dryNoStamp) muted.push(TEXT.noFgzo);
+        muted.push(rainSentence(rn));
       }
+      var surf = surfaceText(ac, af);
+      muted.push((surf ? 'Gerechnet für ' + surf + '. ' : '') + TEXT.reserve);
+      if (notes.length) h += '<div class="perf-note">' + notes.join(' ') + '</div>';
+      h += '<div class="perf-cond">' + muted.join(' ') + '</div>';
     }
     return h;
   }
@@ -593,15 +679,16 @@
 
   function axisLine(lk, res, af) {
     return lk.axes.map(function (a, k) {
-      var t = AXIS_TEXT[a.quantity] || [esc(a.quantity), ''];
+      // Der Kern lässt nur Druckhöhe und Temperatur zu; der Ersatztext stammt nie aus den Daten
+      var t = AXIS_TEXT[a.quantity] || ['Tabellenachse', ''];
       var shown = a.quantity === 'pressureAltitude' ? fmtInt(ceilEps(a.input)) : fmtDec(a.input, 1);
       var s = t[0] + ' ' + shown + '&nbsp;' + t[1];
       if (a.quantity === 'pressureAltitude') {
         s += ' (aus QNH ' + fmtQnh(res.input.qnhHpa) + '&nbsp;hPa und Platzhöhe ' + fmtInt(af.elevation.value) + '&nbsp;ft)';
       }
       if (a.weight !== undefined) {
-        return s + ' → zwischen den Tabellenspalten ' + fmtInt(a.lower) + '&nbsp;' + t[1] + ' und ' + fmtInt(a.upper) + '&nbsp;' + t[1] +
-          ' linear interpoliert (Gewicht ' + fmtTrim(Math.round(a.weight * 1000) / 1000, 3) + ')';
+        return s + ' → zwischen den Tabellenspalten ' + fmtExact(a.lower) + '&nbsp;' + t[1] + ' und ' + fmtExact(a.upper) + '&nbsp;' + t[1] +
+          ' linear interpoliert (Gewicht ' + fmtExact(a.weight) + ')';
       }
       var word = k === 0 ? 'Tabellenzeile' : (k === 1 ? 'Tabellenspalte' : 'Tabellenwert');
       return s + ' → ' + word + ' ' + fmtInt(a.value) + '&nbsp;' + t[1] + (a.belowLowest ? ' (kleinster Tabellenwert)' : '');
@@ -610,38 +697,57 @@
 
   function windDetail(r, inp) {
     var w = r.wind;
-    if (w.mode === 'calm') return 'Mittelwind ' + fmtDec(inp.windKt, 1) + '&nbsp;kt, unter ' + fmtDec(core.CALM_BELOW_KT, 0) + '&nbsp;kt: windstill, ohne Windkorrektur.';
+    if (w.mode === 'calm') return 'Mittelwind ' + fmtKt2(inp.windKt) + '&nbsp;kt, unter ' + fmtDec(core.CALM_BELOW_KT, 0) + '&nbsp;kt: windstill, ohne Windkorrektur.';
     if (w.mode === 'nodir') return 'Windrichtung nicht gemeldet: ohne Windkorrektur.';
     var s = 'Wind aus ' + fmtInt(inp.windDirTrue) + '°: ';
     if (w.along === 0) return s + 'genau quer zur Piste, keine Längskomponente.';
-    return s + 'Gegenwindkomponente ' + fmtDec(w.componentKt, 2) + '&nbsp;kt aus dem Mittelwind ' + fmtDec(inp.windKt, 1) +
+    return s + 'Gegenwindkomponente ' + fmtKt2(w.componentKt) + '&nbsp;kt aus dem Mittelwind ' + fmtKt2(inp.windKt) +
       '&nbsp;kt, abgerundet ' + w.kt + '&nbsp;kt.';
   }
 
-  // Wert der Tabelle oder Zwischenwert: ganze Zahlen bleiben ganz, sonst auf 0,01 aufgerundet
-  function num(x) { return Math.abs(x - Math.round(x)) < 1e-9 ? fmtInt(x) : fmtUp2(x); }
-  function pair(a, b, unit) { return num(a) + '&nbsp;/&nbsp;' + num(b) + '&nbsp;' + unit; }
+  // Rechenweg: Zwischenwerte exakt; nur das letzte Wertepaar vor dem Aufrunden auf ganze Meter (bei Tabellen in ft
+  // das Paar in m) erscheint auf 0,01 aufgerundet. Das ist zulässig, weil ceil(ceil_0,01(x)) = ceil(x).
+  function pair(a, b, unit, up) {
+    var f = up ? fmtUp2 : fmtExact;
+    return f(a) + '&nbsp;/&nbsp;' + f(b) + '&nbsp;' + unit;
+  }
+
+  function lastStep(p) {
+    if (!p.ok) return '';
+    if (p.unit === 'ft') return 'meters';
+    if (p.factors.length) return 'factor' + (p.factors.length - 1);
+    if (p.surface) return 'surface';
+    if (p.wind.applied) return 'wind';
+    return 'table';
+  }
 
   function phaseLine(label, p) {
     var u = p.unit;
     var lk = p.lookup;
+    var last = lastStep(p);
     var s = '<li>' + label + ': Tabelle ';
     if (lk.interpolated) {
       var c = lk.columns;
-      s += pair(c.lower.groundRoll, c.lower.overObstacle, u) + ' bei ' + fmtInt(c.lowerValue) + '&nbsp;°C und ' +
-        pair(c.upper.groundRoll, c.upper.overObstacle, u) + ' bei ' + fmtInt(c.upperValue) + '&nbsp;°C, Gewicht ' +
-        fmtTrim(Math.round(c.weight * 1000) / 1000, 3) + ' → ' + pair(p.table.groundRoll, p.table.overObstacle, u);
+      s += pair(c.lower.groundRoll, c.lower.overObstacle, u) + ' bei ' + fmtExact(c.lowerValue) + '&nbsp;°C und ' +
+        pair(c.upper.groundRoll, c.upper.overObstacle, u) + ' bei ' + fmtExact(c.upperValue) + '&nbsp;°C, Gewicht ' +
+        fmtExact(c.weight) + ' → ' + pair(p.table.groundRoll, p.table.overObstacle, u, last === 'table');
     } else {
-      s += pair(p.table.groundRoll, p.table.overObstacle, u);
+      s += pair(p.table.groundRoll, p.table.overObstacle, u, last === 'table');
     }
     var w = p.wind;
     if (!p.ok && p.reason === 'headwind-limit') return s + ' · Gegenwind ' + w.kt + '&nbsp;kt: über ' + fmtInt(p.limitKt) + '&nbsp;kt, kein Wert</li>';
     if (w.kt >= 1 && w.applied) {
       s += ' · Gegenwind ' + w.kt + '&nbsp;kt: ';
-      if (w.type === 'percentPer') s += '−' + w.percent + '&nbsp;%';
-      else s += '−' + fmtInt(w.perKt) + '&nbsp;' + u + ' je ' + (w.per === 1 ? '' : fmtInt(w.per) + '&nbsp;') + 'kt = −' + fmtInt(w.reduction) + '&nbsp;' + u;
+      if (w.type === 'percentPer') {
+        s += '−' + w.percent + '&nbsp;%';
+      } else {
+        // ganzzahlig: «= −70 m»; sonst abgerundet (zur längeren Strecke)
+        var exact = Math.abs(w.perKt * w.kt / w.per - w.reduction) < 1e-9;
+        s += '−' + fmtExact(w.perKt) + '&nbsp;' + u + ' je ' + (w.per === 1 ? '' : fmtExact(w.per) + '&nbsp;') + 'kt' +
+          (exact ? ' = −' : ', abgerundet −') + fmtInt(w.reduction) + '&nbsp;' + u;
+      }
       if (!p.ok && p.reason === 'wind-credit-limit') return s + ', mehr als die Hälfte – kein Wert</li>';
-      s += ' → ' + pair(p.afterWind.groundRoll, p.afterWind.overObstacle, u);
+      s += ' → ' + pair(p.afterWind.groundRoll, p.afterWind.overObstacle, u, last === 'wind');
     } else if (w.kt >= 1) {
       s += ' · Gegenwind ' + w.kt + '&nbsp;kt: nicht angerechnet (keine Regel in den Flugzeugdaten)';
     } else {
@@ -649,15 +755,15 @@
     }
     if (!p.ok) return s + ' · ' + (p.reason === 'no-surface-rule' ? 'keine Korrektur für den Belag' : 'Rechenfehler') + ' – kein Wert</li>';
     if (p.surface) {
-      s += ' · ' + (SURFACE_LABEL[p.surface.surface] || esc(p.surface.surface)) + ' +' + fmtTrim(p.surface.percent, 2) + '&nbsp;% von ' +
-        num(p.surface.base) + '&nbsp;' + u + ' = +' + num(p.surface.inc) + '&nbsp;' + u + ' → ' +
-        pair(p.surface.after.groundRoll, p.surface.after.overObstacle, u);
+      s += ' · ' + (SURFACE_LABEL[p.surface.surface] || esc(p.surface.surface)) + ' +' + fmtExact(p.surface.percent) + '&nbsp;% von ' +
+        fmtExact(p.surface.base) + '&nbsp;' + u + ' = +' + fmtExact(p.surface.inc) + '&nbsp;' + u + ' → ' +
+        pair(p.surface.after.groundRoll, p.surface.after.overObstacle, u, last === 'surface');
     }
-    p.factors.forEach(function (f) {
+    p.factors.forEach(function (f, i) {
       s += ' · ' + esc(f.labelDe) + (f.minimum ? ': mindestens × ' : ' × ') + fmtFactor(f.factor) + ' (' + esc(f.refDe) + ') → ' +
-        pair(f.after.groundRoll, f.after.overObstacle, u);
+        pair(f.after.groundRoll, f.after.overObstacle, u, last === 'factor' + i);
     });
-    if (u === 'ft') s += ' = ' + pair(p.meters.groundRoll, p.meters.overObstacle, 'm');
+    if (u === 'ft') s += ' = ' + pair(p.meters.groundRoll, p.meters.overObstacle, 'm', true);
     return s + ' → aufgerundet ' + fmtInt(p.m.groundRoll) + '&nbsp;/&nbsp;' + fmtInt(p.m.overObstacle) + '&nbsp;m</li>';
   }
 
@@ -713,6 +819,9 @@
     Object.keys(used).forEach(function (k) {
       h.push('<p>' + esc(str(ac.sources[k].labelDe) || k) + ': ' + sourceText(ac.sources[k]) + '</p>');
     });
+    if (str(ac.massNoteDe)) {
+      h.push('<p>Gewicht ' + fmtInt(ac.mass.kg) + '&nbsp;kg (' + fmtInt(ac.mass.lb) + '&nbsp;lb): ' + esc(ac.massNoteDe) + '</p>');
+    }
     var as = af.source && typeof af.source === 'object' ? af.source : {};
     var rwys = af.runways.map(function (r) {
       return 'Piste ' + esc(r.id) + ': ' + fmtInt(r.bearingTrue) + '° rechtweisend' +
@@ -751,9 +860,7 @@
     var input = { tempC: a.wx.tempC, qnhHpa: a.wx.qnhHpa, windDirTrue: a.wx.windDirTrue, windKt: a.wx.windKt, runwayWet: ws.wet };
     var res = core.compute(ac, af, input);
     if (!res.ok) return head + errorTexts(res).map(stateHtml).join('') + foot;
-    if (res.mode === 'no-direction') {
-      return head + stateHtml('Windrichtung fehlt bei ' + fmtKt(input.windKt) + '&nbsp;kt Wind: Die Gegenwindpiste lässt sich nicht bestimmen – keine Berechnung.') + foot;
-    }
+    if (res.mode === 'no-direction') return head + stateHtml(TEXT.noDirection) + foot;
     if (res.computedCount === 0) return head + stateHtml(TEXT.noHeadwindRunway) + foot;
     var hint = '';
     if (res.mode === 'calm') hint = TEXT.calm;
@@ -906,11 +1013,23 @@
       if (S.dataState === 'error' && Date.now() - S.lastLoadAttempt >= RETRY_MS) loadData();
     }
 
+    // Ein fehlgeschlagener Abruf (Netz, HTTP-Fehler, kaputtes JSON, kein Objekt) lässt den letzten Stand stehen;
+    // er altert über fetched_at_utc von selbst. Antworten eines älteren Abrufs werden verworfen, ebenso ein
+    // Datensatz ohne lesbare oder mit älterer Abrufzeit (fgzoAccept).
     function loadFgzo() {
       var seq = ++S.fgzoSeq;
       getJson('data/fgzo_status.json')
-        .then(function (p) { if (seq === S.fgzoSeq) { S.fgzo = p; S.fgzoLoaded = true; render(); } })
-        .catch(function () { if (seq === S.fgzoSeq) { S.fgzo = null; S.fgzoLoaded = true; render(); } });
+        .then(function (p) {
+          if (seq !== S.fgzoSeq) return;
+          if (fgzoAccept(S.fgzo, p)) S.fgzo = p;
+          S.fgzoLoaded = true;
+          render();
+        })
+        .catch(function () {
+          if (seq !== S.fgzoSeq) return;
+          S.fgzoLoaded = true;
+          render();
+        });
     }
 
     function update(wx) {
@@ -1002,8 +1121,12 @@
     fmtInt: fmtInt,
     fmtDec: fmtDec,
     fmtUp2: fmtUp2,
+    fmtExact: fmtExact,
+    fmtWind: fmtWind,
+    fmtKt2: fmtKt2,
     adaptLszkWx: adaptLszkWx,
     fgzoState: fgzoState,
+    fgzoAccept: fgzoAccept,
     rainState: rainState,
     wetState: wetState,
     parseIndex: parseIndex,

@@ -120,6 +120,122 @@ test('Nässe U1–U8: FGZO frisch DRY/nicht DRY/unbekannt × Regen ja/nein/unbek
   assert.equal(ui.WET_BY_RAIN, true);
 });
 
+test('Nässe aus der letzten FGZO-Meldung: veraltet, ok=false und ohne Zeitstempel nass; DRY nur frisch mit Zeitstempel gesichert', () => {
+  const st = (fg, rain1h, rate) => ui.wetState(ui.fgzoState(fg, NOW), ui.rainState({ rain1hMm: rain1h, rainMmH: rate }));
+  const pick = (w) => [w.wet, w.byFgzo, w.byRain, w.unknown];
+  const old = new Date(NOW - 54 * MIN).toISOString();
+  assert.deepEqual(pick(st(fgzo({ runway_condition: 'STANDING WATER', fetched_at_utc: old }), 0, 0)), [true, true, false, false], 'veraltet, nicht DRY');
+  assert.deepEqual(pick(st(fgzo({ runway_condition: 'WET', ok: false }), 0, 0)), [true, true, false, false], 'ok=false, nicht DRY');
+  assert.deepEqual(pick(st(fgzo({ runway_condition: 'WET', ok: false, fetched_at_utc: null }), null, null)), [true, true, false, false], 'ohne Abrufzeit');
+  assert.deepEqual(pick(st(fgzo({ runway_condition: 'WET', updated: undefined }), 0, 0)), [true, true, false, false], 'ohne Zeitstempel');
+  assert.deepEqual(pick(st(fgzo({ updated: '' }), null, null)), [false, false, false, true], 'DRY ohne Zeitstempel: unbekannt');
+  assert.deepEqual(pick(st(fgzo({ updated: 42 }), null, null)), [false, false, false, true], 'DRY, Zeitstempel kein String');
+  assert.deepEqual(pick(st(fgzo({ updated: '  ' }), 0, 0)), [false, false, false, false], 'DRY ohne Zeitstempel, Regenwert da');
+  assert.deepEqual(pick(st(fgzo({ fetched_at_utc: old }), null, null)), [false, false, false, true], 'DRY veraltet, ohne Regenwert');
+  assert.deepEqual(pick(st(fgzo({ fetched_at_utc: old }), 0.2, null)), [true, false, true, false], 'DRY veraltet, Regen');
+  assert.deepEqual(pick(st(fgzo({ updated: '17.11.2026, 16:20' }), null, null)), [false, false, false, false], 'DRY frisch von gestern');
+  let f = ui.fgzoState(fgzo({ updated: '17.11.2026, 16:20' }), NOW);
+  assert.deepEqual([f.kind, f.fresh, f.today, f.dayKnown], ['dry', true, false, true]);
+  f = ui.fgzoState(fgzo(), NOW);
+  assert.deepEqual([f.kind, f.fresh, f.today, f.updated], ['dry', true, true, '18.11.2026, 07:14']);
+  f = ui.fgzoState(fgzo({ updated: '7.11.2026, 07:14' }), NOW);
+  assert.deepEqual([f.today, f.dayKnown], [false, true]);
+  f = ui.fgzoState(fgzo({ updated: '18.11.20261, 07:14' }), NOW);
+  assert.deepEqual([f.today, f.dayKnown], [false, false]);
+  f = ui.fgzoState(fgzo({ updated: { a: 1 }, runway_condition: ' wet ' }), NOW);
+  assert.deepEqual([f.kind, f.updated, f.condition], ['notdry', null, 'WET']);
+  // Ein vorhandener Zustand, der kein String ist, zählt als «nicht DRY» (nass); fehlt er, gibt es keine Meldung
+  for (const rc of [42, true, { a: 1 }, ['WET']]) {
+    f = ui.fgzoState(fgzo({ runway_condition: rc }), NOW);
+    assert.deepEqual([f.kind, f.condition], ['notdry', 'UNLESBAR'], 'Zustand ' + JSON.stringify(rc));
+    assert.deepEqual(pick(st(fgzo({ runway_condition: rc }), 0, 0)), [true, true, false, false], 'nass bei ' + JSON.stringify(rc));
+  }
+  for (const rc of [null, undefined, '', '   ']) {
+    f = ui.fgzoState(fgzo({ runway_condition: rc }), NOW);
+    assert.deepEqual([f.kind, f.condition], ['unknown', null], 'kein Zustand ' + JSON.stringify(rc));
+  }
+  // Datumsvergleich mit Jahr: gleicher Tag und Monat im Vorjahr ist nicht heute
+  f = ui.fgzoState(fgzo({ updated: '18.11.2025, 07:14' }), NOW);
+  assert.deepEqual([f.today, f.dayKnown], [false, true], 'Vorjahr');
+  // Datum ohne führende Nullen wird erkannt: 8.1.2026 am 8. Januar 2026 ist heute
+  const jan8 = Date.UTC(2026, 0, 8, 9, 0);
+  f = ui.fgzoState(fgzo({ updated: '8.1.2026, 07:14', fetched_at_utc: new Date(jan8 - 5 * MIN).toISOString() }), jan8);
+  assert.deepEqual([f.kind, f.fresh, f.today, f.dayKnown], ['dry', true, true, true], 'ohne führende Nullen');
+  // Abrufzeit als Zahl ist nicht lesbar: kein Alter, nicht frisch
+  f = ui.fgzoState(fgzo({ fetched_at_utc: NOW - 5 * MIN }), NOW);
+  assert.deepEqual([f.ageMin, f.fresh], [null, false], 'Abrufzeit als Zahl');
+  f = ui.fgzoState(fgzo({ fetched_at_utc: old, flaeche: 'gesperrt', flaeche_grund: 'x' }), NOW);
+  assert.deepEqual([f.fresh, f.closed, f.closedStale, f.closedReason], [false, false, true, 'x']);
+  // Mitternacht in Zürich: 23:30 UTC am 17.11. ist 00:30 Uhr am 18.11.
+  const late = Date.UTC(2026, 10, 17, 23, 30);
+  f = ui.fgzoState(fgzo({ updated: '18.11.2026, 00:10', fetched_at_utc: new Date(late - 10 * MIN).toISOString() }), late);
+  assert.deepEqual([f.fresh, f.today], [true, true]);
+  assert.deepEqual([ui.fgzoState([fgzo()], NOW).kind, ui.fgzoState('DRY', NOW).kind, ui.fgzoState(null, NOW).kind], ['unknown', 'unknown', 'unknown']);
+});
+
+test('fgzoAccept: neuer FGZO-Satz nur mit lesbarer, nicht älterer Abrufzeit', () => {
+  const a = fgzo();                                   // Abruf vor 14 min
+  const at = (min) => fgzo({ fetched_at_utc: new Date(NOW - min * MIN).toISOString() });
+  assert.equal(ui.fgzoAccept(null, a), true, 'erster Satz');
+  assert.equal(ui.fgzoAccept({}, a), true, 'gespeicherter Satz ohne Abrufzeit');
+  // Ohne gespeicherten Satz mit Abrufzeit zählt auch ein Satz ohne lesbare Abrufzeit (ein erstes «WET» geht nicht verloren)
+  const wetNoTime = fgzo({ runway_condition: 'WET', fetched_at_utc: null });
+  assert.equal(ui.fgzoAccept(null, wetNoTime), true, 'erster Satz ohne Abrufzeit');
+  assert.equal(ui.fgzoAccept(fgzo({ fetched_at_utc: 'kaputt' }), wetNoTime), true, 'gespeicherter Satz mit kaputter Abrufzeit');
+  assert.equal(ui.fgzoAccept(null, {}), true, 'leerer erster Satz (ergibt «unbekannt» wie bisher)');
+  assert.equal(ui.fgzoState(wetNoTime, NOW).kind, 'notdry', 'erstes WET ohne Abrufzeit zählt als nass');
+  assert.equal(ui.fgzoAccept(null, null), false, 'kein Objekt');
+  assert.equal(ui.fgzoAccept(null, []), false, 'Array');
+  assert.equal(ui.fgzoAccept(a, at(5)), true, 'neuer');
+  assert.equal(ui.fgzoAccept(a, fgzo({ runway_condition: 'WET', ok: false })), true, 'gleiche Abrufzeit');
+  assert.equal(ui.fgzoAccept(a, at(20)), false, 'älter');
+  for (const bad of [{}, null, undefined, [], 'DRY', 42, fgzo({ fetched_at_utc: 'kaputt' }), fgzo({ fetched_at_utc: NOW }),
+    fgzo({ fetched_at_utc: null }), { ok: false, failed_at_utc: new Date(NOW).toISOString() }]) {
+    assert.equal(ui.fgzoAccept(a, bad), false, 'abgelehnt: ' + JSON.stringify(bad));
+  }
+});
+
+test('Pistenzustand-Texte: letzte Meldung nass, DRY veraltet, nicht von heute oder ohne Zeitstempel in der Hinweisfarbe', () => {
+  const old = new Date(NOW - 54 * MIN).toISOString();
+  let html = render(wxPfa(), { fgzo: fgzo({ runway_condition: 'STANDING WATER', updated: '18.11.2026, 10:38', ok: false, fetched_at_utc: old }) });
+  assert.ok(has(html, 'Piste gilt als nass: letzte FGZO-Meldung «STANDING WATER» (Stand 18.11.2026, 10:38), Abruf vor 54 min – vorsichtshalber weiter nass gerechnet. Start: mindestens +20 % eingerechnet'), text(html));
+  assert.ok(html.includes('perf-warn') && has(block(html, '30'), 'Start 397 m 590 m'), 'nass gerechnet');
+  html = render(wxPfa(), { fgzo: fgzo({ runway_condition: 'WET', updated: null }) });
+  assert.ok(has(html, 'Piste gilt als nass: FGZO meldet «WET» (ohne Zeitstempel).'), text(html));
+  html = render(wxPfa(), { fgzo: fgzo({ runway_condition: 'WET', updated: null, fetched_at_utc: 'kaputt' }) });
+  assert.ok(has(html, 'Piste gilt als nass: letzte FGZO-Meldung «WET» (ohne Zeitstempel), Abrufzeit unbekannt – vorsichtshalber weiter nass gerechnet.'), text(html));
+  html = render(wxPfa(), { fgzo: fgzo({ fetched_at_utc: old }) });
+  assert.ok(html.includes('<div class="perf-note">Letzte FGZO-Meldung DRY ist veraltet (Stand 18.11.2026, 07:14, Abruf vor 54 min).</div>'), html);
+  assert.ok(has(html, 'MeteoSchweiz hat in der letzten Stunde keinen Regen gemessen. Gerechnet für trockenes Gras.'));
+  assert.ok(!has(html, 'Pistenzustand laut FGZO: DRY') && !html.includes('perf-warn'));
+  assert.ok(has(block(html, '30'), 'Start 331 m 492 m'), 'trocken gerechnet');
+  html = render(wxPfa({ rain1hMm: null, rainMmH: null }), { fgzo: fgzo({ fetched_at_utc: old }) });
+  assert.ok(html.includes('<div class="perf-note">Letzte FGZO-Meldung DRY ist veraltet (Stand 18.11.2026, 07:14, Abruf vor 54 min). ' + ui.TEXT.unknown + '</div>'), html);
+  html = render(wxPfa({ rain1hMm: 0.4 }), { fgzo: fgzo({ fetched_at_utc: old }) });
+  assert.ok(has(html, 'Piste gilt als nass: MeteoSchweiz hat in der letzten Stunde 0,4 mm Regen gemessen.') && has(block(html, '30'), 'Start 397 m'));
+  html = render(wxPfa(), { fgzo: fgzo({ updated: '17.11.2026, 16:20' }) });
+  assert.ok(html.includes('<div class="perf-note">Pistenzustand laut FGZO: DRY (Stand 17.11.2026, 16:20) – Meldung nicht von heute.</div>'), html);
+  assert.ok(has(block(html, '30'), 'Start 331 m 492 m'));
+  html = render(wxPfa(), { fgzo: fgzo({ updated: '' }) });
+  assert.ok(html.includes('<div class="perf-note">FGZO meldet DRY ohne Zeitstempel – gilt als unbekannt.</div>'), html);
+  assert.ok(!has(html, 'Pistenzustand: keine aktuelle Meldung der FGZO.'));
+  html = render(wxPfa({ rain1hMm: null, rainMmH: null }), { fgzo: fgzo({ updated: undefined }) });
+  assert.ok(html.includes('<div class="perf-note">FGZO meldet DRY ohne Zeitstempel – gilt als unbekannt. ' + ui.TEXT.unknown + '</div>'), html);
+  html = render(wxPfa());
+  assert.ok(!html.includes('perf-note') && has(html, 'Pistenzustand laut FGZO: DRY (Stand 18.11.2026, 07:14). MeteoSchweiz'));
+});
+
+test('FGZO-Texte auf 40 Zeichen gekürzt (Pistenzustand und Zeitstempel)', () => {
+  const cond = 'STANDING WATER AND PATCHES OF SLUSH ON THE ENTIRE RUNWAY';
+  const stamp = '18.11.2026, 10:38 Nachtrag der Flugplatzleitung zum Abschnitt Ost';
+  const cut = (s) => s.slice(0, 39) + '…';
+  let t = text(render(wxPfa(), { fgzo: fgzo({ runway_condition: cond, updated: stamp }) }));
+  assert.ok(t.includes('FGZO meldet «' + cut(cond) + '» (Stand ' + cut(stamp) + ').'), t);
+  t = text(render(wxPfa(), { fgzo: fgzo({ updated: stamp }) }));
+  assert.ok(t.includes('Pistenzustand laut FGZO: DRY (Stand ' + cut(stamp) + ').'), t);
+  assert.equal(cut(cond).length, 40);
+});
+
 /* ── Anzeige Cessna ────────────────────────────────────────── */
 
 test('Cessna trocken (K2): Auswahl, Kopf, Messwerte, nur Gegenwindpiste, Zustand, Fusszeile', () => {
@@ -129,7 +245,7 @@ test('Cessna trocken (K2): Auswahl, Kopf, Messwerte, nur Gegenwindpiste, Zustand
   assert.ok(html.includes('<label class="perf-ac-label" for="perf-ac">Flugzeug</label><select id="perf-ac" class="perf-select">'));
   assert.ok(html.includes('<option value="c172d" selected>Cessna 172 Diesel · HB-TDA, HB-TDB, HB-TDC, HB-TDD</option><option value="p2010">Tecnam P2010 · HB-KMD</option>'), html);
   assert.ok(t.includes("Maximales Abfluggewicht 1'157 kg (2'550 lb) · Kurzstart- und Kurzlandetechnik · Motor TAE 125-02-114, Propeller MTV-6-A/190-69"), t);
-  assert.ok(t.includes("Messwerte MeteoSchweiz Pfäffikon ZH, 09:00 Uhr (vor 15 min): 15,0 °C · QNH 1018,0 hPa · Wind 290° / 8 kt, Böen 14 kt · Druckhöhe 1'630 ft"), t);
+  assert.ok(t.includes("Messwerte MeteoSchweiz Pfäffikon ZH, 09:00 Uhr (vor 15 min): 15,0 °C · QNH 1018,0 hPa · Wind 290° / 8,0 kt, Böen 14 kt · Druckhöhe 1'630 ft"), t);
   assert.ok(t.includes('Pistenzustand laut FGZO: DRY (Stand 18.11.2026, 07:14). MeteoSchweiz hat in der letzten Stunde keinen Regen gemessen. Gerechnet für trockenes Gras. Tau, Reif, eben einsetzenden Regen und Nässe von früherem Regen erkennt die Karte nicht.'), t);
   assert.equal(block(html, '12'), null, 'Rückenwindpiste ohne Block');
   const b30 = text(block(html, '30'));
@@ -147,13 +263,18 @@ test('Cessna trocken (K2): Rechenweg wie im Wortlaut des Planers', () => {
   assert.ok(t.includes('Start: Tabelle 306 / 479 m · Gegenwind 7 kt: −7 % → 284,58 / 445,47 m · Gras +15 % von 306 m = +45,9 m → 330,48 / 491,37 m → aufgerundet 331 / 492 m'), t);
   assert.ok(t.includes("Landung: Tabelle 630 / 1'420 ft · Gegenwind 7 kt: −7 % → 585,9 / 1'320,6 ft · Gras +45 % von 630 ft = +283,5 ft → 869,4 / 1'604,1 ft = 265 / 488,93 m → aufgerundet 265 / 489 m"), t);
   assert.ok(t.includes("Druckhöhe 1'630 ft (aus QNH 1018,0 hPa und Platzhöhe 1'759 ft) → Tabellenzeile 2'000 ft · Temperatur 15,0 °C → Tabellenspalte 20 °C"), t);
-  assert.ok(t.includes('Wind aus 290°: Gegenwindkomponente 7,76 kt aus dem Mittelwind 8,0 kt, abgerundet 7 kt.'), t);
+  assert.ok(t.includes('Wind aus 290°: Gegenwindkomponente 7,76 kt aus dem Mittelwind 8,00 kt, abgerundet 7 kt.'), t);
   assert.ok(t.includes('Piste 12: Wind aus 290°, Rückenwindkomponente 7,76 kt aus dem Mittelwind – nicht berechnet.'), t);
   ['Start (Supplement): Ground Roll and Take-Off Distance at 1157 kg (2550 lbs), Short Field Takeoff, Figure 5-1a (Section 5b), Seite 5b-3.',
     'Landung (Grundhandbuch): Short Field Landing Distance at 2550 Pounds, Figure 5-11, Seite 5-24.',
     'Doc.-No. 20-0310-22122', 'EASA STC 10014287', '172SIMBUS-00', 'Seitenkennung 172SPHBUS-00',
     C172D.readingRuleDe + ' Rundung immer zur längeren Strecke', 'Gerechnet wird nur die Piste mit Gegenwind',
-    'Nasse Piste: Die Piste gilt als nass', 'AD INFO 1 LSZK'].forEach((s) => assert.ok(t.includes(s), 'fehlt: ' + s));
+    'Nasse Piste: Die Piste gilt als nass', 'AD INFO 1 LSZK',
+    "Gewicht 1'157 kg (2'550 lb): " + C172D.massNoteDe].forEach((s) => assert.ok(t.includes(s), 'fehlt: ' + s));
+  assert.ok(text(render(wxPfa(), { aircraft: P2010 })).includes("Gewicht 1'160 kg (2'557 lb): " + P2010.massNoteDe));
+  const noNote = clone(C172D);
+  delete noNote.massNoteDe;
+  assert.ok(!text(render(wxPfa(), { aircraft: noNote })).includes("Gewicht 1'157 kg"));
 });
 
 test('Cessna nass durch FGZO (K3): gelber Kasten mit Quelle und Folge je Phase, Start × 1,20', () => {
@@ -221,13 +342,13 @@ test('Tecnam nass durch Regen: Hinweis ohne Zuschlag, Zahlen unverändert, Gewic
 
 test('Pistenwahl: windstill, ohne Richtung, quer, Gegenwind unter 1 kt, Richtung fehlt bei starkem Wind', () => {
   let html = render(wxPfa({ tempC: 20, qnhHpa: 1013.25, windDir: null, windKt: 0, gustKt: null }));        // K5
-  assert.ok(has(html, 'Windstill (Mittelwind unter 1 kt): keine Gegenwindpiste. Beide Pisten ohne Windkorrektur gerechnet.'));
+  assert.ok(has(html, 'Windstill (Mittelwind unter 1 kt): keine Gegenwindpiste. Beide Pisten ohne Windkorrektur gerechnet; mit Rückenwind sind die Strecken länger.'));
   assert.ok(has(block(html, '12'), 'Piste 12 · ohne Windkorrektur') && has(block(html, '30'), 'Piste 30 · ohne Windkorrektur'));
   assert.ok(text(block(html, '12')).includes('Start 352 m 525 m 520 m'));
   assert.ok(!has(html, 'Böen'), 'ohne Böe keine Böenangabe');
   html = render(wxPfa({ tempC: 3, qnhHpa: 1022, windDir: null, windKt: 2 }));                               // K12
   assert.ok(has(html, 'Windrichtung nicht gemeldet: keine Gegenwindpiste bestimmbar. Beide Pisten ohne Windkorrektur gerechnet; mit Rückenwind sind die Strecken länger.'));
-  assert.ok(has(html, 'Wind 2 kt, Richtung unbestimmt, Böen 14 kt'));
+  assert.ok(has(html, 'Wind 2,0 kt, Richtung unbestimmt, Böen 14 kt'));
   html = render(wxPfa({ tempC: 25, qnhHpa: 1015, windDir: 214, windKt: 10 }));                              // K6
   assert.ok(has(html, 'Wind genau quer zur Piste: keine Gegenwindpiste. Beide Pisten ohne Windkorrektur gerechnet; mit Rückenwind sind die Strecken länger.'));
   assert.ok(block(html, '12') && block(html, '30'));
@@ -236,10 +357,28 @@ test('Pistenwahl: windstill, ohne Richtung, quer, Gegenwind unter 1 kt, Richtung
   assert.ok(has(block(html, '30'), 'Piste 30 · Gegenwind unter 1 kt, nicht angerechnet'));
   assert.equal(block(html, '12'), null);
   assert.ok(!has(html, 'Wind genau quer zur Piste: keine Gegenwindpiste'));
-  assert.ok(has(html, 'Wind aus 215°: Gegenwindkomponente 0,17 kt aus dem Mittelwind 10,0 kt, abgerundet 0 kt.'), text(html));
+  assert.ok(has(html, 'Wind aus 215°: Gegenwindkomponente 0,17 kt aus dem Mittelwind 10,00 kt, abgerundet 0 kt.'), text(html));
   html = render(wxPfa({ windDir: null, windKt: 6 }));                                                       // K12b
-  assert.ok(has(html, 'Windrichtung fehlt bei 6 kt Wind: Die Gegenwindpiste lässt sich nicht bestimmen – keine Berechnung.'));
+  assert.ok(has(html, 'Windrichtung fehlt bei mehr als 3 kt Wind: Die Gegenwindpiste lässt sich nicht bestimmen – keine Berechnung.'));
   assertNoResult(html, 'K12b');
+  assert.ok(has(render(wxPfa()), 'ohne gemeldete Windrichtung nur bis 3 kt Mittelwind'), 'Regeltext');
+});
+
+test('Schwellen: Mittelwind der Messwertzeile auf 0,1 kt, Wind im Rechenweg auf 0,01 kt abgeschnitten', () => {
+  assert.deepEqual([ui.fmtWind(0.97), ui.fmtWind(0.99999), ui.fmtWind(1), ui.fmtWind(2.96), ui.fmtWind(3.04), ui.fmtWind(8), ui.fmtWind(0.3 * 3)],
+    ['0,9', '0,9', '1,0', '2,9', '3,0', '8,0', '0,9']);
+  assert.deepEqual([ui.fmtKt2(6.996), ui.fmtKt2(7.7624), ui.fmtKt2(0.1 * 3 * 10), ui.fmtKt2(0.1736), ui.fmtKt2(0.999)], ['6,99', '7,76', '3,00', '0,17', '0,99']);
+  let html = render(wxPfa({ windDir: 120, windKt: 0.97 }));
+  assert.ok(has(html, 'Wind 120° / 0,9 kt') && has(html, 'Mittelwind 0,97 kt, unter 1 kt: windstill'), text(html));
+  assert.ok(has(html, 'Windstill (Mittelwind unter 1 kt)'));
+  html = render(wxPfa({ windDir: null, windKt: 2.96 }));
+  assert.ok(has(html, 'Wind 2,9 kt, Richtung unbestimmt') && has(html, 'Windrichtung nicht gemeldet'), text(html));
+  html = render(wxPfa({ windDir: null, windKt: 3.04 }));
+  assert.ok(has(html, 'Windrichtung fehlt bei mehr als 3 kt Wind'), text(html));
+  assertNoResult(html, '3,04 kt ohne Richtung');
+  html = render(wxPfa({ windDir: 304, windKt: 6.996 }));                       // Komponente 6,996 kt → abgerundet 6 kt
+  assert.ok(has(html, 'Wind 304° / 6,9 kt'), text(html));
+  assert.ok(has(html, 'Gegenwindkomponente 6,99 kt aus dem Mittelwind 6,99 kt, abgerundet 6 kt.'), text(html));
 });
 
 test('Feststellungen: 50-%-Satz, Gegenwindgrenze, Überschreitungen, Gleichstand', () => {
@@ -261,6 +400,17 @@ test('Feststellungen: 50-%-Satz, Gegenwindgrenze, Überschreitungen, Gleichstand
   af.runways.find((r) => r.id === '30').takeoffAvailable.value = 331;
   const g = block(render(wxPfa(), { airfield: af }), '30');
   assert.ok(g.includes('<td>331&nbsp;m</td>') && !g.includes('perf-red'), g);
+});
+
+test('Keine Piste mit Gegenwind (Test-Platz mit nur Piste 12, Wind von hinten): Meldung statt leerem Raster', () => {
+  // In LSZK unerreichbar (Gegenrichtungen 12/30), darum ein Test-Platz mit einer Piste
+  const one = clone(AF);
+  one.runways = one.runways.filter((r) => r.id === '12');
+  const html = render(wxPfa(), { airfield: one });
+  assert.ok(has(html, 'Keine Piste mit Gegenwind in den Platzdaten – keine Berechnung.'), text(html));
+  assertNoResult(html, 'keine Gegenwindpiste');
+  assertClean(html, 'keine Gegenwindpiste');
+  assert.ok(has(render(wxPfa({ windDir: 124 }), { airfield: one }), 'Piste 12 · Gegenwind 8 kt'), 'Gegenwind auf derselben Piste');
 });
 
 /* ── Zustände ohne Wert ────────────────────────────────────── */
@@ -312,10 +462,15 @@ test('Platzsperre: Wortlaut wie die Seite, Grund maskiert und gekürzt, Typfilte
   assert.ok(!html.includes('<img'));
   const reason = text(html).match(/für Flächenflugzeuge gesperrt \(([^)]*)\)\./)[1];
   assert.ok(reason.length <= 60 && reason.endsWith('…'), reason);
-  html = render(wxPfa(), { fgzo: fgzo({ flaeche: 'gesperrt', fetched_at_utc: new Date(NOW - 45 * MIN).toISOString() }) });
-  assert.ok(!html.includes('gesperrt'), 'veraltete Sperre');
+  // veraltete Sperre (Abruf 45 min alt): Hinweis in der Hinweisfarbe, nicht im gelben Kasten
+  html = render(wxPfa(), { fgzo: fgzo({ flaeche: 'gesperrt', flaeche_grund: 'nur Helikopterbetrieb', fetched_at_utc: new Date(NOW - 45 * MIN).toISOString() }) });
+  assert.ok(html.includes('<div class="perf-note">Platz laut FGZO für Flächenflugzeuge gesperrt (nur Helikopterbetrieb) (veraltete Meldung).</div>'), html);
+  assert.ok(!html.includes('perf-warn'), 'veraltete Sperre im gelben Kasten');
+  html = render(wxPfa(), { fgzo: fgzo({ flaeche: 'gesperrt', flaeche_grund: 'geschlossen', ok: false, fetched_at_utc: null }) });
+  assert.ok(html.includes('<div class="perf-note">Platz laut FGZO geschlossen (veraltete Meldung).</div>'), html);
   html = render(wxPfa(), { fgzo: fgzo({ flaeche: 'gesperrt', flaeche_grund: 'nur Helikopterbetrieb', runway_condition: 'STANDING WATER' }) });
   assert.ok(html.includes('<div>Platz laut FGZO für Flächenflugzeuge gesperrt (nur Helikopterbetrieb).</div><div>Piste gilt als nass: FGZO meldet «STANDING WATER»'));
+  assert.ok(!html.includes('veraltete Meldung'));
 });
 
 /* ── Escaping ──────────────────────────────────────────────── */
@@ -326,7 +481,7 @@ test('Escaping: Quelle, FGZO, Auswahl, Kennzeichen, Texte aus den Daten, Seitenk
   assert.ok(!html.includes('<img') && !html.includes('<b>'));
   assert.ok(html.includes('&lt;IMG SRC=X ONERROR=Y&gt;') && html.includes('&lt;img src=x onerror=y&gt;'));
   html = render(wxPfa(), { fgzo: fgzo({ updated: '<b onclick=x>7</b>' }) });
-  assert.ok(html.includes('Pistenzustand laut FGZO: DRY (Stand &lt;b onclick=x&gt;7&lt;/b&gt;).'));
+  assert.ok(html.includes('Pistenzustand laut FGZO: DRY (Stand &lt;b onclick=x&gt;7&lt;/b&gt;) – Datum der Meldung unklar.'), html);
   const list = [{ id: 'c172d', label: 'C <i>1</i>', file: 'c172d.json', registrations: ['HB-<s>X'] }, LIST[1]];
   html = render(wxPfa(), { list });
   assert.ok(html.includes('<option value="c172d" selected>C &lt;i&gt;1&lt;/i&gt; · HB-&lt;s&gt;X</option>'), html);
@@ -350,6 +505,112 @@ test('Escaping: Quelle, FGZO, Auswahl, Kennzeichen, Texte aus den Daten, Seitenk
   assert.ok(html.includes('&lt;i&gt;w&lt;/i&gt;') && !html.includes('<i>w'));
 });
 
+// Generischer Maskierungstest: eine Marke in jedem Textfeld der Daten, im FGZO-Status und in srcLabel
+const MARK = '<img src=x onerror=alert(1)>';
+function stringPaths(o, base, out) {
+  out = out || [];
+  if (typeof o === 'string') out.push(base);
+  else if (o && typeof o === 'object') Object.keys(o).forEach((k) => stringPaths(o[k], base === undefined ? k : base + '.' + k, out));
+  return out;
+}
+function getPath(o, p) { return p.split('.').reduce((x, k) => x[k], o); }
+function setPath(o, p, v) {
+  const keys = p.split('.');
+  const last = keys.pop();
+  keys.reduce((x, k) => x[k], o)[last] = v;
+}
+// Alle Textfelder zugleich mit der Marke; Schlüsselwörter des Schemas bleiben (sonst gälten die Daten nicht)
+function markAll(o, skip, key) {
+  if (typeof o === 'string') return skip.includes(key) ? o : MARK + o;
+  if (Array.isArray(o)) return o.map((x) => markAll(x, skip, key));
+  if (!o || typeof o !== 'object') return o;
+  const out = {};
+  Object.keys(o).forEach((k) => { out[k] = markAll(o[k], skip, k); });
+  return out;
+}
+// Zustände, die zusammen alle Textstellen der Karte erreichen
+function maskVariants(ac, af, list) {
+  const old = new Date(NOW - 54 * MIN).toISOString();
+  const base = { dataState: 'ready', list, aircraft: ac, airfield: af, nowMs: NOW, detailsOpen: true };
+  return [
+    [wxPfa(), fgzo()],                                                                    // Gegenwind 30, Rückenwind 12
+    [wxPfa({ rain1hMm: 0.4 }), fgzo()],                                                   // nass durch Regen, Nässefaktor
+    [wxPfa({ windDir: null, windKt: 0 }), null],                                          // windstill, beide Pisten
+    [wxPfa({ windDir: 214, windKt: 10 }), fgzo({ runway_condition: 'WET', flaeche: 'gesperrt', flaeche_grund: 'nur Helikopterbetrieb' })],
+    [wxPfa({ tempC: 10, qnhHpa: 1013.25, windDir: 304, windKt: 22 }), fgzo({ fetched_at_utc: old, flaeche: 'gesperrt' })],
+    [wxPfa({ qnhHpa: 1013.25, windDir: 304, windKt: 41, rain1hMm: null, rainMmH: null }), fgzo({ updated: '' })]
+  ].map(([w, f]) => Object.assign({}, base, { wx: w, fgzo: f }));
+}
+
+test('Maskierung: Marke in jedem Textfeld von Flugzeug-, Platz- und Listendatei, FGZO-Status und srcLabel nie unmaskiert', () => {
+  let renders = 0, escaped = 0;
+  const check = (ctx, label) => {
+    const html = ui.renderHtml(ctx);
+    renders++;
+    assert.ok(!/<img/i.test(html), label + ': Marke unmaskiert');
+    if (/&lt;img/i.test(html)) escaped++;
+    return html;
+  };
+  // 1) jedes Textfeld einzeln
+  [C172D, P2010].forEach((acBase) => stringPaths(acBase).forEach((p) => {
+    const ac = clone(acBase);
+    setPath(ac, p, MARK + getPath(ac, p));
+    maskVariants(ac, AF, LIST).forEach((ctx) => check(ctx, acBase.id + ' ' + p));
+  }));
+  stringPaths(AF).forEach((p) => {
+    const af = clone(AF);
+    setPath(af, p, MARK + getPath(af, p));
+    [C172D, P2010].forEach((ac) => maskVariants(ac, af, LIST).forEach((ctx) => check(ctx, 'Platz ' + p)));
+  });
+  stringPaths(INDEX_RAW).forEach((p) => {
+    const idx = clone(INDEX_RAW);
+    setPath(idx, p, MARK + getPath(idx, p));
+    const parsed = ui.parseIndex(idx);
+    // geprüfte Liste, ungeprüfte Einträge (Anzeige maskiert auch ohne Prüfung) und ein einzelnes Muster
+    [parsed ? parsed.list : null, idx.aircraft, [idx.aircraft[0]]].forEach((list) => {
+      check({ dataState: 'ready', list, aircraft: C172D, airfield: AF, wx: wxPfa(), fgzo: fgzo(), nowMs: NOW }, 'Liste ' + p);
+      check({ dataState: 'loading', list, selectedId: 'p2010', nowMs: NOW }, 'Liste, Laden ' + p);
+      check({ dataState: 'error', list, nowMs: NOW }, 'Liste, Fehler ' + p);
+    });
+  });
+  // 2) alle Textfelder zugleich: gleiche Beläge und Pistenkennungen überall, fehlende Quellen- und Kopffelder ergänzt
+  const SRC = ['labelDe', 'title', 'publisher', 'number', 'issue', 'approval', 'applicability', 'applicabilityDe', 'pageMark', 'pageMarkDe', 'caveatDe'];
+  const HEAD = ['techniqueDe', 'variantDe', 'footerDe', 'readingRuleDe', 'wetNoteDe', 'massNoteDe'];
+  const afAll = markAll(AF, ['unit']);
+  assert.equal(core.validateAirfield(afAll).ok, true);
+  [C172D, P2010].forEach((acBase) => {
+    const full = clone(acBase);
+    Object.keys(full.sources).forEach((k) => SRC.forEach((f) => { if (typeof full.sources[k][f] !== 'string') full.sources[k][f] = f; }));
+    HEAD.forEach((f) => { if (typeof full[f] !== 'string') full[f] = f; });
+    const acAll = markAll(full, ['id', 'kind', 'type', 'unit', 'amountUnit', 'quantity', 'read', 'below', 'above', 'when', 'of', 'surfaceCondition', 'source']);
+    assert.equal(core.validateAircraft(acAll).ok, true, acBase.id);
+    const htmls = maskVariants(acAll, afAll, LIST).map((ctx) => check(ctx, acBase.id + ' alle Felder'));
+    assert.ok(htmls[0].includes('perf-grid') && htmls[2].includes('perf-grid'), acBase.id + ': Zahlen erwartet');
+    // 3) Quellenschlüssel als Text (ohne labelDe)
+    const keyed = clone(acAll);
+    Object.keys(keyed.sources).forEach((k) => {
+      const s = keyed.sources[k];
+      delete s.labelDe;
+      delete keyed.sources[k];
+      keyed.sources[MARK + k] = s;
+    });
+    core.PHASES.forEach((ph) => { keyed.charts[ph].source = MARK + keyed.charts[ph].source; });
+    assert.equal(core.validateAircraft(keyed).ok, true, acBase.id + ' Quellenschlüssel');
+    maskVariants(keyed, afAll, LIST).forEach((ctx) => check(ctx, acBase.id + ' Quellenschlüssel'));
+  });
+  // 4) FGZO-Status und srcLabel
+  const old = new Date(NOW - 54 * MIN).toISOString();
+  [fgzo({ runway_condition: MARK, updated: MARK }), fgzo({ runway_condition: 'WET', updated: '18.11.2026, 07:14 ' + MARK, flaeche: 'gesperrt', flaeche_grund: MARK }),
+    fgzo({ updated: MARK }), fgzo({ updated: '18.11.2026, 07:14 ' + MARK }), fgzo({ updated: '17.11.2026, 07:14 ' + MARK }),
+    fgzo({ updated: MARK, fetched_at_utc: old }), fgzo({ runway_condition: MARK, updated: MARK, fetched_at_utc: old, flaeche: 'gesperrt', flaeche_grund: MARK }),
+    fgzo({ runway_condition: MARK, updated: null, fetched_at_utc: MARK }), fgzo({ flaeche: 'gesperrt', flaeche_grund: MARK, fetched_at_utc: old })].forEach((f, i) => {
+    [wxPfa({ srcLabel: MARK }), wxPfa({ srcLabel: MARK, rain1hMm: null, rainMmH: null })].forEach((w) => {
+      check({ dataState: 'ready', list: LIST, aircraft: C172D, airfield: AF, wx: w, fgzo: f, nowMs: NOW, detailsOpen: true }, 'FGZO ' + i);
+    });
+  });
+  assert.ok(renders >= 1500 && escaped >= 600, renders + ' Darstellungen, ' + escaped + ' mit maskierter Marke');
+});
+
 /* ── Auswahl, Format, Technik ──────────────────────────────── */
 
 test('Auswahl: ein Muster ohne select, Laden und Fehler mit erreichbarer Auswahl', () => {
@@ -367,13 +628,158 @@ test('Auswahl: ein Muster ohne select, Laden und Fehler mit erreichbarer Auswahl
   assert.deepEqual(ui.parseIndex({ schema: 2, default: 'a', aircraft: [{ id: 'a', label: 'A', file: 'a.json' }] }).list[0].registrations, []);
 });
 
-test('Format: QNH ohne Tausendertrenner, Druckhöhe aufgerundet, Zwischenwerte auf 0,01 aufgerundet', () => {
+test('Format: QNH ohne Tausendertrenner, Druckhöhe aufgerundet, Zwischenwerte exakt, letzter Wert auf 0,01 aufgerundet', () => {
   let t = text(render(wxPfa({ tempC: 3, qnhHpa: 1022, windDir: null, windKt: 2 })));
   assert.ok(t.includes('QNH 1022,0 hPa') && !t.includes("1'022"), t);
   t = text(render(wxPfa({ tempC: 8, qnhHpa: 1020, windDir: 110, windKt: 3 })));          // PA 1575,15
   assert.ok(t.includes("Druckhöhe 1'576 ft") && !t.includes("1'575"), t);
   assert.deepEqual([ui.fmtUp2(396.576), ui.fmtUp2(589.644), ui.fmtUp2(264.99312), ui.fmtUp2(284.58000000000004), ui.fmtUp2(45.9)],
     ['396,58', '589,65', '265', '284,58', '45,9']);
+  assert.deepEqual([ui.fmtExact(743.664), ui.fmtExact(26.0936), ui.fmtExact(1604.1), ui.fmtExact(0.1 + 0.2), ui.fmtExact(401.2 - 70), ui.fmtExact(-25), ui.fmtExact(1420)],
+    ['743,664', '26,0936', "1'604,1", '0,3', '331,2', '−25', "1'420"]);
+  assert.deepEqual([ui.fmtExact(1 / 3), ui.fmtExact(375.36336)], ['≈0,3333', '≈375,3634'], 'nicht exakt darstellbar: mit «≈»');
+  // Tecnam K21: Zwischenwerte mit drei und vier Nachkommastellen exakt, nur der letzte Wert auf 0,01 aufgerundet
+  t = text(render(wxPfa({ tempC: 10.8, qnhHpa: 998.2, windDir: 247, windKt: 8.7 }), { aircraft: P2010 }));
+  assert.ok(t.includes('Landung: Tabelle 251 / 535 m bei 0 °C und 274 / 558 m bei 25 °C, Gewicht 0,432 → 260,936 / 544,936 m · Gegenwind 4 kt: −4 m je kt = −16 m → 244,936 / 528,936 m · Gras +10 % von 260,936 m = +26,0936 m → 271,0296 / 555,0296 m · Faktor für Abweichungen im Betrieb × 1,67 (NOTE, APV5-17) → 452,62 / 926,9 m → aufgerundet 453 / 927 m'), t);
+  // Temperatur mit drei Dezimalen (kommt bei MeteoSchweiz nicht vor): nicht exakt darstellbare Werte mit «≈»
+  t = text(render(wxPfa({ tempC: 7.123 }), { aircraft: P2010 }));
+  assert.ok(t.includes('Gewicht ≈0,2849 → ≈375,3634 / 661,8888 m'), t);
+  assert.ok(t.includes('→ aufgerundet 378 / 693 m'), t);
+});
+
+test('Rechenweg: absolute Windkorrektur mit Rest «abgerundet», gebrochene Regelwerte exakt', () => {
+  const ac = clone(P2010);
+  Object.assign(ac.charts.takeoff.corrections.find((c) => c.kind === 'headwind'), { amount: -15, per: 2 });
+  Object.assign(ac.charts.landing.corrections.find((c) => c.kind === 'headwind'), { amount: -2.5, per: 1.5 });
+  const t = text(render(wxPfa({ windDir: 304, windKt: 3 }), { aircraft: ac }));
+  assert.ok(t.includes('Gegenwind 3 kt: −15 m je 2 kt, abgerundet −22 m → 379,2 / 684 m'), t);   // 22,5 → 22
+  assert.ok(t.includes('Gegenwind 3 kt: −2,5 m je 1,5 kt = −5 m → 250,2 / 534,2 m'), t);
+});
+
+/* ── Rechenweg geht exakt auf: alle Kontrollfälle des Planers ── */
+
+const CASES = readJson('tests/fixtures/kontrollfaelle.json');
+const E4 = 10000n;
+// Angezeigte Zahl («1'604,1», «−25») als Ganzzahl im Massstab 10^4; höchstens vier Nachkommastellen, keine nachgestellte
+// Null (ausser beim Faktor, der wie im AFM mit zwei Stellen steht: «1,10»)
+function dec(s, ctx, factor) {
+  const m = /^(−)?(\d{1,3}(?:'\d{3})*)(?:,(\d{1,4}))?$/.exec(s);
+  assert.ok(m, ctx + ': keine exakte Zahl «' + s + '»');
+  assert.ok(factor || !m[3] || !m[3].endsWith('0'), ctx + ': nachgestellte Null in «' + s + '»');
+  const v = BigInt(m[2].replace(/'/g, '')) * E4 + (m[3] ? BigInt(m[3].padEnd(4, '0')) : 0n);
+  return m[1] ? -v : v;
+}
+const ceilDiv = (a, b) => (a >= 0n ? (a + b - 1n) / b : -(-a / b));
+// shown im Massstab 10^4, exact im Massstab 10^8: Zwischenwert exakt gleich, letzter Wert auf 0,01 aufgerundet
+function sameValue(shown, exact, last, ctx) {
+  if (last) assert.equal(shown, ceilDiv(exact, 1000000n) * 100n, ctx + ': letzter Wert nicht ceil auf 0,01');
+  else assert.equal(shown * E4, exact, ctx + ': Zwischenwert nicht exakt');
+}
+// Eine Zeile «Start: …» bzw. «Landung: …» nachrechnen; gibt die aufgerundeten Meter zurück (oder null ohne Wert)
+function checkPhaseLine(line, tempC, ctx) {
+  const head = /^(Start|Landung): (.*)$/.exec(line);
+  assert.ok(head, ctx + ': ' + line);
+  let body = head[2], fin = null, meters = null, m;
+  if ((m = / → aufgerundet (\S+) \/ (\S+) m$/.exec(body))) { fin = [dec(m[1], ctx), dec(m[2], ctx)]; body = body.slice(0, m.index); }
+  if (fin && (m = / = (\S+) \/ (\S+) m$/.exec(body))) { meters = [dec(m[1], ctx), dec(m[2], ctx)]; body = body.slice(0, m.index); }
+  const segs = body.split(' · ');
+  const steps = [];
+  const P = (a, b) => [dec(a, ctx), dec(b, ctx)];
+  m = /^Tabelle (\S+) \/ (\S+) (m|ft)(?: bei (\S+) °C und (\S+) \/ (\S+) (?:m|ft) bei (\S+) °C, Gewicht (\S+) → (\S+) \/ (\S+) (?:m|ft))?$/.exec(segs[0]);
+  assert.ok(m, ctx + ': Tabelle «' + segs[0] + '»');
+  const unit = m[3];
+  let table;
+  if (m[4] !== undefined) {
+    const lo = P(m[1], m[2]), hi = P(m[5], m[6]), t0 = dec(m[4], ctx), t1 = dec(m[7], ctx), w = dec(m[8], ctx);
+    assert.equal(w * (t1 - t0), (BigInt(Math.round(tempC * 10000)) - t0) * E4, ctx + ': Gewicht = (t − t0) / (t1 − t0)');
+    table = P(m[9], m[10]);
+    steps.push({ what: 'Interpolation', shown: table, exact: () => [0, 1].map((k) => lo[k] * E4 + w * (hi[k] - lo[k])) });
+  } else {
+    table = P(m[1], m[2]);
+    steps.push({ what: 'Tabelle', shown: table, exact: () => table.map((v) => v * E4) });
+  }
+  for (let i = 1; i < segs.length; i++) {
+    const s = segs[i];
+    if (s === 'ohne Windkorrektur' || /^Gegenwind \d+ kt: nicht angerechnet/.test(s)) continue;
+    if (/^Gegenwind \d+ kt: über \d+ kt, kein Wert$/.test(s) || /kein Wert$/.test(s) && !/je/.test(s)) { assert.equal(fin, null, ctx); break; }
+    if ((m = /^Gegenwind (\d+) kt: −(\d+) % → (\S+) \/ (\S+) (?:m|ft)$/.exec(s))) {
+      const p = BigInt(m[2]);
+      steps.push({ what: 'Wind %', shown: P(m[3], m[4]), exact: (prev) => prev.map((v) => v * (100n - p) * 100n) });
+      continue;
+    }
+    if ((m = /^Gegenwind (\d+) kt: −(\S+) (?:m|ft) je (?:(\S+) )?kt(, abgerundet | = )−(\S+) (?:m|ft)(?:, mehr als die Hälfte – kein Wert| → (\S+) \/ (\S+) (?:m|ft))$/.exec(s))) {
+      const kt = BigInt(m[1]), x = dec(m[2], ctx), y = m[3] ? dec(m[3], ctx) : E4, r = dec(m[5], ctx);
+      assert.equal(r, (x * kt / y) * E4, ctx + ': Windabzug je kt × kt, abgerundet');
+      assert.equal(m[4] === ', abgerundet ', (x * kt) % y !== 0n, ctx + ': «abgerundet» genau bei Rest');
+      if (m[6] === undefined) { assert.equal(fin, null, ctx); break; }
+      steps.push({ what: 'Wind absolut', shown: P(m[6], m[7]), exact: (prev) => prev.map((v) => (v - r) * E4) });
+      continue;
+    }
+    if ((m = /^\S+ \+(\S+) % von (\S+) (?:m|ft) = \+(\S+) (?:m|ft) → (\S+) \/ (\S+) (?:m|ft)$/.exec(s))) {
+      const p = dec(m[1], ctx), b = dec(m[2], ctx), inc = dec(m[3], ctx);
+      assert.equal(b, table[0], ctx + ': Gras von der Tabellen-Rollstrecke');
+      assert.equal(inc * 1000000n, p * b, ctx + ': Graszuschlag exakt');
+      steps.push({ what: 'Gras', shown: P(m[4], m[5]), exact: (prev) => prev.map((v) => (v + inc) * E4) });
+      continue;
+    }
+    if ((m = /^.+ × (\S+) \(.*\) → (\S+) \/ (\S+) (?:m|ft)$/.exec(s))) {
+      const f = dec(m[1], ctx, true);
+      steps.push({ what: 'Faktor', shown: P(m[2], m[3]), exact: (prev) => prev.map((v) => v * f) });
+      continue;
+    }
+    assert.fail(ctx + ': unbekannter Schritt «' + s + '»');
+  }
+  assert.equal(!!meters, !!fin && unit === 'ft', ctx + ': Meterzeile genau bei ft');
+  if (meters) steps.push({ what: 'ft → m', shown: meters, exact: (prev) => prev.map((v) => v * 3048n) });
+  let prev = null;
+  steps.forEach((st, k) => {
+    const ex = st.exact(prev);
+    [0, 1].forEach((j) => sameValue(st.shown[j], ex[j], !!fin && k === steps.length - 1, ctx + ' ' + st.what + (j ? ' (15 m)' : ' (Rollstrecke)')));
+    prev = st.shown;
+  });
+  if (!fin) return null;
+  [0, 1].forEach((j) => assert.equal(fin[j], ceilDiv(prev[j], E4) * E4, ctx + ': aufgerundet'));
+  return fin.map((v) => Number(v / E4));
+}
+function pavedTestField(elevFt) {
+  return { schema: 2, icao: 'TEST', elevation: { value: elevFt, unit: 'ft' },
+    runways: [{ id: '36', bearingTrue: 360, bearingMag: 360, surface: 'paved', takeoffAvailable: { value: 1070, unit: 'm' }, landingAvailable: { value: 915, unit: 'm' } }] };
+}
+
+test('Rechenweg geht exakt auf: jede Zeile aller Kontrollfälle nachgerechnet, letzter Wert aufgerundet gleich der Karte', () => {
+  const sample = clone(C172D);
+  sample.charts.takeoff.table.cells = readJson('tests/fixtures/c172d_5a_1111kg_m.json').cells;
+  let lines = 0, values = 0;
+  CASES.forEach(([id, acId, field, inp]) => {
+    const ac = acId === 'c172d' ? C172D : (acId === 'p2010' ? P2010 : sample);
+    const af = field === 'lszk' ? AF : pavedTestField(field);
+    const html = render(wxPfa({ tempC: inp[0], qnhHpa: inp[1], windDir: inp[2], windKt: inp[3], rain1hMm: inp[4] ? 0.4 : 0 }),
+      { aircraft: ac, airfield: af, detailsOpen: true });
+    assertClean(html, id);
+    assert.ok(!html.includes('≈'), id + ': nicht exakter Zwischenwert');
+    const re = /<p class="perf-calc-h">Piste ([^ <]+) \(.*?<ul>(.*?)<\/ul>/g;
+    let m;
+    while ((m = re.exec(html))) {
+      const rid = m[1];
+      const items = m[2].match(/<li>.*?<\/li>/g).map((li) => text(li).trim());
+      assert.equal(items.length, 2, id + ' Piste ' + rid);
+      const card = text(block(html, rid));
+      items.forEach((line, k) => {
+        lines++;
+        const label = k ? 'Landung' : 'Start';
+        const fin = checkPhaseLine(line, inp[0], id + ' Piste ' + rid + ' ' + label);
+        const cell = new RegExp(label + ' (\\S+) m (\\S+) m').exec(card);
+        if (fin) {
+          values++;
+          assert.ok(cell, id + ': Kartenzeile ' + label);
+          assert.deepEqual([cell[1], cell[2]], fin.map((v) => ui.fmtInt(v)), id + ' Piste ' + rid + ' ' + label + ': Karte');
+        } else {
+          assert.ok(new RegExp(label + ' – – ').test(card), id + ': ohne Wert auch auf der Karte');
+        }
+      });
+    }
+  });
+  assert.deepEqual([lines, values], [134, 127], 'Zeilen und Werte im Rechenweg');
 });
 
 test('Versionsprüfung: Kern und Anzeige müssen gleich sein', () => {
@@ -702,16 +1108,86 @@ test('boot: Wahl und Standard nicht ladbar – kein «Standardmuster gewählt»,
   assert.ok(shown(env).includes('Start 409 m'));
 });
 
-test('boot: FGZO-Status mit jedem update, Sperre und Nässe', async (t) => {
-  const env = startBrowser(t, { files: { 'data/fgzo_status.json': fgzo({ flaeche: 'gesperrt', flaeche_grund: 'nur Helikopterbetrieb', runway_condition: 'STANDING WATER' }) } });
+test('boot: FGZO-Status mit jedem update; ein fehlgeschlagener Abruf lässt den letzten Stand stehen, der dann altert', async (t) => {
+  const wet = fgzo({ flaeche: 'gesperrt', flaeche_grund: 'nur Helikopterbetrieb', runway_condition: 'STANDING WATER', updated: '18.11.2026, 10:38' });
+  const env = startBrowser(t, { files: { 'data/fgzo_status.json': wet } });
   await settle();
   env.win.LszkPerf.update(wxPfa());
   await settle();
   assert.ok(shown(env).includes('Platz laut FGZO für Flächenflugzeuge gesperrt (nur Helikopterbetrieb).'));
   assert.ok(shown(env).includes('Start 397 m 590 m'), 'nass gerechnet');
-  env.files['data/fgzo_status.json'] = undefined;
+  // 404, Netzfehler, kaputtes JSON, kein Objekt: der letzte Stand bleibt
+  const broken = [undefined, () => Promise.reject(new Error('offline')),
+    () => Promise.resolve({ ok: true, status: 200, json: () => Promise.reject(new SyntaxError('kaputt')) }), null, [], 'DRY', 42];
+  for (const [i, bad] of broken.entries()) {
+    const n = env.fetchUrls.length;
+    env.files['data/fgzo_status.json'] = bad;
+    env.win.LszkPerf.update(wxPfa());
+    await settle();
+    assert.equal(env.fetchUrls.length, n + 1, 'Abruf ' + i);
+    assert.ok(shown(env).includes('Platz laut FGZO für Flächenflugzeuge gesperrt (nur Helikopterbetrieb).'), 'Sperre nach Fehler ' + i);
+    assert.ok(shown(env).includes('Start 397 m 590 m'), 'nass nach Fehler ' + i);
+  }
+  // Leerer Satz, Satz nur mit ok:false, Satz mit älterer Abrufzeit (DRY): der gespeicherte Stand bleibt
+  const ignored = [{}, { ok: false, error: 'bot challenge', failed_at_utc: new Date(NOW).toISOString() },
+    fgzo({ fetched_at_utc: new Date(NOW - 30 * MIN).toISOString() }), fgzo({ fetched_at_utc: NOW })];
+  for (const [i, bad] of ignored.entries()) {
+    env.files['data/fgzo_status.json'] = bad;
+    env.win.LszkPerf.update(wxPfa());
+    await settle();
+    assert.ok(shown(env).includes('Platz laut FGZO für Flächenflugzeuge gesperrt (nur Helikopterbetrieb).'), 'Sperre nach Satz ' + i);
+    assert.ok(shown(env).includes('Start 397 m 590 m'), 'nass nach Satz ' + i);
+  }
+  // Der Stand altert über fetched_at_utc (14 min alt): nach weiteren 31 min Sperre nur noch als Hinweis, weiter nass
+  env.clock = NOW + 31 * MIN;
+  env.win.LszkPerf.update(wxPfa({ time: env.clock - 10 * MIN }));
+  await settle();
+  let s = shown(env);
+  assert.ok(s.includes('Platz laut FGZO für Flächenflugzeuge gesperrt (nur Helikopterbetrieb) (veraltete Meldung).'), s);
+  assert.ok(s.includes('Piste gilt als nass: letzte FGZO-Meldung «STANDING WATER» (Stand 18.11.2026, 10:38), Abruf vor 45 min – vorsichtshalber weiter nass gerechnet.'), s);
+  assert.ok(s.includes('Start 397 m 590 m') && !env.content.innerHTML.includes('perf-warn" role="note"><div>Platz'), 'Sperre nicht mehr im gelben Kasten');
+  // ein neuer guter Stand ersetzt den alten
+  env.files['data/fgzo_status.json'] = fgzo({ fetched_at_utc: new Date(env.clock - 5 * MIN).toISOString(), updated: '18.11.2026, 09:50' });
+  env.win.LszkPerf.update(wxPfa({ time: env.clock - 10 * MIN }));
+  await settle();
+  s = shown(env);
+  assert.ok(s.includes('Pistenzustand laut FGZO: DRY (Stand 18.11.2026, 09:50).') && s.includes('Start 331 m 492 m') && !s.includes('gesperrt'), s);
+});
+
+function deferred() {
+  let resolve, reject;
+  const promise = new Promise((a, b) => { resolve = a; reject = b; });
+  return { promise, resolve, reject };
+}
+const okResponse = (data) => ({ ok: true, status: 200, json: () => Promise.resolve(JSON.parse(JSON.stringify(data))) });
+
+test('boot: veraltete Antworten werden verworfen (Musterwechsel und FGZO-Abruf)', async (t) => {
+  const slow = deferred();
+  const env = startBrowser(t, { files: { 'perf/aircraft/p2010.json': () => slow.promise } });
+  await settle();
   env.win.LszkPerf.update(wxPfa());
   await settle();
-  assert.ok(!shown(env).includes('gesperrt'));
-  assert.ok(shown(env).includes('Start 331 m 492 m'), 'ohne FGZO und ohne Regen trocken');
+  // Tecnam gewählt (Antwort hängt), dann zurück zur Cessna; die späte Tecnam-Antwort darf nichts ändern
+  env.content.listeners.change({ target: { id: 'perf-ac', value: 'p2010' } });
+  await settle();
+  env.content.listeners.change({ target: { id: 'perf-ac', value: 'c172d' } });
+  await settle();
+  assert.ok(shown(env).includes('Start 331 m 492 m'));
+  slow.resolve(okResponse(P2010));
+  await settle();
+  assert.ok(shown(env).includes('Start 331 m 492 m') && !shown(env).includes('409 m'), shown(env));
+  assert.ok(env.content.innerHTML.includes('<option value="c172d" selected>'));
+  assert.notEqual(env.store['lszk-perf-aircraft'], 'p2010');
+  // FGZO: die Antwort des älteren Abrufs (nass, gesperrt) kommt nach der des neueren (DRY)
+  const first = deferred();
+  env.files['data/fgzo_status.json'] = () => first.promise;
+  env.win.LszkPerf.update(wxPfa());
+  env.files['data/fgzo_status.json'] = fgzo({ updated: '18.11.2026, 08:59' });
+  env.win.LszkPerf.update(wxPfa());
+  await settle();
+  assert.ok(shown(env).includes('Pistenzustand laut FGZO: DRY (Stand 18.11.2026, 08:59).'), shown(env));
+  first.resolve(okResponse(fgzo({ runway_condition: 'STANDING WATER', flaeche: 'gesperrt' })));
+  await settle();
+  const s = shown(env);
+  assert.ok(!s.includes('STANDING WATER') && !s.includes('gesperrt') && s.includes('DRY (Stand 18.11.2026, 08:59)') && s.includes('Start 331 m 492 m'), s);
 });
