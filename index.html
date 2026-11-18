@@ -2861,18 +2861,22 @@
       var head  = Math.round(wspeed * Math.cos(diffRad));
       var cross = Math.round(wspeed * Math.sin(diffRad));
 
+      // Farbschwellen für den Seitenwind in Knoten (seit 18.11.2026, vorher 5/10 km/h): grün bis 5 kt,
+      // gelb bis 10 kt, darüber rot. Massgebend ist der angezeigte, gerundete kt-Wert, damit Zahl und Farbe zusammenpassen.
       var absX  = Math.abs(cross);
-      var color = absX <= 5  ? '#10b981' :
-                  absX <= 10 ? '#f59e0b' :
-                               '#ef4444';
+      var xKt   = Math.round(absX / 1.852);
+      var color = xKt <= 5  ? '#10b981' :
+                  xKt <= 10 ? '#f59e0b' :
+                              '#ef4444';
 
-      // Böen-Komponenten (gleiche Schwellen wie Mittelwind, Werte in km/h)
+      // Böen-Komponenten (gleiche Schwellen wie Mittelwind)
       var hasGust = wgust > 0;
       var gCross  = Math.round(wgust * Math.sin(diffRad));
       var gAbsX   = Math.abs(gCross);
-      var gColor  = gAbsX <= 5  ? '#10b981' :
-                    gAbsX <= 10 ? '#f59e0b' :
-                                  '#ef4444';
+      var gXKt    = Math.round(gAbsX / 1.852);
+      var gColor  = gXKt <= 5  ? '#10b981' :
+                    gXKt <= 10 ? '#f59e0b' :
+                                 '#ef4444';
 
       var W = 180, H = hasGust ? 270 : 250, cx = W/2, cy = 108;
       var boxH = hasGust ? 78 : 58;
