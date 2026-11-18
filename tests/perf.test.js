@@ -196,6 +196,25 @@ test('Daten: alle Tabellenwerte wörtlich (c172d 154 + 90, p2010 56 + 56, c152 9
   assert.deepEqual(LYC.charts.landing.table.cells, C172D_LANDING);
 });
 
+// Zeichenketten einer Datei mit Pfad, z. B. «charts.takeoff.notesDe[0]»
+function strings(o, p, out) {
+  if (typeof o === 'string') out[p] = o;
+  else if (Array.isArray(o)) o.forEach((v, i) => strings(v, p + '[' + i + ']', out));
+  else if (o && typeof o === 'object') Object.keys(o).forEach((k) => strings(o[k], p ? p + '.' + k : k, out));
+  return out;
+}
+
+test('Daten: alle Texte der Flugzeug-, Listen- und Platzdateien wörtlich (Abschrift tests/fixtures/texte.json)', () => {
+  // Die Texte sind am Handbuch geprüft (Bedingungen, Notes, Quellen, Fusszeile). Wer eine Datei ändert, muss die
+  // Abschrift bewusst nachführen; ein neues Muster der Auswahl braucht ebenfalls eine.
+  const FIX = readJson('tests/fixtures/texte.json').data;
+  const files = INDEX.aircraft.map((e) => 'perf/aircraft/' + e.file).concat(['perf/aircraft/index.json', 'perf/airfields/lszk.json']);
+  assert.deepEqual(Object.keys(FIX).sort(), files.slice().sort(), 'Abschrift je Datei');
+  files.forEach((f) => assert.deepEqual(strings(readJson(f).data, '', {}), FIX[f], f));
+  assert.equal(FIX['perf/aircraft/c152.json']['charts.takeoff.notesDe[0]'], 'Gegenwind: −10 % je 9 kt.');
+  assert.ok(FIX['perf/aircraft/c152.json'].footerDe.startsWith('Richtwert nach AFM ohne eigenen Sicherheitszuschlag'));
+});
+
 test('Daten: Achsen, Einheiten und Ablesung je Tabelle', () => {
   const ax = (ch) => ch.table.axes.map((a) => [a.quantity, a.values, a.read]);
   assert.deepEqual(ax(C172D.charts.takeoff), [['pressureAltitude', [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000], 'nextHigher'],

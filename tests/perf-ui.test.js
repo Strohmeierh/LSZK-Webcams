@@ -419,6 +419,8 @@ test('Schwellen: Mittelwind der Messwertzeile auf 0,1 kt, Wind im Rechenweg auf 
   assert.deepEqual([ui.fmtWind(0.97), ui.fmtWind(0.99999), ui.fmtWind(1), ui.fmtWind(2.96), ui.fmtWind(3.04), ui.fmtWind(8), ui.fmtWind(0.3 * 3)],
     ['0,9', '0,9', '1,0', '2,9', '3,0', '8,0', '0,9']);
   assert.deepEqual([ui.fmtKt2(6.996), ui.fmtKt2(7.7624), ui.fmtKt2(0.1 * 3 * 10), ui.fmtKt2(0.1736), ui.fmtKt2(0.999)], ['6,99', '7,76', '3,00', '0,17', '0,99']);
+  // 8,7 × 100 = 869,999… und 0,29 × 100 = 28,999…: ohne die Toleranz in fmtKt2 stünde «8,69» und «0,28»
+  assert.deepEqual([ui.fmtKt2(8.7), ui.fmtKt2(0.29), ui.fmtKt2(4.35)], ['8,70', '0,29', '4,35']);
   let html = render(wxPfa({ windDir: 120, windKt: 0.97 }));
   assert.ok(has(html, 'Wind 120° / 0,9 kt') && has(html, 'Mittelwind 0,97 kt, unter 1 kt: windstill'), text(html));
   assert.ok(has(html, 'Windstill (Mittelwind unter 1 kt)'));
@@ -436,7 +438,7 @@ test('Schwellen: Mittelwind der Messwertzeile auf 0,1 kt, Wind im Rechenweg auf 
 
 test('Rechenweg: Gegenwind- und Rückenwindzeile zeigen dieselbe, abgeschnittene Windkomponente', () => {
   let n = 0;
-  [[215, 6.6, '0,11'], [304, 6.996, '6,99'], [290, 8, '7,76'], [124, 12.345, '12,34'], [200, 9.999, '2,41']].forEach(([dir, kt, shown]) => {
+  [[215, 6.6, '0,11'], [304, 6.996, '6,99'], [290, 8, '7,76'], [124, 12.345, '12,34'], [200, 9.999, '2,41'], [304, 8.7, '8,70']].forEach(([dir, kt, shown]) => {
     const t = text(render(wxPfa({ windDir: dir, windKt: kt })));
     const head = /Gegenwindkomponente (\S+) kt aus dem Mittelwind/.exec(t);
     const tail = /Rückenwindkomponente (\S+) kt aus dem Mittelwind – nicht berechnet\./.exec(t);
@@ -444,7 +446,7 @@ test('Rechenweg: Gegenwind- und Rückenwindzeile zeigen dieselbe, abgeschnittene
     assert.deepEqual([head[1], tail[1]], [shown, shown], dir + '/' + kt);
     n++;
   });
-  assert.equal(n, 5);
+  assert.equal(n, 6);
 });
 
 test('Feststellungen: 50-%-Satz, Gegenwindgrenze, Überschreitungen, Gleichstand', () => {
