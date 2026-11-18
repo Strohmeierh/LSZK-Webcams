@@ -1100,8 +1100,9 @@ function startBrowser(t, opts) {
 }
 const perfFetches = (env) => env.fetchUrls.filter((u) => u.startsWith('perf/')).length;
 const shown = (env) => text(env.content.innerHTML);
-// Text der Kurzzeile ohne den Zusatz «Richtwert AFM», damit die boot-Tests nicht von TEASER_AFM_TAG abhängen
-const teaserText = (env) => text(env.teaser.innerHTML.replace(/<span class="perf-t-tag">[^<]*<\/span>/g, '')).trim();
+// Sichtbarer Text der Kurzzeile: ohne den Zusatz «Richtwert AFM» (damit die boot-Tests nicht von TEASER_AFM_TAG
+// abhängen) und ohne die versteckten Hinweiswörter für Screenreader
+const teaserText = (env) => text(env.teaser.innerHTML.replace(/<span class="perf-(?:t-tag|sr)">[^<]*<\/span>/g, '')).trim();
 // Wahl wie im Browser: value des bestehenden <select> setzen, dann change auf #perf-sel
 function choose(env, id) {
   const s = env.sel.querySelector('select');
@@ -1132,7 +1133,7 @@ test('boot: Kurzzeile und Karte versteckt bis zum ersten update, dann Zahlen nac
   assert.equal(teaserText(env), 'Start- und Landestrecke · Cessna 172 Diesel Lade Flugplatzstatus …');
   await settle();
   assert.ok(shown(env).includes('Start 331 m 492 m 625 m'), shown(env));
-  assert.equal(teaserText(env), 'Cessna 172 Diesel · Piste 30 Start über 15 m: 492 m · verfügbar 625 m Landung über 15 m: 489 m · verfügbar 520 m');
+  assert.equal(teaserText(env), 'Cessna 172 Diesel · Piste 30 Rollstrecke: Start 331 m · Landung 265 m');
   // Der Weg über boot nimmt die ausgelieferte Stellung des Zusatzes «Richtwert AFM»
   assert.equal(env.teaser.innerHTML.includes('<span class="perf-t-tag">Richtwert AFM</span>'), ui.TEASER_AFM_TAG);
   assert.ok(env.fetchUrls.some((u) => u.startsWith('data/fgzo_status.json?t=')));
@@ -1153,7 +1154,7 @@ test('boot: FGZO antwortet nicht – nach höchstens 5 s Rechnung ohne Meldung',
   env.timeouts[0].fn();
   assert.ok(shown(env).includes('Pistenzustand: keine aktuelle Meldung der FGZO.'), shown(env));
   assert.ok(shown(env).includes('Start 331 m'));
-  assert.ok(teaserText(env).includes('Start über 15 m: 492 m'), teaserText(env));
+  assert.ok(teaserText(env).includes('Rollstrecke: Start 331 m'), teaserText(env));
 });
 
 test('boot: LSZK_WX beim Start einmal gelesen; ohne #perf-card oder #perf-content nichts tun', async (t) => {
@@ -1161,7 +1162,7 @@ test('boot: LSZK_WX beim Start einmal gelesen; ohne #perf-card oder #perf-conten
   await settle();
   assert.equal(env.box.style.display, 'block');
   assert.ok(shown(env).includes('Start 331 m'));
-  assert.ok(teaserText(env).includes('Start über 15 m: 492 m'));
+  assert.ok(teaserText(env).includes('Rollstrecke: Start 331 m'));
   for (const o of [{ noCard: true }, { noContent: true }]) {
     env = fakeBrowser(o);
     ui.boot(env.win);
@@ -1214,7 +1215,7 @@ test('boot: kaputtes update wirft nicht, Rechenfehler in Karte und Kurzzeile ble
   assert.ok(teaserText(env).includes('Rechenfehler') && !/\d&nbsp;m/.test(env.teaser.innerHTML), 'alte Zahlen in der Kurzzeile');
   env.win.LszkPerf.update(wxPfa({ time: env.clock - 10 * MIN }));
   await settle();
-  assert.ok(shown(env).includes('331 m') && teaserText(env).includes('492 m'));
+  assert.ok(shown(env).includes('331 m') && teaserText(env).includes('Start 331 m'));
   assert.ok(env.content.innerHTML.includes('<select id="perf-ac"'), 'Auswahl wieder da');
   [42, 'x', undefined, null, []].forEach((v) => assert.doesNotThrow(() => env.win.LszkPerf.update(v)));
   assert.ok(shown(env).includes('Keine aktuellen Messwerte vom Platz – keine Berechnung.'));
@@ -1228,7 +1229,7 @@ test('boot: kaputtes update wirft nicht, Rechenfehler in Karte und Kurzzeile ble
   env.win.LszkPerf.update(same);
   await settle();
   assert.ok(shown(env).includes('Start 331 m 492 m') && !shown(env).includes('Rechenfehler'), 'Karte nach dem Rechenfehler: ' + shown(env).slice(0, 200));
-  assert.ok(teaserText(env).includes('492 m'));
+  assert.ok(teaserText(env).includes('Start 331 m'));
 });
 
 test('boot: Rechenfehler als erstes update zeigt die Box; ein update vor DOMContentLoaded wird beim Start nachgeholt', async (t) => {
@@ -1248,7 +1249,7 @@ test('boot: Rechenfehler als erstes update zeigt die Box; ein update vor DOMCont
   env.docListeners.DOMContentLoaded();
   assert.equal(env.box.style.display, 'block');
   await settle();
-  assert.ok(teaserText(env).includes('492 m') && !shown(env).includes('Rechenfehler'), teaserText(env));
+  assert.ok(teaserText(env).includes('Start 331 m') && !shown(env).includes('Rechenfehler'), teaserText(env));
 });
 
 test('boot: Übergang vom Ergebnis zu Rechenabbruch und fehlender Windrichtung – die Kurzzeile zeigt keine alten Zahlen', async (t) => {
@@ -1262,7 +1263,7 @@ test('boot: Übergang vom Ergebnis zu Rechenabbruch und fehlender Windrichtung �
   for (const [w, state] of cases) {
     env.win.LszkPerf.update(wxPfa());
     await settle();
-    assert.ok(teaserText(env).includes('492 m'), 'Ergebnis vor «' + state + '»');
+    assert.ok(teaserText(env).includes('Start 331 m'), 'Ergebnis vor «' + state + '»');
     env.win.LszkPerf.update(w);
     await settle();
     assert.equal(teaserText(env), 'Start- und Landestrecke · Cessna 172 Diesel ' + state);
@@ -1324,9 +1325,8 @@ test('boot: Der Takt schreibt die Karte neu, das Auswahlfeld nicht (gleicher Kno
   // Neuer Messwert mit anderem Ergebnis: Karte und Kurzzeile neu, die Auswahl bleibt derselbe Knoten
   env.win.LszkPerf.update(wxPfa({ time: env.clock - 5 * MIN, tempC: 25, qnhHpa: 1015, windDir: 214, windKt: 10 }));     // K6
   await settle();
-  assert.equal(teaserText(env), 'Cessna 172 Diesel · Wind quer · beide Pisten Start über 15 m: 560 m · verfügbar ab 520 m ' +
-    'Landung über 15 m: 533 m · verfügbar ab 520 m');
-  assert.ok(env.teaser.innerHTML.includes('<b class="perf-amber">560&nbsp;m</b>'));
+  assert.equal(teaserText(env), 'Cessna 172 Diesel · Wind quer · beide Pisten Rollstrecke: Start 375 m · Landung 288 m');
+  assert.ok(env.teaser.innerHTML.includes('<b class="perf-amber">375&nbsp;m</b>'));
   assert.equal(env.writesBy['perf-sel'], w['perf-sel']);
   assert.equal(env.selectNodes, nodes0);
   assert.equal(env.sel.querySelector('select'), node);
@@ -1353,7 +1353,7 @@ test('boot: Auf- und Zuklappen der Kurzzeile gemerkt (lszk-perf-open), beim Star
   assert.equal(next.box.open, true, 'nach Neuladen offen');
   await settle();
   assert.equal(next.box.style.display, 'block');
-  assert.ok(teaserText(next).includes('492 m') && next.box.open === true);
+  assert.ok(teaserText(next).includes('Start 331 m') && next.box.open === true);
   assert.equal(next.writesBy['perf-box'], undefined);
   // ohne gespeicherten Zustand zu, ebenso bei einem anderen Wert als '1'; privater Modus (localStorage wirft): kein Fehler, zu
   const closed = fakeBrowser({ initialWx: wxPfa() });
@@ -1370,7 +1370,7 @@ test('boot: Auf- und Zuklappen der Kurzzeile gemerkt (lszk-perf-open), beim Star
   priv.box.open = true;
   assert.doesNotThrow(() => priv.box.listeners.toggle());
   await settle();
-  assert.ok(teaserText(priv).includes('492 m'), 'Kurzzeile im privaten Modus');
+  assert.ok(teaserText(priv).includes('Start 331 m'), 'Kurzzeile im privaten Modus');
 });
 
 test('boot: alte Seite aus dem Cache (Karte im Panel, ohne Box und Kurzzeile) – die Karte erscheint und funktioniert', async (t) => {
@@ -1417,7 +1417,7 @@ test('boot: Wechsel Cessna ↔ Tecnam, Wahl erst nach erfolgreichem Laden gespei
   assert.equal(env.store['lszk-perf-aircraft'], 'p2010');
   assert.ok(shown(env).includes('Start 409 m 744 m') && shown(env).includes("1'160 kg"), shown(env));
   assert.ok(shown(env).includes(P2010.footerDe));
-  assert.equal(teaserText(env), 'Tecnam P2010 · Piste 30 Start über 15 m: 744 m · verfügbar 625 m Landung über 15 m: 897 m · verfügbar 520 m');
+  assert.equal(teaserText(env), 'Tecnam P2010 · Piste 30 Rollstrecke: Start 409 m · Landung 423 m');
   assert.equal(env.sel.querySelector('select'), node);
   assert.equal(env.writesBy['perf-sel'], selWrites);
   choose(env, 'c172d');
@@ -1449,7 +1449,7 @@ test('boot: Wechsel zur Cessna 152 und zurück; die gespeicherte Wahl gilt beim 
     '<span class="perf-nw">HB-CYP</span> · 758&nbsp;kg</div>'));
   let s = shown(env);
   assert.ok(s.includes('Start 300 m 521 m 625 m') && s.includes('Landung 219 m 432 m 520 m') && s.includes("758 kg (1'670 lb)") && s.includes(C152.footerDe), s);
-  assert.equal(teaserText(env), 'Cessna 152 · Piste 30 Start über 15 m: 521 m · verfügbar 625 m Landung über 15 m: 432 m · verfügbar 520 m');
+  assert.equal(teaserText(env), 'Cessna 152 · Piste 30 Rollstrecke: Start 300 m · Landung 219 m');
   // nächster Seitenaufruf mit der gespeicherten Wahl: die Auswahl entsteht gleich mit der gespeicherten Wahl
   const next = fakeBrowser({ store: { 'lszk-perf-aircraft': 'c152' }, initialWx: wxPfa() });
   ui.boot(next.win);
@@ -1474,7 +1474,8 @@ test('boot: nicht ladbare Wahl fällt auf den Standard zurück, Speicher geleert
   assert.ok(env.content.innerHTML.includes('<option value="c172d" selected>'));
   assert.ok(shown(env).includes('Flugzeugdaten für «Fehlt» nicht verfügbar – Standardmuster gewählt.'));
   assert.ok(shown(env).includes('Start 331 m'));
-  assert.ok(teaserText(env).endsWith('⚠ Hinweis in den Details'), 'Hinweis «Standardmuster gewählt» als Vorbehalt');
+  assert.ok(teaserText(env) === 'Cessna 172 Diesel · Piste 30 Rollstrecke: Start 331 m · Landung 265 m' && !env.teaser.innerHTML.includes('perf-t-warn'),
+    'Hinweis «Standardmuster gewählt» nur in der Karte');
   const node = env.sel.querySelector('select'), selWrites = env.writesBy['perf-sel'];
   choose(env, 'x');
   assert.equal(node.value, 'x');
@@ -1485,7 +1486,7 @@ test('boot: nicht ladbare Wahl fällt auf den Standard zurück, Speicher geleert
   assert.equal(env.sel.querySelector('select'), node);
   assert.equal(node.value, 'c172d', 'Rückfall auf den Standard setzt value');
   assert.equal(env.writesBy['perf-sel'], selWrites);
-  assert.ok(teaserText(env).startsWith('Cessna 172 Diesel · Piste 30') && teaserText(env).endsWith('⚠ Hinweis in den Details'));
+  assert.equal(teaserText(env), 'Cessna 172 Diesel · Piste 30 Rollstrecke: Start 331 m · Landung 265 m');
 });
 
 test('boot: Flugzeugdatei mit falscher id gilt als nicht ladbar', async (t) => {
@@ -1515,7 +1516,7 @@ test('boot: Wahl und Standard nicht ladbar – kein «Standardmuster gewählt»,
   await settle();
   assert.equal(env.store['lszk-perf-aircraft'], 'p2010');
   assert.ok(shown(env).includes('Start 409 m'));
-  assert.ok(teaserText(env).startsWith('Tecnam P2010 · Piste 30 Start über 15 m: 744 m'), teaserText(env));
+  assert.ok(teaserText(env).startsWith('Tecnam P2010 · Piste 30 Rollstrecke: Start 409 m'), teaserText(env));
 });
 
 test('boot: FGZO-Status mit jedem update; ein fehlgeschlagener Abruf lässt den letzten Stand stehen, der dann altert', async (t) => {
@@ -1587,7 +1588,7 @@ test('boot: veraltete Antworten werden verworfen (Musterwechsel und FGZO-Abruf)'
   slow.resolve(okResponse(P2010));
   await settle();
   assert.ok(shown(env).includes('Start 331 m 492 m') && !shown(env).includes('409 m'), shown(env));
-  assert.ok(teaserText(env).startsWith('Cessna 172 Diesel · Piste 30') && !teaserText(env).includes('744'), teaserText(env));
+  assert.ok(teaserText(env).startsWith('Cessna 172 Diesel · Piste 30') && !teaserText(env).includes('409'), teaserText(env));
   assert.equal(env.sel.querySelector('select').value, 'c172d');
   assert.notEqual(env.store['lszk-perf-aircraft'], 'p2010');
   // FGZO: die Antwort des älteren Abrufs (nass, gesperrt) kommt nach der des neueren (DRY)

@@ -13,7 +13,7 @@
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  var VERSION = 3;
+  var VERSION = 4;
 
   var EPS = 1e-9;
   var FT_M = 0.3048;

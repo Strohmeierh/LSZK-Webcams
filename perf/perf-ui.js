@@ -6,8 +6,10 @@
    Modell (buildModel, eine Rechnung). In #perf-content legt das Skript #perf-sel (Auswahl, nur bei geänderter Liste
    neu geschrieben) und #perf-body (Karteninhalt) an. Auf- und Zuklappen merkt sich lszk-perf-open.
    Fehlen Box und Kurzzeile (alte Seite aus dem Cache), erscheint wie bisher nur die Karte.
+   Die Kurzzeile zeigt Muster, Piste und die Rollstrecke für Start und Landung; die Farbe der Zahl folgt dem
+   schlimmsten Fall der Karte. Nässe, Sperre und Hinweise stehen nur in der aufgeklappten Karte.
    Grundsatz: lieber kein Wert als ein falscher. Ohne gültige, frische Messwerte keine Zahlen, auch nicht in der
-   Kurzzeile; sie wirkt nie günstiger als die Karte.
+   Kurzzeile.
    Gezeigt wird nur die Piste mit Gegenwind. Nass gilt die Piste bei einer FGZO-Meldung ungleich DRY oder bei Regen.
    Browser: window.LszkPerf = { update, version, _tick }. Node: reine Funktionen für die Tests.
    VERSION gleich dem ?v= in index.html und in perf/perf.js halten.
@@ -21,7 +23,7 @@
 }(typeof self !== 'undefined' ? self : this, function (core) {
   'use strict';
 
-  var VERSION = 3;
+  var VERSION = 4;
 
   var STALE_MIN = 45;          // Messwerte älter: keine Zahlen
   var FUTURE_MIN = 5;          // Messzeit weiter in der Zukunft: keine Zahlen
@@ -38,7 +40,7 @@
   // Entscheid F-C: Regen von MeteoSchweiz macht die Piste nass (neben einer FGZO-Meldung ungleich DRY)
   var WET_BY_RAIN = true;
   // Entscheid des Benutzers offen: «Richtwert AFM» sichtbar in der Kurzzeile (direkt nach dem Kopf, nur wenn mindestens
-  // eine Zeile eine Zahl zeigt).
+  // eine Phase eine Zahl zeigt).
   // Ausgeliefert aus. Umschalten = diese Zeile und den Test der ausgelieferten Stellung in tests/perf-teaser.test.js ändern.
   var TEASER_AFM_TAG = false;
 
@@ -76,7 +78,8 @@
       'einsetzenden Regen und Nässe von früherem Regen erkennt die Karte nicht.'
   };
 
-  // Kurzzeile unter der Ampel: Zustände ohne Zahlen und Vorbehalte (ohne Satzpunkt, ohne HTML)
+  // Kurzzeile unter der Ampel: Zustände ohne Zahlen, Wörter im Kopf, Zeile mit der Rollstrecke und die versteckten
+  // Hinweiswörter für Screenreader (ohne Satzpunkt, ohne HTML)
   var TEASER = {
     title: 'Start- und Landestrecke',
     internal: 'Rechenfehler – keine Berechnung',
@@ -93,19 +96,14 @@
     noDirection: 'Windrichtung fehlt – keine Berechnung',
     noRunway: 'Keine Piste mit Gegenwind – keine Berechnung',
     calm: 'windstill',
+    nodir: 'ohne Windrichtung',
     cross: 'Wind quer',
     afmTag: 'Richtwert AFM',
+    roll: 'Rollstrecke',
     noValue: 'kein Wert',
-    closed: 'Platz gesperrt',
-    closedAll: 'Platz geschlossen',
-    closedStale: ' (veraltete Meldung)',
-    dirUnknown: 'Windrichtung unbekannt: Rückenwind möglich',
-    wet: 'Piste nass: Strecken deutlich länger möglich',
-    unknown: 'Pistenzustand unbekannt',
-    inDetails: 'Hinweis in den Details'
+    srRed: '(Rollstrecke länger als verfügbar)',
+    srAmber: '(Strecke über 15 m länger als verfügbar)'
   };
-  // Warnzeichen wie auf der übrigen Seite: einfaches U+26A0, ohne Variantenwähler
-  var WARN_SIGN = '⚠';
 
   // Feldnamen stammen aus dem Adapter bzw. dem Kern, nie aus Daten; unbekannte heissen «Messwert»
   var FIELD_LABEL = {
@@ -174,7 +172,8 @@
     // display:block auf dem summary blendet das Dreieck aus (Safari: ::-webkit-details-marker); Flex sitzt im inneren span,
     // weil display:flex direkt auf <summary> in älterem Safari nicht greift.
     '.perf-box { max-width: 1600px; margin: 0 auto 16px; }',
-    '.perf-teaser { display: block; list-style: none; cursor: pointer; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; padding: 8px 12px; }',
+    // Flach: wenig Innenabstand und enge Zeilenhöhe; am iPhone (375/393 px) zwei Zeilen, am Desktop eine
+    '.perf-teaser { display: block; list-style: none; cursor: pointer; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; padding: 6px 12px; }',
     '.perf-teaser::-webkit-details-marker { display: none; }',
     '.perf-teaser:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }',
     '.perf-box[open] > .perf-teaser { margin-bottom: 8px; }',
@@ -182,7 +181,7 @@
     '.perf-t-ico, .perf-t-chev { flex: none; width: 18px; height: 18px; color: var(--accent); }',
     '.perf-t-chev { transition: transform 0.2s ease; }',
     '.perf-box[open] .perf-t-chev { transform: rotate(180deg); }',
-    '.perf-t-body { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 1px 18px; font-size: 0.8rem; line-height: 1.45; color: var(--text); overflow-wrap: break-word; }',
+    '.perf-t-body { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 0 18px; font-size: 0.8rem; line-height: 1.3; color: var(--text); overflow-wrap: break-word; }',
     // Elemente dürfen schmaler werden als ihr längstes Wort (sonst schiebt ein langer Name ohne Leerzeichen die Seite
     // seitlich); umbrochen wird dann per overflow-wrap
     '.perf-t-body > span { min-width: 0; }',
@@ -190,13 +189,14 @@
     '.perf-t-tag { color: var(--text-muted); font-weight: 400; }',
     '.perf-t-state { color: #f87171; }',
     '.perf-t-load { color: var(--text-muted); }',
-    '.perf-t-warn { color: #fcd34d; }',
+    // Nur für Screenreader: Hinweiswort hinter einer gefärbten Zahl (sichtbar ändert sich nichts)
+    '.perf-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }',
     '@media (hover: hover) {',
     '  .perf-teaser:hover { border-color: var(--accent); }',
     '}',
     '@media (max-width: 600px) {',
     '  .perf-box { margin-bottom: 10px; }',
-    '  .perf-teaser { padding: 8px; border-radius: 6px; }',
+    '  .perf-teaser { padding: 5px 8px; border-radius: 6px; }',
     '  .perf-t { gap: 6px; }',
     '  .perf-t-ico, .perf-t-chev { width: 16px; height: 16px; }',
     '}',
@@ -1042,51 +1042,30 @@
   }
 
   /* ── Kurzzeile unter der Ampel (rein, für Node-Tests) ───────────
-     Folge von <span> im Flex-Behälter #perf-teaser-text: Kopf, je Phase eine Zeile, Vorbehalte. Zahlen nur im Zustand
-     result, also genau dann, wenn die Karte Pistenblöcke zeigt; je Phase die Strecke über 15 m gegen die verfügbare
-     Länge. Bei mehreren gerechneten Pisten die grösste Strecke («bis …», falls verschieden) gegen die kleinste Länge
-     («ab …», falls verschieden), Farbe die schwerste Stufe aller Pisten, mindestens amber, wenn die gezeigte Strecke
-     die gezeigte Länge übersteigt; fehlt einer Piste der Wert, steht «kein Wert». So ist die Zeile nie günstiger als
-     die Karte. Ein Vorbehalt (⚠) steht genau dann, wenn die Karte ein gelbes Element zeigt oder ohne Windrichtung
-     gerechnet wurde (bis 3 kt Rückenwind möglich). Farben nur über Klassen. */
-  // Zeigt die Zeile dieser Phase eine Zahl? Nur wenn jede gerechnete Piste in der Phase einen Wert hat, sonst «kein Wert».
+     Folge von <span> im Flex-Behälter #perf-teaser-text: Kopf und eine Zeile «Rollstrecke: Start … · Landung …».
+     Zahlen nur im Zustand result, also genau dann, wenn die Karte Pistenblöcke zeigt. Je Phase die Rollstrecke, bei
+     mehreren gerechneten Pisten die grösste («bis …», falls verschieden). Die Farbe zeigt den schlimmsten Fall aller
+     gerechneten Pisten wie die Karte: rot, wenn eine Rollstrecke länger ist als verfügbar, sonst amber, wenn eine
+     Strecke über 15 m länger ist als verfügbar; dahinter ein verstecktes Hinweiswort für Screenreader. Fehlt einer
+     Piste der Wert, steht «kein Wert». Keine Vorbehaltszeilen: Nässe, Sperre und Hinweise stehen nur in der
+     aufgeklappten Karte. Farben nur über Klassen. */
+  // Zeigt diese Phase eine Zahl? Nur wenn jede gerechnete Piste in der Phase einen Wert hat, sonst «kein Wert».
   function phaseHasValue(ph, computed) {
     return computed.every(function (r) { return r[ph] && r[ph].ok; });
   }
 
-  function teaserRowHtml(ph, computed) {
-    var label = '<span class="perf-nw">' + PHASE_LABEL[ph] + ' über 15&nbsp;m: ';
+  // Eine Phase der Zeile: «Start 449 m» (gefärbt mit Hinweiswort) bzw. «Start kein Wert»
+  function teaserPhaseHtml(ph, computed) {
+    var label = '<span class="perf-nw">' + PHASE_LABEL[ph] + ' ';
+    if (!phaseHasValue(ph, computed)) return label + '<span class="perf-nov">' + TEASER.noValue + '</span></span>';
     var ps = computed.map(function (r) { return r[ph]; });
-    if (!phaseHasValue(ph, computed)) {
-      return '<span class="perf-t-row">' + label + '<span class="perf-nov">' + TEASER.noValue + '</span></span></span>';
-    }
-    var vals = ps.map(function (p) { return p.m.overObstacle; });
-    var avail = ps.map(function (p) { return p.availableM; });
-    var v = Math.max.apply(null, vals), av = Math.min.apply(null, avail);
-    var sev = 0;
-    ps.forEach(function (p) { sev = Math.max(sev, p.exceeds.groundRoll ? 2 : (p.exceeds.overObstacle ? 1 : 0)); });
-    if (sev === 0 && v > av) sev = 1;
-    var cls = sev === 2 ? ' class="perf-red"' : (sev === 1 ? ' class="perf-amber"' : '');
-    return '<span class="perf-t-row">' + label + (vals.some(function (x) { return x !== v; }) ? 'bis ' : '') +
-      '<b' + cls + '>' + fmtInt(v) + '&nbsp;m</b></span> <span class="perf-nw">· verfügbar ' +
-      (avail.some(function (x) { return x !== av; }) ? 'ab ' : '') + fmtInt(av) + '&nbsp;m</span></span>';
-  }
-
-  // Vorbehalte im Zustand result, feste Reihenfolge: Sperre (frisch, veraltet), Windrichtung, Nässe bzw. «unbekannt»,
-  // Hinweis. Sperre, Nässe und «unbekannt» aus denselben Flags wie conditionHtml. «Windrichtung unbekannt» bei
-  // Rechnung ohne Windrichtung: die Zahlen gelten ohne Wind, bis 3 kt Rückenwind sind möglich (in der Karte der graue
-  // Hinweis). Jedes andere gelbe Element der Karte (unsichere DRY-Meldung, Hinweis) einmal als «Hinweis in den Details».
-  function teaserWarnings(m) {
-    var f = condFlags(m.fg, m.ws);
-    var closed = m.fg.closedReason === 'geschlossen' ? TEASER.closedAll : TEASER.closed;
-    var out = [];
-    if (f.closed) out.push(closed);
-    if (f.closedStale) out.push(closed + TEASER.closedStale);
-    if (m.hintKind === 'nodir') out.push(TEASER.dirUnknown);
-    if (f.wet) out.push(TEASER.wet);
-    if (f.unknown) out.push(TEASER.unknown);
-    if (m.notice || ((f.dryNotToday || f.dryStale || f.dryNoStamp) && !f.unknown)) out.push(TEASER.inDetails);
-    return out;
+    var vals = ps.map(function (p) { return p.m.groundRoll; });
+    var v = Math.max.apply(null, vals);
+    var red = ps.some(function (p) { return p.exceeds.groundRoll; });
+    var amber = !red && ps.some(function (p) { return p.exceeds.overObstacle; });
+    return label + (vals.some(function (x) { return x !== v; }) ? 'bis ' : '') +
+      '<b' + (red ? ' class="perf-red"' : (amber ? ' class="perf-amber"' : '')) + '>' + fmtInt(v) + '&nbsp;m</b>' +
+      (red || amber ? '<span class="perf-sr"> ' + (red ? TEASER.srRed : TEASER.srAmber) + '</span>' : '') + '</span>';
   }
 
   function teaserStateText(m) {
@@ -1111,27 +1090,23 @@
     }
   }
 
-  // Kopf: Muster, «windstill» bzw. «Wind quer», Pisten. Ohne Windrichtung steht kein Wort im Kopf, das sagt die
-  // Vorbehaltszeile. Mit m.afmTag folgt «Richtwert AFM» als eigenes Element, aber nur, wenn mindestens eine Zeile eine
-  // Zahl zeigt (nicht bei zweimal «kein Wert»).
+  var HEAD_WORD = { calm: TEASER.calm, nodir: TEASER.nodir, cross: TEASER.cross };
+
+  // Kopf: Muster, «windstill», «ohne Windrichtung» bzw. «Wind quer», Pisten. Mit m.afmTag folgt «Richtwert AFM» als
+  // eigenes Element, aber nur, wenn mindestens eine Phase eine Zahl zeigt (nicht bei zweimal «kein Wert»).
   function teaserHtml(m) {
-    var h, warn;
     if (m.kind === 'result') {
       var c = m.computed;
       var where = c.length === 1 ? 'Piste&nbsp;' + esc(c[0].id) : (c.length === 2 ? 'beide Pisten' : c.length + ' Pisten');
-      var word = m.hintKind === 'calm' ? TEASER.calm : (m.hintKind === 'cross' ? TEASER.cross : '');
+      var word = m.hintKind ? HEAD_WORD[m.hintKind] : '';
       var tag = m.afmTag && core.PHASES.some(function (ph) { return phaseHasValue(ph, c); });
-      h = '<span class="perf-t-head">' + esc(clip(m.ac.label, LABEL_MAX)) + ' · ' + (word ? word + ' · ' : '') + where + '</span>' +
+      return '<span class="perf-t-head">' + esc(clip(m.ac.label, LABEL_MAX)) + ' · ' + (word ? word + ' · ' : '') + where + '</span>' +
         (tag ? '<span class="perf-t-tag">' + TEASER.afmTag + '</span>' : '') +
-        core.PHASES.map(function (ph) { return teaserRowHtml(ph, c); }).join('');
-      warn = teaserWarnings(m);
-    } else {
-      var load = m.kind === 'loading' || m.kind === 'fgzo-pending';
-      h = '<span class="perf-t-head">' + TEASER.title + (m.ac ? ' · ' + esc(clip(m.ac.label, LABEL_MAX)) : '') + '</span>' +
-        '<span class="' + (load ? 'perf-t-load' : 'perf-t-state') + '">' + teaserStateText(m) + '</span>';
-      warn = m.notice ? [TEASER.inDetails] : [];
+        '<span class="perf-t-row">' + TEASER.roll + ': ' + core.PHASES.map(function (ph) { return teaserPhaseHtml(ph, c); }).join(' · ') + '</span>';
     }
-    return h + warn.map(function (w) { return '<span class="perf-t-warn">' + WARN_SIGN + ' ' + w + '</span>'; }).join('');
+    var load = m.kind === 'loading' || m.kind === 'fgzo-pending';
+    return '<span class="perf-t-head">' + TEASER.title + (m.ac ? ' · ' + esc(clip(m.ac.label, LABEL_MAX)) : '') + '</span>' +
+      '<span class="' + (load ? 'perf-t-load' : 'perf-t-state') + '">' + teaserStateText(m) + '</span>';
   }
 
   // Karte und Kurzzeile aus einer Rechnung: { sel, body, teaser, selectedId, kind }; sel + body === renderHtml(ctx)

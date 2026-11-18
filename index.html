@@ -884,8 +884,9 @@
   <!-- Briefing-Ampel: Kurzüberblick, Klick öffnet die Erklärung im Detail-Fenster -->
   <div id="briefing-bar" title="Ampel – Klick für Werte &amp; Erklärung"></div>
 
-  <!-- Start-/Landestrecke nach AFM: Kurzzeile unter der Ampel, Antippen klappt die Karte auf. Texte, Zahlen und CSS
-       kommen aus perf/perf-ui.js, die Rechnung aus perf/perf.js. Sichtbar ab dem ersten Messwert-Update. -->
+  <!-- Start-/Landestrecke nach AFM: Kurzzeile unter der Ampel (Muster, Piste, Rollstrecke Start und Landung), Antippen
+       klappt die Karte auf. Texte, Zahlen und CSS kommen aus perf/perf-ui.js, die Rechnung aus perf/perf.js.
+       Sichtbar ab dem ersten Messwert-Update. -->
   <details class="perf-box" id="perf-box" style="display:none;">
     <summary class="perf-teaser" id="perf-teaser" title="Start- und Landestrecke – Richtwert nach AFM. Klick öffnet oder schliesst die Details mit Rechenweg und Hinweisen.">
       <span class="perf-t">
@@ -4297,9 +4298,9 @@ load();
   })();
   </script>
 
-  <!-- Start-/Landestreckenrechner (Kurzzeile #perf-box unter der Ampel, Karte #perf-card darin): erst Rechenkern, dann Anzeige. ?v= bei jeder Änderung an perf/*.js in beiden Zeilen erhöhen. -->
-  <script defer src="perf/perf.js?v=3"></script>
-  <script defer src="perf/perf-ui.js?v=3"></script>
+  <!-- Start-/Landestreckenrechner (Kurzzeile #perf-box mit der Rollstrecke unter der Ampel, Karte #perf-card darin): erst Rechenkern, dann Anzeige. ?v= bei jeder Änderung an perf/*.js in beiden Zeilen erhöhen. -->
+  <script defer src="perf/perf.js?v=4"></script>
+  <script defer src="perf/perf-ui.js?v=4"></script>
 
   <!-- GoatCounter: cookielose Aufruf-Statistik (strohmeierh.goatcounter.com) -->
   <!-- Pfad-Präfix: Unter lszk.strowa.ch wäre der Pfad nur "/" (wie bei EDSF). Mit Präfix zählt LSZK weiter als /LSZK-Webcams/ wie vor dem Domainwechsel (16.11.2026). -->
