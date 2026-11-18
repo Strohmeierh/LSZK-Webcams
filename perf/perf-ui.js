@@ -41,7 +41,7 @@
     fgzoLoading: 'Lade Flugplatzstatus …',
     noHeadwindRunway: 'Keine Piste mit Gegenwind in den Platzdaten – keine Berechnung.',
     footerGeneric: 'Richtwert nach AFM ohne eigenen Sicherheitszuschlag. Massgebend sind das AFM der jeweiligen Maschine und die eigene Beurteilung.',
-    selectLabel: 'Flugzeug',
+    selectLabel: 'Flugzeug wählen',
     calm: 'Windstill (Mittelwind unter 1 kt): keine Gegenwindpiste. Beide Pisten ohne Windkorrektur gerechnet; mit Rückenwind sind die Strecken länger.',
     noDirection: 'Windrichtung fehlt bei mehr als 3 kt Wind: Die Gegenwindpiste lässt sich nicht bestimmen – keine Berechnung.',
     nodir: 'Windrichtung nicht gemeldet: keine Gegenwindpiste bestimmbar. Beide Pisten ohne Windkorrektur gerechnet; mit Rückenwind sind die Strecken länger.',
@@ -78,9 +78,21 @@
 
   var CSS = [
     '#perf-content { font-size: 0.82rem; line-height: 1.5; color: var(--text); overflow-wrap: break-word; }',
-    '.perf-ac { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 0 0 6px; font-weight: 600; color: var(--text); }',
-    '.perf-ac-label { color: var(--text-muted); font-weight: 600; font-size: 0.78rem; }',
-    '.perf-select { font: inherit; font-weight: 600; color: var(--text); background: var(--bg); border: 1px solid var(--card-border); border-radius: 6px; padding: 4px 8px; max-width: 100%; }',
+    '.perf-ac { margin: 0 0 4px; }',
+    '.perf-ac-label { display: block; margin: 0 0 4px; color: var(--text-muted); font-weight: 600; font-size: 0.78rem; }',
+    // Als Auswahlfeld erkennbar: Rahmen in Akzentfarbe, eigener Pfeil (Daten-URI, Farbe = --accent), Fingermass 44 px.
+    // 16 px auf allen Breiten, weil iOS bei kleinerer Schrift beim Fokus zoomt. Kein «outline: none».
+    '.perf-select { -webkit-appearance: none; -moz-appearance: none; appearance: none; display: block; width: 100%; max-width: 26rem; ' +
+      'min-height: 44px; margin: 0; font: inherit; font-size: 16px; font-weight: 600; line-height: 1.25; color: var(--text); ' +
+      'background-color: var(--bg); background-image: url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' ' +
+      'viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2338bdf8\' stroke-width=\'2.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E' +
+      '%3Cpolyline points=\'6 9 12 15 18 9\'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; ' +
+      'background-size: 18px 18px; border: 1px solid var(--accent); border-radius: 8px; padding: 8px 40px 8px 12px; cursor: pointer; }',
+    '.perf-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }',
+    '.perf-ac-one { font-weight: 600; }',
+    '.perf-ac-sub { color: var(--text-muted); font-size: 0.78rem; margin: 0 0 8px; }',
+    '.perf-ac-sub:empty { display: none; }',
+    '.perf-nw { white-space: nowrap; }',
     '.perf-head { color: var(--text-muted); margin: 0 0 6px; }',
     '.perf-meas { color: var(--text-muted); margin: 0 0 8px; }',
     '.perf-note { color: #fcd34d; font-size: 0.78rem; margin: 0 0 8px; }',
@@ -117,11 +129,6 @@
     '.perf-calc li { margin: 2px 0; }',
     '.perf-calc-h { color: var(--text); font-weight: 600; }',
     '.perf-foot { font-size: 0.72rem; color: var(--text-muted); line-height: 1.5; border-top: 1px solid var(--card-border); padding-top: 8px; margin-top: 4px; }',
-    '@media (max-width: 600px) {',
-    '  .perf-ac { display: block; }',
-    '  .perf-ac-label { display: block; margin: 0 0 4px; }',
-    '  .perf-select { display: block; width: 100%; font-size: 16px; min-height: 44px; }',
-    '}',
     '@media (max-width: 400px) {',
     '  .perf-block { padding: 8px; }',
     '  .perf-table th, .perf-table td { padding: 3px; }',
@@ -385,18 +392,31 @@
   }
   function stateHtml(text) { return '<div class="perf-state" role="status">' + text + '</div>'; }
 
-  function optionText(e) {
-    return clip(e.label, LABEL_MAX) + (e.registrations && e.registrations.length ? ' · ' + e.registrations.join(', ') : '');
-  }
+  // Name des Musters in der Auswahl (die Kennzeichen stehen in der Unterzeile)
+  function optionText(e) { return clip(e.label, LABEL_MAX); }
 
-  // Erste Zeile: Auswahl ab zwei Mustern, sonst derselbe Text ohne <select>
+  // Auswahl ab zwei Mustern mit Beschriftung, sonst der Name ohne <select>
   function selectionHtml(list, selectedId) {
     if (!list || !list.length) return '';
-    if (list.length < 2) return '<div class="perf-ac">' + esc(optionText(list[0])) + '</div>';
+    if (list.length < 2) return '<div class="perf-ac perf-ac-one">' + esc(optionText(list[0])) + '</div>';
     return '<div class="perf-ac"><label class="perf-ac-label" for="perf-ac">' + TEXT.selectLabel + '</label>' +
-      '<select id="perf-ac" class="perf-select">' + list.map(function (e) {
+      '<select id="perf-ac" class="perf-select" aria-describedby="perf-ac-sub">' + list.map(function (e) {
         return '<option value="' + esc(e.id) + '"' + (e.id === selectedId ? ' selected' : '') + '>' + esc(optionText(e)) + '</option>';
       }).join('') + '</select></div>';
+  }
+
+  // Unterzeile der Auswahl: Kennzeichen des gewählten Musters, nach dem Laden der Flugzeugdaten auch die Masse.
+  // Ein Eintrag, der nicht in der Liste steht, zeigt keine Kennzeichen (nie die eines anderen Musters).
+  function subLineHtml(list, selectedId, ac) {
+    if (!list || !list.length) return '';
+    var entry = null;
+    if (list.length < 2) entry = list[0];
+    else list.forEach(function (e) { if (!entry && e && e.id === selectedId) entry = e; });
+    var parts = (entry && Array.isArray(entry.registrations) ? entry.registrations : []).map(function (r) {
+      return '<span class="perf-nw">' + esc(r) + '</span>';
+    });
+    if (ac) parts.push(fmtInt(ac.mass.kg) + '&nbsp;kg');
+    return '<div class="perf-ac-sub" id="perf-ac-sub">' + parts.join(' · ') + '</div>';
   }
 
   function headHtml(ac) {
@@ -911,11 +931,14 @@
 
   var HINT_TEXT = { calm: TEXT.calm, nodir: TEXT.nodir, cross: TEXT.cross };
 
+  // Beginnt mit der Unterzeile der Auswahl (ausser im Zustand internal, der keine Auswahl zeigt)
   function bodyHtml(m) {
-    if (m.kind === 'loading') return '<div class="perf-loading">' + TEXT.loading + '</div>' + footerHtml(null);
-    if (m.kind === 'data-error') return noticeHtml(m.notice) + stateHtml(TEXT.dataError) + footerHtml(null);
-    if (m.kind === 'internal' || !m.ac) return stateHtml(TEXT.internal) + footerHtml(null);
-    var head = headHtml(m.ac) + noticeHtml(m.notice);
+    if (m.kind === 'internal') return stateHtml(TEXT.internal) + footerHtml(null);
+    var sub = subLineHtml(m.list, m.selectedId, m.ac);
+    if (m.kind === 'loading') return sub + '<div class="perf-loading">' + TEXT.loading + '</div>' + footerHtml(null);
+    if (m.kind === 'data-error') return sub + noticeHtml(m.notice) + stateHtml(TEXT.dataError) + footerHtml(null);
+    if (!m.ac) return stateHtml(TEXT.internal) + footerHtml(null);
+    var head = sub + headHtml(m.ac) + noticeHtml(m.notice);
     var foot = footerHtml(m.ac);
     switch (m.kind) {
       case 'no-wx': return head + stateHtml(adapterText(m.a, m.nowMs)) + foot;

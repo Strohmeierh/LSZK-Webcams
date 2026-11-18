@@ -243,9 +243,11 @@ test('Cessna trocken (K2): Auswahl, Kopf, Messwerte, nur Gegenwindpiste, Zustand
   const html = render(wxPfa());
   assertClean(html, 'K2');
   const t = text(html);
-  assert.ok(html.includes('<label class="perf-ac-label" for="perf-ac">Flugzeug</label><select id="perf-ac" class="perf-select">'));
-  assert.ok(html.includes('<select id="perf-ac" class="perf-select"><option value="c172d" selected>Cessna 172 Diesel · HB-TDA, HB-TDB, HB-TDC, HB-TDD</option>' +
-    '<option value="p2010">Tecnam P2010 · HB-KMD</option><option value="c152">Cessna 152 · HB-CFA, HB-CYF, HB-CYP</option></select>'), html);
+  assert.ok(html.includes('<label class="perf-ac-label" for="perf-ac">Flugzeug wählen</label><select id="perf-ac" class="perf-select" aria-describedby="perf-ac-sub">'));
+  assert.ok(html.includes('<select id="perf-ac" class="perf-select" aria-describedby="perf-ac-sub"><option value="c172d" selected>Cessna 172 Diesel</option>' +
+    '<option value="p2010">Tecnam P2010</option><option value="c152">Cessna 152</option></select></div>' +
+    '<div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-TDA</span> · <span class="perf-nw">HB-TDB</span> · ' +
+    '<span class="perf-nw">HB-TDC</span> · <span class="perf-nw">HB-TDD</span> · 1\'157&nbsp;kg</div>'), html);
   assert.ok(t.includes("Maximales Abfluggewicht 1'157 kg (2'550 lb) · Kurzstart- und Kurzlandetechnik · Motor TAE 125-02-114, Propeller MTV-6-A/190-69"), t);
   assert.ok(t.includes("Messwerte MeteoSchweiz Pfäffikon ZH, 09:00 Uhr (vor 15 min): 15,0 °C · QNH 1018,0 hPa · Wind 290° / 8,0 kt, Böen 14 kt · Druckhöhe 1'630 ft"), t);
   assert.ok(t.includes('Pistenzustand laut FGZO: DRY (Stand 18.11.2026, 07:14). MeteoSchweiz hat in der letzten Stunde keinen Regen gemessen. Gerechnet für trockenes Gras. Tau, Reif, eben einsetzenden Regen und Nässe von früherem Regen erkennt die Karte nicht.'), t);
@@ -316,7 +318,8 @@ test('Tecnam (K8): Kopf, Zahlen, Faktorzeile, interpolierter Rechenweg, Fusszeil
   const html = render(wxPfa(), { aircraft: P2010 });
   assertClean(html, 'K8');
   const t = text(html);
-  assert.ok(html.includes('<option value="p2010" selected>Tecnam P2010 · HB-KMD</option>'));
+  assert.ok(html.includes('<option value="p2010" selected>Tecnam P2010</option>'));
+  assert.ok(html.includes('<div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-KMD</span> · 1\'160&nbsp;kg</div>'), html);
   assert.ok(t.includes("Maximales Abfluggewicht 1'160 kg (2'557 lb) · Klappen T/O beim Start und LAND bei der Landung, Geschwindigkeiten nach AFM · Lycoming IO-360-M1A, Verstellpropeller MTV-15-B/193-52"), t);
   const b30 = text(block(html, '30'));
   assert.ok(b30.includes('Start 409 m 744 m 625 m') && b30.includes('Landung 423 m 897 m 520 m'), b30);
@@ -347,8 +350,10 @@ test('Cessna 152 trocken (C2): Auswahl mit drei Mustern, Kopf, Zahlen, Rechenweg
   assertClean(html, 'C2');
   const t = text(html);
   assert.equal((html.match(/<option /g) || []).length, 3);
-  assert.ok(html.includes('<option value="c172d">Cessna 172 Diesel · HB-TDA, HB-TDB, HB-TDC, HB-TDD</option><option value="p2010">Tecnam P2010 · HB-KMD</option>' +
-    '<option value="c152" selected>Cessna 152 · HB-CFA, HB-CYF, HB-CYP</option>'), html);
+  assert.ok(html.includes('<option value="c172d">Cessna 172 Diesel</option><option value="p2010">Tecnam P2010</option>' +
+    '<option value="c152" selected>Cessna 152</option>'), html);
+  assert.ok(html.includes('<div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-CFA</span> · <span class="perf-nw">HB-CYF</span> · ' +
+    '<span class="perf-nw">HB-CYP</span> · 758&nbsp;kg</div>'), html);
   assert.ok(t.includes("Maximales Abfluggewicht 758 kg (1'670 lb) · Kurzstart- und Kurzlandetechnik · Motor Lycoming O-235-L2C, Festpropeller"), t);
   assert.equal(block(html, '12'), null, 'Rückenwindpiste ohne Block');
   const b30 = text(block(html, '30'));
@@ -552,7 +557,8 @@ test('Escaping: Quelle, FGZO, Auswahl, Kennzeichen, Texte aus den Daten, Seitenk
   assert.ok(html.includes('Pistenzustand laut FGZO: DRY (Stand &lt;b onclick=x&gt;7&lt;/b&gt;) – Datum der Meldung unklar.'), html);
   const list = [{ id: 'c172d', label: 'C <i>1</i>', file: 'c172d.json', registrations: ['HB-<s>X'] }, LIST[1]];
   html = render(wxPfa(), { list });
-  assert.ok(html.includes('<option value="c172d" selected>C &lt;i&gt;1&lt;/i&gt; · HB-&lt;s&gt;X</option>'), html);
+  assert.ok(html.includes('<option value="c172d" selected>C &lt;i&gt;1&lt;/i&gt;</option>'), html);
+  assert.ok(html.includes('<div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-&lt;s&gt;X</span> · 1\'157&nbsp;kg</div>'), html);
   const ac = clone(C172D);
   ac.techniqueDe = '<u>t</u>';
   ac.variantDe = '<u>v</u>';
@@ -684,7 +690,8 @@ test('Maskierung: Marke in jedem Textfeld von Flugzeug-, Platz- und Listendatei,
 test('Auswahl: ein Muster ohne select, Laden und Fehler mit erreichbarer Auswahl', () => {
   let html = render(wxPfa(), { list: [LIST[0]] });
   assert.ok(!html.includes('<select'));
-  assert.ok(html.includes('<div class="perf-ac">Cessna 172 Diesel · HB-TDA, HB-TDB, HB-TDC, HB-TDD</div>'));
+  assert.ok(html.includes('<div class="perf-ac perf-ac-one">Cessna 172 Diesel</div><div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-TDA</span> · ' +
+    '<span class="perf-nw">HB-TDB</span> · <span class="perf-nw">HB-TDC</span> · <span class="perf-nw">HB-TDD</span> · 1\'157&nbsp;kg</div>'), html);
   html = render(wxPfa(), { dataState: 'loading', selectedId: 'p2010', aircraft: null });
   assert.ok(html.includes('<option value="p2010" selected>'));
   html = render(wxPfa(), { dataState: 'error', selectedId: 'c172d', aircraft: null, notice: 'Flugzeugdaten für «Tecnam P2010» nicht verfügbar – Standardmuster gewählt.' });
@@ -873,7 +880,7 @@ test('Durchlauf: nie NaN, undefined, null oder Infinity im HTML', () => {
   }))));
 });
 
-test('CSS und HTML: nur Klassen und IDs mit Präfix perf-, Auswahl mobil 16 px und 44 px', () => {
+test('CSS und HTML: nur Klassen und IDs mit Präfix perf-, Auswahl auf allen Breiten 16 px und 44 px', () => {
   const selectors = ui.CSS.replace(/\{[^}]*\}/g, ' ').replace(/@media[^{]*\{/g, ' ');
   const names = selectors.match(/[.#][a-zA-Z][\w-]*/g) || [];
   assert.ok(names.length > 10);
@@ -882,7 +889,80 @@ test('CSS und HTML: nur Klassen und IDs mit Präfix perf-, Auswahl mobil 16 px u
   (html.match(/class="[^"]*"/g) || []).forEach((c) => c.slice(7, -1).split(/\s+/).forEach((k) => assert.ok(k.startsWith('perf-'), 'Klasse ' + k)));
   (html.match(/ id="[^"]*"/g) || []).forEach((i) => assert.ok(i.slice(5, -1).startsWith('perf-'), 'ID ' + i));
   assert.ok(ui.CSS.includes('repeat(auto-fit, minmax(min(260px, 100%), 1fr))'));
-  assert.ok(/@media \(max-width: 600px\) \{[^@]*\.perf-select \{[^}]*width: 100%; font-size: 16px; min-height: 44px;/.test(ui.CSS));
+  // Regel ohne Einzug steht ausserhalb jeder @media-Regel, gilt also auf allen Breiten
+  const sel = /\n\.perf-select \{([^}]*)\}/.exec(ui.CSS);
+  assert.ok(sel && sel[1].includes('font-size: 16px;') && sel[1].includes('min-height: 44px;') && sel[1].includes('width: 100%;'), ui.CSS);
+  assert.ok(!/\n {2}\.perf-select\b/.test(ui.CSS), 'eine @media-Regel überschreibt das Auswahlfeld');
+});
+
+function cssRule(selector) {
+  const m = new RegExp('\\n' + selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' \\{([^}]*)\\}').exec(ui.CSS);
+  return m ? m[1] : null;
+}
+
+test('Auswahlfeld-CSS: als Feld erkennbar (Rahmen in Akzentfarbe, eigener Pfeil), 16 px, 44 px, Fokusrahmen, nie «outline: none»', () => {
+  const s = cssRule('.perf-select');
+  ['-webkit-appearance: none;', '-moz-appearance: none;', ' appearance: none;', 'display: block;', 'width: 100%;', 'max-width: 26rem;',
+    'min-height: 44px;', 'font-size: 16px;', 'color: var(--text);', 'background-color: var(--bg);', 'border: 1px solid var(--accent);',
+    'background-repeat: no-repeat;', 'background-position: right 12px center;', 'padding: 8px 40px 8px 12px;', 'cursor: pointer;'].forEach((x) => {
+    assert.ok(s.includes(x), 'fehlt: ' + x);
+  });
+  // Pfeil als Daten-URI: Hochkommas im SVG (kein «"», das die url("…") beendete), Farbe = --accent (#38bdf8)
+  const uri = /background-image: url\("(data:image\/svg\+xml,[^"]*)"\);/.exec(s);
+  assert.ok(uri, s);
+  assert.ok(uri[1].includes("%3Csvg xmlns='http://www.w3.org/2000/svg'") && uri[1].includes("stroke='%2338bdf8'") &&
+    uri[1].includes("%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"), uri[1]);
+  assert.ok(!/[\s<>{}]/.test(uri[1].replace(/ /g, '')), 'unmaskierte Zeichen in der Daten-URI');
+  assert.equal(cssRule('.perf-select:focus-visible'), ' outline: 2px solid var(--accent); outline-offset: 2px; ');
+  assert.ok(!/outline:\s*(?:none|0)\b/.test(ui.CSS), 'outline: none');
+  assert.equal(cssRule('.perf-ac-label'), ' display: block; margin: 0 0 4px; color: var(--text-muted); font-weight: 600; font-size: 0.78rem; ');
+  assert.equal(cssRule('.perf-ac-sub:empty'), ' display: none; ');
+  assert.equal(cssRule('.perf-nw'), ' white-space: nowrap; ');
+});
+
+test('Auswahlfeld: «Flugzeug wählen», Namen ohne Kennzeichen, Unterzeile mit Kennzeichen, Masse erst nach dem Laden', () => {
+  const sub = (html) => { const m = /<div class="perf-ac-sub" id="perf-ac-sub">(.*?)<\/div>/.exec(html); return m ? m[1] : null; };
+  const regs = (r) => r.map((x) => '<span class="perf-nw">' + x + '</span>').join(' · ');
+  // Geladen: Kennzeichen und Masse des geladenen Musters; Liste nur mit Namen
+  [[C172D, ['HB-TDA', 'HB-TDB', 'HB-TDC', 'HB-TDD'], "1'157"], [P2010, ['HB-KMD'], "1'160"], [C152, ['HB-CFA', 'HB-CYF', 'HB-CYP'], '758']].forEach(([ac, r, kg]) => {
+    const html = render(wxPfa(), { aircraft: ac });
+    assert.equal(sub(html), regs(r) + ' · ' + kg + '&nbsp;kg', ac.id);
+    (html.match(/<option [^>]*>[^<]*<\/option>/g) || []).forEach((o) => assert.ok(!o.includes('HB-'), 'Kennzeichen in der Liste: ' + o));
+    assert.equal(html.split('id="perf-ac-sub"').length - 1, 1, 'Unterzeile genau einmal');
+    assert.ok(html.indexOf('</select></div><div class="perf-ac-sub"') > 0, 'Unterzeile direkt unter der Auswahl');
+  });
+  // Laden und Fehler: Kennzeichen der Wahl, keine Masse (die Flugzeugdaten fehlen)
+  let html = render(wxPfa(), { dataState: 'loading', selectedId: 'p2010', aircraft: null });
+  assert.equal(sub(html), regs(['HB-KMD']));
+  html = render(wxPfa(), { dataState: 'error', selectedId: 'c152', aircraft: null });
+  assert.equal(sub(html), regs(['HB-CFA', 'HB-CYF', 'HB-CYP']));
+  // Wahl nicht in der Liste: keine Kennzeichen eines anderen Musters; leere Unterzeile wird per CSS ausgeblendet
+  html = render(wxPfa(), { dataState: 'loading', selectedId: 'x', aircraft: null });
+  assert.equal(sub(html), '');
+  // Muster ohne Kennzeichen: nur die Masse bzw. nichts
+  const noRegs = [Object.assign({}, LIST[0], { registrations: [] }), LIST[1]];
+  assert.equal(sub(render(wxPfa(), { list: noRegs })), "1'157&nbsp;kg");
+  assert.equal(sub(render(wxPfa(), { list: noRegs, dataState: 'loading', selectedId: 'c172d', aircraft: null })), '');
+  // Ein Muster: Name ohne <select>, darunter die Unterzeile
+  html = render(wxPfa(), { list: [LIST[1]], aircraft: P2010 });
+  assert.ok(html.startsWith('<div class="perf-ac perf-ac-one">Tecnam P2010</div><div class="perf-ac-sub" id="perf-ac-sub">' + regs(['HB-KMD']) +
+    " · 1'160&nbsp;kg</div>"), html.slice(0, 200));
+  assert.ok(!html.includes('<select') && !html.includes('<label'));
+  // Ohne Liste weder Auswahl noch Unterzeile; Version ungleich: nur «Rechenfehler»
+  html = render(wxPfa(), { list: null });
+  assert.ok(!html.includes('perf-ac') && html.includes('perf-grid'));
+  const v = core.VERSION;
+  try {
+    core.VERSION = v + 1;
+    html = render(wxPfa());
+    assert.ok(!html.includes('perf-ac') && has(html, 'Rechenfehler – keine Berechnung.'), html);
+  } finally {
+    core.VERSION = v;
+  }
+  // Langer Name gekürzt, maskiert
+  const long = [Object.assign({}, LIST[0], { label: '<b>' + 'Sehr langer Name '.repeat(5) }), LIST[1]];
+  const opt = /<option value="c172d" selected>([^<]*)<\/option>/.exec(render(wxPfa(), { list: long }));
+  assert.ok(opt && opt[1].startsWith('&lt;b&gt;Sehr langer') && opt[1].endsWith('…'), opt && opt[1]);
 });
 
 test('Browsercode ohne ?., ?? und Lookbehind', () => {
@@ -1147,7 +1227,9 @@ test('boot: Wechsel zur Cessna 152 und zurück; die gespeicherte Wahl gilt beim 
   await settle();
   assert.equal(env.store['lszk-perf-aircraft'], 'c152');
   assert.ok(env.fetchUrls.some((u) => u.startsWith('perf/aircraft/c152.json?t=')));
-  assert.ok(env.content.innerHTML.includes('<option value="c152" selected>Cessna 152 · HB-CFA, HB-CYF, HB-CYP</option>'));
+  assert.ok(env.content.innerHTML.includes('<option value="c152" selected>Cessna 152</option>'));
+  assert.ok(env.content.innerHTML.includes('<div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-CFA</span> · <span class="perf-nw">HB-CYF</span> · ' +
+    '<span class="perf-nw">HB-CYP</span> · 758&nbsp;kg</div>'));
   let s = shown(env);
   assert.ok(s.includes('Start 300 m 521 m 625 m') && s.includes('Landung 219 m 432 m 520 m') && s.includes("758 kg (1'670 lb)") && s.includes(C152.footerDe), s);
   // nächster Seitenaufruf mit der gespeicherten Wahl
