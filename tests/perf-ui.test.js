@@ -342,7 +342,7 @@ test('Cessna 152 trocken (C2): Auswahl mit drei Mustern, Kopf, Zahlen, Rechenweg
   const b30 = text(block(html, '30'));
   assert.ok(b30.includes('Piste 30 · Gegenwind 7 kt'), b30);
   assert.ok(b30.includes('Start 300 m 521 m 625 m') && b30.includes('Landung 219 m 432 m 520 m'), b30);
-  assert.ok(t.includes("Eingaben: Druckhöhe 1'630 ft (QNH 1018,0 hPa, Platzhöhe 1'759 ft) · Temperatur 15,0 °C · Piste trocken Piste 30 (304° rechtweisend) · Gegenwind 7,76 kt, abgerundet 7 kt"), t);
+  assert.ok(t.includes("Eingaben: Druckhöhe 1'630 ft (QNH 1018,0 hPa, Platzhöhe 1'759 ft) · Temperatur 15,0 °C · Piste trocken gerechnet Piste 30 (304° rechtweisend) · Gegenwind 7,76 kt, abgerundet 7 kt"), t);
   assert.ok(t.includes("Start · Handbuch, Figure 5-4, Seite 5-11 Tabelle 2'000 ft / 20 °C 910 ft 1'690 ft Gegenwind 7 kt: −10 % je 9 kt, abgerundet −7 % 846,3 ft 1'571,7 ft " +
     "Gras +15 % von 910 ft = +136,5 ft 982,8 ft 1'708,2 ft in Meter (× 0,3048) 299,56 m 520,66 m aufgerundet 300 m 521 m"), t);
   assert.ok(t.includes("Landung · Handbuch, Figure 5-10, Seite 5-19 Tabelle 2'000 ft / 20 °C 520 ft 1'270 ft Gegenwind 7 kt: −10 % je 9 kt, abgerundet −7 % 483,6 ft 1'181,1 ft " +
@@ -1032,6 +1032,7 @@ test('boot: kaputtes update wirft nicht, Rechenfehler in Karte und Kurzzeile ble
   assert.ok(shown(env).includes('331 m'));
   assert.doesNotThrow(() => env.win.LszkPerf.update(evilWx()));
   assert.ok(shown(env).includes('Rechenfehler – keine Berechnung.'));
+  assert.ok(env.body.innerHTML.endsWith('<div class="perf-foot">' + ui.TEXT.advice + '</div>'), 'Pflichthinweis auch im Fehlerzustand von boot');
   assert.equal(teaserText(env), 'Start- und Landestrecke Rechenfehler – keine Berechnung');
   assert.equal(env.sel.innerHTML, '', 'Auswahl im Zustand Rechenfehler');
   assert.equal(env.box.style.display, 'block');

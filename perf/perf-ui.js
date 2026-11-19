@@ -68,6 +68,9 @@
     // Rechenweg: Lesehilfe unter den Tabellen und Zeile für eine Phase ohne Nässewert im AFM
     calcRules: 'Rundung immer zur längeren Strecke: nächsthöherer Tabellenwert, Gegenwind abgerundet, Ergebnis aufgerundet. ' +
       'Gegenwind voll angerechnet. Graszuschlag in % der Tabellen-Rollstrecke, auf beide Strecken.',
+    // dasselbe, wenn der Kern die Temperatur interpoliert hat (Tecnam); die Datenprüfung erlaubt Interpolation nur dort
+    calcRulesInterp: 'Rundung zur längeren Strecke: Druckhöhe auf den nächsthöheren Tabellenwert, Gegenwind abgerundet, Ergebnis aufgerundet. ' +
+      'Temperatur linear interpoliert. Gegenwind voll angerechnet. Graszuschlag in % der Tabellen-Rollstrecke, auf beide Strecken.',
     calcLimits: 'Nicht berücksichtigt: Pistenneigung. Kein eigener Sicherheitszuschlag.',
     calcNoWet: 'nasse Piste: kein Wert im AFM, ohne Zuschlag gerechnet'
   };
@@ -891,7 +894,7 @@
       'Druckhöhe ' + fmtInt(ceilEps(res.pressureAltitudeFt)) + '&nbsp;ft (QNH ' + fmtQnh(res.input.qnhHpa) + '&nbsp;hPa, Platzhöhe ' +
         fmtInt(af.elevation.value) + '&nbsp;ft)',
       'Temperatur ' + fmtDec(res.input.tempC, 1) + '&nbsp;°C',
-      res.input.runwayWet ? 'Piste nass' : 'Piste trocken'
+      res.input.runwayWet ? 'Piste nass gerechnet' : 'Piste trocken gerechnet'
     ].join(' · ') + '</p>');
     // Pisten mit gleicher Zeile und gleicher Tabelle teilen sich einen Block (Vergleich des fertigen HTML)
     var groups = [];
@@ -908,7 +911,12 @@
       h.push('<p><span class="perf-calc-h">' + (n === 1 ? 'Piste ' + g.ids[0] : 'Pisten ' + g.ids.slice(0, n - 1).join(', ') + ' und ' + g.ids[n - 1]) +
         '</span>' + g.body);
     });
-    h.push('<p>' + TEXT.calcRules + ' ' + TEXT.calcLimits + '</p>');
+    // Lesehilfe so, wie gerechnet wurde: Zeigt eine Schritt-Tabelle «interpoliert für» (gleiche Quelle wie phaseRows),
+    // gilt der nächsthöhere Tabellenwert nur für die Druckhöhe.
+    var interp = res.runways.some(function (rw) {
+      return rw.computed && core.PHASES.some(function (ph) { return rw[ph] && rw[ph].lookup && rw[ph].lookup.interpolated; });
+    });
+    h.push('<p>' + (interp ? TEXT.calcRulesInterp : TEXT.calcRules) + ' ' + TEXT.calcLimits + '</p>');
     h.push('</div></details>');
     return h.join('');
   }

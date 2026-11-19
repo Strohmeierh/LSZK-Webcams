@@ -257,7 +257,7 @@ test('Rechenweg K2: genauer Aufbau und Wortlaut, direkt darunter der Pflichthinw
   const html = render(wxPfa());
   const row = (label, a, b) => '<tr><th scope="row">' + label + '</th><td>' + a + '</td><td>' + b + '</td></tr>';
   const expected = '<details class="perf-details"><summary>Rechenweg und Quellen</summary><div class="perf-calc">' +
-    '<p><span class="perf-calc-h">Eingaben:</span> Druckhöhe 1\'630&nbsp;ft (QNH 1018,0&nbsp;hPa, Platzhöhe 1\'759&nbsp;ft) · Temperatur 15,0&nbsp;°C · Piste trocken</p>' +
+    '<p><span class="perf-calc-h">Eingaben:</span> Druckhöhe 1\'630&nbsp;ft (QNH 1018,0&nbsp;hPa, Platzhöhe 1\'759&nbsp;ft) · Temperatur 15,0&nbsp;°C · Piste trocken gerechnet</p>' +
     '<p><span class="perf-calc-h">Piste 30</span> (304° rechtweisend) · Gegenwind 7,76&nbsp;kt, abgerundet 7&nbsp;kt</p>' +
     '<table class="perf-steps"><thead><tr><th></th><th scope="col">Rollstrecke</th><th scope="col">über 15 m</th></tr></thead>' +
     '<tbody><tr class="perf-steps-ph"><th colspan="3" scope="rowgroup">Start <span class="perf-steps-src">· Supplement, Figure 5-1a (Section 5b), Seite 5b-3</span></th></tr>' +
@@ -279,12 +279,36 @@ test('Rechenweg K2: genauer Aufbau und Wortlaut, direkt darunter der Pflichthinw
   assert.equal(ui.TEXT.advice, 'Die Werte sind nur ein Anhaltspunkt. Für die Flugvorbereitung in jedem Fall das AFM der Maschine heranziehen.');
   assert.equal(ui.TEXT.calcRules, 'Rundung immer zur längeren Strecke: nächsthöherer Tabellenwert, Gegenwind abgerundet, Ergebnis aufgerundet. ' +
     'Gegenwind voll angerechnet. Graszuschlag in % der Tabellen-Rollstrecke, auf beide Strecken.');
+  assert.equal(ui.TEXT.calcRulesInterp, 'Rundung zur längeren Strecke: Druckhöhe auf den nächsthöheren Tabellenwert, Gegenwind abgerundet, Ergebnis aufgerundet. ' +
+    'Temperatur linear interpoliert. Gegenwind voll angerechnet. Graszuschlag in % der Tabellen-Rollstrecke, auf beide Strecken.');
   assert.equal(ui.TEXT.calcLimits, 'Nicht berücksichtigt: Pistenneigung. Kein eigener Sicherheitszuschlag.');
   assert.equal(ui.TEXT.calcNoWet, 'nasse Piste: kein Wert im AFM, ohne Zuschlag gerechnet');
   ['footerGeneric', 'ruleWind', 'ruleRound', 'ruleGrass', 'ruleWet'].forEach((k) => assert.equal(ui.TEXT[k], undefined, 'TEXT.' + k));
 });
 
+test('Rechenweg: 1 kt Gegenwind wird angerechnet (Prozentregel abgerundet), Tecnam mit interpolierter Temperatur hat die eigene Lesehilfe', () => {
+  // C172 Diesel, Piste 30 (304°), Wind 304°/1,4 kt: Gegenwind 1 kt, −10 % je 9 kt = −1,11 %, abgerundet −1 %
+  const html = render(wxPfa({ windDir: 304, windKt: 1.4 }), { detailsOpen: true });
+  assert.ok(html.includes('<th scope="row">Gegenwind 1&nbsp;kt: −10&nbsp;% je 9&nbsp;kt, abgerundet −1&nbsp;%</th>'), text(calcOf(html)));
+  assert.ok(!html.includes('nicht angerechnet'), text(calcOf(html)));
+  assert.ok(html.includes('<p>' + ui.TEXT.calcRules + ' ' + ui.TEXT.calcLimits + '</p>'), 'Cessna: nächsthöherer Tabellenwert');
+  // Tecnam bei 15 °C: zwischen den Spalten 0 und 25 °C interpoliert; auf der Spalte 25 °C und unter −25 °C nicht
+  const tec = (tempC) => calcOf(render(wxPfa({ tempC: tempC }), { aircraft: P2010, detailsOpen: true }));
+  assert.ok(tec(15).includes('interpoliert für 15,0') && tec(15).includes('<p>' + ui.TEXT.calcRulesInterp + ' ' + ui.TEXT.calcLimits + '</p>'));
+  [25, -30].forEach((tempC) => {
+    const c = tec(tempC);
+    assert.ok(!c.includes('interpoliert') && c.includes('<p>' + ui.TEXT.calcRules + ' ' + ui.TEXT.calcLimits + '</p>'), tempC + ' °C: ' + text(c));
+  });
+});
+
 /* ── Rechenweg gleich Rechnung: alle Kontrollfälle ────────── */
+
+// Hat der Kern die Temperatur interpoliert? Aus den Flugzeugdaten, ohne perf-ui.js: Achse «linear» und die Temperatur liegt
+// zwischen zwei Spalten (nicht auf einer Spalte, nicht unter der kleinsten, nicht über der grössten)
+function interpolates(ac, tempC) {
+  return core.PHASES.some((ph) => ac.charts[ph].table.axes.some((a) => a.quantity === 'temperature' && a.read === 'linear' &&
+    tempC > a.values[0] && tempC < a.values[a.values.length - 1] && !a.values.includes(tempC)));
+}
 
 // Wind zur Piste ohne den Rechenkern: Zusatz hinter dem Pistennamen und ganze kt Gegenwind; null = Piste nicht gerechnet
 function expectRunway(inp, rwy) {
@@ -318,8 +342,8 @@ test('Rechenweg gleich Rechnung: alle Kontrollfälle – Eingaben, Tabellenables
     const calc = parseCalc(html, id);
     const pa = core.pressureAltitudeFt(af.elevation.value, inp[1]);
     assert.equal(calc.inputs, 'Druckhöhe ' + ui.fmtInt(Math.ceil(pa - 1e-9)) + ' ft (QNH ' + inp[1].toFixed(1).replace('.', ',') + ' hPa, Platzhöhe ' +
-      ui.fmtInt(af.elevation.value) + ' ft) · Temperatur ' + ui.fmtDec(inp[0], 1) + ' °C · Piste ' + (inp[4] ? 'nass' : 'trocken'), id + ': Eingaben');
-    assert.equal(calc.rules, ui.TEXT.calcRules + ' ' + ui.TEXT.calcLimits, id + ': Lesehilfe');
+      ui.fmtInt(af.elevation.value) + ' ft) · Temperatur ' + ui.fmtDec(inp[0], 1) + ' °C · Piste ' + (inp[4] ? 'nass' : 'trocken') + ' gerechnet', id + ': Eingaben');
+    assert.equal(calc.rules, (interpolates(ac, inp[0]) ? ui.TEXT.calcRulesInterp : ui.TEXT.calcRules) + ' ' + ui.TEXT.calcLimits, id + ': Lesehilfe');
     assert.deepEqual(calc.groups.map((g) => g.ids).flat(), shown.map((x) => x[0].id), id + ': jede gerechnete Piste genau einmal, keine Rückenwindpiste');
     const res = core.compute(ac, af, { tempC: inp[0], qnhHpa: inp[1], windDirTrue: inp[2], windKt: inp[3], runwayWet: inp[4] });
     calc.groups.forEach((g) => {
