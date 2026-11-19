@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "quelle": "https://www.skybriefing.com/o/dabs?today",
-  "abgerufen_utc": "2026-11-19T04:03:58+00:00",
+  "abgerufen_utc": "2026-11-19T08:04:02+00:00",
   "datum": "2026-11-19",
-  "version": 1,
-  "stand_utc": "2026-11-18T14:28:00+00:00",
+  "version": 2,
+  "stand_utc": "2026-11-19T07:45:00+00:00",
   "fehler": null,
   "eintraege": [
     {
@@ -57,7 +57,7 @@
     },
     {
       "sec": 1,
-      "notam": "W3108/26",
+      "notam": "W3127/26",
       "gebiet": "LSR11",
       "fenster": [
         [
@@ -79,7 +79,7 @@
     },
     {
       "sec": 1,
-      "notam": "W3110/26",
+      "notam": "W3129/26",
       "gebiet": "LSR11A",
       "fenster": [
         [
@@ -223,15 +223,11 @@
       "gebiet": "",
       "fenster": [
         [
-          "2026-11-19T00:00:00+00:00",
-          "2026-11-19T04:00:00+00:00"
-        ],
-        [
           "2026-11-19T22:30:00+00:00",
           "2026-11-19T23:59:00+00:00"
         ]
       ],
-      "zeit_roh": "0000 - 0400, 2230 - 2359",
+      "zeit_roh": "2230 - 2359",
       "unten": "GND",
       "oben": "FL195",
       "unten_ft": 0,
