@@ -248,7 +248,7 @@ test('Cessna trocken (K2): Auswahl, Kopf, Messwerte, nur Gegenwindpiste, Zustand
   assert.ok(html.includes('<select id="perf-ac" class="perf-select" aria-describedby="perf-ac-sub"><option value="c172d" selected>Cessna 172 Diesel</option>' +
     '<option value="p2010">Tecnam P2010</option><option value="c152">Cessna 152</option></select></div>' +
     '<div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-TDA</span> · <span class="perf-nw">HB-TDB</span> · ' +
-    '<span class="perf-nw">HB-TDC</span> · <span class="perf-nw">HB-TDD</span> · 1\'157&nbsp;kg</div>'), html);
+    '<span class="perf-nw">HB-TDC</span> · <span class="perf-nw">HB-TDD</span></div><div class="perf-mass">'), html);
   assert.ok(t.includes("Maximales Abfluggewicht 1'157 kg (2'550 lb) · Kurzstart- und Kurzlandetechnik · Motor TAE 125-02-114, Propeller MTV-6-A/190-69"), t);
   assert.ok(t.includes("Messwerte MeteoSchweiz Pfäffikon ZH, 09:00 Uhr (vor 15 min): 15,0 °C · QNH 1018,0 hPa · Wind 290° / 8,0 kt, Böen 14 kt · Druckhöhe 1'630 ft"), t);
   assert.ok(t.includes('Pistenzustand laut FGZO: DRY (Stand 18.11.2026, 07:14). MeteoSchweiz hat in der letzten Stunde keinen Regen gemessen. Gerechnet für trockenes Gras. Tau, Reif, eben einsetzenden Regen und Nässe von früherem Regen erkennt die Karte nicht.'), t);
@@ -303,14 +303,18 @@ test('Tecnam (K8): Kopf, Zahlen, Faktorzeile, interpolierter Rechenweg, Pflichth
   assertClean(html, 'K8');
   const t = text(html);
   assert.ok(html.includes('<option value="p2010" selected>Tecnam P2010</option>'));
-  assert.ok(html.includes('<div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-KMD</span> · 1\'160&nbsp;kg</div>'), html);
+  assert.ok(html.includes('<div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-KMD</span></div>'), html);
   assert.ok(t.includes("Maximales Abfluggewicht 1'160 kg (2'557 lb) · Klappen T/O beim Start und LAND bei der Landung, Geschwindigkeiten nach AFM · Lycoming IO-360-M1A, Verstellpropeller MTV-15-B/193-52"), t);
   const b30 = text(block(html, '30'));
   assert.ok(b30.includes('Start 409 m 744 m 625 m') && b30.includes('Landung 423 m 897 m 520 m'), b30);
   assert.ok(t.includes('Eingerechnet nach AFM: Faktor für Abweichungen im Betrieb – Start × 1,10 (NOTE, APV5-8), Landung × 1,67 (NOTE, APV5-17).'), t);
-  assert.ok(t.includes("Start · AFM, Section 5, Ziffer 7, Seite APV5-8 Tabelle 2'000 ft / 0 °C 352 m 622 m Tabelle 2'000 ft / 25 °C 434 m 762 m interpoliert für 15,0 °C 401,2 m 706 m " +
-    'Gegenwind 7 kt: −10 m je kt = −70 m 331,2 m 636 m Gras +10 % von 401,2 m = +40,12 m 371,32 m 676,12 m Faktor für Abweichungen im Betrieb × 1,10 408,46 m 743,74 m aufgerundet 409 m 744 m'), t);
-  assert.ok(t.includes("Landung · AFM, Section 5, Ziffer 11, Seite APV5-17 Tabelle 2'000 ft / 0 °C 242 m 526 m Tabelle 2'000 ft / 25 °C 264 m 548 m interpoliert für 15,0 °C 255,2 m 539,2 m " +
+  // K8: über 15 m 744 m > 625 m, mit der Tabelle 1'060 kg 590 m (Sollrechnung tests/fixtures/gewicht_faelle.json): «möglich bis»
+  // in der Karte, darunter im Rechenweg die Zeile je Starttabelle
+  assert.ok(b30.includes("Start mit 1'160 kg laut AFM nicht möglich, möglich bis 1'060 kg."), b30);
+  assert.ok(t.includes("Start · AFM, Section 5, Ziffer 7, Seite APV5-8 · Tabelle 1'160 kg Tabelle 2'000 ft / 0 °C 352 m 622 m Tabelle 2'000 ft / 25 °C 434 m 762 m interpoliert für 15,0 °C 401,2 m 706 m " +
+    'Gegenwind 7 kt: −10 m je kt = −70 m 331,2 m 636 m Gras +10 % von 401,2 m = +40,12 m 371,32 m 676,12 m Faktor für Abweichungen im Betrieb × 1,10 408,46 m 743,74 m aufgerundet 409 m 744 m ' +
+    "Über 15 m je Starttabelle: 1'160 kg 744 m · 1'060 kg 590 m · 960 kg 453 m Landung"), t);
+  assert.ok(t.includes("Landung · AFM, Section 5, Ziffer 11, Seite APV5-17 · maximales Landegewicht 1'160 kg Tabelle 2'000 ft / 0 °C 242 m 526 m Tabelle 2'000 ft / 25 °C 264 m 548 m interpoliert für 15,0 °C 255,2 m 539,2 m " +
     'Gegenwind 7 kt: −4 m je kt = −28 m 227,2 m 511,2 m Gras +10 % von 255,2 m = +25,52 m 252,72 m 536,72 m Faktor für Abweichungen im Betrieb × 1,67 422,05 m 896,33 m aufgerundet 423 m 897 m'), t);
   assert.ok(t.includes(ui.TEXT.advice) && !t.includes('Doc. No.') && !t.includes('Die Spalte ISA'), t);
 });
@@ -335,14 +339,16 @@ test('Cessna 152 trocken (C2): Auswahl mit drei Mustern, Kopf, Zahlen, Rechenweg
   assert.equal((html.match(/<option /g) || []).length, 3);
   assert.ok(html.includes('<option value="c172d">Cessna 172 Diesel</option><option value="p2010">Tecnam P2010</option>' +
     '<option value="c152" selected>Cessna 152</option>'), html);
+  // Eine Starttabelle: Kennzeichen, darunter statt des Felds der Satz zur einzigen Starttabelle
   assert.ok(html.includes('<div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-CFA</span> · <span class="perf-nw">HB-CYF</span> · ' +
-    '<span class="perf-nw">HB-CYP</span> · 758&nbsp;kg</div>'), html);
+    '<span class="perf-nw">HB-CYP</span></div><div class="perf-mass-one">Abfluggewicht: 758&nbsp;kg – das AFM hat nur diese Starttabelle.</div>'), html);
+  assert.ok(!html.includes('<input'), 'kein Gewichtsfeld bei einer Starttabelle');
   assert.ok(t.includes("Maximales Abfluggewicht 758 kg (1'670 lb) · Kurzstart- und Kurzlandetechnik · Motor Lycoming O-235-L2C, Festpropeller"), t);
   assert.equal(block(html, '12'), null, 'Rückenwindpiste ohne Block');
   const b30 = text(block(html, '30'));
   assert.ok(b30.includes('Piste 30 · Gegenwind 7 kt'), b30);
   assert.ok(b30.includes('Start 300 m 521 m 625 m') && b30.includes('Landung 219 m 432 m 520 m'), b30);
-  assert.ok(t.includes("Eingaben: Druckhöhe 1'630 ft (QNH 1018,0 hPa, Platzhöhe 1'759 ft) · Temperatur 15,0 °C · Piste trocken gerechnet Piste 30 (304° rechtweisend) · Gegenwind 7,76 kt, abgerundet 7 kt"), t);
+  assert.ok(t.includes("Eingaben: Gewicht 758 kg (einzige Starttabelle) · Druckhöhe 1'630 ft (QNH 1018,0 hPa, Platzhöhe 1'759 ft) · Temperatur 15,0 °C · Piste trocken gerechnet Piste 30 (304° rechtweisend) · Gegenwind 7,76 kt, abgerundet 7 kt"), t);
   assert.ok(t.includes("Start · Handbuch, Figure 5-4, Seite 5-11 Tabelle 2'000 ft / 20 °C 910 ft 1'690 ft Gegenwind 7 kt: −10 % je 9 kt, abgerundet −7 % 846,3 ft 1'571,7 ft " +
     "Gras +15 % von 910 ft = +136,5 ft 982,8 ft 1'708,2 ft in Meter (× 0,3048) 299,56 m 520,66 m aufgerundet 300 m 521 m"), t);
   assert.ok(t.includes("Landung · Handbuch, Figure 5-10, Seite 5-19 Tabelle 2'000 ft / 20 °C 520 ft 1'270 ft Gegenwind 7 kt: −10 % je 9 kt, abgerundet −7 % 483,6 ft 1'181,1 ft " +
@@ -509,7 +515,7 @@ test('Escaping: Quelle, FGZO, Auswahl, Kennzeichen, Texte aus den Daten, Quellen
   const list = [{ id: 'c172d', label: 'C <i>1</i>', file: 'c172d.json', registrations: ['HB-<s>X'] }, LIST[1]];
   html = render(wxPfa(), { list });
   assert.ok(html.includes('<option value="c172d" selected>C &lt;i&gt;1&lt;/i&gt;</option>'), html);
-  assert.ok(html.includes('<div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-&lt;s&gt;X</span> · 1\'157&nbsp;kg</div>'), html);
+  assert.ok(html.includes('<div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-&lt;s&gt;X</span></div>'), html);
   const ac = clone(C172D);
   ac.techniqueDe = '<u>t</u>';
   ac.variantDe = '<u>v</u>';
@@ -523,8 +529,8 @@ test('Escaping: Quelle, FGZO, Auswahl, Kennzeichen, Texte aus den Daten, Quellen
   ac.charts.landing.ref.page = '<s>p</s>';
   html = render(wxPfa(), { aircraft: ac, notice: 'Hinweis <u>x</u>' });
   ['<u>', '<script', '<img', '<b>', '<i>', '<s>'].forEach((s) => assert.ok(!html.includes(s), s));
-  ['&lt;u&gt;t&lt;/u&gt;', '&lt;u&gt;v&lt;/u&gt;', 'Start <span class="perf-steps-src">· &lt;i&gt;s&lt;/i&gt;, &lt;b&gt;f&lt;/b&gt;, Seite 5b-3</span>',
-    'Figure 5-11, Seite &lt;s&gt;p&lt;/s&gt;</span>', '<div class="perf-note" role="status">Hinweis &lt;u&gt;x&lt;/u&gt;</div>'].forEach((s) => assert.ok(html.includes(s), s));
+  ['&lt;u&gt;t&lt;/u&gt;', '&lt;u&gt;v&lt;/u&gt;', 'Start <span class="perf-steps-src">· &lt;i&gt;s&lt;/i&gt;, &lt;b&gt;f&lt;/b&gt;, Seite 5b-3 · Tabelle 1\'157&nbsp;kg</span>',
+    'Figure 5-11, Seite &lt;s&gt;p&lt;/s&gt; · maximales Landegewicht 1\'157&nbsp;kg</span>', '<div class="perf-note" role="status">Hinweis &lt;u&gt;x&lt;/u&gt;</div>'].forEach((s) => assert.ok(html.includes(s), s));
   // Nicht mehr angezeigt: Fusszeile, Anmerkungen, Bedingungen, Seitenkennung und Ableseregel der Daten
   ['&lt;u&gt;f', 'n()', 'src=c', '172SPHBUS', '&lt;u&gt;r'].forEach((s) => assert.ok(!html.includes(s), 'noch angezeigt: ' + s));
   const p = clone(P2010);
@@ -645,7 +651,7 @@ test('Auswahl: ein Muster ohne select, Laden und Fehler mit erreichbarer Auswahl
   let html = render(wxPfa(), { list: [LIST[0]] });
   assert.ok(!html.includes('<select'));
   assert.ok(html.includes('<div class="perf-ac perf-ac-one">Cessna 172 Diesel</div><div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-TDA</span> · ' +
-    '<span class="perf-nw">HB-TDB</span> · <span class="perf-nw">HB-TDC</span> · <span class="perf-nw">HB-TDD</span> · 1\'157&nbsp;kg</div>'), html);
+    '<span class="perf-nw">HB-TDB</span> · <span class="perf-nw">HB-TDC</span> · <span class="perf-nw">HB-TDD</span></div><div class="perf-mass">'), html);
   html = render(wxPfa(), { dataState: 'loading', selectedId: 'p2010', aircraft: null });
   assert.ok(html.includes('<option value="p2010" selected>'));
   html = render(wxPfa(), { dataState: 'error', selectedId: 'c172d', aircraft: null, notice: 'Flugzeugdaten für «Tecnam P2010» nicht verfügbar – Standardmuster gewählt.' });
@@ -748,16 +754,20 @@ test('Auswahlfeld-CSS: als Feld erkennbar (Rahmen in Akzentfarbe, eigener Pfeil)
   assert.equal(cssRule('.perf-nw'), ' white-space: nowrap; ');
 });
 
-test('Auswahlfeld: «Flugzeug wählen», Namen ohne Kennzeichen, Unterzeile mit Kennzeichen, Masse erst nach dem Laden', () => {
+test('Auswahlfeld: «Flugzeug wählen», Namen ohne Kennzeichen, Unterzeile mit Kennzeichen, darunter nach dem Laden das Gewichtsfeld', () => {
   const sub = (html) => { const m = /<div class="perf-ac-sub" id="perf-ac-sub">(.*?)<\/div>/.exec(html); return m ? m[1] : null; };
   const regs = (r) => r.map((x) => '<span class="perf-nw">' + x + '</span>').join(' · ');
-  // Geladen: Kennzeichen und Masse des geladenen Musters; Liste nur mit Namen
-  [[C172D, ['HB-TDA', 'HB-TDB', 'HB-TDC', 'HB-TDD'], "1'157"], [P2010, ['HB-KMD'], "1'160"], [C152, ['HB-CFA', 'HB-CYF', 'HB-CYP'], '758']].forEach(([ac, r, kg]) => {
+  // Geladen: Kennzeichen des geladenen Musters (die Masse steht nicht mehr in der Unterzeile, sondern im Hinweis des
+  // Gewichtsfelds und in der Kopfzeile); Liste nur mit Namen; direkt unter der Unterzeile das Gewichtsfeld bzw. bei einer
+  // Starttabelle der Satz dazu
+  [[C172D, ['HB-TDA', 'HB-TDB', 'HB-TDC', 'HB-TDD'], '<div class="perf-mass">'], [P2010, ['HB-KMD'], '<div class="perf-mass">'],
+    [C152, ['HB-CFA', 'HB-CYF', 'HB-CYP'], '<div class="perf-mass-one">']].forEach(([ac, r, next]) => {
     const html = render(wxPfa(), { aircraft: ac });
-    assert.equal(sub(html), regs(r) + ' · ' + kg + '&nbsp;kg', ac.id);
+    assert.equal(sub(html), regs(r), ac.id);
     (html.match(/<option [^>]*>[^<]*<\/option>/g) || []).forEach((o) => assert.ok(!o.includes('HB-'), 'Kennzeichen in der Liste: ' + o));
     assert.equal(html.split('id="perf-ac-sub"').length - 1, 1, 'Unterzeile genau einmal');
     assert.ok(html.indexOf('</select></div><div class="perf-ac-sub"') > 0, 'Unterzeile direkt unter der Auswahl');
+    assert.ok(html.indexOf(regs(r) + '</div>' + next) > 0, ac.id + ': Gewichtsfeld direkt unter der Unterzeile');
   });
   // Laden und Fehler: Kennzeichen der Wahl, keine Masse (die Flugzeugdaten fehlen)
   let html = render(wxPfa(), { dataState: 'loading', selectedId: 'p2010', aircraft: null });
@@ -767,15 +777,15 @@ test('Auswahlfeld: «Flugzeug wählen», Namen ohne Kennzeichen, Unterzeile mit 
   // Wahl nicht in der Liste: keine Kennzeichen eines anderen Musters; leere Unterzeile wird per CSS ausgeblendet
   html = render(wxPfa(), { dataState: 'loading', selectedId: 'x', aircraft: null });
   assert.equal(sub(html), '');
-  // Muster ohne Kennzeichen: nur die Masse bzw. nichts
+  // Muster ohne Kennzeichen: leere Unterzeile (per CSS ausgeblendet)
   const noRegs = [Object.assign({}, LIST[0], { registrations: [] }), LIST[1]];
-  assert.equal(sub(render(wxPfa(), { list: noRegs })), "1'157&nbsp;kg");
+  assert.equal(sub(render(wxPfa(), { list: noRegs })), '');
   assert.equal(sub(render(wxPfa(), { list: noRegs, dataState: 'loading', selectedId: 'c172d', aircraft: null })), '');
-  // Ein Muster: Name ohne <select>, darunter die Unterzeile
+  // Ein Muster: Name ohne <select> und ohne dessen Beschriftung, darunter die Unterzeile und das Gewichtsfeld
   html = render(wxPfa(), { list: [LIST[1]], aircraft: P2010 });
   assert.ok(html.startsWith('<div class="perf-ac perf-ac-one">Tecnam P2010</div><div class="perf-ac-sub" id="perf-ac-sub">' + regs(['HB-KMD']) +
-    " · 1'160&nbsp;kg</div>"), html.slice(0, 200));
-  assert.ok(!html.includes('<select') && !html.includes('<label'));
+    '</div><div class="perf-mass">'), html.slice(0, 200));
+  assert.ok(!html.includes('<select') && !html.includes('<label class="perf-ac-label"'));
   // Ohne Liste weder Auswahl noch Unterzeile; Version ungleich: nur «Rechenfehler»
   html = render(wxPfa(), { list: null });
   assert.ok(!html.includes('perf-ac') && html.includes('perf-grid'));
@@ -826,9 +836,11 @@ const INDEX_3 = { schema: 2, default: 'c172d', aircraft: INDEX_RAW.aircraft.conc
 // und ein <select id="perf-ac"> werden zu Objekten (open bzw. value, wie im Browser aus dem Markup vorbelegt).
 // Jedes Schreiben mit <select> legt einen neuen Knoten an (env.selectNodes). Ein Element mit Kindern liefert als
 // innerHTML deren Inhalt hintereinander (so zeigt #perf-content Auswahl und Karte zusammen).
+// Gewichtsfeld: jedes Schreiben mit <input id="perf-mass-in"> legt ein neues, leeres Feld an (env.inputNodes; kein value
+// im Markup), der Fehlertext darunter (.perf-mass-err) ist ein eigenes Element mit textContent.
 function fakeEl(env, id, style) {
   return {
-    id, html: '', style: Object.assign({}, style), listeners: {}, children: [], details: null, select: null, open: false,
+    id, html: '', style: Object.assign({}, style), listeners: {}, children: [], details: null, select: null, input: null, err: null, open: false,
     get innerHTML() { return this.children.length ? this.children.map((c) => c.innerHTML).join('') : this.html; },
     set innerHTML(v) {
       this.html = String(v);
@@ -844,15 +856,37 @@ function fakeEl(env, id, style) {
         this.select = { id: 'perf-ac', value: pick ? pick[1] : '' };
         env.selectNodes++;
       }
+      this.input = /<input id="perf-mass-in"[^>]*>/.test(this.html) ? fakeInput(env) : null;
+      if (this.input) env.inputNodes++;
+      this.err = this.html.includes('<div class="perf-mass-err" id="perf-mass-err" role="alert"></div>') ? { textContent: '' } : null;
     },
     querySelector(q) {
       if (q === 'details.perf-details') return this.details;
       if (q === 'select') return this.select;
+      if (q === 'input') return this.input;
+      if (q === '.perf-mass-err') return this.err;
       return null;
     },
     addEventListener(type, fn) { this.listeners[type] = fn; },
     appendChild(c) { this.children.push(c); if (c.id) env.nodes[c.id] = c; return c; },
     getAttribute: (n) => (n === 'data-airfield' ? 'lszk' : null)
+  };
+}
+// Gewichtsfeld: value schreibt nur das Skript (gezählt; bei Fokus zusätzlich als Fehler, denn Cursor und Tastatur gingen
+// verloren), typed() ist das Tippen des Benutzers; Attribute über setAttribute (aria-invalid)
+function fakeInput(env) {
+  let value = '';
+  return {
+    id: 'perf-mass-in', attrs: {},
+    get value() { return value; },
+    set value(v) {
+      value = String(v);
+      env.valueWrites++;
+      if (env.doc.activeElement === this) env.focusedValueWrites++;
+    },
+    typed(v) { value = String(v); },
+    setAttribute(n, v) { this.attrs[n] = String(v); },
+    getAttribute(n) { return Object.prototype.hasOwnProperty.call(this.attrs, n) ? this.attrs[n] : null; }
   };
 }
 
@@ -863,7 +897,7 @@ function fakeBrowser(opts) {
   opts = opts || {};
   const env = {
     clock: NOW, fetchUrls: [], failPerf: !!opts.failPerf, intervals: [], timeouts: [], docListeners: {},
-    writes: 0, writesBy: {}, selectNodes: 0, nodes: {},
+    writes: 0, writesBy: {}, selectNodes: 0, nodes: {}, inputNodes: 0, valueWrites: 0, focusedValueWrites: 0, sessionWrites: 0,
     store: Object.assign({}, opts.store),
     files: Object.assign({
       'perf/aircraft/index.json': INDEX_RAW,
@@ -882,7 +916,7 @@ function fakeBrowser(opts) {
   if (opts.noContent) delete env.nodes['perf-content'];
   const styles = [];
   const doc = {
-    readyState: opts.readyState || 'interactive', hidden: false,
+    readyState: opts.readyState || 'interactive', hidden: false, activeElement: null,
     head: { appendChild: (el) => { styles.push(el); } },
     getElementById: (id) => {
       if (opts.noCard) return null;
@@ -901,6 +935,8 @@ function fakeBrowser(opts) {
       setItem: (k, v) => { env.store[k] = String(v); },
       removeItem: (k) => { delete env.store[k]; }
     },
+    // sessionStorage nutzt das Skript nicht (das Gewicht gilt nur im Speicher der Seite); jeder Zugriff wird gezählt
+    sessionStorage: { getItem: () => { env.sessionWrites++; return null; }, setItem: () => { env.sessionWrites++; }, removeItem: () => { env.sessionWrites++; } },
     setInterval: (fn, ms) => { env.intervals.push({ fn, ms }); return env.intervals.length; },
     setTimeout: (fn, ms) => { env.timeouts.push({ fn, ms }); return env.timeouts.length; },
     fetch: (url) => {
@@ -914,8 +950,9 @@ function fakeBrowser(opts) {
     }
   };
   Object.assign(env, { win, doc, card, content, box, teaser, styles });
-  // vom Skript angelegt: #perf-sel (Auswahl) und #perf-body (Karteninhalt)
+  // vom Skript angelegt: #perf-sel (Auswahl), #perf-mass (Kennzeichen und Gewichtsfeld) und #perf-body (Karteninhalt)
   Object.defineProperty(env, 'sel', { get: () => env.nodes['perf-sel'] || null });
+  Object.defineProperty(env, 'mass', { get: () => env.nodes['perf-mass'] || null });
   Object.defineProperty(env, 'body', { get: () => env.nodes['perf-body'] || null });
   return env;
 }
@@ -949,7 +986,7 @@ test('boot: Kurzzeile und Karte versteckt bis zum ersten update, dann Zahlen nac
   assert.equal(env.box.style.display, 'none');
   assert.equal(env.content.innerHTML, '');
   assert.equal(env.teaser.innerHTML, '');
-  assert.deepEqual(env.content.children.map((c) => c.id), ['perf-sel', 'perf-body'], 'Unterbehälter in #perf-content angelegt');
+  assert.deepEqual(env.content.children.map((c) => c.id), ['perf-sel', 'perf-mass', 'perf-body'], 'Unterbehälter in #perf-content angelegt');
   assert.equal(env.styles.length, 1);
   assert.equal(env.styles[0].textContent, ui.CSS);
   assert.equal(env.win.LszkPerf.version, ui.VERSION);
@@ -1154,7 +1191,7 @@ test('boot: Der Takt schreibt die Karte neu, das Auswahlfeld nicht (gleicher Kno
   // Neuer Messwert mit anderem Ergebnis: Karte und Kurzzeile neu, die Auswahl bleibt derselbe Knoten
   env.win.LszkPerf.update(wxPfa({ time: env.clock - 5 * MIN, tempC: 25, qnhHpa: 1015, windDir: 214, windKt: 10 }));     // K6
   await settle();
-  assert.equal(teaserText(env), 'Cessna 172 Diesel · Wind quer · beide Pisten Rollstrecke: Start 375 m · Landung 288 m');
+  assert.equal(teaserText(env), 'Cessna 172 Diesel · Wind quer Rollstrecke: Start 375 m · Landung 288 m');
   assert.ok(env.teaser.innerHTML.includes('<b class="perf-amber">375&nbsp;m</b>'));
   assert.equal(env.writesBy['perf-sel'], w['perf-sel']);
   assert.equal(env.selectNodes, nodes0);
@@ -1207,7 +1244,7 @@ test('boot: alte Seite aus dem Cache (Karte im Panel, ohne Box und Kurzzeile) �
   await settle();
   assert.equal(env.box, null);
   assert.equal(env.card.style.display, 'none');
-  assert.deepEqual(env.content.children.map((c) => c.id), ['perf-sel', 'perf-body']);
+  assert.deepEqual(env.content.children.map((c) => c.id), ['perf-sel', 'perf-mass', 'perf-body']);
   assert.equal(env.card.listeners.toggle, undefined, 'kein toggle auf der Karte');
   env.win.LszkPerf.update(wxPfa());
   assert.equal(env.card.style.display, 'block', 'Karte beim ersten update sichtbar');
@@ -1275,7 +1312,7 @@ test('boot: Wechsel zur Cessna 152 und zurück; die gespeicherte Wahl gilt beim 
   assert.ok(env.fetchUrls.some((u) => u.startsWith('perf/aircraft/c152.json?t=')));
   assert.equal(env.sel.querySelector('select').value, 'c152');
   assert.ok(env.content.innerHTML.includes('<div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-CFA</span> · <span class="perf-nw">HB-CYF</span> · ' +
-    '<span class="perf-nw">HB-CYP</span> · 758&nbsp;kg</div>'));
+    '<span class="perf-nw">HB-CYP</span></div><div class="perf-mass-one">Abfluggewicht: 758&nbsp;kg – das AFM hat nur diese Starttabelle.</div>'));
   let s = shown(env);
   assert.ok(s.includes('Start 300 m 521 m 625 m') && s.includes('Landung 219 m 432 m 520 m') && s.includes("758 kg (1'670 lb)") && s.includes('Start · Handbuch, Figure 5-4, Seite 5-11') && s.includes(ui.TEXT.advice), s);
   assert.equal(teaserText(env), 'Cessna 152 · Piste 30 Rollstrecke: Start 300 m · Landung 219 m');
@@ -1433,4 +1470,276 @@ test('boot: veraltete Antworten werden verworfen (Musterwechsel und FGZO-Abruf)'
   await settle();
   const s = shown(env);
   assert.ok(!s.includes('STANDING WATER') && !s.includes('gesperrt') && s.includes('DRY (Stand 18.11.2026, 08:59)') && s.includes('Start 331 m 492 m'), s);
+});
+
+/* ── Browserteil: Gewichtsfeld ─────────────────────────────── */
+
+// Sollzeilen des Planers (tests/fixtures/gewicht_faelle.json): Rollstrecke Start auf Piste 30 im Fall K2 je Gewicht
+const GEWICHT = readJson('tests/fixtures/gewicht_faelle.json');
+const TABLES_KG = [C172D.mass.kg].concat(C172D.charts.takeoff.lowerWeights.map((e) => e.mass.kg));
+function k2Start(massKg) {
+  const g = GEWICHT.find((x) => x[0] === 'K2' && x[4] === massKg);
+  return g[6]['30'][0][TABLES_KG.indexOf(g[5])][0];
+}
+const massInput = (env) => env.mass.querySelector('input');
+const massErr = (env) => env.mass.querySelector('.perf-mass-err');
+// Tippen wie im Browser: Wert im Feld, dann «input» (steigt vom Feld zum Behälter #perf-mass auf)
+function typeMass(env, v) {
+  const el = massInput(env);
+  el.typed(v);
+  env.mass.listeners.input({ target: el });
+  return el;
+}
+// «change»: Verlassen des Felds, «Fertig» oder Enter
+function changeMass(env, v) {
+  const el = massInput(env);
+  if (v !== undefined) el.typed(v);
+  env.mass.listeners.change({ target: el });
+  return el;
+}
+// Verlassen des Felds: Fokus weg, «change» (wenn geändert), dann «focusout»
+function blurMass(env, changed) {
+  const el = massInput(env);
+  env.doc.activeElement = null;
+  if (changed) env.mass.listeners.change({ target: el });
+  env.mass.listeners.focusout({ target: el });
+  return el;
+}
+const massTimers = (env) => env.timeouts.filter((x) => x.ms === ui.MASS_DEBOUNCE_MS);
+const headOf = (env) => { const m = /<div class="perf-head">(.*?)<\/div>/.exec(env.body.innerHTML); return m ? text(m[1]).trim() : null; };
+const K2_MAX = () => 'Cessna 172 Diesel · Piste 30 Rollstrecke: Start ' + k2Start(null) + ' m · Landung 265 m';
+async function bootK2(t, opts) {
+  const env = startBrowser(t, opts);
+  await settle();
+  env.win.LszkPerf.update(wxPfa());
+  await settle();
+  return env;
+}
+
+test('boot: Gewichtsfeld – Höchstgewicht im Feld, Tippen rechnet erst nach 700 ms Ruhe, change sofort, Fehlertext und aria-invalid ohne Neuschreiben', async (t) => {
+  const env = await bootK2(t);
+  const el = massInput(env);
+  assert.ok(el, 'Feld nach dem Laden');
+  assert.equal(el.value, '1157', 'Höchstgewicht im Feld');
+  assert.equal(massErr(env).textContent, '');
+  assert.equal(ui.MASS_DEBOUNCE_MS, 700);
+  assert.ok(headOf(env).startsWith("Maximales Abfluggewicht 1'157 kg (2'550 lb)"), headOf(env));
+  assert.equal(teaserText(env), K2_MAX());
+  const w0 = env.writesBy['perf-mass'], n0 = env.inputNodes;
+  // Fokus, Tippen «1», «11», «111», «1110»: keine Rechnung und kein Fehler vor 700 ms Ruhe; ältere Takte verfallen
+  env.doc.activeElement = el;
+  const body0 = env.body.innerHTML, teaser0 = env.teaser.innerHTML, k0 = massTimers(env).length;
+  ['1', '11', '111', '1110'].forEach((v) => typeMass(env, v));
+  assert.equal(env.body.innerHTML, body0, 'gerechnet vor 700 ms Ruhe');
+  assert.equal(env.teaser.innerHTML, teaser0);
+  assert.equal(massErr(env).textContent, '', 'Fehler beim Tippen');
+  const timers = massTimers(env).slice(k0);
+  assert.equal(timers.length, 4, 'je Tastendruck ein Takt');
+  timers.slice(0, 3).forEach((x) => x.fn());
+  assert.equal(env.body.innerHTML, body0, 'ein überholter Takt rechnet');
+  timers[3].fn();
+  assert.ok(headOf(env).startsWith("Abfluggewicht 1'110 kg: Start nach der kleinsten AFM-Tabelle (1'111 kg), Landung mit dem maximalen Landegewicht 1'157 kg"), headOf(env));
+  assert.equal(teaserText(env), "Cessna 172 Diesel · 1'110 kg · Piste 30 Rollstrecke: Start " + k2Start(1110) + ' m · Landung 265 m');
+  assert.equal(el.value, '1110', 'der getippte Wert bleibt');
+  // change: sofort, ohne Takt
+  const k1 = massTimers(env).length;
+  changeMass(env, '1133');
+  assert.equal(massTimers(env).length, k1);
+  assert.ok(headOf(env).startsWith("Abfluggewicht 1'133 kg: Start nach der AFM-Tabelle für 1'134 kg"), headOf(env));
+  assert.ok(teaserText(env).includes("1'133 kg · Piste 30 Rollstrecke: Start " + k2Start(1133) + ' m'), teaserText(env));
+  // ungültig: Fehlertext am Feld und in der Karte, aria-invalid, keine Zahl in Karte und Kurzzeile
+  changeMass(env, '115');
+  const e115 = ui.parseMass('115', C172D).error;
+  assert.equal(massErr(env).textContent, e115);
+  assert.equal(el.getAttribute('aria-invalid'), 'true');
+  assert.ok(shown(env).includes(e115.replace(/ /g, ' ')), shown(env));
+  assert.equal(teaserText(env), 'Start- und Landestrecke · Cessna 172 Diesel ' + ui.TEASER.massError);
+  assert.ok(!env.body.innerHTML.includes('perf-grid') && !/\d&nbsp;m/.test(env.body.innerHTML + env.teaser.innerHTML), 'Zahl bei ungültigem Gewicht');
+  changeMass(env, '1200');
+  assert.equal(massErr(env).textContent, ui.parseMass('1200', C172D).error);
+  assert.equal(el.getAttribute('aria-invalid'), 'true');
+  changeMass(env, " 1'110 ");
+  assert.equal(massErr(env).textContent, '');
+  assert.equal(el.getAttribute('aria-invalid'), 'false');
+  assert.ok(teaserText(env).includes("1'110 kg · Piste 30 Rollstrecke: Start " + k2Start(1110) + ' m'), teaserText(env));
+  // Fehlertext und aria-invalid ohne Neuschreiben des Behälters: derselbe Knoten, der getippte Wert bleibt, nie bei Fokus geschrieben
+  assert.equal(env.writesBy['perf-mass'], w0, 'Behälter des Gewichtsfelds neu geschrieben');
+  assert.equal(env.inputNodes, n0);
+  assert.equal(massInput(env), el);
+  assert.equal(el.value, " 1'110 ");
+  assert.equal(env.focusedValueWrites, 0, 'Feldwert bei Fokus geschrieben');
+  // Ereignisse anderer Elemente im Behälter zählen nicht
+  env.mass.listeners.change({ target: { id: 'anderes', value: '600' } });
+  env.mass.listeners.input({ target: { id: 'anderes', value: '600' } });
+  env.mass.listeners.focusout({ target: { id: 'anderes', value: '' } });
+  assert.ok(teaserText(env).includes("1'110 kg"), teaserText(env));
+  assert.equal(massTimers(env).length, k1);
+});
+
+test('boot: leeres Feld beim Verlassen – wieder das Höchstgewicht, und es steht im Feld; ein offener Takt verfällt', async (t) => {
+  const env = await bootK2(t);
+  const el = massInput(env);
+  env.doc.activeElement = el;
+  changeMass(env, '1110');
+  assert.ok(teaserText(env).includes("1'110 kg"));
+  // geleert: «change» zeigt den Fehler, «focusout» setzt auf das Höchstgewicht
+  el.typed('');
+  env.mass.listeners.change({ target: el });
+  assert.equal(massErr(env).textContent, ui.TEXT.massEmpty);
+  blurMass(env, false);
+  assert.equal(el.value, '1157');
+  assert.equal(massErr(env).textContent, '');
+  assert.equal(el.getAttribute('aria-invalid'), 'false');
+  assert.ok(headOf(env).startsWith('Maximales Abfluggewicht'), headOf(env));
+  assert.equal(teaserText(env), K2_MAX());
+  // nur Leerzeichen und Apostroph gelten als leer
+  env.doc.activeElement = el;
+  changeMass(env, '1110');
+  el.typed(" ' ");
+  blurMass(env, true);
+  assert.equal(el.value, '1157');
+  assert.equal(teaserText(env), K2_MAX());
+  // ein gültiges Gewicht bleibt beim Verlassen stehen
+  env.doc.activeElement = el;
+  el.typed('1133');
+  blurMass(env, true);
+  assert.equal(el.value, '1133');
+  assert.ok(teaserText(env).includes("1'133 kg"));
+  // geleert mit offenem Takt: Verlassen setzt zurück, der Takt danach übernimmt nichts
+  env.doc.activeElement = el;
+  typeMass(env, '');
+  const pending = massTimers(env).slice(-1)[0];
+  blurMass(env, true);
+  pending.fn();
+  assert.equal(el.value, '1157');
+  assert.equal(massErr(env).textContent, '');
+  assert.equal(teaserText(env), K2_MAX());
+  assert.equal(env.focusedValueWrites, 0);
+});
+
+test('boot: 100 Takte bei unveränderter Eingabe – derselbe Feldknoten, kein innerHTML auf #perf-mass, Fokus, Wert und Entwurf bleiben', async (t) => {
+  const env = await bootK2(t);
+  const el = massInput(env);
+  env.doc.activeElement = el;
+  typeMass(env, '1133');
+  massTimers(env).slice(-1)[0].fn();
+  assert.ok(teaserText(env).includes("1'133 kg"));
+  const w = env.writesBy['perf-mass'], n = env.inputNodes, vw = env.valueWrites;
+  // offener Entwurf (getippt, noch nicht übernommen) über alle Takte
+  typeMass(env, '1110');
+  const pending = massTimers(env).slice(-1)[0];
+  for (let i = 0; i < 100; i++) {
+    env.clock += MIN;
+    if (i % 2) env.win.LszkPerf._tick(); else env.intervals[0].fn();
+    if (i % 20 === 0) {
+      env.win.LszkPerf.update(wxPfa({ time: env.clock - 10 * MIN }));
+      await settle();
+    }
+  }
+  assert.equal(env.writesBy['perf-mass'], w, 'Behälter des Gewichtsfelds neu geschrieben');
+  assert.equal(env.inputNodes, n, 'neues Feld angelegt');
+  assert.equal(massInput(env), el);
+  assert.equal(env.valueWrites, vw, 'Feldwert vom Takt geschrieben');
+  assert.equal(env.focusedValueWrites, 0);
+  assert.equal(el.value, '1110');
+  assert.ok(teaserText(env).includes("1'133 kg") && env.writesBy['perf-body'] > 50, 'der Takt übernimmt den Entwurf');
+  pending.fn();
+  assert.ok(teaserText(env).includes("1'110 kg"), teaserText(env));
+});
+
+test('boot: Musterwechsel – zurück auf das Höchstgewicht, auch beim Zurückwechseln, ein offener Takt verfällt; Cessna 152 ohne Feld', async (t) => {
+  const env = await bootK2(t);
+  env.doc.activeElement = massInput(env);
+  changeMass(env, '1110');
+  typeMass(env, '1133');
+  const pending = massTimers(env).slice(-1)[0];
+  env.doc.activeElement = null;
+  choose(env, 'p2010');
+  assert.equal(massInput(env), null, 'während des Ladens kein Feld');
+  pending.fn();
+  await settle();
+  let el = massInput(env);
+  assert.equal(el.value, '1160');
+  assert.ok(headOf(env).startsWith("Maximales Abfluggewicht 1'160 kg"), headOf(env));
+  assert.ok(teaserText(env).startsWith('Tecnam P2010 · Piste 30 Rollstrecke'), teaserText(env));
+  changeMass(env, '1000');
+  assert.ok(teaserText(env).startsWith("Tecnam P2010 · 1'000 kg · Piste 30"), teaserText(env));
+  choose(env, 'c172d');
+  await settle();
+  el = massInput(env);
+  assert.equal(el.value, '1157');
+  assert.ok(headOf(env).startsWith("Maximales Abfluggewicht 1'157 kg"));
+  assert.equal(teaserText(env), K2_MAX());
+  choose(env, 'c152');
+  await settle();
+  assert.equal(massInput(env), null, 'Cessna 152 ohne Feld');
+  assert.ok(env.mass.innerHTML.includes('<div class="perf-mass-one">Abfluggewicht: 758&nbsp;kg – das AFM hat nur diese Starttabelle.</div>'));
+  assert.ok(teaserText(env).startsWith('Cessna 152 · Piste 30'));
+  assert.equal(env.focusedValueWrites, 0);
+});
+
+test('boot: Tageswechsel in Zürich – zurück auf das Höchstgewicht, aber nicht, solange das Feld den Fokus hat', async (t) => {
+  const env = await bootK2(t);
+  const el = massInput(env);
+  changeMass(env, '1110');                          // 18.11.2026, 09:15 Uhr in Zürich
+  env.clock = Date.UTC(2026, 10, 18, 22, 59);       // 23:59 Uhr, gleicher Tag
+  env.win.LszkPerf._tick();
+  assert.ok(headOf(env).startsWith("Abfluggewicht 1'110 kg"), 'vor Mitternacht zurückgesetzt: ' + headOf(env));
+  env.clock = Date.UTC(2026, 10, 18, 23, 1);        // 19.11., 00:01 Uhr
+  env.win.LszkPerf._tick();
+  assert.ok(headOf(env).startsWith('Maximales Abfluggewicht'), headOf(env));
+  assert.equal(el.value, '1157', 'Höchstgewicht im Feld');
+  // mit Fokus: kein Rücksetzen, auch nicht über Takt und neue Messwerte; beim Verlassen zurück
+  env.doc.activeElement = el;
+  changeMass(env, '1133');                          // 19.11.
+  env.clock = Date.UTC(2026, 10, 19, 23, 5);        // 20.11., 00:05 Uhr
+  env.win.LszkPerf._tick();
+  env.intervals[0].fn();
+  env.win.LszkPerf.update(wxPfa({ time: env.clock - 10 * MIN }));
+  await settle();
+  assert.ok(headOf(env).startsWith("Abfluggewicht 1'133 kg"), 'mit Fokus zurückgesetzt: ' + headOf(env));
+  assert.equal(el.value, '1133');
+  assert.equal(env.focusedValueWrites, 0);
+  blurMass(env, false);
+  assert.equal(el.value, '1157');
+  assert.ok(headOf(env).startsWith('Maximales Abfluggewicht'));
+  assert.equal(teaserText(env), K2_MAX());
+  // neu getippt am neuen Tag: gilt bis zum nächsten Tageswechsel
+  env.doc.activeElement = el;
+  typeMass(env, '1110');
+  massTimers(env).slice(-1)[0].fn();
+  env.doc.activeElement = null;
+  env.clock += 60 * MIN;
+  env.win.LszkPerf._tick();
+  assert.ok(headOf(env).startsWith("Abfluggewicht 1'110 kg"), headOf(env));
+});
+
+test('boot: Gewicht nur im Speicher – kein localStorage, kein sessionStorage; nach dem Neuladen und nach einem Rechenfehler das Höchstgewicht', async (t) => {
+  const env = await bootK2(t);
+  env.doc.activeElement = massInput(env);
+  typeMass(env, '1110');
+  massTimers(env).slice(-1)[0].fn();
+  changeMass(env, '1133');
+  blurMass(env, false);
+  assert.ok(teaserText(env).includes("1'133 kg"));
+  assert.deepEqual(env.store, {}, 'localStorage beschrieben');
+  assert.equal(env.sessionWrites, 0, 'sessionStorage benutzt');
+  const next = fakeBrowser({ store: env.store, initialWx: wxPfa() });
+  ui.boot(next.win);
+  await settle();
+  assert.equal(next.mass.querySelector('input').value, '1157');
+  assert.ok(text(next.body.innerHTML).includes("Maximales Abfluggewicht 1'157 kg"));
+  // Rechenfehler leert das Feld; beim nächsten gültigen update gilt wieder das Höchstgewicht
+  env.win.LszkPerf.update(evilWx());
+  assert.equal(env.mass.innerHTML, '', 'Gewichtsfeld im Zustand Rechenfehler');
+  env.win.LszkPerf.update(wxPfa({ time: env.clock - 10 * MIN }));
+  await settle();
+  assert.equal(massInput(env).value, '1157');
+  assert.ok(headOf(env).startsWith('Maximales Abfluggewicht'), headOf(env));
+  assert.equal(teaserText(env), K2_MAX());
+  // Quelltext: kein sessionStorage, localStorage nur über die drei Helfer, gespeichert nur Muster und Auf-/Zuklappen
+  const src = fs.readFileSync(path.join(ROOT, 'perf', 'perf-ui.js'), 'utf8');
+  assert.ok(!src.includes('sessionStorage'));
+  assert.equal(src.split('win.localStorage.').length - 1, 3);
+  assert.deepEqual([...src.matchAll(/storeSet\(([^,)]+),/g)].map((m) => m[1]).sort(), ['OPEN_KEY', 'STORE_KEY', 'k']);
 });

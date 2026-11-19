@@ -51,6 +51,56 @@
           [[399, 703], [502, 878], [620, 1075], [752, 1296]]
         ]
       },
+      "lowerWeights": [
+        {
+          "mass": { "kg": 1060, "lb": 2337 },
+          "title": "Take-Off Performances, Weight 1060 kg (2337 lb)",
+          "ref": { "figure": "Section 5, Ziffer 7", "page": "APV5-9" },
+          "conditionsRefDe": "Bedingungen und Corrections auf APV5-9 wie auf APV5-8 (Klappen T/O, 60 KIAS, 65 KIAS in 15 m Höhe). Die NOTE mit dem Faktor 1,10 steht einmal auf APV5-8 unter der Überschrift von Ziffer 7 und gilt für das ganze Kapitel.",
+          "table": {
+            "type": "grid",
+            "axes": [
+              { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000], "read": "nextHigher", "below": "lowest", "above": "none" },
+              { "quantity": "temperature", "unit": "degC", "values": [-25, 0, 25, 50], "read": "linear", "below": "lowest", "above": "none" }
+            ],
+            "outputs": [{ "id": "groundRoll", "unit": "m" }, { "id": "overObstacle", "unit": "m" }],
+            "obstacle": { "value": 50, "unit": "ft" },
+            "cells": [
+              [[189, 342], [238, 427], [293, 523], [356, 630]],
+              [[206, 372], [259, 464], [320, 569], [388, 685]],
+              [[225, 405], [283, 505], [349, 619], [424, 745]],
+              [[246, 441], [309, 550], [382, 674], [463, 812]],
+              [[268, 480], [338, 599], [417, 734], [506, 884]],
+              [[294, 523], [370, 653], [456, 800], [553, 964]],
+              [[321, 571], [404, 713], [499, 873], [605, 1052]]
+            ]
+          }
+        },
+        {
+          "mass": { "kg": 960, "lb": 2116 },
+          "title": "Take-Off Performances, Weight 960 kg (2116 lb)",
+          "ref": { "figure": "Section 5, Ziffer 7", "page": "APV5-10" },
+          "conditionsRefDe": "Bedingungen und Corrections auf APV5-10 wie auf APV5-8 (Klappen T/O, 60 KIAS, 65 KIAS in 15 m Höhe). Die NOTE mit dem Faktor 1,10 steht einmal auf APV5-8 unter der Überschrift von Ziffer 7 und gilt für das ganze Kapitel.",
+          "table": {
+            "type": "grid",
+            "axes": [
+              { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000], "read": "nextHigher", "below": "lowest", "above": "none" },
+              { "quantity": "temperature", "unit": "degC", "values": [-25, 0, 25, 50], "read": "linear", "below": "lowest", "above": "none" }
+            ],
+            "outputs": [{ "id": "groundRoll", "unit": "m" }, { "id": "overObstacle", "unit": "m" }],
+            "obstacle": { "value": 50, "unit": "ft" },
+            "cells": [
+              [[149, 272], [187, 340], [231, 416], [281, 501]],
+              [[162, 296], [204, 369], [252, 452], [306, 545]],
+              [[177, 322], [223, 402], [275, 492], [334, 593]],
+              [[194, 350], [244, 438], [301, 536], [365, 645]],
+              [[212, 382], [266, 477], [329, 584], [399, 703]],
+              [[231, 416], [291, 520], [360, 636], [436, 766]],
+              [[253, 454], [319, 567], [393, 694], [477, 836]]
+            ]
+          }
+        }
+      ],
       "corrections": [
         { "kind": "headwind", "type": "absolutePer", "amount": -10, "amountUnit": "m", "per": 1, "unit": "kt" },
         { "kind": "surface", "type": "addPercentOf", "surface": "grass", "surfaceCondition": "dry", "percent": 10, "of": "groundRoll" },

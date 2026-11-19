@@ -154,35 +154,35 @@ test('Kurzzeile mit Ergebnis: Kopf und Rollstrecke Start und Landung, Farbe nach
     ['K3 nass (FGZO)', parts(wxPfa(), { fgzo: fgzo({ runway_condition: 'STANDING WATER' }) }), [C + 'Piste 30', roll('397 m', '265 m')]],
     ['K14n nass, nur über 15 m zu lang: amber', parts(wxPfa({ tempC: 10.8, qnhHpa: 998.2, windDir: 247, windKt: 8.7, rain1hMm: 0.4 })),
       [C + 'Piste 30', roll('[amber]437 m', '282 m')]],
-    ['K5 windstill', parts(CALM()), [C + 'windstill · beide Pisten', roll('[amber]352 m', '279 m')]],
-    ['K5n windstill nass', parts(CALM({ rain1hMm: 0.4 })), [C + 'windstill · beide Pisten', roll('[amber]423 m', '279 m')]],
-    ['K12 ohne Windrichtung (wieder im Kopf)', parts(NODIR()), [C + 'ohne Windrichtung · beide Pisten', roll('328 m', '270 m')]],
-    ['K6 Wind quer', parts(wxPfa({ tempC: 25, qnhHpa: 1015, windDir: 214, windKt: 10 })), [C + 'Wind quer · beide Pisten', roll('[amber]375 m', '[amber]288 m')]],
+    ['K5 windstill', parts(CALM()), [C + 'windstill', roll('[amber]352 m', '279 m')]],
+    ['K5n windstill nass', parts(CALM({ rain1hMm: 0.4 })), [C + 'windstill', roll('[amber]423 m', '279 m')]],
+    ['K12 ohne Windrichtung (wieder im Kopf)', parts(NODIR()), [C + 'ohne Windrichtung', roll('328 m', '270 m')]],
+    ['K6 Wind quer', parts(wxPfa({ tempC: 25, qnhHpa: 1015, windDir: 214, windKt: 10 })), [C + 'Wind quer', roll('[amber]375 m', '[amber]288 m')]],
     ['K17 215°', parts(wxPfa({ tempC: 25, qnhHpa: 1015, windDir: 215, windKt: 10 })), [C + 'Piste 30', roll('375 m', '[amber]288 m')]],
     ['K8 Tecnam', parts(wxPfa(), { aircraft: P2010 }), [HEAD + 'Tecnam P2010 · Piste 30', roll('[amber]409 m', '[amber]423 m')]],
     ['K10a Tecnam, Start ohne Wert', parts(wxPfa({ tempC: 10, qnhHpa: 1013.25, windDir: 304, windKt: 22 }), { aircraft: P2010 }),
       [HEAD + 'Tecnam P2010 · Piste 30', roll('[nov]kein Wert', '[amber]314 m')]],
     ['K11b Gegenwind 41 kt', parts(wxPfa({ qnhHpa: 1013.25, windDir: 304, windKt: 41 })), [C + 'Piste 30', roll('[nov]kein Wert', '[nov]kein Wert')]],
     ['T1 Tecnam windstill 25 °C: rot', parts(CALM({ tempC: 25 }), { aircraft: P2010 }),
-      [HEAD + 'Tecnam P2010 · windstill · beide Pisten', roll('[red]526 m', '[amber]485 m')]],
+      [HEAD + 'Tecnam P2010 · windstill', roll('[red]526 m', '[amber]485 m')]],
     ['T4 Tecnam 50 °C: zweimal rot', parts(CALM({ tempC: 50 }), { aircraft: P2010 }),
-      [HEAD + 'Tecnam P2010 · windstill · beide Pisten', roll('[red]637 m', '[red]526 m')]],
+      [HEAD + 'Tecnam P2010 · windstill', roll('[red]637 m', '[red]526 m')]],
     ['C2 Cessna 152', parts(wxPfa(), { aircraft: C152 }), [HEAD + 'Cessna 152 · Piste 30', roll('300 m', '219 m')]],
     ['C3 Cessna 152 nass (ohne Nässezuschlag im AFM)', parts(wxPfa(), { aircraft: C152, fgzo: fgzo({ runway_condition: 'STANDING WATER' }) }),
       [HEAD + 'Cessna 152 · Piste 30', roll('300 m', '219 m')]],
-    ['C5 Cessna 152 windstill 40 °C', parts(CALM({ tempC: 40 }), { aircraft: C152 }), [HEAD + 'Cessna 152 · windstill · beide Pisten', roll('[amber]370 m', '246 m')]],
-    ['gemischter Belag: «bis»', parts(CALM(), { airfield: mixed }), [C + 'windstill · beide Pisten', roll('bis [amber]352 m', 'bis 279 m')]],
+    ['C5 Cessna 152 windstill 40 °C', parts(CALM({ tempC: 40 }), { aircraft: C152 }), [HEAD + 'Cessna 152 · windstill', roll('[amber]370 m', '246 m')]],
+    ['gemischter Belag: «bis»', parts(CALM(), { airfield: mixed }), [C + 'windstill', roll('bis [amber]352 m', 'bis 279 m')]],
     ['gemischter Belag gespiegelt: grösste Rollstrecke von der zweiten Piste', parts(CALM(), { airfield: pavedFirst }),
-      [C + 'windstill · beide Pisten', roll('bis 352 m', 'bis 279 m')]],
+      [C + 'windstill', roll('bis 352 m', 'bis 279 m')]],
     ['gespiegelt, Tecnam 40 °C: rot von der zweiten Piste', parts(CALM({ tempC: 40, qnhHpa: 1000 }), { aircraft: P2010, airfield: pavedFirst }),
-      [HEAD + 'Tecnam P2010 · windstill · beide Pisten', roll('bis [red]647 m', 'bis [red]529 m')]],
+      [HEAD + 'Tecnam P2010 · windstill', roll('bis [red]647 m', 'bis [red]529 m')]],
     ['drei Pisten', parts(CALM(), { airfield: three }), [C + 'windstill · 3 Pisten', roll('[amber]352 m', '279 m')]],
     ['eine Piste, windstill', parts(CALM(), { airfield: one }), [C + 'windstill · Piste 12', roll('[amber]352 m', '279 m')]],
     ['eine Piste, ohne Windrichtung', parts(NODIR(), { airfield: one }), [C + 'ohne Windrichtung · Piste 12', roll('328 m', '270 m')]],
     ['eine Piste ohne Wert, die andere mit: «kein Wert», nie die Zahl der anderen Piste', parts(CALM(), { aircraft: withoutGrass(C172D, 'takeoff'), airfield: mixed }),
-      [C + 'windstill · beide Pisten', roll('[nov]kein Wert', 'bis 279 m')]],
+      [C + 'windstill', roll('[nov]kein Wert', 'bis 279 m')]],
     ['dasselbe gespiegelt', parts(CALM(), { aircraft: withoutGrass(C172D, 'takeoff'), airfield: pavedFirst }),
-      [C + 'windstill · beide Pisten', roll('[nov]kein Wert', 'bis 279 m')]]
+      [C + 'windstill', roll('[nov]kein Wert', 'bis 279 m')]]
   ];
   cases.forEach(([label, p, expected]) => {
     assert.equal(p.kind, 'result', label);
@@ -194,7 +194,7 @@ test('Kurzzeile mit Ergebnis: Kopf und Rollstrecke Start und Landung, Farbe nach
     '<span class="perf-t-head">Cessna 172 Diesel · Piste&nbsp;30</span>' +
     '<span class="perf-t-row">Rollstrecke: <span class="perf-nw">Start <b>331&nbsp;m</b></span> · <span class="perf-nw">Landung <b>265&nbsp;m</b></span></span>');
   assert.equal(parts(wxPfa({ tempC: 25, qnhHpa: 1015, windDir: 214, windKt: 10 })).teaser,
-    '<span class="perf-t-head">Cessna 172 Diesel · Wind quer · beide Pisten</span>' +
+    '<span class="perf-t-head">Cessna 172 Diesel · Wind quer</span>' +
     '<span class="perf-t-row">Rollstrecke: <span class="perf-nw">Start <b class="perf-amber">375&nbsp;m</b><span class="perf-sr"> (' + SR_AMBER + ')</span></span> · ' +
     '<span class="perf-nw">Landung <b class="perf-amber">288&nbsp;m</b><span class="perf-sr"> (' + SR_AMBER + ')</span></span></span>');
   const t1 = parts(CALM({ tempC: 25 }), { aircraft: P2010 }).teaser;
@@ -219,7 +219,7 @@ test('Kurzzeile ohne Vorbehaltszeilen: Nässe, «unbekannt», unsichere DRY-Meld
     ['kein FGZO, kein Regenwert (unbekannt)', parts(wxPfa({ rain1hMm: null, rainMmH: null }), { fgzo: null }), DRY],
     ['Standardmuster gewählt', parts(wxPfa(), { notice: 'Flugzeugdaten für «Tecnam P2010» nicht verfügbar – Standardmuster gewählt.' }), DRY],
     ['ohne Windrichtung, nass und gesperrt', parts(NODIR({ rain1hMm: 0.4 }), { fgzo: fgzo({ flaeche: 'gesperrt', flaeche_grund: 'x' }) }),
-      [HEAD + 'Cessna 172 Diesel · ohne Windrichtung · beide Pisten', roll('[amber]394 m', '270 m')]]
+      [HEAD + 'Cessna 172 Diesel · ohne Windrichtung', roll('[amber]394 m', '270 m')]]
   ];
   cases.forEach(([label, p, expected]) => {
     assert.deepEqual(marked(p.teaser), expected, label);
@@ -327,10 +327,13 @@ function gleichlauf(ctx, label, stats) {
   assert.deepEqual(it.map(([c]) => c), ['perf-t-head', 'perf-t-row'], label + ': Elemente');
   const blocks = cardBlocks(p.body);
   assert.ok(blocks.length > 0, label);
-  const hint = p.body.includes(ui.TEXT.calm) ? 'windstill · ' : p.body.includes('<div class="perf-hint">' + ui.TEXT.nodir + '</div>') ? 'ohne Windrichtung · '
-    : p.body.includes(ui.TEXT.cross) ? 'Wind quer · ' : '';
-  const where = blocks.length === 1 ? 'Piste ' + blocks[0].id : (blocks.length === 2 ? 'beide Pisten' : blocks.length + ' Pisten');
-  assert.equal(it[0][1], ctx.aircraft.label + ' · ' + hint + where, label + ': Kopf');
+  const hint = p.body.includes(ui.TEXT.calm) ? 'windstill' : p.body.includes('<div class="perf-hint">' + ui.TEXT.nodir + '</div>') ? 'ohne Windrichtung'
+    : p.body.includes(ui.TEXT.cross) ? 'Wind quer' : '';
+  // Entscheid E3: zwei Pisten ohne Zusatz («beide Pisten» entfällt), mehr als zwei mit Anzahl
+  const where = blocks.length === 1 ? 'Piste ' + blocks[0].id : (blocks.length === 2 ? '' : blocks.length + ' Pisten');
+  // Das eingegebene Gewicht steht im Kopf genau dann, wenn es vom Höchstgewicht abweicht (die Karte nennt es dann im Kopf)
+  const kg = /<div class="perf-head">Abfluggewicht ([\d']+)&nbsp;kg:/.exec(p.body);
+  assert.equal(it[0][1], [ctx.aircraft.label, kg ? kg[1] + ' kg' : '', hint, where].filter((x) => x).join(' · '), label + ': Kopf');
   const phases = rowOf(it[1][2]);
   [['Start', 0], ['Landung', 1]].forEach(([phase, k]) => {
     const r = phases[k];
@@ -433,7 +436,7 @@ test('Eine Rechnung: core.compute je renderParts genau einmal (ab Messwerten) bz
       }
     }
     spy.mock.resetCalls();
-    assert.equal(ui.renderHtml(ctx), p.sel + p.body, 'Fall ' + i + ': renderHtml = sel + body');
+    assert.equal(ui.renderHtml(ctx), p.sel + p.mass + p.body, 'Fall ' + i + ': renderHtml = sel + mass + body');
     assert.equal(spy.mock.callCount(), calls, 'Fall ' + i + ': renderHtml rechnet auch nur einmal');
   });
   // selectedId: ab geladenen Daten die id des geladenen Musters, vorher die gewünschte
@@ -455,8 +458,8 @@ test('Hinweiswörter für Screenreader: hinter jeder gefärbten Zahl, passend zu
   assert.ok(!p.teaser.includes('perf-sr'), p.teaser);
   // sichtbar bleibt nur die Zahl: Text ohne die versteckten Wörter
   p = parts(wxPfa({ tempC: 25, qnhHpa: 1015, windDir: 214, windKt: 10 }));
-  assert.equal(text(visible(p.teaser)).trim(), 'Cessna 172 Diesel · Wind quer · beide Pisten Rollstrecke: Start 375 m · Landung 288 m');
-  assert.equal(text(p.teaser).trim(), 'Cessna 172 Diesel · Wind quer · beide Pisten Rollstrecke: Start 375 m (' + SR_AMBER + ') · Landung 288 m (' + SR_AMBER + ')');
+  assert.equal(text(visible(p.teaser)).trim(), 'Cessna 172 Diesel · Wind quer Rollstrecke: Start 375 m · Landung 288 m');
+  assert.equal(text(p.teaser).trim(), 'Cessna 172 Diesel · Wind quer Rollstrecke: Start 375 m (' + SR_AMBER + ') · Landung 288 m (' + SR_AMBER + ')');
   // CSS: übliches Clip-Muster, keine Anzeige
   const m = /\n\.perf-sr \{([^}]*)\}/.exec(ui.CSS);
   assert.ok(m, 'Regel .perf-sr fehlt');
@@ -473,7 +476,7 @@ test('Maskierung: Marke in Name, Pistenkennung, Liste, FGZO-Feldern und Hinweis 
   const ESC = '&lt;img src=x onerror=alert(1)&gt;';
   const raw = (p, label) => {
     assert.ok(!/<img/i.test(p.teaser), label + ': Marke roh in der Kurzzeile');
-    assert.ok(!/<img/i.test(p.sel + p.body), label + ': Marke roh in der Karte');
+    assert.ok(!/<img/i.test(p.sel + p.mass + p.body), label + ': Marke roh in der Karte');
     assertCleanTeaser(p.teaser, label);
   };
   // Name der Flugzeugdatei: im Kopf, mit und ohne Ergebnis
@@ -502,7 +505,7 @@ test('Maskierung: Marke in Name, Pistenkennung, Liste, FGZO-Feldern und Hinweis 
   [list, [list[0]]].forEach((l, i) => {
     p = parts(wxPfa(), { list: l });
     raw(p, 'Liste ' + i);
-    assert.ok(!p.teaser.includes('&lt;img') && (p.sel + p.body).includes(ESC), 'Liste ' + i);
+    assert.ok(!p.teaser.includes('&lt;img') && (p.sel + p.mass + p.body).includes(ESC), 'Liste ' + i);
   });
   [fgzo({ runway_condition: MARK, updated: MARK }), fgzo({ flaeche: 'gesperrt', flaeche_grund: MARK }), fgzo({ updated: MARK, fetched_at_utc: OLD }),
     fgzo({ flaeche: 'gesperrt', flaeche_grund: MARK, fetched_at_utc: OLD, runway_condition: MARK }), fgzo({ updated: '17.11.2026 ' + MARK })].forEach((f, i) => {
@@ -615,7 +618,7 @@ test('Schalter «Richtwert AFM» eingeschaltet: eigenes Element direkt nach dem 
   ctxs.forEach(([label, ctx]) => {
     const off = ui.renderParts(Object.assign({}, ctx, { afmTag: false }));
     const on = ui.renderParts(Object.assign({}, ctx, { afmTag: true }));
-    assert.equal(on.sel + on.body, off.sel + off.body, label + ': Karte');
+    assert.equal(on.sel + on.mass + on.body, off.sel + off.mass + off.body, label + ': Karte');
     assert.ok(!off.teaser.includes('perf-t-tag'), label + ': Zusatz trotz Stellung aus');
     // Eine Phase zeigt eine Zahl genau dann, wenn sie ein <b> enthält; bei zweimal «kein Wert» kein Zusatz
     if (off.kind === 'result' && off.teaser.includes('<b')) {
@@ -638,7 +641,7 @@ test('Schalter «Richtwert AFM» eingeschaltet: eigenes Element direkt nach dem 
   // Beispiele: eine Piste, windstill nass, ohne Windrichtung
   assert.deepEqual(marked(parts(wxPfa(), { afmTag: true }).teaser), [HEAD + 'Cessna 172 Diesel · Piste 30', 'perf-t-tag: Richtwert AFM', roll('331 m', '265 m')]);
   assert.deepEqual(marked(parts(CALM({ rain1hMm: 0.4 }), { afmTag: true }).teaser),
-    [HEAD + 'Cessna 172 Diesel · windstill · beide Pisten', 'perf-t-tag: Richtwert AFM', roll('[amber]423 m', '279 m')]);
+    [HEAD + 'Cessna 172 Diesel · windstill', 'perf-t-tag: Richtwert AFM', roll('[amber]423 m', '279 m')]);
   assert.deepEqual(marked(parts(NODIR(), { afmTag: true }).teaser),
-    [HEAD + 'Cessna 172 Diesel · ohne Windrichtung · beide Pisten', 'perf-t-tag: Richtwert AFM', roll('328 m', '270 m')]);
+    [HEAD + 'Cessna 172 Diesel · ohne Windrichtung', 'perf-t-tag: Richtwert AFM', roll('328 m', '270 m')]);
 });

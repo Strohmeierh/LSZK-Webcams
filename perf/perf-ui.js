@@ -4,7 +4,13 @@
    Lädt perf/aircraft/index.json, die gewählte Flugzeugdatei, perf/airfields/<data-airfield>.json und
    data/fgzo_status.json, rechnet mit window.LszkPerfCore (perf/perf.js) und schreibt Kurzzeile und Karte aus einem
    Modell (buildModel, eine Rechnung). In #perf-content legt das Skript #perf-sel (Auswahl, nur bei geänderter Liste
-   neu geschrieben) und #perf-body (Karteninhalt) an. Auf- und Zuklappen merkt sich lszk-perf-open.
+   neu geschrieben), #perf-mass (Kennzeichen und Feld für das Abfluggewicht, nur bei anderem Muster oder neu geladenen
+   Daten neu geschrieben, sonst bleibt das Feld derselbe Knoten) und #perf-body (Karteninhalt) an. Auf- und Zuklappen
+   merkt sich lszk-perf-open.
+   Abfluggewicht: Vorgabe ist das Höchstgewicht. Eine Eingabe gilt nur im Speicher der Seite (kein localStorage) und
+   fällt beim Musterwechsel und beim Tageswechsel (Zürich) zurück auf das Höchstgewicht. Gerechnet wird der Start mit der
+   AFM-Tabelle für das nächsthöhere Gewicht, die Landung mit dem maximalen Landegewicht. Ist der Start nicht möglich,
+   nennt die Karte je Piste, bis zu welchem Gewicht er laut AFM möglich wäre (nicht bei nasser Piste ohne AFM-Wert).
    Fehlen Box und Kurzzeile (alte Seite aus dem Cache), erscheint wie bisher nur die Karte.
    Die Kurzzeile zeigt Muster, Piste und die Rollstrecke für Start und Landung; die Farbe der Zahl folgt dem
    schlimmsten Fall der Karte. Nässe und Hinweise stehen nur in der aufgeklappten Karte. Platzstatus und Sperre zeigt
@@ -24,7 +30,7 @@
 }(typeof self !== 'undefined' ? self : this, function (core) {
   'use strict';
 
-  var VERSION = 4;
+  var VERSION = 5;
 
   var STALE_MIN = 45;          // Messwerte älter: keine Zahlen
   var FUTURE_MIN = 5;          // Messzeit weiter in der Zukunft: keine Zahlen
@@ -37,6 +43,8 @@
   var TZ = 'Europe/Zurich';
   var FGZO_TEXT_MAX = 40;      // Pistenzustand und Zeitstempel der FGZO
   var LABEL_MAX = 60;
+  var MASS_DEBOUNCE_MS = 700;  // Abfluggewicht: nach so viel Ruhe beim Tippen rechnen (kein Fehler bei «1», «10», «105»)
+  var NBSP = ' ';         // geschütztes Leerzeichen in reinen Texten (Fehlertext des Gewichtsfelds)
   // Entscheid F-C: Regen von MeteoSchweiz macht die Piste nass (neben einer FGZO-Meldung ungleich DRY)
   var WET_BY_RAIN = true;
   // Entscheid des Benutzers offen: «Richtwert AFM» sichtbar in der Kurzzeile (direkt nach dem Kopf, nur wenn mindestens
@@ -72,7 +80,15 @@
     calcRulesInterp: 'Rundung zur längeren Strecke: Druckhöhe auf den nächsthöheren Tabellenwert, Gegenwind abgerundet, Ergebnis aufgerundet. ' +
       'Temperatur linear interpoliert. Gegenwind voll angerechnet. Graszuschlag in % der Tabellen-Rollstrecke, auf beide Strecken.',
     calcLimits: 'Nicht berücksichtigt: Pistenneigung. Kein eigener Sicherheitszuschlag.',
-    calcNoWet: 'nasse Piste: kein Wert im AFM, ohne Zuschlag gerechnet'
+    calcNoWet: 'nasse Piste: kein Wert im AFM, ohne Zuschlag gerechnet',
+    // Abfluggewicht: Beschriftung des Felds, Fehlertexte (reiner Text, ohne HTML; Über- und Untergrenze mit Zahlen in
+    // parseMass) und Sätze der Zeile «Start möglich bis …» je Piste
+    massLabel: 'Abfluggewicht in kg',
+    massEmpty: 'Bitte das Abfluggewicht in kg eingeben.',
+    massNotInt: 'Bitte eine ganze Zahl in kg eingeben, zum Beispiel 1050.',
+    limitLowest: 'Für ein tieferes Gewicht hat das AFM keine Starttabelle.',
+    limitWet: 'Ob er mit weniger Gewicht möglich wäre, lässt sich bei nasser Piste nicht sagen: Das AFM nennt dafür keinen Wert.',
+    limitNoValue: 'Für tiefere Gewichte gibt es keinen Wert.'
   };
 
   // Kurzzeile unter der Ampel: Zustände ohne Zahlen, Wörter im Kopf, Zeile mit der Rollstrecke und die versteckten
@@ -92,6 +108,7 @@
     aboveRange: 'Über dem Tabellenbereich des AFM – kein Wert',
     noDirection: 'Windrichtung fehlt – keine Berechnung',
     noRunway: 'Keine Piste mit Gegenwind – keine Berechnung',
+    massError: 'Gewicht ungültig – keine Berechnung',
     calm: 'windstill',
     nodir: 'ohne Windrichtung',
     cross: 'Wind quer',
@@ -104,7 +121,7 @@
 
   // Feldnamen stammen aus dem Adapter bzw. dem Kern, nie aus Daten; unbekannte heissen «Messwert»
   var FIELD_LABEL = {
-    tempC: 'Temperatur', qnhHpa: 'QNH', windKt: 'Wind', windDir: 'Windrichtung', windDirTrue: 'Windrichtung'
+    tempC: 'Temperatur', qnhHpa: 'QNH', windKt: 'Wind', windDir: 'Windrichtung', windDirTrue: 'Windrichtung', massKg: 'Abfluggewicht'
   };
   function fieldLabel(f) { return Object.prototype.hasOwnProperty.call(FIELD_LABEL, f) ? FIELD_LABEL[f] : 'Messwert'; }
   var SURFACE_LABEL = { grass: 'Gras', paved: 'Hartbelag' };
@@ -128,6 +145,20 @@
     '.perf-ac-one { font-weight: 600; }',
     '.perf-ac-sub { color: var(--text-muted); font-size: 0.78rem; margin: 0 0 8px; }',
     '.perf-ac-sub:empty { display: none; }',
+    // Feld für das Abfluggewicht: Rahmen und Fokus wie das Auswahlfeld, 16 px auf allen Breiten (kein Zoom beim Fokus
+    // unter iOS), Fingermass 44 px; ungültige Eingabe mit rotem Rahmen und Fehlertext darunter (leer: ausgeblendet)
+    '.perf-mass { margin: 0 0 8px; }',
+    '.perf-mass-label { display: block; margin: 0 0 4px; color: var(--text-muted); font-weight: 600; font-size: 0.78rem; }',
+    '.perf-mass-in { box-sizing: border-box; display: block; width: 100%; max-width: 9rem; min-height: 44px; margin: 0; font: inherit; ' +
+      'font-size: 16px; font-weight: 600; line-height: 1.25; font-variant-numeric: tabular-nums; color: var(--text); ' +
+      'background-color: var(--bg); border: 1px solid var(--accent); border-radius: 8px; padding: 8px 12px; ' +
+      '-webkit-appearance: none; -moz-appearance: none; appearance: none; }',
+    '.perf-mass-in:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }',
+    '.perf-mass-in[aria-invalid="true"] { border-color: #ef4444; }',
+    '.perf-mass-hint { color: var(--text-muted); font-size: 0.78rem; margin: 4px 0 0; }',
+    '.perf-mass-err { color: #f87171; font-size: 0.82rem; font-weight: 600; margin: 4px 0 0; }',
+    '.perf-mass-err:empty { display: none; }',
+    '.perf-mass-one { color: var(--text-muted); font-size: 0.78rem; margin: 0 0 8px; }',
     '.perf-nw { white-space: nowrap; }',
     '.perf-head { color: var(--text-muted); margin: 0 0 6px; }',
     '.perf-meas { color: var(--text-muted); margin: 0 0 8px; }',
@@ -463,6 +494,39 @@
     return null;
   }
 
+  /* ── Abfluggewicht ─────────────────────────────────────────────
+     Eingabe als Text: Leerzeichen und Apostrophe (' ’) fallen weg, dann nur ganze kg mit 1 bis 5 Ziffern. Erlaubt ist
+     das halbe Höchstgewicht (aufgerundet) bis zum Höchstgewicht. Die Untergrenze fängt Tippfehler wie «115» statt «1150»,
+     die sonst still mit der leichtesten Starttabelle gerechnet würden. Ergebnis { kg, error }: genau eines ist null. */
+  function massMinKg(ac) { return Math.ceil(ac.mass.kg / 2); }
+
+  function parseMass(text, ac) {
+    var t = String(text == null ? '' : text).replace(/[\s'’]/g, '');
+    if (!t) return { kg: null, error: TEXT.massEmpty };
+    if (!/^\d{1,5}$/.test(t)) return { kg: null, error: TEXT.massNotInt };
+    var kg = Number(t), max = ac.mass.kg, min = massMinKg(ac);
+    if (kg > max) {
+      return { kg: null, error: fmtInt(kg) + NBSP + 'kg liegt über dem maximalen Abfluggewicht von ' + fmtInt(max) + NBSP + 'kg – keine Berechnung.' };
+    }
+    if (kg < min) return { kg: null, error: fmtInt(kg) + NBSP + 'kg ist unplausibel tief (unter ' + fmtInt(min) + NBSP + 'kg) – keine Berechnung.' };
+    return { kg: kg, error: null };
+  }
+
+  // Gewicht und Starttabelle für Kopf und Kurzzeile, solange es keine Rechnung gibt (gleiche Wahl wie im Kern);
+  // mit Rechnung gilt deren Feld mass. inputKg null: keine Eingabe, gerechnet mit dem Höchstgewicht.
+  function massInfo(ac, massKg) {
+    var tables = core.takeoffTables(ac);
+    var ti = core.pickTakeoffTable(tables, massKg);
+    var lightest = tables[tables.length - 1].kg;
+    return {
+      inputKg: massKg, maxKg: ac.mass.kg, maxLb: ac.mass.lb, tableKg: tables[ti].kg, tableIndex: ti, tableCount: tables.length,
+      lightestKg: lightest, belowLowest: massKg !== null && massKg < lightest
+    };
+  }
+
+  // Weicht die Eingabe vom Höchstgewicht ab? (Eingabe = Höchstgewicht zählt wie keine Eingabe)
+  function massDiffers(mass) { return !!mass && mass.inputKg !== null && mass.inputKg !== mass.maxKg; }
+
   /* ── HTML-Bausteine ────────────────────────────────────────── */
   // Pflichthinweis am Fuss der Karte: fester Text in jedem Zustand (footerDe der Flugzeugdaten wird nicht mehr angezeigt)
   function footerHtml() { return '<div class="perf-foot">' + TEXT.advice + '</div>'; }
@@ -481,9 +545,9 @@
       }).join('') + '</select></div>';
   }
 
-  // Unterzeile der Auswahl: Kennzeichen des gewählten Musters, nach dem Laden der Flugzeugdaten auch die Masse.
-  // Ein Eintrag, der nicht in der Liste steht, zeigt keine Kennzeichen (nie die eines anderen Musters).
-  function subLineHtml(list, selectedId, ac) {
+  // Unterzeile der Auswahl: Kennzeichen des gewählten Musters (das Höchstgewicht steht im Hinweis des Gewichtsfelds und
+  // in der Kopfzeile). Ein Eintrag, der nicht in der Liste steht, zeigt keine Kennzeichen (nie die eines anderen Musters).
+  function subLineHtml(list, selectedId) {
     if (!list || !list.length) return '';
     var entry = null;
     if (list.length < 2) entry = list[0];
@@ -491,12 +555,35 @@
     var parts = (entry && Array.isArray(entry.registrations) ? entry.registrations : []).map(function (r) {
       return '<span class="perf-nw">' + esc(r) + '</span>';
     });
-    if (ac) parts.push(fmtInt(ac.mass.kg) + '&nbsp;kg');
     return '<div class="perf-ac-sub" id="perf-ac-sub">' + parts.join(' · ') + '</div>';
   }
 
-  function headHtml(ac) {
-    var parts = ['Maximales Abfluggewicht ' + fmtInt(ac.mass.kg) + '&nbsp;kg (' + fmtInt(ac.mass.lb) + '&nbsp;lb)'];
+  // Feld für das Abfluggewicht. Hängt nur am Muster (Höchstgewicht, Tabellengewichte), nie an der Eingabe oder am
+  // Fehler: So bleibt das Feld beim Neuschreiben der Karte derselbe Knoten. Kein value im HTML (boot setzt den Wert).
+  // Ein Muster mit nur einer Starttabelle bekommt kein Feld (jede Eingabe ergäbe dasselbe), nur den Satz dazu.
+  function massFieldHtml(ac) {
+    var tables = core.takeoffTables(ac);
+    if (tables.length < 2) {
+      return '<div class="perf-mass-one">Abfluggewicht: ' + fmtInt(ac.mass.kg) + '&nbsp;kg – das AFM hat nur diese Starttabelle.</div>';
+    }
+    var kgs = tables.map(function (t) { return fmtInt(t.kg); });
+    return '<div class="perf-mass"><label class="perf-mass-label" for="perf-mass-in">' + TEXT.massLabel + '</label>' +
+      '<input id="perf-mass-in" class="perf-mass-in" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="6" ' +
+      'aria-describedby="perf-mass-hint perf-mass-err">' +
+      '<div class="perf-mass-hint" id="perf-mass-hint">höchstens ' + fmtInt(ac.mass.kg) + '&nbsp;kg · gerechnet wird mit der AFM-Tabelle für das ' +
+      'nächsthöhere Gewicht (' + kgs.slice(0, -1).join(', ') + ' oder ' + kgs[kgs.length - 1] + '&nbsp;kg)</div>' +
+      '<div class="perf-mass-err" id="perf-mass-err" role="alert"></div></div>';
+  }
+
+  function headHtml(ac, mass) {
+    var parts;
+    if (massDiffers(mass)) {
+      parts = ['Abfluggewicht ' + fmtInt(mass.inputKg) + '&nbsp;kg: Start nach der ' + (mass.belowLowest
+        ? 'kleinsten AFM-Tabelle (' + fmtInt(mass.tableKg) + '&nbsp;kg)' : 'AFM-Tabelle für ' + fmtInt(mass.tableKg) + '&nbsp;kg') +
+        ', Landung mit dem maximalen Landegewicht ' + fmtInt(mass.maxKg) + '&nbsp;kg'];
+    } else {
+      parts = ['Maximales Abfluggewicht ' + fmtInt(ac.mass.kg) + '&nbsp;kg (' + fmtInt(ac.mass.lb) + '&nbsp;lb)'];
+    }
     if (str(ac.techniqueDe)) parts.push(esc(ac.techniqueDe));
     if (str(ac.variantDe)) parts.push(esc(ac.variantDe));
     return '<div class="perf-head">' + parts.join(' · ') + '</div>';
@@ -551,6 +638,7 @@
       case 'tempC': return label + ' ' + fmtDec(v, 1) + '&nbsp;°C';
       case 'qnhHpa': return label + ' ' + fmtQnh(v) + '&nbsp;hPa';
       case 'windDirTrue': return label + ' ' + fmtDec(v, 0) + '°';
+      case 'massKg': return label + ' ' + fmtDec(v, 1) + '&nbsp;kg';
       default: return label + ' ' + fmtDec(v, 1) + '&nbsp;kt';
     }
   }
@@ -571,6 +659,10 @@
         }
         return 'Eingabe liegt über dem Tabellenbereich des AFM – kein Wert.';
       });
+    }
+    // Rückfallebene: das Feld lässt nur Gewichte bis zum Höchstgewicht zu (parseMass)
+    if (e.code === 'above-mass' && isNum(e.massKg) && isNum(e.maxKg)) {
+      return [fmtInt(e.massKg) + '&nbsp;kg liegt über dem maximalen Abfluggewicht von ' + fmtInt(e.maxKg) + '&nbsp;kg – keine Berechnung.'];
     }
     if (e.code === 'bad-data') return [TEXT.dataError];
     return [TEXT.internal];
@@ -729,7 +821,45 @@
     return '<td>' + v + '</td>';
   }
 
-  function blockHtml(rw) {
+  // Gewichte als Aufzählung: «1'060 kg», «1'060 und 960 kg», «1'110, 1'060 und 960 kg»
+  function kgList(list) {
+    var s = list.map(function (t) { return fmtInt(t.kg); });
+    return (s.length > 1 ? s.slice(0, -1).join(', ') + ' und ' : '') + s[s.length - 1] + '&nbsp;kg';
+  }
+
+  /* Zweite Zeile zum Start einer Piste aus dem Zustand des Kerns (takeoffLimit), nur wenn der Start mit der gewählten
+     Tabelle einen Wert hat und nicht möglich ist; X ist das eingegebene Gewicht, sonst das Höchstgewicht.
+     limit:       «Start mit X kg laut AFM nicht möglich, möglich bis Y kg.»
+     none:        «Start laut AFM auch mit Z kg nicht möglich.» (Z: leichteste Tabelle)
+     lowest:      keine leichtere Tabelle
+     wet-unknown: nass ohne Nässewert im AFM – nie «möglich bis»
+     unknown:     leichtere Tabellen ohne Wert (und keine möglich); mit Wert, aber nicht möglich, werden sie genannt
+     possible, no-value: keine Zeile */
+  function limitText(rw, mass) {
+    var L = rw.takeoffLimit, p = rw.takeoff;
+    if (!L || !p || !p.ok || !mass) return null;
+    var no = 'Start mit ' + fmtInt(mass.inputKg !== null ? mass.inputKg : mass.maxKg) + '&nbsp;kg laut AFM nicht möglich';
+    switch (L.state) {
+      case 'limit': return no + ', möglich bis ' + fmtInt(L.maxKg) + '&nbsp;kg.';
+      case 'none': return 'Start laut AFM auch mit ' + fmtInt(L.lightestKg) + '&nbsp;kg nicht möglich.';
+      case 'lowest': return no + '. ' + TEXT.limitLowest;
+      case 'wet-unknown': return no + '. ' + TEXT.limitWet;
+      case 'unknown':
+        var lighter = (rw.takeoffByMass || []).filter(function (t) { return t.kg < L.tableKg; });
+        var val = lighter.filter(function (t) { return t.ok; }), noVal = lighter.filter(function (t) { return !t.ok; });
+        if (!val.length || !noVal.length) return no + '. ' + TEXT.limitNoValue;
+        return no + ', auch nicht mit ' + kgList(val) + '. Für ' + kgList(noVal) + ' gibt es keinen Wert.';
+      default: return null;
+    }
+  }
+
+  // Ist der Start auf dieser Piste laut AFM nicht möglich (mit Wert und zu lang)?
+  function startNotPossible(rw) {
+    var L = rw.takeoffLimit;
+    return !!L && L.state !== 'possible' && L.state !== 'no-value';
+  }
+
+  function blockHtml(rw, mass) {
     var phases = [['Start', rw.takeoff], ['Landung', rw.landing]];
     var rows = phases.map(function (x) {
       var p = x[1];
@@ -738,7 +868,7 @@
     }).join('');
     var seen = {};
     var findings = [];
-    phases.forEach(function (x) {
+    phases.forEach(function (x, k) {
       var label = x[0], p = x[1], h = null;
       if (p.ok) {
         // Je Phase höchstens eine Feststellung, die schwerere gewinnt
@@ -748,6 +878,9 @@
         h = '<div class="perf-finding perf-nov">' + reasonText(label, p) + '</div>';
       }
       if (h && !seen[h]) { seen[h] = true; findings.push(h); }
+      // Nach der Feststellung zum Start: bis zu welchem Gewicht er möglich wäre, in derselben Farbe
+      var lim = k === 0 ? limitText(rw, mass) : null;
+      if (lim) findings.push('<div class="perf-finding ' + (p.exceeds.groundRoll ? 'perf-red' : 'perf-amber') + '">' + lim + '</div>');
     });
     return '<section class="perf-block" aria-label="Piste ' + esc(rw.id) + '">' +
       '<div class="perf-block-title"><span class="perf-rwy">Piste ' + esc(rw.id) + '</span> · <span class="perf-wind">' + windTitle(rw) + '</span></div>' +
@@ -817,18 +950,29 @@
     return null;
   }
 
-  // Block einer Phase: Kopfzeile mit Quelle (Handbuch, Tabelle, Seite), dann die Schritte bis zum aufgerundeten Ergebnis.
-  // Alle Werte stammen aus der Rechnung (p). Aus den Flugzeugdaten kommen nur Beschriftungen: die Quelle und bei der
-  // Prozentregel des Winds deren Satz je kt (das Ergebnis der Rechnung enthält nur das abgerundete Prozent).
-  function phaseRows(ph, p, ac) {
+  // Block einer Phase: Kopfzeile mit Quelle (Handbuch, Tabelle, Seite), dann die Schritte bis zum aufgerundeten Ergebnis,
+  // danach extra (Zeile je Starttabelle). Beim Start ist die Quelle die gewählte Starttabelle (res.mass.tableRef). Hat das
+  // Muster mehrere Starttabellen, nennt der Kopf beim Start deren Gewicht und bei der Landung das maximale Landegewicht.
+  function phaseRows(ph, p, ac, mass, extra) {
     var ch = ac.charts[ph];
-    var ref = ch.ref && typeof ch.ref === 'object' ? ch.ref : {};
+    var ref = ph === 'takeoff' && mass ? mass.tableRef : ch.ref;
+    if (!ref || typeof ref !== 'object') ref = {};
     var src = ac.sources[ch.source] || {};
     var where = [esc(str(src.labelDe) || ch.source)];
     if (str(ref.figure)) where.push(esc(ref.figure));
     if (str(ref.page)) where.push('Seite ' + esc(ref.page));
-    var h = '<tr class="perf-steps-ph"><th colspan="3" scope="rowgroup">' + PHASE_LABEL[ph] + ' <span class="perf-steps-src">· ' +
-      where.join(', ') + '</span></th></tr>';
+    var add = '';
+    if (mass && mass.tableCount > 1) {
+      add = ph === 'takeoff' ? ' · Tabelle ' + fmtInt(mass.tableKg) + '&nbsp;kg' : ' · maximales Landegewicht ' + fmtInt(mass.maxKg) + '&nbsp;kg';
+    }
+    return '<tr class="perf-steps-ph"><th colspan="3" scope="rowgroup">' + PHASE_LABEL[ph] + ' <span class="perf-steps-src">· ' +
+      where.join(', ') + add + '</span></th></tr>' + stepRows(p, ac.charts[ph]) + (extra || '');
+  }
+
+  // Schritte einer Phase. Alle Werte stammen aus der Rechnung (p). Aus den Flugzeugdaten (ch) kommt nur bei der
+  // Prozentregel des Winds deren Satz je kt (das Ergebnis der Rechnung enthält nur das abgerundete Prozent).
+  function stepRows(p, ch) {
+    var h = '';
     var u = p.unit, lk = p.lookup, last = lastStep(p), w = p.wind;
     if (lk.interpolated) {
       var c = lk.columns, k = -1;
@@ -881,26 +1025,46 @@
     return ' (' + fmtInt(rw.bearingTrue) + '° rechtweisend) · Gegenwind ' + fmtKt2(w.componentKt) + '&nbsp;kt, abgerundet ' + w.kt + '&nbsp;kt';
   }
 
-  function stepsTable(rw, ac) {
-    return '<table class="perf-steps"><thead><tr><th></th><th scope="col">Rollstrecke</th><th scope="col">über 15 m</th></tr></thead>' +
-      core.PHASES.map(function (ph) { return '<tbody>' + phaseRows(ph, rw[ph], ac) + '</tbody>'; }).join('') + '</table>';
+  // Zeile je Starttabelle unter dem Start: Strecke über 15 m mit jeder Tabelle (Grundlage von «möglich bis»). Ohne die
+  // verfügbare Länge, damit Pisten mit gleicher Rechnung weiter eine Tabelle teilen.
+  function byMassRow(rw) {
+    return noteRow('Über 15 m je Starttabelle: ' + rw.takeoffByMass.map(function (t) {
+      return fmtInt(t.kg) + '&nbsp;kg ' + (t.ok ? fmtInt(t.m.overObstacle) + '&nbsp;m' : 'kein Wert');
+    }).join(' · '));
   }
 
-  function detailsHtml(ac, af, res, open) {
+  function stepsTable(rw, ac, mass, byMass) {
+    return '<table class="perf-steps"><thead><tr><th></th><th scope="col">Rollstrecke</th><th scope="col">über 15 m</th></tr></thead>' +
+      core.PHASES.map(function (ph) {
+        return '<tbody>' + phaseRows(ph, rw[ph], ac, mass, ph === 'takeoff' && byMass ? byMassRow(rw) : '') + '</tbody>';
+      }).join('') + '</table>';
+  }
+
+  // Erster Eintrag der Eingaben: Gewicht und Starttabelle
+  function massEntry(mass) {
+    if (mass.tableCount < 2) return 'Gewicht ' + fmtInt(mass.maxKg) + '&nbsp;kg (einzige Starttabelle)';
+    if (!massDiffers(mass)) return 'Gewicht ' + fmtInt(mass.maxKg) + '&nbsp;kg (maximales Abfluggewicht)';
+    return 'Gewicht ' + fmtInt(mass.inputKg) + '&nbsp;kg, Starttabelle ' + fmtInt(mass.tableKg) + '&nbsp;kg';
+  }
+
+  function detailsHtml(ac, af, res, open, mass) {
     var h = ['<details class="perf-details"' + (open ? ' open' : '') + '><summary>Rechenweg und Quellen</summary><div class="perf-calc">'];
-    // Eingaben der Rechnung. Platz für das Gewicht, sobald es eine Eingabe gibt: als erster Eintrag dieser Liste,
-    // etwa «Gewicht 1'000 kg, Tabelle für 1'060 kg».
+    // Eingaben der Rechnung, zuerst Gewicht und Starttabelle
     h.push('<p><span class="perf-calc-h">Eingaben:</span> ' + [
+      massEntry(mass),
       'Druckhöhe ' + fmtInt(ceilEps(res.pressureAltitudeFt)) + '&nbsp;ft (QNH ' + fmtQnh(res.input.qnhHpa) + '&nbsp;hPa, Platzhöhe ' +
         fmtInt(af.elevation.value) + '&nbsp;ft)',
       'Temperatur ' + fmtDec(res.input.tempC, 1) + '&nbsp;°C',
       res.input.runwayWet ? 'Piste nass gerechnet' : 'Piste trocken gerechnet'
     ].join(' · ') + '</p>');
+    // Ist der Start auf einer gerechneten Piste nicht möglich, steht unter jedem Start die Zeile je Starttabelle
+    // (nur bei mehreren Starttabellen)
+    var byMass = mass.tableCount > 1 && res.runways.some(function (rw) { return rw.computed && rw.takeoffByMass && startNotPossible(rw); });
     // Pisten mit gleicher Zeile und gleicher Tabelle teilen sich einen Block (Vergleich des fertigen HTML)
     var groups = [];
     res.runways.forEach(function (rw) {
       if (!rw.computed) return;
-      var body = runwayNote(rw) + '</p>' + stepsTable(rw, ac);
+      var body = runwayNote(rw) + '</p>' + stepsTable(rw, ac, mass, byMass && !!rw.takeoffByMass);
       for (var i = 0; i < groups.length; i++) {
         if (groups[i].body === body) { groups[i].ids.push(esc(rw.id)); return; }
       }
@@ -923,16 +1087,19 @@
 
   /* ── Modell: eine Rechnung für alle Darstellungen (rein, für Node-Tests) ── */
   // ctx: { dataState: 'loading'|'ready'|'error', list, selectedId, notice, aircraft, airfield,
-  //        wx (window.LSZK_WX), fgzo, fgzoPending, nowMs, detailsOpen, afmTag (Vorgabe TEASER_AFM_TAG) }
-  // kind: internal | loading | data-error | no-wx | fgzo-pending | calc-error | no-direction | no-runway | result.
+  //        wx (window.LSZK_WX), fgzo, fgzoPending, nowMs, detailsOpen, afmTag (Vorgabe TEASER_AFM_TAG),
+  //        massText (übernommene Eingabe des Gewichtsfelds; fehlt sie oder ist sie null, gilt das Höchstgewicht) }
+  // kind: internal | loading | data-error | no-wx | fgzo-pending | mass-error | calc-error | no-direction | no-runway | result.
   // core.compute läuft höchstens einmal. notice steht nur in den Zuständen, in denen die Karte ihn zeigt;
-  // selectedId ist ab geladenen Daten die id des geladenen Musters.
+  // selectedId ist ab geladenen Daten die id des geladenen Musters. massError: Fehlertext des Felds (in jedem Zustand mit
+  // geladenem Muster), mass: Gewicht und Starttabelle (mit Rechnung aus deren Feld mass).
   function buildModel(ctx) {
     ctx = ctx || {};
     var m = {
       kind: 'internal', nowMs: isNum(ctx.nowMs) ? ctx.nowMs : Date.now(), list: ctx.list, selectedId: ctx.selectedId,
       notice: null, detailsOpen: !!ctx.detailsOpen, afmTag: typeof ctx.afmTag === 'boolean' ? ctx.afmTag : TEASER_AFM_TAG,
-      ac: null, af: null, a: null, fg: null, rn: null, ws: null, res: null, hintKind: null, computed: null
+      ac: null, af: null, a: null, fg: null, rn: null, ws: null, res: null, hintKind: null, computed: null,
+      mass: null, massError: null
     };
     if (!core || core.VERSION !== VERSION) return m;
     if (ctx.dataState === 'loading') {
@@ -948,6 +1115,11 @@
     m.ac = ac;
     m.af = af;
     m.selectedId = ac.id;
+    // Abfluggewicht: nur bei mehreren Starttabellen (sonst gibt es kein Feld) und nur, was parseMass zulässt
+    var pm = { kg: null, error: null };
+    if (typeof ctx.massText === 'string' && core.takeoffTables(ac).length > 1) pm = parseMass(ctx.massText, ac);
+    m.mass = massInfo(ac, pm.kg);
+    m.massError = pm.error;
     var a = m.a = adaptLszkWx(ctx.wx, m.nowMs);
     if (!a.ok) {
       m.kind = 'no-wx';
@@ -957,11 +1129,18 @@
       m.kind = 'fgzo-pending';
       return m;
     }
+    // Ungültiges Gewicht: keine Zahlen, auch nicht die zum letzten gültigen Gewicht
+    if (m.massError) {
+      m.kind = 'mass-error';
+      return m;
+    }
     m.fg = fgzoState(ctx.fgzo, m.nowMs);
     m.rn = rainState(a);
     m.ws = wetState(m.fg, m.rn);
-    var input = { tempC: a.wx.tempC, qnhHpa: a.wx.qnhHpa, windDirTrue: a.wx.windDirTrue, windKt: a.wx.windKt, runwayWet: m.ws.wet };
+    var input = { tempC: a.wx.tempC, qnhHpa: a.wx.qnhHpa, windDirTrue: a.wx.windDirTrue, windKt: a.wx.windKt, runwayWet: m.ws.wet,
+      massKg: pm.kg };
     var res = m.res = core.compute(ac, af, input);
+    if (res.ok && res.mass) m.mass = res.mass;   // Kopf, Karte und Kurzzeile so, wie gerechnet wurde
     if (!res.ok) m.kind = 'calc-error';
     else if (res.mode === 'no-direction') m.kind = 'no-direction';
     else if (res.computedCount === 0) m.kind = 'no-runway';
@@ -982,18 +1161,28 @@
 
   var HINT_TEXT = { calm: TEXT.calm, nodir: TEXT.nodir, cross: TEXT.cross };
 
-  // Beginnt mit der Unterzeile der Auswahl (ausser im Zustand internal, der keine Auswahl zeigt)
+  // Unter der Auswahl: Kennzeichen (Unterzeile), nach dem Laden der Flugzeugdaten das Gewichtsfeld. Hängt nicht an der
+  // Eingabe oder am Fehler des Felds, nur an Liste, Wahl und Muster (boot schreibt es nur bei Änderung neu).
+  function massHtml(m) {
+    if (m.kind === 'internal') return '';
+    var sub = subLineHtml(m.list, m.selectedId);
+    if (m.kind === 'loading' || m.kind === 'data-error') return sub;
+    if (!m.ac) return '';
+    return sub + massFieldHtml(m.ac);
+  }
+
+  // Karteninhalt unter Auswahl und Gewichtsfeld
   function bodyHtml(m) {
     var foot = footerHtml();
     if (m.kind === 'internal') return stateHtml(TEXT.internal) + foot;
-    var sub = subLineHtml(m.list, m.selectedId, m.ac);
-    if (m.kind === 'loading') return sub + '<div class="perf-loading">' + TEXT.loading + '</div>' + foot;
-    if (m.kind === 'data-error') return sub + noticeHtml(m.notice) + stateHtml(TEXT.dataError) + foot;
+    if (m.kind === 'loading') return '<div class="perf-loading">' + TEXT.loading + '</div>' + foot;
+    if (m.kind === 'data-error') return noticeHtml(m.notice) + stateHtml(TEXT.dataError) + foot;
     if (!m.ac) return stateHtml(TEXT.internal) + foot;
-    var head = sub + headHtml(m.ac) + noticeHtml(m.notice);
+    var head = headHtml(m.ac, m.mass) + noticeHtml(m.notice);
     switch (m.kind) {
       case 'no-wx': return head + stateHtml(adapterText(m.a, m.nowMs)) + foot;
       case 'fgzo-pending': return head + '<div class="perf-loading">' + TEXT.fgzoLoading + '</div>' + foot;
+      case 'mass-error': return head + stateHtml(esc(m.massError)) + foot;
       case 'calc-error': return head + errorTexts(m.res).map(stateHtml).join('') + foot;
       case 'no-direction': return head + stateHtml(TEXT.noDirection) + foot;
       case 'no-runway': return head + stateHtml(TEXT.noHeadwindRunway) + foot;
@@ -1003,15 +1192,15 @@
     var hint = m.hintKind ? HINT_TEXT[m.hintKind] : '';
     return head + measHtml(m.a, m.res, m.nowMs) + conditionHtml(m.fg, m.rn, m.ws, m.ac, m.af, m.res) +
       (hint ? '<div class="perf-hint">' + hint + '</div>' : '') +
-      '<div class="perf-grid">' + m.computed.map(blockHtml).join('') + '</div>' +
+      '<div class="perf-grid">' + m.computed.map(function (rw) { return blockHtml(rw, m.mass); }).join('') + '</div>' +
       factorLineHtml(m.ac) +
-      detailsHtml(m.ac, m.af, m.res, m.detailsOpen) + foot;
+      detailsHtml(m.ac, m.af, m.res, m.detailsOpen, m.mass) + foot;
   }
 
   // Gesamte Karte als HTML (rein, für Node-Tests)
   function renderHtml(ctx) {
     var m = buildModel(ctx);
-    return selectHtml(m) + bodyHtml(m);
+    return selectHtml(m) + massHtml(m) + bodyHtml(m);
   }
 
   /* ── Kurzzeile unter der Ampel (rein, für Node-Tests) ───────────
@@ -1051,10 +1240,12 @@
         if (m.a.code === 'missing') return TEASER.missing;
         return TEASER.noData;                     // no-data, no-source, no-time
       case 'fgzo-pending': return TEASER.fgzoLoading;
+      case 'mass-error': return TEASER.massError;
       case 'calc-error':
         var code = m.res.error ? m.res.error.code : null;
         if (code === 'invalid-input') return TEASER.invalid;
         if (code === 'above-range') return TEASER.aboveRange;
+        if (code === 'above-mass') return TEASER.massError;
         if (code === 'bad-data') return TEASER.dataError;
         return TEASER.internal;
       case 'no-direction': return TEASER.noDirection;
@@ -1065,15 +1256,21 @@
 
   var HEAD_WORD = { calm: TEASER.calm, nodir: TEASER.nodir, cross: TEASER.cross };
 
-  // Kopf: Muster, «windstill», «ohne Windrichtung» bzw. «Wind quer», Pisten. Mit m.afmTag folgt «Richtwert AFM» als
-  // eigenes Element, aber nur, wenn mindestens eine Phase eine Zahl zeigt (nicht bei zweimal «kein Wert»).
+  // Kopf: Muster, das eingegebene Gewicht (nur wenn es vom Höchstgewicht abweicht), «windstill», «ohne Windrichtung»
+  // bzw. «Wind quer», die Piste. Zwei gerechnete Pisten ohne Zusatz (Entscheid: «beide Pisten» entfällt, damit die
+  // Kurzzeile am iPhone zweizeilig bleibt; der Grund steht im Wort davor), mehr als zwei (nur Testplätze) mit Anzahl.
+  // Mit m.afmTag folgt «Richtwert AFM» als eigenes Element, aber nur, wenn mindestens eine Phase eine Zahl zeigt
+  // (nicht bei zweimal «kein Wert»).
   function teaserHtml(m) {
     if (m.kind === 'result') {
       var c = m.computed;
-      var where = c.length === 1 ? 'Piste&nbsp;' + esc(c[0].id) : (c.length === 2 ? 'beide Pisten' : c.length + ' Pisten');
-      var word = m.hintKind ? HEAD_WORD[m.hintKind] : '';
+      var head = [esc(clip(m.ac.label, LABEL_MAX))];
+      if (massDiffers(m.mass)) head.push(fmtInt(m.mass.inputKg) + '&nbsp;kg');
+      if (m.hintKind) head.push(HEAD_WORD[m.hintKind]);
+      if (c.length === 1) head.push('Piste&nbsp;' + esc(c[0].id));
+      else if (c.length > 2) head.push(c.length + ' Pisten');
       var tag = m.afmTag && core.PHASES.some(function (ph) { return phaseHasValue(ph, c); });
-      return '<span class="perf-t-head">' + esc(clip(m.ac.label, LABEL_MAX)) + ' · ' + (word ? word + ' · ' : '') + where + '</span>' +
+      return '<span class="perf-t-head">' + head.join(' · ') + '</span>' +
         (tag ? '<span class="perf-t-tag">' + TEASER.afmTag + '</span>' : '') +
         '<span class="perf-t-row">' + TEASER.roll + ': ' + core.PHASES.map(function (ph) { return teaserPhaseHtml(ph, c); }).join(' · ') + '</span>';
     }
@@ -1082,24 +1279,29 @@
       '<span class="' + (load ? 'perf-t-load' : 'perf-t-state') + '">' + teaserStateText(m) + '</span>';
   }
 
-  // Karte und Kurzzeile aus einer Rechnung: { sel, body, teaser, selectedId, kind }; sel + body === renderHtml(ctx)
+  // Karte und Kurzzeile aus einer Rechnung: { sel, mass, body, teaser, selectedId, kind, massError };
+  // sel + mass + body === renderHtml(ctx)
   function renderParts(ctx) {
     var m = buildModel(ctx);
-    return { sel: selectHtml(m), body: bodyHtml(m), teaser: teaserHtml(m), selectedId: m.selectedId, kind: m.kind };
+    return { sel: selectHtml(m), mass: massHtml(m), body: bodyHtml(m), teaser: teaserHtml(m), selectedId: m.selectedId, kind: m.kind,
+      massError: m.massError };
   }
 
   /* ── Browser ───────────────────────────────────────────────── */
   function boot(win) {
     var doc = win.document;
     // box: <details id="perf-box"> mit der Kurzzeile, auf einer alten Seite die Karte selbst; teaser darf fehlen.
-    // sel und body liegen in #perf-content; lastSelKey ist das HTML der Auswahl ohne die Markierung «selected».
+    // sel, mass und body liegen in #perf-content; lastSelKey ist das HTML der Auswahl ohne die Markierung «selected».
+    // Abfluggewicht nur im Speicher: massDraft = getippt, noch nicht übernommen; massText = übernommen (null: Höchstgewicht);
+    // massSeq macht einen offenen Takt der Eingabe ungültig; massDay = Tag (Zürich) der Eingabe; massErrShown = Fehlertext am Feld.
     var S = {
-      card: null, content: null, box: null, sel: null, body: null, teaser: null, started: false,
+      card: null, content: null, box: null, sel: null, mass: null, body: null, teaser: null, started: false,
       index: null, aircraft: null, airfield: null, selectedId: null, pendingId: null, notice: null,
       dataState: 'loading', lastLoadAttempt: 0, loadSeq: 0,
       wx: null, hasUpdate: false, fatal: false,
       fgzo: null, fgzoSeq: 0, fgzoLoaded: false, fgzoDeadline: 0,
-      lastSelKey: null, lastBody: null, lastTeaser: null
+      massDraft: null, massText: null, massSeq: 0, massDay: null, massErrShown: '',
+      lastSelKey: null, lastMass: null, lastBody: null, lastTeaser: null
     };
     var FATAL_MODEL = { kind: 'internal', ac: null, notice: null };
     var FATAL_BODY = bodyHtml(FATAL_MODEL);
@@ -1117,17 +1319,20 @@
         });
     }
 
-    // Erst alles mit Zahlen leeren (Karte, Kurzzeile), dann «Rechenfehler» in Karte und Kurzzeile; Auswahl leer
+    // Erst alles mit Zahlen leeren (Karte, Kurzzeile), dann «Rechenfehler» in Karte und Kurzzeile; Auswahl und
+    // Gewichtsfeld leer (beim nächsten Neuschreiben gilt wieder das Höchstgewicht)
     function showFatal() {
       if (!S.content) return;
       try {
         S.body.innerHTML = '';
         if (S.teaser) S.teaser.innerHTML = '';
         S.sel.innerHTML = '';
+        if (S.mass) S.mass.innerHTML = '';
         S.body.innerHTML = FATAL_BODY;
         if (S.teaser) S.teaser.innerHTML = FATAL_TEASER;
       } catch (e) { /* nichts mehr zu tun */ }
       S.lastSelKey = '';
+      S.lastMass = '';
       S.lastBody = FATAL_BODY;
       S.lastTeaser = FATAL_TEASER;
     }
@@ -1155,22 +1360,117 @@
       if (el && typeof selectedId === 'string' && el.value !== selectedId) el.value = selectedId;
     }
 
+    /* ── Abfluggewicht ── */
+    function massField() { return S.mass ? S.mass.querySelector('input') : null; }
+    function massFocused() {
+      var el = massField();
+      return !!el && doc.activeElement === el;
+    }
+    function massTouched() { return S.massText !== null || S.massDraft !== null || S.massDay !== null; }
+    // Höchstgewicht ins Feld, aber nie, solange es den Fokus hat (Cursor und Tastatur bleiben)
+    function showMaxMass() {
+      var el = massField();
+      if (el && S.aircraft && !massFocused()) el.value = String(S.aircraft.mass.kg);
+    }
+    // Zurück auf das Höchstgewicht; ein offener Takt der Eingabe verfällt
+    function resetMass() {
+      S.massSeq++;
+      S.massDraft = null;
+      S.massText = null;
+      S.massDay = null;
+    }
+    // Getippten Text übernehmen und rechnen
+    function commitMass() {
+      try {
+        if (S.massDraft === null) return;
+        S.massSeq++;
+        S.massText = S.massDraft;
+        S.massDraft = null;
+        S.massDay = dayKey(Date.now());
+        render();
+      } catch (e) {
+        showFatal();
+      }
+    }
+    function isMassEvent(e) { return !!(e && e.target && e.target.id === 'perf-mass-in'); }
+    // Tippen: Text merken, nach MASS_DEBOUNCE_MS Ruhe rechnen
+    function onMassInput(e) {
+      if (!isMassEvent(e)) return;
+      S.massDraft = String(e.target.value);
+      if (S.massDay === null) S.massDay = dayKey(Date.now());
+      var seq = ++S.massSeq;
+      if (typeof win.setTimeout === 'function') win.setTimeout(function () { if (seq === S.massSeq) commitMass(); }, MASS_DEBOUNCE_MS);
+    }
+    // Verlassen des Felds, «Fertig», Enter: sofort rechnen
+    function onMassChange(e) {
+      if (!isMassEvent(e)) return;
+      S.massDraft = String(e.target.value);
+      commitMass();
+    }
+    // Leeres Feld beim Verlassen: wieder das Höchstgewicht, und es steht im Feld
+    function onMassFocusOut(e) {
+      if (!isMassEvent(e)) return;
+      try {
+        if (!String(e.target.value).replace(/[\s'’]/g, '')) {
+          resetMass();
+          if (S.aircraft) e.target.value = String(S.aircraft.mass.kg);
+        }
+        render();
+      } catch (e2) {
+        showFatal();
+      }
+    }
+
+    // Behälter des Gewichtsfelds nur bei geändertem HTML neu schreiben (anderes Muster, neu geladene Daten); dann gilt
+    // wieder das Höchstgewicht. Sonst bleibt das Feld derselbe Knoten: Fokus, Cursor und Tastatur bleiben beim Takt.
+    function writeMass(html) {
+      if (html === S.lastMass) return;
+      S.mass.innerHTML = html;
+      S.lastMass = html;
+      S.massErrShown = '';
+      showMaxMass();
+    }
+    // Fehlertext und aria-invalid am Feld, nur bei Änderung (nie über innerHTML des Behälters)
+    function syncMassError(err) {
+      err = err || '';
+      if (err === S.massErrShown) return;
+      var el = massField(), box = S.mass.querySelector('.perf-mass-err');
+      if (box) box.textContent = err;
+      if (el) el.setAttribute('aria-invalid', err ? 'true' : 'false');
+      S.massErrShown = err;
+    }
+
+    function parts() {
+      var d = S.body.querySelector('details.perf-details');
+      return renderParts({
+        dataState: S.dataState, list: S.index ? S.index.list : null,
+        selectedId: S.pendingId || S.selectedId || (S.index ? S.index.def : null), notice: S.notice,
+        aircraft: S.aircraft, airfield: S.airfield,
+        wx: S.wx, fgzo: S.fgzo, fgzoPending: !S.fgzoLoaded && Date.now() < S.fgzoDeadline,
+        nowMs: Date.now(), detailsOpen: !!(d && d.open), massText: S.massText
+      });
+    }
+
     function render() {
       if (!S.content || !S.hasUpdate) return;
       if (S.fatal) {
-        if (S.lastBody !== FATAL_BODY || S.lastSelKey !== '') showFatal();
+        if (S.lastBody !== FATAL_BODY || S.lastSelKey !== '' || S.lastMass !== '') showFatal();
         return;
       }
       try {
-        var d = S.body.querySelector('details.perf-details');
-        var p = renderParts({
-          dataState: S.dataState, list: S.index ? S.index.list : null,
-          selectedId: S.pendingId || S.selectedId || (S.index ? S.index.def : null), notice: S.notice,
-          aircraft: S.aircraft, airfield: S.airfield,
-          wx: S.wx, fgzo: S.fgzo, fgzoPending: !S.fgzoLoaded && Date.now() < S.fgzoDeadline,
-          nowMs: Date.now(), detailsOpen: !!(d && d.open)
-        });
+        // Tageswechsel (Zürich): wieder das Höchstgewicht, aber nicht, solange das Feld den Fokus hat
+        if (S.massDay !== null && S.massDay !== dayKey(Date.now()) && !massFocused()) {
+          resetMass();
+          showMaxMass();
+        }
+        var p = parts();
+        // Neuer Inhalt im Behälter des Gewichtsfelds: zuerst zurück auf das Höchstgewicht, dann mit diesem rechnen
+        if (p.mass !== S.lastMass && massTouched()) {
+          resetMass();
+          p = parts();
+        }
         writeSel(p.sel, p.selectedId);
+        writeMass(p.mass);
         // Karte und Kurzzeile nur bei geändertem HTML neu setzen, damit ein offenes <details> offen bleibt.
         // Die Box selbst wird nie neu geschrieben und bleibt darum offen oder zu.
         if (p.body !== S.lastBody) {
@@ -1181,6 +1481,7 @@
           S.teaser.innerHTML = p.teaser;
           S.lastTeaser = p.teaser;
         }
+        syncMassError(p.massError);
       } catch (e) {
         showFatal();
       }
@@ -1319,6 +1620,7 @@
       S.dataState = 'loading';            // alte Zahlen weg, Auswahl bleibt sichtbar
       S.pendingId = entry.id;
       S.notice = null;
+      resetMass();                        // Gewichte verschiedener Muster sind nicht übertragbar: wieder das Höchstgewicht
       render();
       chooseAircraft(entry, seq, true);
     }
@@ -1348,6 +1650,7 @@
       S.box = doc.getElementById('perf-box') || card;
       S.teaser = doc.getElementById('perf-teaser-text');
       S.sel = child(content, 'perf-sel');
+      S.mass = child(content, 'perf-mass');
       S.body = child(content, 'perf-body');
       if (!doc.getElementById('perf-style')) {
         var st = doc.createElement('style');
@@ -1356,6 +1659,10 @@
         (doc.head || doc.documentElement).appendChild(st);
       }
       S.sel.addEventListener('change', onChange);
+      // Gewichtsfeld: Ereignisse am stabilen Behälter (das Feld selbst wird beim Musterwechsel ersetzt)
+      S.mass.addEventListener('input', onMassInput);
+      S.mass.addEventListener('change', onMassChange);
+      S.mass.addEventListener('focusout', onMassFocusOut);
       if (S.box !== card) {
         if (storeGet(OPEN_KEY) === '1') S.box.open = true;   // vor dem ersten Anzeigen
         S.box.addEventListener('toggle', onToggle);
@@ -1382,9 +1689,11 @@
     FGZO_WAIT_MS: FGZO_WAIT_MS,
     WET_BY_RAIN: WET_BY_RAIN,
     TEASER_AFM_TAG: TEASER_AFM_TAG,
+    MASS_DEBOUNCE_MS: MASS_DEBOUNCE_MS,
     TEXT: TEXT,
     TEASER: TEASER,
     CSS: CSS,
+    parseMass: parseMass,
     escapeHtml: esc,
     fmtInt: fmtInt,
     fmtDec: fmtDec,

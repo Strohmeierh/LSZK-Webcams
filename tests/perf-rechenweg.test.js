@@ -20,7 +20,11 @@ const C152 = readJson('perf/aircraft/c152.json');
 const AF = readJson('perf/airfields/lszk.json');
 const LIST = ui.parseIndex(readJson('perf/aircraft/index.json')).list;
 const CASES = readJson('tests/fixtures/kontrollfaelle.json');
+// Sollwerte je Starttabelle aus der unabhängigen Rechnung des Planers (Zeilen ohne Gewicht = Kontrollfälle)
+const GEWICHT = readJson('tests/fixtures/gewicht_faelle.json');
 const clone = (o) => JSON.parse(JSON.stringify(o));
+// Gewichte der Starttabellen aus den Flugzeugdaten: Höchstgewicht, dann lowerWeights
+const tablesKg = (ac) => [ac.mass.kg].concat((ac.charts.takeoff.lowerWeights || []).map((e) => e.mass.kg));
 
 // 18.11.2026, 09:15 Uhr in Zürich (wie tests/perf-ui.test.js)
 const NOW = Date.UTC(2026, 10, 18, 8, 15);
@@ -154,7 +158,8 @@ function checkSteps(steps, fin, ctx) {
 
 // Eine Phase nachrechnen. Gibt die aufgerundeten Meter zurück oder null (kein Wert). stats zählt Zeilen und Werte.
 // Welche Zeilen dastehen müssen, folgt aus Flugzeugdaten und Eingabe, nicht aus dem Rechenkern.
-function checkPhase(P, ph, ac, rwy, inp, pa, kt, ctx, stats) {
+// note: erwartete Zeile je Starttabelle unter dem Start (nur wenn der Start auf einer Piste nicht möglich ist), sonst null.
+function checkPhase(P, ph, ac, rwy, inp, pa, kt, ctx, stats, note) {
   const chart = ac.charts[ph];
   const unit = chart.table.outputs[0].unit;
   const rows = P.rows.slice();
@@ -164,8 +169,12 @@ function checkPhase(P, ph, ac, rwy, inp, pa, kt, ctx, stats) {
     stats.rows++;
     return r;
   };
+  const takeNote = () => { if (note) assert.equal(take('note').label, note, ctx + ': Zeile je Starttabelle'); };
   const src = ac.sources[chart.source];
-  assert.equal(P.src, [src.labelDe, chart.ref.figure, 'Seite ' + chart.ref.page].join(', '), ctx + ': Quelle');
+  // Ohne Gewicht: Starttabelle des Höchstgewichts; bei mehreren Starttabellen deren Gewicht bzw. das maximale Landegewicht
+  const kgs = tablesKg(ac);
+  const add = kgs.length < 2 ? '' : (ph === 'takeoff' ? ' · Tabelle ' + ui.fmtInt(kgs[0]) + ' kg' : ' · maximales Landegewicht ' + ui.fmtInt(ac.mass.kg) + ' kg');
+  assert.equal(P.src, [src.labelDe, chart.ref.figure, 'Seite ' + chart.ref.page].join(', ') + add, ctx + ': Quelle');
   const steps = [];
   const exp = expectTable(chart, pa, inp[0]);
   const shownTab = exp.rows.map(([lab, cells]) => {
@@ -190,6 +199,7 @@ function checkPhase(P, ph, ac, rwy, inp, pa, kt, ctx, stats) {
   }
   const stop = (label) => {
     assert.equal(take('stop').label, label, ctx + ': Abbruchzeile');
+    takeNote();
     assert.equal(rows.length, 0, ctx + ': Zeilen nach dem Abbruch');
     checkSteps(steps, false, ctx);
     return null;
@@ -245,6 +255,7 @@ function checkPhase(P, ph, ac, rwy, inp, pa, kt, ctx, stats) {
   }
   const last = checkSteps(steps, true, ctx);
   const fin = pairOf(take('res'), 'm', ctx);
+  takeNote();
   assert.equal(rows.length, 0, ctx + ': Zeilen nach dem Ergebnis');
   [0, 1].forEach((j) => assert.equal(fin[j], ceilDiv(last[j], E4) * E4, ctx + ': aufgerundet'));
   stats.values++;
@@ -257,15 +268,15 @@ test('Rechenweg K2: genauer Aufbau und Wortlaut, direkt darunter der Pflichthinw
   const html = render(wxPfa());
   const row = (label, a, b) => '<tr><th scope="row">' + label + '</th><td>' + a + '</td><td>' + b + '</td></tr>';
   const expected = '<details class="perf-details"><summary>Rechenweg und Quellen</summary><div class="perf-calc">' +
-    '<p><span class="perf-calc-h">Eingaben:</span> Druckhöhe 1\'630&nbsp;ft (QNH 1018,0&nbsp;hPa, Platzhöhe 1\'759&nbsp;ft) · Temperatur 15,0&nbsp;°C · Piste trocken gerechnet</p>' +
+    '<p><span class="perf-calc-h">Eingaben:</span> Gewicht 1\'157&nbsp;kg (maximales Abfluggewicht) · Druckhöhe 1\'630&nbsp;ft (QNH 1018,0&nbsp;hPa, Platzhöhe 1\'759&nbsp;ft) · Temperatur 15,0&nbsp;°C · Piste trocken gerechnet</p>' +
     '<p><span class="perf-calc-h">Piste 30</span> (304° rechtweisend) · Gegenwind 7,76&nbsp;kt, abgerundet 7&nbsp;kt</p>' +
     '<table class="perf-steps"><thead><tr><th></th><th scope="col">Rollstrecke</th><th scope="col">über 15 m</th></tr></thead>' +
-    '<tbody><tr class="perf-steps-ph"><th colspan="3" scope="rowgroup">Start <span class="perf-steps-src">· Supplement, Figure 5-1a (Section 5b), Seite 5b-3</span></th></tr>' +
+    '<tbody><tr class="perf-steps-ph"><th colspan="3" scope="rowgroup">Start <span class="perf-steps-src">· Supplement, Figure 5-1a (Section 5b), Seite 5b-3 · Tabelle 1\'157&nbsp;kg</span></th></tr>' +
     row('Tabelle 2\'000&nbsp;ft / 20&nbsp;°C', '306&nbsp;m', '479&nbsp;m') +
     row('Gegenwind 7&nbsp;kt: −10&nbsp;% je 9&nbsp;kt, abgerundet −7&nbsp;%', '284,58&nbsp;m', '445,47&nbsp;m') +
     row('Gras +15&nbsp;% von 306&nbsp;m = +45,9&nbsp;m', '330,48&nbsp;m', '491,37&nbsp;m') +
     '<tr class="perf-steps-res"><th scope="row">aufgerundet</th><td>331&nbsp;m</td><td>492&nbsp;m</td></tr></tbody>' +
-    '<tbody><tr class="perf-steps-ph"><th colspan="3" scope="rowgroup">Landung <span class="perf-steps-src">· Grundhandbuch, Figure 5-11, Seite 5-24</span></th></tr>' +
+    '<tbody><tr class="perf-steps-ph"><th colspan="3" scope="rowgroup">Landung <span class="perf-steps-src">· Grundhandbuch, Figure 5-11, Seite 5-24 · maximales Landegewicht 1\'157&nbsp;kg</span></th></tr>' +
     row('Tabelle 2\'000&nbsp;ft / 20&nbsp;°C', '630&nbsp;ft', '1\'420&nbsp;ft') +
     row('Gegenwind 7&nbsp;kt: −10&nbsp;% je 9&nbsp;kt, abgerundet −7&nbsp;%', '585,9&nbsp;ft', '1\'320,6&nbsp;ft') +
     row('Gras +45&nbsp;% von 630&nbsp;ft = +283,5&nbsp;ft', '869,4&nbsp;ft', '1\'604,1&nbsp;ft') +
@@ -325,7 +336,7 @@ function expectRunway(inp, rwy) {
 test('Rechenweg gleich Rechnung: alle Kontrollfälle – Eingaben, Tabellenablesung, jede Zeile nachgerechnet, Ergebnis gleich Rechenkern, Kontrollfall und Karte', () => {
   const sample = clone(C172D);
   sample.charts.takeoff.table.cells = readJson('tests/fixtures/c172d_5a_1111kg_m.json').cells;
-  const stats = { cases: 0, noResult: 0, tables: 0, merged: 0, phases: 0, rows: 0, values: 0, noValue: 0 };
+  const stats = { cases: 0, noResult: 0, tables: 0, merged: 0, phases: 0, rows: 0, values: 0, noValue: 0, notes: 0 };
   CASES.forEach(([id, acId, field, inp, want]) => {
     assert.ok(['c172d', 'p2010', 'c152', 'sample5a1111'].includes(acId), id + ': unbekanntes Muster ' + acId);
     const ac = acId === 'c172d' ? C172D : (acId === 'p2010' ? P2010 : (acId === 'c152' ? C152 : sample));
@@ -341,8 +352,21 @@ test('Rechenweg gleich Rechnung: alle Kontrollfälle – Eingaben, Tabellenables
     }
     const calc = parseCalc(html, id);
     const pa = core.pressureAltitudeFt(af.elevation.value, inp[1]);
-    assert.equal(calc.inputs, 'Druckhöhe ' + ui.fmtInt(Math.ceil(pa - 1e-9)) + ' ft (QNH ' + inp[1].toFixed(1).replace('.', ',') + ' hPa, Platzhöhe ' +
+    const kgs = tablesKg(ac);
+    assert.equal(calc.inputs, 'Gewicht ' + ui.fmtInt(ac.mass.kg) + ' kg (' + (kgs.length > 1 ? 'maximales Abfluggewicht' : 'einzige Starttabelle') + ') · ' +
+      'Druckhöhe ' + ui.fmtInt(Math.ceil(pa - 1e-9)) + ' ft (QNH ' + inp[1].toFixed(1).replace('.', ',') + ' hPa, Platzhöhe ' +
       ui.fmtInt(af.elevation.value) + ' ft) · Temperatur ' + ui.fmtDec(inp[0], 1) + ' °C · Piste ' + (inp[4] ? 'nass' : 'trocken') + ' gerechnet', id + ': Eingaben');
+    // Zeile je Starttabelle unter jedem Start, wenn der Start auf einer gerechneten Piste nicht möglich ist (Zustand und
+    // Strecken aus der Sollrechnung des Planers; ohne Sollzeile, etwa beim Sample Problem, aus dem Kontrollfall)
+    const soll = GEWICHT.find((g) => g[0] === id && g[4] === null);
+    const notPossible = shown.some(([r]) => {
+      if (soll) return !['possible', 'no-value'].includes(soll[6][r.id][1]);
+      const t = want[r.id][1];
+      return Array.isArray(t) && (t[2] === 1 || t[3] === 1);
+    });
+    const noteFor = (rid) => (kgs.length > 1 && notPossible ? 'Über 15 m je Starttabelle: ' + soll[6][rid][0].map((v, i) =>
+      ui.fmtInt(kgs[i]) + ' kg ' + (Array.isArray(v) ? ui.fmtInt(v[1]) + ' m' : 'kein Wert')).join(' · ') : null);
+    if (noteFor(shown[0][0].id)) stats.notes++;
     assert.equal(calc.rules, (interpolates(ac, inp[0]) ? ui.TEXT.calcRulesInterp : ui.TEXT.calcRules) + ' ' + ui.TEXT.calcLimits, id + ': Lesehilfe');
     assert.deepEqual(calc.groups.map((g) => g.ids).flat(), shown.map((x) => x[0].id), id + ': jede gerechnete Piste genau einmal, keine Rückenwindpiste');
     const res = core.compute(ac, af, { tempC: inp[0], qnhHpa: inp[1], windDirTrue: inp[2], windKt: inp[3], runwayWet: inp[4] });
@@ -356,7 +380,7 @@ test('Rechenweg gleich Rechnung: alle Kontrollfälle – Eingaben, Tabellenables
         [['Start', 'takeoff'], ['Landung', 'landing']].forEach(([label, ph], k) => {
           const first = rid === g.ids[0], local = { rows: 0, values: 0 };
           const ctx = id + ' Piste ' + rid + ' ' + label;
-          const fin = checkPhase(g.phases[label], ph, ac, rwy, inp, pa, exp.kt, ctx, local);
+          const fin = checkPhase(g.phases[label], ph, ac, rwy, inp, pa, exp.kt, ctx, local, ph === 'takeoff' ? noteFor(rid) : null);
           if (first) { stats.phases++; stats.rows += local.rows; stats.values += local.values; if (!fin) stats.noValue++; }
           const p = res.runways.find((r) => r.id === rid)[ph];
           const fix = want[rid][k + 1];
@@ -375,7 +399,8 @@ test('Rechenweg gleich Rechnung: alle Kontrollfälle – Eingaben, Tabellenables
       });
     });
   });
-  assert.deepEqual(stats, { cases: 64, noResult: 5, tables: 59, merged: 28, phases: 118, rows: 556, values: 109, noValue: 9 }, 'Abdeckung');
+  // Zeile je Starttabelle in 24 Fällen (je eine Tabelle, darum 24 Zeilen mehr als vor der Gewichtseingabe: 556 + 24)
+  assert.deepEqual(stats, { cases: 64, noResult: 5, tables: 59, merged: 28, phases: 118, rows: 580, values: 109, noValue: 9, notes: 24 }, 'Abdeckung');
 });
 
 /* ── Zusammenfassen, Sonderzeilen ─────────────────────────── */
@@ -454,7 +479,7 @@ test('Rechenweg: Rechenfehler in einer Phase (Schlussprobe des Kerns) – Tabell
   }
   const row = (label, a, b) => '<tr><th scope="row">' + label + '</th><td>' + a + '</td><td>' + b + '</td></tr>';
   const calc = calcOf(html);
-  assert.ok(calc.includes('<tbody><tr class="perf-steps-ph"><th colspan="3" scope="rowgroup">Landung <span class="perf-steps-src">· Grundhandbuch, Figure 5-11, Seite 5-24</span></th></tr>' +
+  assert.ok(calc.includes('<tbody><tr class="perf-steps-ph"><th colspan="3" scope="rowgroup">Landung <span class="perf-steps-src">· Grundhandbuch, Figure 5-11, Seite 5-24 · maximales Landegewicht 1\'157&nbsp;kg</span></th></tr>' +
     row('Tabelle 2\'000&nbsp;ft / 20&nbsp;°C', '630&nbsp;ft', '1\'420&nbsp;ft') +
     row('Gegenwind 7&nbsp;kt: −10&nbsp;% je 9&nbsp;kt, abgerundet −7&nbsp;%', '585,9&nbsp;ft', '1\'320,6&nbsp;ft') +
     '<tr><th scope="row">Rechenfehler</th><td class="perf-nov" colspan="2">kein Wert</td></tr></tbody></table>'), calc);
@@ -551,14 +576,15 @@ test('Pflichthinweis: in jedem Zustand genau einmal am Schluss der Karte, ausser
   const ctxs = [{ dataState: 'loading', aircraft: null }, { dataState: 'error', aircraft: null, notice: 'x' }, { wx: undefined }, { wx: wxPfa({ src: 'speck' }) },
     { wx: wxPfa({ time: NOW - 46 * MIN }) }, { wx: wxPfa({ time: NOW + 10 * MIN }) }, { wx: wxPfa({ qnhHpa: null }) }, { fgzoPending: true }, { wx: wxPfa({ qnhHpa: 850 }) },
     { wx: wxPfa({ tempC: 45 }) }, { wx: wxPfa({ windDir: null, windKt: 6 }) }, { airfield: one }, {}, { detailsOpen: true }, { aircraft: P2010, detailsOpen: true },
-    { aircraft: C152, wx: wxPfa({ rain1hMm: 0.4 }) }, { wx: CALM(), detailsOpen: true }, { fgzo: fgzo({ flaeche: 'gesperrt', runway_condition: 'WET' }), notice: 'x' }];
+    { aircraft: C152, wx: wxPfa({ rain1hMm: 0.4 }) }, { wx: CALM(), detailsOpen: true }, { fgzo: fgzo({ flaeche: 'gesperrt', runway_condition: 'WET' }), notice: 'x' },
+    { massText: '115' }, { massText: '1050', wx: CALM(), detailsOpen: true }];
   const kinds = {};
   const check = (p, label) => {
     kinds[p.kind] = true;
     assert.equal(p.body.split('class="perf-foot"').length - 1, 1, label + ': genau einmal');
     assert.ok(p.body.endsWith(FOOT), label + ': am Schluss');
     assert.ok(p.body.lastIndexOf('</details>') < p.body.lastIndexOf(FOOT), label + ': nicht im Rechenweg');
-    assert.ok(!p.teaser.includes('Anhaltspunkt') && !p.sel.includes('Anhaltspunkt'), label + ': nicht in Kurzzeile und Auswahl');
+    assert.ok(!p.teaser.includes('Anhaltspunkt') && !p.sel.includes('Anhaltspunkt') && !p.mass.includes('Anhaltspunkt'), label + ': nicht in Kurzzeile, Auswahl und Gewichtsfeld');
   };
   ctxs.forEach((over, i) => check(ui.renderParts(Object.assign({}, base, over)), 'Fall ' + i));
   const v = core.VERSION;
@@ -568,7 +594,7 @@ test('Pflichthinweis: in jedem Zustand genau einmal am Schluss der Karte, ausser
   } finally {
     core.VERSION = v;
   }
-  assert.deepEqual(Object.keys(kinds).sort(), ['calc-error', 'data-error', 'fgzo-pending', 'internal', 'loading', 'no-direction', 'no-runway', 'no-wx', 'result']);
+  assert.deepEqual(Object.keys(kinds).sort(), ['calc-error', 'data-error', 'fgzo-pending', 'internal', 'loading', 'mass-error', 'no-direction', 'no-runway', 'no-wx', 'result']);
   // Fester Text: Die Fusszeile der Flugzeugdaten ändert die Karte nicht mehr
   const ac = clone(C172D);
   ac.footerDe = 'ANDERER TEXT';

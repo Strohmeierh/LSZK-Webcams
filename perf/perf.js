@@ -4,6 +4,10 @@
    Gerechnet wird nur die Piste mit Gegenwind; bei Windstille, fehlender Richtung (bis 3 kt) oder genau querem
    Wind alle Pisten ohne Windkorrektur. Rückenwind wird nicht gerechnet.
    Die Daten deklarieren ihr Schema, der Kern kennt eine Whitelist: Unbekanntes ergibt keinen Wert.
+   Abfluggewicht (freiwillig, input.massKg): Start nach der AFM-Tabelle für das nächsthöhere Gewicht (Haupttabelle =
+   Höchstgewicht, charts.takeoff.lowerWeights = tiefere Gewichte), unter der kleinsten Tabelle diese; ohne Angabe das
+   Höchstgewicht. Die Landung rechnet immer mit ihrer einen Tabelle (maximales Landegewicht). Je gerechneter Piste
+   zusätzlich der Start mit jeder Starttabelle und daraus «Start möglich bis …» (takeoffLimit).
    Browser: window.LszkPerfCore. Node: module.exports.
    VERSION gleich dem ?v= in index.html und in perf/perf-ui.js halten. */
 (function (root, factory) {
@@ -13,7 +17,7 @@
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  var VERSION = 4;
+  var VERSION = 5;
 
   var EPS = 1e-9;
   var FT_M = 0.3048;
@@ -22,6 +26,8 @@
   var NODIR_MAX_KT = 3;         // ohne Windrichtung bis hier alle Pisten ohne Windkorrektur, darüber kein Wert
   var MAX_HEADWIND_KT = 40;     // Gegenwind darüber: kein Wert (das AFM nennt keine Obergrenze)
   var MAX_WIND_CREDIT = 0.5;    // verkürzt der Wind eine Strecke um mehr als die Hälfte: kein Wert
+  var MAX_LOWER_WEIGHTS = 8;    // höchstens so viele weitere Starttabellen je Muster
+  var MASS_TOL_KG = 1;          // gedruckte kg und gedruckte Pfund einer Tabelle dürfen höchstens so weit auseinanderliegen
 
   // Plausible Eingabebereiche, ausserhalb: invalid-input
   var INPUT_RANGES = {
@@ -210,6 +216,42 @@
     if (headwind > 1) err(path + ': Gegenwind-Regel doppelt');
   }
 
+  /* Weitere Starttabellen für tiefere Gewichte (charts.takeoff.lowerWeights, optional).
+     Die Haupttabelle (charts.takeoff.table) gilt für das Höchstgewicht (mass). Die weiteren Tabellen stehen absteigend
+     nach Gewicht, alle unter dem Höchstgewicht, mit denselben Achsen, Ausgaben und derselben Einheit, und sind in
+     keiner Zelle länger als die nächstschwerere Tabelle. Nur dann ist die Ablesung «Tabelle für das nächsthöhere
+     Gewicht» konservativ. Bei der Landung sind keine weiteren Tabellen erlaubt. */
+  function validateLowerWeights(ch, ph, mass, path, err) {
+    var list = ch.lowerWeights;
+    if (list === undefined) return;
+    var p = path + '.lowerWeights';
+    if (ph !== 'takeoff') { err(p + ' nur beim Start erlaubt'); return; }
+    if (!Array.isArray(list) || list.length < 1 || list.length > MAX_LOWER_WEIGHTS) { err(p + ' falsch'); return; }
+    if (!isObj(mass) || !isNum(mass.kg) || !isNum(mass.lb)) return;     // «mass unbekannt» ist schon gemeldet
+    var prevKg = mass.kg, prevLb = mass.lb, prevTable = ch.table;
+    for (var i = 0; i < list.length; i++) {
+      var e = list[i], q = p + '[' + i + ']';
+      if (!isObj(e) || !isObj(e.mass) || !(isNum(e.mass.kg) && e.mass.kg > 0) || !(isNum(e.mass.lb) && e.mass.lb > 0)) { err(q + '.mass unbekannt'); return; }
+      if (!(e.mass.kg < prevKg) || !(e.mass.lb < prevLb)) { err(q + '.mass nicht absteigend unter dem Höchstgewicht'); return; }
+      if (Math.abs(e.mass.lb * LB_KG - e.mass.kg) > MASS_TOL_KG) err(q + '.mass: kg und lb passen nicht zusammen');
+      var bad = false;
+      validateTable(e.table, q + '.table', function (m) { bad = true; err(m); });
+      if (bad) return;
+      if (JSON.stringify(e.table.axes) !== JSON.stringify(ch.table.axes) || JSON.stringify(e.table.outputs) !== JSON.stringify(ch.table.outputs)) {
+        err(q + '.table: Achsen oder Ausgaben anders als in der Haupttabelle');
+        return;
+      }
+      var dims = e.table.axes.map(function (ax) { return ax.values.length; });
+      var longer = false;
+      forEachIndex(dims, function (idx) {
+        var lo = cellAt(e.table.cells, idx), hi = cellAt(prevTable.cells, idx);
+        for (var o = 0; o < lo.length; o++) if (!(lo[o] <= hi[o])) longer = true;
+      });
+      if (longer) { err(q + '.table.cells: länger als die nächstschwerere Tabelle'); return; }
+      prevKg = e.mass.kg; prevLb = e.mass.lb; prevTable = e.table;
+    }
+  }
+
   // Text einer Ausnahme; wirft selbst nie (auch nicht bei einer Ausnahme mit Fallen)
   function errText(e) {
     try { return String(e && e.message || e); } catch (e2) { return 'unbekannter Fehler'; }
@@ -244,8 +286,11 @@
         if (!isObj(ch)) { err(p + ' fehlt'); return; }
         if (!isStr(ch.source) || !isObj(ac.sources) || !has(ac.sources, ch.source) || !isObj(ac.sources[ch.source])) err(p + '.source unbekannt');
         if (!isObj(ch.base) || !isStr(ch.base.surface) || !inList(SURFACE_CONDITIONS, ch.base.surfaceCondition)) err(p + '.base unbekannt');
-        validateTable(ch.table, p + '.table', err);
+        var tableBad = false;
+        validateTable(ch.table, p + '.table', function (m) { tableBad = true; err(m); });
         validateCorrections(ch.corrections, tableUnit(ch.table), p + '.corrections', err);
+        // Ist die Haupttabelle schon fehlerhaft, bleibt es bei deren Meldung (das Ergebnis ist ohnehin bad-data)
+        if (!tableBad) validateLowerWeights(ch, ph, ac.mass, p, err);
       });
     }
     return { ok: errors.length === 0, errors: errors };
@@ -290,6 +335,8 @@
       if (!inRange(v, INPUT_RANGES[f])) bad.push({ field: f, value: v });
     });
     if (typeof input.runwayWet !== 'boolean') bad.push({ field: 'runwayWet', value: input.runwayWet });
+    // Abfluggewicht in kg, freiwillig: fehlt es (undefined oder null), gilt das Höchstgewicht
+    if (input.massKg !== undefined && input.massKg !== null && !(isNum(input.massKg) && input.massKg > 0)) bad.push({ field: 'massKg', value: input.massKg });
     return bad;
   }
 
@@ -449,6 +496,61 @@
     return res;
   }
 
+  /* ── Abfluggewicht: Starttabellen und «Start möglich bis» ──── */
+  // Starttabellen absteigend nach Gewicht: zuerst die Haupttabelle (Höchstgewicht), dann lowerWeights
+  function takeoffTables(aircraft) {
+    var ch = aircraft.charts.takeoff;
+    var list = [{ kg: aircraft.mass.kg, lb: aircraft.mass.lb, table: ch.table, ref: ch.ref, title: ch.title }];
+    (ch.lowerWeights || []).forEach(function (e) {
+      list.push({ kg: e.mass.kg, lb: e.mass.lb, table: e.table, ref: e.ref, title: e.title });
+    });
+    return list;
+  }
+
+  // Tabelle für das nächsthöhere Gewicht: die leichteste Tabelle mit Gewicht ≥ Eingabe. Unter der leichtesten Tabelle
+  // gilt diese (es wird nicht hochgerechnet), ohne Eingabe die schwerste. Gewichte über dem Höchstgewicht fängt compute ab.
+  function pickTakeoffTable(tables, massKg) {
+    var idx = 0;
+    if (massKg !== null) for (var i = 0; i < tables.length; i++) if (tables[i].kg >= massKg) idx = i;
+    return idx;
+  }
+
+  // Start-Chart mit einer anderen Tabelle, sonst gleich (Quelle, Belag der Tabelle, Korrekturen); die Daten bleiben unverändert
+  function chartWithTable(chart, table) {
+    return { source: chart.source, base: chart.base, corrections: chart.corrections, table: table };
+  }
+
+  /* «Start möglich» heisst: Wert vorhanden, Rollstrecke und Strecke über 15 m ≤ verfügbare Startstrecke.
+     list: Ergebnis je Starttabelle (absteigend nach Gewicht), ti: Index der gewählten Tabelle.
+     state: 'possible'    mit der gewählten Tabelle möglich
+            'no-value'    die gewählte Tabelle ergibt keinen Wert: keine Aussage
+            'limit'       nicht möglich, aber mit einer leichteren Tabelle: maxKg
+            'wet-unknown' wie 'limit', aber die Piste ist nass und das AFM nennt keinen Nässewert: keine Aussage «möglich»
+            'none'        auch mit der leichtesten Tabelle nicht möglich (lightestKg)
+            'lowest'      nicht möglich, und es gibt keine leichtere Tabelle
+            'unknown'     nicht möglich, und eine leichtere Tabelle ergibt keinen Wert, keine ist möglich
+     maxPossibleKg: schwerste Tabelle überhaupt, mit der der Start möglich ist (null: keine; bei 'wet-unknown' ohne Aussagekraft). */
+  function takeoffLimit(list, ti) {
+    var cur = list[ti];
+    var res = { state: 'no-value', tableKg: cur.kg, maxKg: null, lightestKg: list[list.length - 1].kg, maxPossibleKg: null };
+    for (var k = 0; k < list.length; k++) if (list[k].possible) { res.maxPossibleKg = list[k].kg; break; }
+    if (!cur.ok) return res;
+    if (cur.possible) { res.state = 'possible'; return res; }
+    if (ti === list.length - 1) { res.state = 'lowest'; return res; }
+    var noValue = false;
+    for (var i = ti + 1; i < list.length; i++) {
+      if (!list[i].ok) { noValue = true; continue; }
+      if (list[i].possible) {
+        if (list[i].wetFactorMissing) { res.state = 'wet-unknown'; return res; }
+        res.state = 'limit';
+        res.maxKg = list[i].kg;
+        return res;
+      }
+    }
+    res.state = noValue ? 'unknown' : 'none';
+    return res;
+  }
+
   /* ── Hauptfunktion ─────────────────────────────────────────── */
   function compute(aircraft, airfield, input) {
     try {
@@ -465,12 +567,19 @@
     var bad = checkInput(input);
     if (bad.length) return { ok: false, error: { code: 'invalid-input', fields: bad } };
     var inp = { tempC: input.tempC, qnhHpa: input.qnhHpa, windDirTrue: input.windDirTrue, windKt: input.windKt, runwayWet: input.runwayWet };
+    var massKg = input.massKg === undefined || input.massKg === null ? null : input.massKg;
+    if (massKg !== null && massKg > aircraft.mass.kg) {
+      return { ok: false, error: { code: 'above-mass', massKg: massKg, maxKg: aircraft.mass.kg }, input: inp };
+    }
+    var tables = takeoffTables(aircraft);
+    var ti = pickTakeoffTable(tables, massKg);
+    var charts = { takeoff: chartWithTable(aircraft.charts.takeoff, tables[ti].table), landing: aircraft.charts.landing };
     var pa = pressureAltitudeFt(airfield.elevation.value, inp.qnhHpa);
     var axisInputs = { pressureAltitude: pa, temperature: inp.tempC };
     var lookups = {};
     var above = [];
     PHASES.forEach(function (ph) {
-      var lk = lookupTable(aircraft.charts[ph].table, axisInputs);
+      var lk = lookupTable(charts[ph].table, axisInputs);
       lookups[ph] = lk;
       if (!lk.ok) {
         if (lk.missing) throw new Error('Eingabe für Achse fehlt: ' + lk.missing);
@@ -492,17 +601,41 @@
       mode = w.mode;
       var out = {
         id: rwy.id, bearingTrue: rwy.bearingTrue, bearingMag: rwy.bearingMag, surface: rwy.surface,
-        computed: w.computed, reason: w.reason, wind: w, takeoff: null, landing: null
+        computed: w.computed, reason: w.reason, wind: w, takeoff: null, landing: null, takeoffByMass: null, takeoffLimit: null
       };
       if (w.computed) {
-        out.takeoff = computePhase(aircraft.charts.takeoff, lookups.takeoff, rwy, w, inp.runwayWet, rwy.takeoffAvailable.value);
-        out.landing = computePhase(aircraft.charts.landing, lookups.landing, rwy, w, inp.runwayWet, rwy.landingAvailable.value);
+        out.takeoff = computePhase(charts.takeoff, lookups.takeoff, rwy, w, inp.runwayWet, rwy.takeoffAvailable.value);
+        out.landing = computePhase(charts.landing, lookups.landing, rwy, w, inp.runwayWet, rwy.landingAvailable.value);
+        // Start je Starttabelle mit derselben Kette (Wind, Belag, Faktoren, Nässe) und daraus «möglich bis»
+        out.takeoffByMass = tables.map(function (t, i) {
+          var p = out.takeoff;
+          if (i !== ti) {
+            var lk = lookupTable(t.table, axisInputs);
+            if (!lk.ok) return { kg: t.kg, ok: false, reason: 'no-lookup', m: null, possible: false, wetFactorMissing: false };
+            p = computePhase(chartWithTable(aircraft.charts.takeoff, t.table), lk, rwy, w, inp.runwayWet, rwy.takeoffAvailable.value);
+          }
+          // Möglich: Wert vorhanden, beide Strecken innerhalb der verfügbaren Länge (heute folgt das eine aus dem anderen,
+          // weil die Strecke über 15 m nie kürzer ist als die Rollstrecke; die doppelte Bedingung hält auch ohne das)
+          var possible = p.ok && !p.exceeds.groundRoll && !p.exceeds.overObstacle;
+          return { kg: t.kg, ok: p.ok, reason: p.reason, m: p.m, possible: possible, wetFactorMissing: p.wetFactorMissing };
+        });
+        out.takeoffLimit = takeoffLimit(out.takeoffByMass, ti);
       }
       return out;
     });
+    var lightest = tables[tables.length - 1];
     return {
       ok: true, error: null, input: inp, pressureAltitudeFt: pa, mode: mode,
       lookups: lookups, runways: runways,
+      // inputKg null: kein Gewicht eingegeben, gerechnet mit dem Höchstgewicht. table*: gewählte Starttabelle.
+      // Die Landung rechnet immer mit der einen Landetabelle (maximales Landegewicht).
+      mass: {
+        inputKg: massKg, maxKg: aircraft.mass.kg, maxLb: aircraft.mass.lb,
+        tableKg: tables[ti].kg, tableLb: tables[ti].lb, tableIndex: ti, tableCount: tables.length,
+        tableRef: tables[ti].ref, tableTitle: tables[ti].title,
+        lightestKg: lightest.kg, belowLowest: massKg !== null && massKg < lightest.kg,
+        tablesKg: tables.map(function (t) { return t.kg; })
+      },
       computedCount: runways.filter(function (r) { return r.computed; }).length
     };
   }
@@ -527,7 +660,11 @@
     checkInput: checkInput,
     lookupTable: lookupTable,
     windForRunway: windForRunway,
+    takeoffTables: takeoffTables,
+    pickTakeoffTable: pickTakeoffTable,
     compute: compute,
+    // nur für Tests: Auswertung «möglich bis» aus einer Liste je Starttabelle
+    _takeoffLimit: takeoffLimit,
     // nur für Tests: eine Phase direkt rechnen (Schlussprobe ist mit geprüften Daten nicht erreichbar)
     _computePhase: computePhase
   };
