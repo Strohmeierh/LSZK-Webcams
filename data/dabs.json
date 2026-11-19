@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "quelle": "https://www.skybriefing.com/o/dabs?today",
-  "abgerufen_utc": "2026-11-18T15:03:51+00:00",
-  "datum": "2026-11-18",
-  "version": 4,
-  "stand_utc": "2026-11-18T14:45:00+00:00",
+  "abgerufen_utc": "2026-11-19T04:03:58+00:00",
+  "datum": "2026-11-19",
+  "version": 1,
+  "stand_utc": "2026-11-18T14:28:00+00:00",
   "fehler": null,
   "eintraege": [
     {
@@ -13,11 +13,15 @@
       "gebiet": "LSD12",
       "fenster": [
         [
-          "2026-11-18T12:00:00+00:00",
-          "2026-11-18T21:00:00+00:00"
+          "2026-11-19T07:00:00+00:00",
+          "2026-11-19T11:00:00+00:00"
+        ],
+        [
+          "2026-11-19T12:00:00+00:00",
+          "2026-11-19T21:00:00+00:00"
         ]
       ],
-      "zeit_roh": "1200 - 2100",
+      "zeit_roh": "0700 - 1100, 1200 - 2100",
       "unten": "GND",
       "oben": "3000m / 9850ft",
       "unten_ft": 0,
@@ -35,8 +39,8 @@
       "gebiet": "LSR7",
       "fenster": [
         [
-          "2026-11-18T06:30:00+00:00",
-          "2026-11-18T21:00:00+00:00"
+          "2026-11-19T06:30:00+00:00",
+          "2026-11-19T21:00:00+00:00"
         ]
       ],
       "zeit_roh": "0630 - 2100",
@@ -57,11 +61,11 @@
       "gebiet": "LSR11",
       "fenster": [
         [
-          "2026-11-18T13:00:00+00:00",
-          "2026-11-18T17:30:00+00:00"
+          "2026-11-19T07:00:00+00:00",
+          "2026-11-19T20:30:00+00:00"
         ]
       ],
-      "zeit_roh": "1300 - 1730",
+      "zeit_roh": "0700 - 2030",
       "unten": "GND",
       "oben": "9600m / 31500ft",
       "unten_ft": 0,
@@ -79,11 +83,11 @@
       "gebiet": "LSR11A",
       "fenster": [
         [
-          "2026-11-18T13:00:00+00:00",
-          "2026-11-18T17:30:00+00:00"
+          "2026-11-19T07:00:00+00:00",
+          "2026-11-19T20:30:00+00:00"
         ]
       ],
-      "zeit_roh": "1300 - 1730",
+      "zeit_roh": "0700 - 2030",
       "unten": "2150m / 7000ft",
       "oben": "9600m / 31500ft",
       "unten_ft": 7000,
@@ -101,8 +105,8 @@
       "gebiet": "LSR16",
       "fenster": [
         [
-          "2026-11-18T07:00:00+00:00",
-          "2026-11-18T16:30:00+00:00"
+          "2026-11-19T07:00:00+00:00",
+          "2026-11-19T16:30:00+00:00"
         ]
       ],
       "zeit_roh": "0700 - 1630",
@@ -123,8 +127,8 @@
       "gebiet": "LSR17",
       "fenster": [
         [
-          "2026-11-18T07:00:00+00:00",
-          "2026-11-18T16:30:00+00:00"
+          "2026-11-19T07:00:00+00:00",
+          "2026-11-19T16:30:00+00:00"
         ]
       ],
       "zeit_roh": "0700 - 1630",
@@ -145,11 +149,11 @@
       "gebiet": "LSR18",
       "fenster": [
         [
-          "2026-11-18T07:00:00+00:00",
-          "2026-11-18T22:00:00+00:00"
+          "2026-11-19T07:00:00+00:00",
+          "2026-11-19T20:00:00+00:00"
         ]
       ],
-      "zeit_roh": "0700 - 2200",
+      "zeit_roh": "0700 - 2000",
       "unten": "GND",
       "oben": "1350m / 4500ft",
       "unten_ft": 0,
@@ -163,15 +167,19 @@
     },
     {
       "sec": 1,
-      "notam": "W3104/26",
+      "notam": "W3115/26",
       "gebiet": "LSR39B",
       "fenster": [
         [
-          "2026-11-18T13:00:00+00:00",
-          "2026-11-18T15:00:00+00:00"
+          "2026-11-19T08:00:00+00:00",
+          "2026-11-19T10:00:00+00:00"
+        ],
+        [
+          "2026-11-19T13:00:00+00:00",
+          "2026-11-19T15:00:00+00:00"
         ]
       ],
-      "zeit_roh": "1300 - 1500",
+      "zeit_roh": "0800 - 1000, 1300 - 1500",
       "unten": "2750m / 9000ft",
       "oben": "FL130",
       "unten_ft": 9000,
@@ -185,15 +193,19 @@
     },
     {
       "sec": 1,
-      "notam": "W3103/26",
+      "notam": "W3114/26",
       "gebiet": "LSR39C",
       "fenster": [
         [
-          "2026-11-18T13:00:00+00:00",
-          "2026-11-18T15:00:00+00:00"
+          "2026-11-19T08:00:00+00:00",
+          "2026-11-19T10:00:00+00:00"
+        ],
+        [
+          "2026-11-19T13:00:00+00:00",
+          "2026-11-19T15:00:00+00:00"
         ]
       ],
-      "zeit_roh": "1300 - 1500",
+      "zeit_roh": "0800 - 1000, 1300 - 1500",
       "unten": "2750m / 9000ft",
       "oben": "FL130",
       "unten_ft": 9000,
@@ -207,81 +219,19 @@
     },
     {
       "sec": 1,
-      "notam": "B1990/26",
-      "gebiet": "",
-      "fenster": [
-        [
-          "2026-11-18T12:30:00+00:00",
-          "2026-11-18T16:00:00+00:00"
-        ]
-      ],
-      "zeit_roh": "1230 - 1600",
-      "unten": "900m / 3000ft",
-      "oben": "FL130",
-      "unten_ft": 3000,
-      "mitte": [
-        46.269444444444446,
-        7.4944444444444445
-      ],
-      "radius_km": 4.7,
-      "text": "SION TEMPO MIL TMA SECT 1 ACT.",
-      "unsicher": false
-    },
-    {
-      "sec": 1,
-      "notam": "B1991/26",
-      "gebiet": "",
-      "fenster": [
-        [
-          "2026-11-18T12:30:00+00:00",
-          "2026-11-18T16:00:00+00:00"
-        ]
-      ],
-      "zeit_roh": "1230 - 1600",
-      "unten": "3050m / 10000ft",
-      "oben": "FL130",
-      "unten_ft": 10000,
-      "mitte": [
-        46.341944444444444,
-        7.743611111111111
-      ],
-      "radius_km": 6.4,
-      "text": "SION TEMPO MIL TMA SECT 3 ACT.",
-      "unsicher": false
-    },
-    {
-      "sec": 1,
-      "notam": "B1992/26",
-      "gebiet": "",
-      "fenster": [
-        [
-          "2026-11-18T12:30:00+00:00",
-          "2026-11-18T16:00:00+00:00"
-        ]
-      ],
-      "zeit_roh": "1230 - 1600",
-      "unten": "1850m / 6000ft",
-      "oben": "FL130",
-      "unten_ft": 6000,
-      "mitte": [
-        46.30583333333333,
-        7.610277777777777
-      ],
-      "radius_km": 7.4,
-      "text": "SION TEMPO MIL TMA SECT 2 ACT.",
-      "unsicher": false
-    },
-    {
-      "sec": 1,
       "notam": "W3015/26",
       "gebiet": "",
       "fenster": [
         [
-          "2026-11-18T22:30:00+00:00",
-          "2026-11-18T23:59:00+00:00"
+          "2026-11-19T00:00:00+00:00",
+          "2026-11-19T04:00:00+00:00"
+        ],
+        [
+          "2026-11-19T22:30:00+00:00",
+          "2026-11-19T23:59:00+00:00"
         ]
       ],
-      "zeit_roh": "2230 - 2359",
+      "zeit_roh": "0000 - 0400, 2230 - 2359",
       "unten": "GND",
       "oben": "FL195",
       "unten_ft": 0,
@@ -291,28 +241,6 @@
       ],
       "radius_km": 0.3,
       "text": "TEMPO R-AREA AMLIKON ESTABLISHED RADIUS 0.2KM (473426N0090252E RADIUS 0.2NM). WX MEASUREMENTS BY REMOTELY PILOTED AERIAL SYSTEM WILL TAKE PLACE. WHITE BLINKING PSN LGT WITH VISUAL RANGE OF AT LEAST 3KM. ENTRY PROHIBITED WHEN ACT EXC HEL EMERG MEDICAL SER (HEMS). FOR INFO ON ACT AND HEMS CTC TEL +41 79 772 93 32 AND REFER TO WWW.MAP.GEO.ADMIN.CH TOPIC AVIATION UAS AWARENESS MAP.",
-      "unsicher": false
-    },
-    {
-      "sec": 2,
-      "notam": "W3120/26",
-      "gebiet": "",
-      "fenster": [
-        [
-          "2026-11-18T16:26:00+00:00",
-          "2026-11-18T21:00:00+00:00"
-        ]
-      ],
-      "zeit_roh": "1626 - 2100",
-      "unten": "GND",
-      "oben": "FL130",
-      "unten_ft": 0,
-      "mitte": [
-        46.75,
-        8.133333333333333
-      ],
-      "radius_km": 181.5,
-      "text": "MIL NGT FLT WITH HEL WI FLW TRG AREAS: WOLHUSEN, OLTEN, ZUGERSEE, TRIENGEN, SUSTEN, GRAUBUNDEN, KLAUSEN, SCHANGNAU REF VFR MANUAL RAC 3-2-3 (MIL NGT FLT CHART). UPPER LIMIT: AIRSPACE CLASS E OR MAX ACCORDING TO ITEM G.",
       "unsicher": false
     }
   ]
