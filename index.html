@@ -963,7 +963,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M17 18a5 5 0 0 0-1.89-9.55 5 5 0 0 0-9 2.5 5 5 0 0 0 0 8.5h9z"/><line x1="8" y1="18" x2="8" y2="22"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="16" y1="18" x2="16" y2="22"/>
         </svg>
-        Wetter LSZK – Flugplatz Speck · 536 m (1'759 ft)
+        Wetter LSZK – Flugplatz Speck · 1'759 ft
       </div>
       <div id="wx-content">
         <div style="color:var(--text-muted);font-size:0.85rem;padding:10px 0;">Lade Wetterdaten…</div>
@@ -1816,7 +1816,7 @@
           chip:  th && th.von ? 'Thermik ' + th.von.slice(0, 2) + '–' + th.bis.slice(0, 2) + ' h' : 'Thermik: keine',
           title: 'Thermikfenster',
           value: th && th.von ? th.von + ' – ' + th.bis + ' Uhr' : 'heute keine erwartet',
-          text:  'Modellabschätzung, wann Aufwinde nutzbar sind: erwärmte Bodenluft steigt mindestens 400&nbsp;m über Grund, wenig Bewölkung, kein Regen. Grün ab 4&nbsp;Stunden Fensterlänge. Details (Arbeitshöhe, Basis, Auslösetemperatur) in der Karte «Thermik» im Wetter-Panel.'
+          text:  "Modellabschätzung, wann Aufwinde nutzbar sind: erwärmte Bodenluft steigt mindestens etwa 1'300&nbsp;ft über Grund, wenig Bewölkung, kein Regen. Grün ab 4&nbsp;Stunden Fensterlänge. Details (Arbeitshöhe, Basis, Auslösetemperatur) in der Karte «Thermik» im Wetter-Panel."
         });
       }
       if (briefing.capeMax !== undefined) {
@@ -1950,8 +1950,131 @@
     function aiMslBand(s) {
       return (s && /\d\s*(?:m|ft)\b/i.test(s) && !/AGL|MSL|GND|SFC|FL|UNL/i.test(s)) ? s + ' MSL' : s;
     }
-    function aiMeter(v) {                  // Höhe aus dem Datensatz: 1400 -> «1'400 m MSL» (Wunsch 18.11.: Höhen immer mit MSL)
-      return (typeof v === 'number' && isFinite(v)) ? aiThousands(Math.round(v)) + ' m MSL' : null;
+    // ── Höhen in Fuss (Wunsch 19.11.2026, nur LSZK): Der Job schreibt Höhen weiter in m MSL (Prompt und Datensatz
+    //    unverändert), die Seite rechnet bei der Anzeige um: 1 ft = 0,3048 m, gerundet auf 100 ft. DABS-Grenzen zeigt sie
+    //    mit dem amtlichen ft-Wert aus dem DABS («3000m / 9850ft»), nicht umgerechnet. Ohne Lookbehind (ältere Safari).
+    //    Zwischen Zahl und «ft» steht ein geschütztes Leerzeichen: kein Zeilenumbruch «9'000 | ft MSL» bei 320 px.
+    var AI_M_PER_FT = 0.3048, AI_NBSP = '\u00a0';
+    function aiFtRound(m) { return Math.round(m / AI_M_PER_FT / 100) * 100; }
+    function aiFeet(v) {                   // Höhe aus dem Datensatz (m MSL): 1400 -> «4'600 ft MSL»
+      return (typeof v === 'number' && isFinite(v)) ? aiThousands(aiFtRound(v)) + AI_NBSP + 'ft MSL' : null;
+    }
+    function aiDabsFtMap(d) {              // m-Wert -> amtlicher ft-Wert aus den DABS-Treffern des Datensatzes
+      var map = {}, x = (d && d.dabs && typeof d.dabs === 'object') ? d.dabs : null;
+      (x && Array.isArray(x.treffer) ? x.treffer : []).forEach(function (t) {
+        if (!t || typeof t !== 'object') return;
+        [t.unten, t.oben].forEach(function (s) {
+          var p = typeof s === 'string' ? /^\s*(\d{2,5})\s*m\s*\/\s*(\d{2,6})\s*ft\b/i.exec(s) : null;
+          if (p) map[String(+p[1])] = +p[2];
+        });
+      });
+      return map;
+    }
+    // Eine Gruppe endet auf «m MSL», «m AGL» oder «m über/unter» mit einem Höhenbezug danach («300 m unter der Kammhöhe»,
+    // «200 m über Grund»); ohne Höhenbezug ist es eine Strecke und bleibt in m («auf den ersten 200 m über die Graspiste»).
+    // Jede Zahl der Gruppe wird umgerechnet, auch in Bereichen und Listen («2'000–2'100 m MSL», «von 1'800 auf 1'500 m MSL»,
+    // «1'400, 1'800 und 2'600 m MSL», «1'400 m, 1'800 m und 2'600 m MSL», «1'100 (Bachtel) und 1'300 m MSL»).
+    // Zahlen ab 100 (Höhen in der Schweiz liegen über 190 m); davor keine Ziffer und kein Buchstabe (FL100, LSR11, 08:45, 2,5).
+    var AI_FT_PRE = /(^|[^\dA-Za-zÄÖÜäöü.,:'’])/.source,
+        AI_FT_NUM = /(?:[1-9]\d?['’.]?\d{3}|[1-9]\d{2})/.source,
+        AI_FT_UNIT = /(?:\s*m(?![A-Za-zÄÖÜäöü]))?/.source,
+        AI_FT_ITEM = /(?:~\s?|≈\s?|ca\.\s?|rund\s|etwa\s)?/.source + AI_FT_NUM + AI_FT_UNIT + /(?:\s*\([^()]{1,40}\))?/.source,
+        AI_FT_SEP = /\s*(?:–|-|bis|und|oder|bzw\.|sowie|auf|,|\/)\s*/.source,
+        // Höhenbezug: Grund, Boden, Meer, Kamm, Grat, Gipfel, Basis, Wolken, Nebel, auch zusammengesetzt (Talboden, Kammhöhe,
+        // Nebelobergrenze), mit beliebigem Artikel; Flächen (Platz, See, Tal, Gelände) nur ohne Artikel oder mit «dem/der»:
+        // «200 m über dem Platz» ist eine Höhe, «200 m über den Platz» eine Strecke.
+        AI_FT_BEZUG = /\s+(?:(?:[a-zäöüß]+\s+){0,3}(?:Grund|Boden|Meer|Kamm|Kämmen?|Grat|Graten|Gipfeln?|Basis|Wolken|Nebel|Inversion|[A-ZÄÖÜ][a-zäöüß]*(?:grund|boden|meer|kamm|kämmen?|grat|graten|gipfeln?|basis|grenze|wolken|nebel|decke|inversion|höhe|niveau|spiegel|sohle))|(?:(?:dem|der)\s+(?:[a-zäöüß]+\s+){0,2})?(?:Platz|See|Tal|Gelände|Terrain|[A-ZÄÖÜ][a-zäöüß]*(?:platz|see|tal|gelände|feld|land)))(?![A-Za-zÄÖÜäöüß])/.source,
+        AI_FT_END = /\s*m/.source + '(?:' + /\s*(MSL|AGL)(?![A-Za-z])/.source + '|' + /\s+(über|unter)/.source + '(?=' + AI_FT_BEZUG + '))';
+    var AI_M_GROUP = new RegExp(AI_FT_PRE + '(' + AI_FT_ITEM + '(?:' + AI_FT_SEP + AI_FT_ITEM + ')*)' + AI_FT_END, 'g');
+    var AI_M_TOKEN = new RegExp(/(\([^()]*\))|/.source + '(' + AI_FT_NUM + ')(' + AI_FT_UNIT + ')', 'g');
+    var AI_M_PAIR  = new RegExp(AI_FT_PRE + AI_FT_NUM + /\s*m\s*\/\s*/.source + '(' + AI_FT_NUM + ')' + /\s*ft(?![A-Za-z])/.source, 'gi');   // «3000m / 9850ft»
+    var AI_DABS_CTX = /\bDABS\b|\bLS[RDP]\d|\b[RD]-Area|\bGND\b|\bFL\s*\d{2,3}\b/i;   // Satz mit DABS-Angaben
+    // Wächter gegen eine m-Zahl, die nach der Umrechnung wie ft aussähe (Faktor 3,3). Dann bleibt die ganze Gruppe in m,
+    // richtig beschriftet:
+    // - Satzwächter: eine Zahl ab 100 ohne Einheit irgendwo im selben Satz («1'800 bis gegen 1'500 m MSL», «Basis 1'400;
+    //   Gipfel 1'800 m MSL», «Basis 1'000 bis 14 Uhr, dann 1'500 m MSL», «Basis 1'000 m MSL, ab 14 Uhr 1'500.»). Nicht als
+    //   lose gelten Flugflächen («FL 130») und der Anfang einer weiteren Gruppe («1'000 m MSL bis 1'200 und 1'400 m MSL»).
+    //   Ein Punkt nach einer Ziffer («18.11.») oder nach einer Abkürzung («bzw.», «ca.», «z. B.») beendet keinen Satz.
+    // - eine ein- oder zweistellige Zahl ohne Einheit kurz vor der Gruppe («zwischen 50 und 150 m über Grund»), ausser nach
+    //   «Version», «Nr.», «FL», «Piste» («Pistenanfang 30», «Piste 12/30») und nach einem Vorzeichen («+1»). Mit umgerechnet
+    //   werden solche Zahlen nicht: auf 100 ft gerundet wären sie zu grob (30 m -> 100 ft, 10 m -> 0 ft), und oft sind sie
+    //   keine Höhe («Böen 25 und 1'500 m MSL»). Das deckt auch ein Leerzeichen als Tausendertrenner ab: In «1 400 m MSL»
+    //   (auch mit geschütztem oder schmalem Leerzeichen) ist die «1» eine solche Zahl, der Rest bleibt in m.
+    // - ein Stichwort für eine Nicht-Höhe direkt vor einer Gruppe mit mehreren Zahlen («QNH 1013, 1'000 m MSL»,
+    //   «CAPE 500, 1'800 m MSL», «Winter 2025/2026, 1'000 m MSL», «Wind 240 auf 1'500 m MSL»)
+    // - eine Zahl ohne Einheit in einer Klammer der Gruppe («1'100 (1'115) und 1'300 m MSL»)
+    // - «Sicht» davor: Sichtweiten bleiben in m («Sicht 800 m über dem See»)
+    var AI_FT_EINHEIT = /^\s*(?:%|°|(?:m|km|cm|mm|ft|kt|hPa|J|h|min|s|Uhr|LT|UTC|MEZ|MESZ|K|Meter|Metern|Kilometer|Fuss|Knoten|Prozent|Grad|Achtel|Std|Stunden?|Minuten?|Sekunden?|Tage?n?)(?![A-Za-zÄÖÜäöüß]))/;
+    var AI_FT_WEITER = new RegExp('^' + /(?:\s*\([^()]{1,40}\))?/.source + '(?:' + AI_FT_SEP + AI_FT_ITEM + ')*' + AI_FT_END);
+    var AI_FT_SICHT = /[Ss]icht(?:weite)?\s+(?:[a-zäöüß]+\s+){0,2}$/;
+    var AI_FT_KLEIN = new RegExp(AI_FT_PRE + /(\d{1,2})((?:[^\d.!?;:()]|\([^()]*\)|(?:bzw|ca|resp|evtl)\.){1,60})$/.source),
+        AI_FT_KLEIN_OK = /(?:(?:^|[^A-Za-zÄÖÜäöü])(?:Version|Nr\.|FL|Piste[a-zäöüß]*|RWY)\s*(?:\d{1,2}\/)?|(?:^|\s)[+\u2212-])$/i;
+    var AI_FT_STICHWORT = /(?:(?:^|[^A-Za-zÄÖÜäöüß])(?:QNH|QFE|CAPE|Version|Nr\.|Jahre?n?|Winter|Sommer|aus|Richtung|Böen|Pisten?)|wind|index)[\s:]*$/i,
+        AI_FT_ZAHLEN = new RegExp(AI_FT_NUM, 'g');
+    var AI_FT_ABK = /(?:^|[^A-Za-zÄÖÜäöüß])(?:[A-Za-zÄÖÜäöüß]|bzw|ca|resp|evtl|ggf|inkl|usw|vgl|Nr|St)$/;
+    function aiFtLos(rest) {               // rest = Text hinter einer Zahl: Zahl ohne Einheit (und nicht länger)?
+      return !/^[\d'’.,]?\d/.test(rest) && !AI_FT_EINHEIT.test(rest);
+    }
+    function aiFtLose(str) {               // Satzwächter, einmal je Text: lose Zahlen ab 100 als [Satzanfang, Satzende, Stelle]
+      var re = /[.!?](?=\s|$)/g, m, ends = [], out = [], a = 0;
+      while ((m = re.exec(str))) {
+        if (str.charAt(m.index) === '.' && (/\d/.test(str.charAt(m.index - 1)) || AI_FT_ABK.test(str.slice(Math.max(0, m.index - 5), m.index)))) continue;
+        ends.push(m.index + 1);
+      }
+      ends.push(str.length);
+      ends.forEach(function (b) {
+        var s = str.slice(a, b), rx = new RegExp(AI_FT_PRE + '(' + AI_FT_NUM + ')', 'g'), x, rest;
+        while ((x = rx.exec(s))) {
+          rest = s.slice(rx.lastIndex);
+          if (!/FL\s*$/i.test(s.slice(0, x.index + x[1].length)) && aiFtLos(rest) && !AI_FT_WEITER.test(rest)) out.push([a, b, a + x.index + x[1].length]);
+        }
+        a = b;
+      });
+      return out;
+    }
+    function aiFtBleibt(str, at, pre, all, grp, lose) {   // true: Gruppe bleibt in m (Wächter oben)
+      var vor = str.slice(Math.max(0, at - 80), at + pre.length), k = AI_FT_KLEIN.exec(vor), g0 = at + pre.length, g1 = at + all.length;
+      if (AI_FT_SICHT.test(vor)) return true;
+      if (k && aiFtLos(k[3]) && !AI_FT_KLEIN_OK.test(vor.slice(0, k.index + k[1].length))) return true;
+      if (AI_FT_STICHWORT.test(vor) && (grp.replace(/\([^()]*\)/g, '').match(AI_FT_ZAHLEN) || []).length > 1) return true;
+      if ((grp.match(/\([^()]*\)/g) || []).some(function (p) {
+        var re = new RegExp(AI_FT_PRE + AI_FT_NUM, 'g'), m;
+        while ((m = re.exec(p))) if (aiFtLos(p.slice(re.lastIndex))) return true;
+        return false;
+      })) return true;
+      return lose.some(function (l) { return l[0] <= g0 && g0 < l[1] && (l[2] < g0 || l[2] >= g1); });   // im Satz, ausserhalb der Gruppe
+    }
+    function aiMVal(s) { return +String(s).replace(/['’.]/g, ''); }
+    function aiSatzUm(s, at) {             // der Satz, in dem «at» steht (wie aiSentences: ein Punkt nach einer Ziffer, «18.11.», endet keinen Satz)
+      var re = /[.!?](?=\s|$)/g, m, start = 0, end = s.length;
+      while ((m = re.exec(s))) {
+        if (s.charAt(m.index) === '.' && /\d/.test(s.charAt(m.index - 1))) continue;
+        if (m.index < at) start = m.index + 1; else { end = m.index + 1; break; }
+      }
+      return s.slice(start, end);
+    }
+    function aiFtText(s, dabsMap) {        // KI-Text: Höhen in m -> ft, danach Schweizer Format wie bisher (aiSwiss)
+      var map = dabsMap || {}, out = String(s == null ? '' : s), lose = null;
+      out = out.replace(AI_M_PAIR, function (all, pre, ft) { return pre + aiThousands(aiMVal(ft)) + AI_NBSP + 'ft'; });
+      out = out.replace(AI_M_GROUP, function (all, pre, grp, ref, rel, at, str) {
+        if (!lose) lose = aiFtLose(str);
+        if (aiFtBleibt(str, at, pre, all, grp, lose)) return all;
+        var dabs = ref === 'MSL' && AI_DABS_CTX.test(aiSatzUm(str, at));   // nur im Satz mit DABS-Angaben der amtliche ft-Wert
+        var fl = /FL\s*$/i.test(str.slice(Math.max(0, at - 6), at + pre.length));   // «FL 130 bis 3'000 m MSL»: 130 ist eine Flugfläche
+        return pre + grp.replace(AI_M_TOKEN, function (t, paren, num, unit) {
+          if (paren) return paren;
+          if (fl) { fl = false; return t; }
+          var k = String(aiMVal(num));
+          return aiThousands(dabs && Object.prototype.hasOwnProperty.call(map, k) ? map[k] : aiFtRound(+k)) + (unit ? AI_NBSP + 'ft' : '');
+        }) + AI_NBSP + 'ft ' + (ref || rel);
+      });
+      return aiSwiss(out);
+    }
+    function aiDabsLevel(s) {              // DABS-Grenze: «3000m / 9850ft» -> «9'850 ft MSL»; GND, SFC, FL, UNL und ft wie geliefert
+      var p = /^\s*\d+\s*m\s*\/\s*(\d+)\s*ft\b\s*(.*)$/i.exec(s), q;
+      if (p) s = p[1] + AI_NBSP + 'ft' + (p[2] ? ' ' + p[2] : '');
+      else if ((q = /^\s*(\d+)\s*m\b\s*(.*)$/i.exec(s))) s = '≈' + AI_NBSP + Math.round(+q[1] / AI_M_PER_FT / 10) * 10 + AI_NBSP + 'ft' + (q[2] ? ' ' + q[2] : '');
+      return aiSwissAlt(aiMslBand(s));
     }
     var ai = { data: undefined, loadedAt: 0 };          // undefined = lädt, null = keine Datei
     var AI_LAGE = {
@@ -2128,7 +2251,7 @@
         var done = t.beendet === true;         // heute schon vorbei: grau, damit die Liste zur DABS-Karte passt (Wunsch 16.11.)
         if (done) nDone++;
         var kopf = [str(t.gebiet), str(t.notam)].filter(Boolean).join(' · ') || 'Eintrag';
-        var band = aiSwissAlt((aiMslBand(str(t.unten)) || '?') + ' bis ' + (aiMslBand(str(t.oben)) || '?'));
+        var band = (aiDabsLevel(str(t.unten)) || '?') + ' bis ' + (aiDabsLevel(str(t.oben)) || '?');   // ft-Wert amtlich (Wunsch 19.11.)
         var zeit = str(t.zeit);                // Lokalzeit mit «LT» (Wunsch 16.11.); ältere Datensätze ohne Zusatz
         if (/^\d{2}:\d{2}/.test(zeit) && !/\b(?:LT|UTC)\b/.test(zeit)) zeit += ' LT';
         html += '<div class="ai-row' + (done ? ' ai-done' : '') + '"><b>' + escHtml(kopf) + '</b> ' + escHtml(zeit) +
@@ -2150,22 +2273,22 @@
       if (st.kind !== 'ok' || !t || typeof t !== 'object' || Array.isArray(t)) return '';
       var regs = Array.isArray(t.regionen) ? t.regionen : [], rows = '', any = false;
       function hm(s) { return (typeof s === 'string' && /^\d{2}:\d{2}$/.test(s)) ? s : null; }
-      function m(v) { return (typeof v === 'number' && isFinite(v)) ? aiThousands(Math.round(v)) + ' m MSL' : null; }
       Object.keys(AI_MAPS.thermik_region).forEach(function (k) {
         regs.forEach(function (r) {
           if (!r || typeof r !== 'object' || r.region !== k) return;
-          var von = hm(r.von), bis = hm(r.bis), ah = m(r.arbeitshoehe_m), ba = m(r.basis_m), parts = [];
+          var von = hm(r.von), bis = hm(r.bis), ah = aiFeet(r.arbeitshoehe_m), ba = aiFeet(r.basis_m), parts = [];
           if (r.nutzbar === true && von && bis && ah) {
             any = true;
             parts.push(von + '–' + bis, 'Arbeitshöhe ≈ ' + ah, r.blau === true ? 'Blauthermik' : (ba ? 'Basis ≈ ' + ba : 'Cumulus'));
           } else parts.push('keine nutzbare Thermik');
           if (aiHas(AI_MAPS.risiko, r.risiko) && r.risiko !== 'gering') parts.push('<span class="ai-prob">Gewitterrisiko ' + AI_MAPS.risiko[r.risiko] + '</span>');
           var w = aiNum(r.wind700_kt, ' kt');
-          if (r.wind_stark === true && w) parts.push('<span class="ai-prob">Wind 3' + "'" + '000 m MSL ' + w + ' (zerrissen, Lee)</span>');
+          // Wind auf 700 hPa (im Job «rund 3'000 m»), angezeigt als «Wind 9'800 ft MSL»
+          if (r.wind_stark === true && w) parts.push('<span class="ai-prob">Wind ' + aiFeet(3000) + ' ' + w + ' (zerrissen, Lee)</span>');
           rows += '<div class="ai-row"><b>' + AI_MAPS.thermik_region[k] + '</b> ' + parts.join(' · ') + '</div>';
         });
       });
-      var sum = (typeof t.zusammenfassung === 'string' && t.zusammenfassung) ? '<div class="ai-text ai-small" style="margin:0 0 6px;">' + escHtml(aiSwiss(t.zusammenfassung)) + '</div>' : '';
+      var sum = (typeof t.zusammenfassung === 'string' && t.zusammenfassung) ? '<div class="ai-text ai-small" style="margin:0 0 6px;">' + escHtml(aiFtText(t.zusammenfassung)) + '</div>' : '';
       if (!sum && !rows) return '';
       return '<div class="ai-sec">Thermik (Prognose)</div>' + sum + (any ? rows : '') +
         '<div class="ai-text ai-small">Modellabschätzung (Parcel-Methode, Open-Meteo), ersetzt kein Emagramm.</div>';
@@ -2181,7 +2304,7 @@
           ' – Lokalflüge nicht möglich</div>';
         return html + '<div class="ai-text">Noch kein KI-Briefing vorhanden. ' + sched + '</div>';
       }
-      var d = st.data, b = st.b;
+      var d = st.data, b = st.b, ftMap = aiDabsFtMap(d);
       var sky = (d.himmel && typeof d.himmel === 'object' && !Array.isArray(d.himmel)) ? d.himmel : {};
       if (st.kind === 'stale') {
         html += '<div class="ai-banner warn">Briefing von ' + aiSlotWhen(d, st.gen, now) + ' – die Lage kann sich inzwischen geändert haben.</div>';
@@ -2193,7 +2316,7 @@
       }
       var lg = st.lage ? AI_LAGE[st.lage] : null;
       html += '<div class="ai-headline"><span class="brf-dot" style="background:' + (st.sperre ? AI_LAGE.schlecht.color : (lg ? lg.color : AI_GREY)) + '"></span>' +
-        '<span>' + escHtml(aiSwiss(b.headline || '')) + '</span></div>';
+        '<span>' + escHtml(aiFtText(b.headline || '', ftMap)) + '</span></div>';
 
       // Platzstatus und Lage hervorgehoben (Wunsch 15.11.); Farben nur aus festen Maps, nie aus dem Datensatz.
       // Für Flächenflugzeuge gesperrt (im Briefing oder inzwischen laut FGZO): nur die Sperre, Lage «nicht möglich»,
@@ -2227,12 +2350,12 @@
       // FGZO-Hinweis (eigenes Feld seit 17.11.) direkt vor dem Text, aber nur solange der Platz nicht gesperrt ist
       var hint = (typeof b.fgzo_hinweis === 'string') ? b.fgzo_hinweis.replace(/^\s+|\s+$/g, '') : '';
       if (st.sperre) { hint = ''; txt = aiDropFgzoHint(txt); }
-      html += '<div class="ai-text">' + escHtml(aiSwiss(hint ? hint + ' ' + txt : txt)) + '</div>';
+      html += '<div class="ai-text">' + escHtml(aiFtText(hint ? hint + ' ' + txt : txt, ftMap)) + '</div>';
 
-      var basis = aiMeter(sky.wolkenbasis_m), bq = aiMap(AI_MAPS.basis_quelle, sky.basis_quelle);
+      var basis = aiFeet(sky.wolkenbasis_m), bq = aiMap(AI_MAPS.basis_quelle, sky.basis_quelle);
       var sichtTxt = aiMap(AI_MAPS.sicht, sky.sicht), sk = aiNum(sky.sicht_km, ' km');
-      var nebelTxt = aiMap(AI_MAPS.nebel, sky.nebel), nog = aiMeter(sky.nebel_obergrenze_m);
-      var schnee = aiMeter(sky.schneegrenze_m);
+      var nebelTxt = aiMap(AI_MAPS.nebel, sky.nebel), nog = aiFeet(sky.nebel_obergrenze_m);
+      var schnee = aiFeet(sky.schneegrenze_m);
       var rows = [
         ['Bedeckung',    aiNum(sky.bedeckung_achtel, '/8') || '–'],
         ['Wolkenbasis',  basis ? basis + (bq !== '–' ? ' <span class="ai-muted">(' + bq + ')</span>' : '') : '–'],
@@ -2249,7 +2372,7 @@
       var regs = Array.isArray(sky.regionen) ? sky.regionen : [], regHtml = '';
       Object.keys(AI_MAPS.region).forEach(function (k) {
         regs.forEach(function (r) {
-          if (r && r.region === k && r.zustand) regHtml += '<div class="ai-row"><b>' + AI_MAPS.region[k] + '</b> ' + escHtml(aiSwiss(r.zustand)) + '</div>';
+          if (r && r.region === k && r.zustand) regHtml += '<div class="ai-row"><b>' + AI_MAPS.region[k] + '</b> ' + escHtml(aiFtText(r.zustand, ftMap)) + '</div>';
         });
       });
       if (regHtml) html += '<div class="ai-sec">Regionen</div>' + regHtml;
@@ -2266,7 +2389,7 @@
           var tags = Array.isArray(k.tags) ? k.tags.filter(function (t) { return typeof t === 'string' && t !== 'gegenlicht'; })
             .map(function (t) { return escHtml(t.replace(/_/g, ' ')); }).join(', ') : '';
           camHtml += '<div class="ai-row"><b>' + escHtml(k.titel || '') + '</b>' + age +
-            (p ? ' ⚠ <span class="ai-prob">' + p + '</span>' : '') + '<br>' + escHtml(aiSwiss(k.satz || '')) +
+            (p ? ' ⚠ <span class="ai-prob">' + p + '</span>' : '') + '<br>' + escHtml(aiFtText(k.satz || '', ftMap)) +
             (tags ? ' <span class="ai-muted">· ' + tags + '</span>' : '') + '</div>';
         });
         html += '<details class="ai-cams"><summary class="ai-sec">Kameras (' + cams.length + ')</summary>' + camHtml + '</details>';
@@ -2710,18 +2833,16 @@
         var densAlt  = Math.round(pressAlt + 118.8 * tempDev);
         var daColor  = densAlt > 5000 ? '#ef4444' : densAlt > 3000 ? '#f59e0b' : '#10b981';
         daHtml = '<div class="wx-stat"><div class="wx-stat-label">Dichtehöhe</div>' +
-          '<div class="wx-stat-value" style="color:' + daColor + '; white-space: nowrap;">' + aiThousands(densAlt) + '&nbsp;ft</div>' +
-          '<div class="wx-stat-sub" style="white-space: nowrap;">' + aiThousands(Math.round(densAlt / 3.28084)) + '&nbsp;m</div></div>';
+          '<div class="wx-stat-value" style="color:' + daColor + '; white-space: nowrap;">' + aiThousands(densAlt) + '&nbsp;ft</div></div>';
       }
 
-      // Wolkenbasis-Schätzung (Faustformel: Spread × 122 m über Platz 536 m)
+      // Wolkenbasis-Schätzung (Faustformel: Spread × 122 m ≈ 400 ft über Platz 536 m), Anzeige in ft (Wunsch 19.11.)
       var cbHtml = '';
       if (temp !== null && dewp !== null) {
-        var baseMsl = Math.round((536 + (temp - dewp) * 122) / 50) * 50;
-        var baseFt  = Math.round(baseMsl * 3.28084 / 100) * 100;
+        var aglM = (temp - dewp) * 122;
         cbHtml = '<div class="wx-stat"><div class="wx-stat-label">Wolkenbasis (Schätzung)</div>' +
-          '<div class="wx-stat-value" style="white-space:nowrap;">' + aiThousands(baseMsl) + '&nbsp;m</div>' +
-          '<div class="wx-stat-sub" style="white-space:nowrap;">' + aiThousands(baseFt) + '&nbsp;ft (MSL)<br>≈&nbsp;' + aiThousands(baseMsl - 536) + '&nbsp;m über Platz</div></div>';
+          '<div class="wx-stat-value" style="white-space:nowrap;">' + aiThousands(aiFtRound(536 + aglM)) + '&nbsp;ft</div>' +
+          '<div class="wx-stat-sub" style="white-space:nowrap;">MSL<br>≈&nbsp;' + aiThousands(aiFtRound(aglM)) + '&nbsp;ft über Platz</div></div>';
       }
 
       // Föhn-Index-Kachel: METAR-QNH LSZA − LSZH (Süd−Nord über den Alpenkamm), ganze hPa
@@ -3367,7 +3488,7 @@
         }
       }
 
-      function fmt100(m2) { return aiThousands(Math.round(m2 / 100) * 100); }   // nur Anzeige: «2'700»
+      function fmtFt(m2) { return aiThousands(aiFtRound(m2)); }   // nur Anzeige in ft (Wunsch 19.11.): 2700 m -> «8'900»
       function tstat(label, val, sub) {
         return '<div class="wx-stat"><div class="wx-stat-label">' + label + '</div>' +
           '<div class="wx-stat-value" style="white-space:nowrap;">' + val + '</div>' +
@@ -3379,13 +3500,13 @@
         von ? null : 'Modell sieht heute keine nutzbare Thermik');
       if (best) {
         var blau = best.top < best.lcl;
-        html += tstat('Max. Arbeitshöhe', '~' + fmt100(Math.min(best.top, best.lcl)) + '&nbsp;m',
+        html += tstat('Max. Arbeitshöhe', '~' + fmtFt(Math.min(best.top, best.lcl)) + '&nbsp;ft',
           'MSL · um ' + best.zeit);
         html += tstat('Charakter', blau ? 'Blauthermik' : 'Cumulus',
-          blau ? 'Basis läge über Thermik-Top' : 'Cu-Basis ~' + fmt100(best.lcl) + '&nbsp;m MSL');
+          blau ? 'Basis läge über Thermik-Top' : 'Cu-Basis ~' + fmtFt(best.lcl) + '&nbsp;ft MSL');
       }
-      if (trigger !== null) {
-        html += tstat("Auslösetemp. (2'000&nbsp;m)", trigger.toFixed(1).replace('.', ',') + '&nbsp;°C',
+      if (trigger !== null) {   // gerechnet weiter mit 2'000 m (eZiel oben), beschriftet in ft
+        html += tstat("Auslösetemp. (6'600&nbsp;ft)", trigger.toFixed(1).replace('.', ',') + '&nbsp;°C',
           triggerAb ? 'erreicht ab ca. ' + triggerAb : 'heute voraussichtlich nicht erreicht');
       }
       html += '</div>' +
@@ -4201,7 +4322,7 @@ function render(){
   var flights=filterText?allFlights.filter(function(f){return matchesFilter(devs[f.device]||{})}):allFlights;
   var total=allFlights.length,shown=flights.length;
   var countStr=filterText?'<span class="count">'+shown+'</span> von '+total+' Flügen':total+(total===1?' Flug':' Flüge');
-  meta.innerHTML="<b>"+esc(af.name||ICAO)+"</b>"+(af.elevation?" · "+tsd(af.elevation)+" m":"")+" · "+countStr+(isToday(currentDate)?" · aktualisiert "+pad(now.getHours())+":"+pad(now.getMinutes()):"");
+  meta.innerHTML="<b>"+esc(af.name||ICAO)+"</b>"+(af.elevation?" · "+tsd(Math.round(af.elevation/0.3048/10)*10)+" ft":"")+" · "+countStr+(isToday(currentDate)?" · aktualisiert "+pad(now.getHours())+":"+pad(now.getMinutes()):"");
   if(!allFlights.length){content.className="status";content.textContent="Keine Flüge an diesem Tag.";return}
   if(!flights.length){content.className="status";content.textContent='Keine Flüge passen zum Filter „'+filterText+'".';return}
   flights.sort(function(a,b){return b.start_tsp-a.start_tsp});
@@ -4219,8 +4340,8 @@ function render(){
     var warn=f.warn?' <span class="warn-icon" title="Detektion unsicher">⚠</span>':"";
     var stop=f.stop?(esc(formatStart(f.stop))+stc):'<span class="running">läuft…</span>';
     var dur=f.duration?esc(formatDuration(f.duration)):'<span class="running">'+(f.duration_expected?"≈ "+formatDuration(f.duration_expected):"läuft…")+"</span>";
-    var agl=f.max_height?tsd(f.max_height)+" m":"–";
-    var msl=f.max_alt?tsd(f.max_alt)+" m":"–";
+    var agl=f.max_height?tsd(Math.round(f.max_height/0.3048/10)*10)+" ft":"–";
+    var msl=f.max_alt?tsd(Math.round(f.max_alt/0.3048/10)*10)+" ft":"–";
     var action;
     if(hasIgc(d,f)){
       var url=buildSeeYouUrl(buildIgcUrl(data.date,d,f));

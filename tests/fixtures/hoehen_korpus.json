@@ -1,0 +1,1036 @@
+[
+ {
+  "where": "ai_status_8eb1def.json headline",
+  "in": "Platz gesperrt (nur Heli), Böen 31 kt, Schauer",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Platz gesperrt (nur Heli), Böen 31 kt, Schauer"
+ },
+ {
+  "where": "ai_status_8eb1def.json text",
+  "in": "Platz gesperrt: nur Helikopterbetrieb. Am Platz Wind aus Südwest mit 15 kt, Böen bis 31 kt, 11 °C, in der letzten Stunde trocken, in der Umgebung aber Schauer. Stark bewölkt mit Basis um 1'600 m MSL, Sicht 21 km (Wageten), Säntis und Glarner Kämme in Wolken. Alpenhauptkamm am Oberalp in Wolken, in Mittelbünden und um Davos Gipfel teilweise frei. Prognose: bis 18 Uhr bedeckt, Regen wahrscheinlich (100 % in den nächsten 3 h), Wind auf 1'500 m MSL um 45 kt aus Westsüdwest, ab 20 Uhr Auflockerung, ab Mitternacht erneut stark bewölkt. DABS (Version 3, Stand 12:45 LT): LSD12 Sihltal 13:00–22:00 LT GND bis 3'000 m MSL, LSR39B Brisen und LSR39C Stoos 14:00–16:00 LT 2'750 m MSL bis FL130, LSR11 S-chanf 14:00–18:30 LT GND bis 9'600 m MSL und LSR11A 2'150–9'600 m MSL aktiv. Laut Thermikprognose sind die Thermikfenster im Alpenraum für heute vorbei.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Platz gesperrt: nur Helikopterbetrieb. Am Platz Wind aus Südwest mit 15 kt, Böen bis 31 kt, 11 °C, in der letzten Stunde trocken, in der Umgebung aber Schauer. Stark bewölkt mit Basis um 5'200 ft MSL, Sicht 21 km (Wageten), Säntis und Glarner Kämme in Wolken. Alpenhauptkamm am Oberalp in Wolken, in Mittelbünden und um Davos Gipfel teilweise frei. Prognose: bis 18 Uhr bedeckt, Regen wahrscheinlich (100 % in den nächsten 3 h), Wind auf 4'900 ft MSL um 45 kt aus Westsüdwest, ab 20 Uhr Auflockerung, ab Mitternacht erneut stark bewölkt. DABS (Version 3, Stand 12:45 LT): LSD12 Sihltal 13:00–22:00 LT GND bis 9'850 ft MSL, LSR39B Brisen und LSR39C Stoos 14:00–16:00 LT 9'000 ft MSL bis FL130, LSR11 S-chanf 14:00–18:30 LT GND bis 31'500 ft MSL und LSR11A 7'000–31'500 ft MSL aktiv. Laut Thermikprognose sind die Thermikfenster im Alpenraum für heute vorbei."
+ },
+ {
+  "where": "ai_status_8eb1def.json region platz",
+  "in": "Vorfeld nass, Windsack fast waagrecht.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Vorfeld nass, Windsack fast waagrecht."
+ },
+ {
+  "where": "ai_status_8eb1def.json region zuercher_oberland",
+  "in": "Dunkle Wolkendecke über den Hügeln, Richtung Glarner Voralpen Schauerschleier.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Dunkle Wolkendecke über den Hügeln, Richtung Glarner Voralpen Schauerschleier."
+ },
+ {
+  "where": "ai_status_8eb1def.json region voralpen",
+  "in": "Hirzli-Kette bis 1'750 m MSL frei, Richtung Walensee Schauer, Linthebene nass.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Hirzli-Kette bis 5'700 ft MSL frei, Richtung Walensee Schauer, Linthebene nass."
+ },
+ {
+  "where": "ai_status_8eb1def.json region glarner_alpen",
+  "in": "Wolkenfetzen an den Flanken des Grosstals ab rund 1'300 m MSL, auf 2'015 m MSL in Wolken mit Neuschneeanflug.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Wolkenfetzen an den Flanken des Grosstals ab rund 4'300 ft MSL, auf 6'600 ft MSL in Wolken mit Neuschneeanflug."
+ },
+ {
+  "where": "ai_status_8eb1def.json region zentralalpen",
+  "in": "Am Klausen Gipfel um 3'000 m MSL teils frei und verschneit, Oberalp und Gotthard in Wolken mit Schnee.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Am Klausen Gipfel um 9'800 ft MSL teils frei und verschneit, Oberalp und Gotthard in Wolken mit Schnee."
+ },
+ {
+  "where": "ai_status_8eb1def.json region graubuenden",
+  "in": "Um Davos sonnig mit Quellwolken, über Lenzerheide und Churer Rheintal dichte Bewölkung mit Niederschlag.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Um Davos sonnig mit Quellwolken, über Lenzerheide und Churer Rheintal dichte Bewölkung mit Niederschlag."
+ },
+ {
+  "where": "ai_status_8eb1def.json region alpensuedseite",
+  "in": "Leventina hoch bewölkt, Pizzo Forno und Campo Tencia frei und verschneit.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Leventina hoch bewölkt, Pizzo Forno und Campo Tencia frei und verschneit."
+ },
+ {
+  "where": "ai_status_8eb1def.json kamera Speck – Runway 30",
+  "in": "Bedeckt mit dunkler Wolkendecke, Graspiste ohne sichtbare Wasserflächen, kein Flugbetrieb.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Bedeckt mit dunkler Wolkendecke, Graspiste ohne sichtbare Wasserflächen, kein Flugbetrieb."
+ },
+ {
+  "where": "ai_status_8eb1def.json kamera Speck – Tankstelle",
+  "in": "Windsack fast waagrecht aus Südwest, Vorfeld nass, dunkle Wolken, Oberland-Hügel bis Bachtel erkennbar.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Windsack fast waagrecht aus Südwest, Vorfeld nass, dunkle Wolken, Oberland-Hügel bis Bachtel erkennbar."
+ },
+ {
+  "where": "ai_status_8eb1def.json kamera Bachtel",
+  "in": "Geschlossene dunkle Wolkendecke, Voralpengipfel in Wolken, Schauerschleier Richtung Süden.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Geschlossene dunkle Wolkendecke, Voralpengipfel in Wolken, Schauerschleier Richtung Süden."
+ },
+ {
+  "where": "ai_status_8eb1def.json kamera Wangen-Lachen – Cam 1",
+  "in": "Stark bewölkt, Gipfel teils in Wolken, Piste und Vorfeld nass.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Stark bewölkt, Gipfel teils in Wolken, Piste und Vorfeld nass."
+ },
+ {
+  "where": "ai_status_8eb1def.json kamera Rapperswil",
+  "in": "Hirzli-Kette bis Wageten frei, links Schauerschleier Richtung Walensee, See mit Wellen.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Hirzli-Kette bis Wageten frei, links Schauerschleier Richtung Walensee, See mit Wellen."
+ },
+ {
+  "where": "ai_status_8eb1def.json kamera Säntis",
+  "in": "Gipfel in der Wolke, Basis unter 2'500 m MSL.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Gipfel in der Wolke, Basis unter 8'200 ft MSL."
+ },
+ {
+  "where": "ai_status_8eb1def.json kamera Richtung Tödi",
+  "in": "Wolkenfetzen an den Talflanken ab rund 1'300 m MSL, Talende nur teilweise sichtbar.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Wolkenfetzen an den Talflanken ab rund 4'300 ft MSL, Talende nur teilweise sichtbar."
+ },
+ {
+  "where": "ai_status_8eb1def.json kamera Elm – Schabell",
+  "in": "Station auf 2'015 m MSL in Wolken, leichter Neuschnee am Hang.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Station auf 6'600 ft MSL in Wolken, leichter Neuschnee am Hang."
+ },
+ {
+  "where": "ai_status_8eb1def.json kamera Klausenpass",
+  "in": "Gipfel um 3'000 m MSL teils frei und verschneit, Wolken über Windgällen, Hänge darunter aper.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Gipfel um 9'800 ft MSL teils frei und verschneit, Wolken über Windgällen, Hänge darunter aper."
+ },
+ {
+  "where": "ai_status_8eb1def.json kamera Schneehüenerstock",
+  "in": "Station auf 2'600 m MSL in Wolken, Anlagen verschneit.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Station auf 8'500 ft MSL in Wolken, Anlagen verschneit."
+ },
+ {
+  "where": "ai_status_8eb1def.json kamera Gotthardpass",
+  "in": "Schneebedeckt, Sicht stark eingeschränkt, keine verlässliche Aussage.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Schneebedeckt, Sicht stark eingeschränkt, keine verlässliche Aussage."
+ },
+ {
+  "where": "ai_status_8eb1def.json kamera Parpaner Rothorn",
+  "in": "Gipfel im Osten frei und verschneit, im Westen über Lenzerheide dichte Wolken mit Niederschlag.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Gipfel im Osten frei und verschneit, im Westen über Lenzerheide dichte Wolken mit Niederschlag."
+ },
+ {
+  "where": "ai_status_8eb1def.json kamera Jakobshorn",
+  "in": "Sonnig mit Quellwolken, Gipfel frei, geschlossene Schneedecke an den Hängen.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Sonnig mit Quellwolken, Gipfel frei, geschlossene Schneedecke an den Hängen."
+ },
+ {
+  "where": "ai_status_8eb1def.json kamera Ambri Tarnolgio",
+  "in": "Hohe Bewölkung, Pizzo Forno und Campo Tencia frei und verschneit.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Hohe Bewölkung, Pizzo Forno und Campo Tencia frei und verschneit."
+ },
+ {
+  "where": "ai_status_8eb1def.json thermik",
+  "in": "Prognose: Die Thermikfenster in Urseren, Mittelbünden und um Davos lagen zwischen 12 und 14 Uhr und sind vorbei; der starke Höhenwind zerreisst die Thermik, Lee beachten.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Prognose: Die Thermikfenster in Urseren, Mittelbünden und um Davos lagen zwischen 12 und 14 Uhr und sind vorbei; der starke Höhenwind zerreisst die Thermik, Lee beachten."
+ },
+ {
+  "where": "ai_status_ab228a8.json headline",
+  "in": "Platz gesperrt (nur Heli), Regen, Basis um 1'300 m MSL",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Platz gesperrt (nur Heli), Regen, Basis um 4'300 ft MSL"
+ },
+ {
+  "where": "ai_status_ab228a8.json text",
+  "in": "Platz gesperrt: nur Helikopterbetrieb. Am Platz Regen, Wind aus Südwest mit 2 kt, Böen bis 4 kt, bedeckt mit Fetzen um 850 m MSL und Basis um 1'300 m MSL, Sicht 7 km (Höchi). Säntis, Glarner Gipfel und Hauptkamm in Wolken, Neuschnee ab etwa 1'800 m MSL. Prognose: Regen wahrscheinlich (100 % in den nächsten 3 h), bis zum Abend stark bewölkt bis bedeckt, am Nachmittag Wind aus Südwest bis 11 kt, Böen bis 22 kt; um 17 Uhr Regen nur möglich, ab 19 Uhr wieder wahrscheinlich. DABS (Version 1, Stand 18.11. 15:28 LT): LSD12 Sihltal 08:00–12:00 und 13:00–22:00 LT GND bis 3'000 m MSL, LSR39B Brisen und LSR39C Stoos 09:00–11:00 und 14:00–16:00 LT 2'750 m MSL bis FL130, LSR11/11A S-chanf 08:00–21:30 LT. Thermik laut Prognose nur kurz um 13 Uhr in den Glarner Alpen mit Arbeitshöhe um 2'000 m MSL, unter der Kammhöhe; Wind auf 3'000 m MSL um 40 kt, Thermik zerrissen, Lee beachten.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Platz gesperrt: nur Helikopterbetrieb. Am Platz Regen, Wind aus Südwest mit 2 kt, Böen bis 4 kt, bedeckt mit Fetzen um 2'800 ft MSL und Basis um 4'300 ft MSL, Sicht 7 km (Höchi). Säntis, Glarner Gipfel und Hauptkamm in Wolken, Neuschnee ab etwa 5'900 ft MSL. Prognose: Regen wahrscheinlich (100 % in den nächsten 3 h), bis zum Abend stark bewölkt bis bedeckt, am Nachmittag Wind aus Südwest bis 11 kt, Böen bis 22 kt; um 17 Uhr Regen nur möglich, ab 19 Uhr wieder wahrscheinlich. DABS (Version 1, Stand 18.11. 15:28 LT): LSD12 Sihltal 08:00–12:00 und 13:00–22:00 LT GND bis 9'850 ft MSL, LSR39B Brisen und LSR39C Stoos 09:00–11:00 und 14:00–16:00 LT 9'000 ft MSL bis FL130, LSR11/11A S-chanf 08:00–21:30 LT. Thermik laut Prognose nur kurz um 13 Uhr in den Glarner Alpen mit Arbeitshöhe um 6'600 ft MSL, unter der Kammhöhe; Wind auf 9'800 ft MSL um 40 kt, Thermik zerrissen, Lee beachten."
+ },
+ {
+  "where": "ai_status_ab228a8.json region platz",
+  "in": "Vorfeld mit Pfützen, Windsack hängt schlaff.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Vorfeld mit Pfützen, Windsack hängt schlaff."
+ },
+ {
+  "where": "ai_status_ab228a8.json region zuercher_oberland",
+  "in": "Hügelkuppen um 1'200 m MSL streifen die Wolken, tiefe Fetzen über Hinwil, Fernsicht keine.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Hügelkuppen um 3'900 ft MSL streifen die Wolken, tiefe Fetzen über Hinwil, Fernsicht keine."
+ },
+ {
+  "where": "ai_status_ab228a8.json region voralpen",
+  "in": "Rapperswil im Regen nur dunstig, Speer und Hirzli-Kette in Wolken, Säntis in der Wolke mit Raureif.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Rapperswil im Regen nur dunstig, Speer und Hirzli-Kette in Wolken, Säntis in der Wolke mit Raureif."
+ },
+ {
+  "where": "ai_status_ab228a8.json region glarner_alpen",
+  "in": "Im Grosstal Talflanken frei, Gipfel um den Tödi angezuckert und teils verhangen; über Elm dichte Wolken um 2'000 m MSL.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Im Grosstal Talflanken frei, Gipfel um den Tödi angezuckert und teils verhangen; über Elm dichte Wolken um 6'600 ft MSL."
+ },
+ {
+  "where": "ai_status_ab228a8.json region zentralalpen",
+  "in": "Klausenpass und Oberalp in Wolken bei Schneefall, Neuschnee.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Klausenpass und Oberalp in Wolken bei Schneefall, Neuschnee."
+ },
+ {
+  "where": "ai_status_ab228a8.json region graubuenden",
+  "in": "Am Parpaner Rothorn Wolken zwischen den Gipfeln mit Lücken nach Westen, Jakobshorn in Wolken bei Schneefall.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Am Parpaner Rothorn Wolken zwischen den Gipfeln mit Lücken nach Westen, Jakobshorn in Wolken bei Schneefall."
+ },
+ {
+  "where": "ai_status_ab228a8.json region alpensuedseite",
+  "in": "Leventina in Wolken, Basis unter 1'600 m MSL.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Leventina in Wolken, Basis unter 5'200 ft MSL."
+ },
+ {
+  "where": "ai_status_ab228a8.json kamera Speck – Runway 30",
+  "in": "Bedeckt und grau, Regen, Graspiste nass, Hügel im Westen leicht verhangen.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Bedeckt und grau, Regen, Graspiste nass, Hügel im Westen leicht verhangen."
+ },
+ {
+  "where": "ai_status_ab228a8.json kamera Speck – Tankstelle",
+  "in": "Bedeckt, Vorfeld nass mit Pfützen, Windsack hängt schlaff, Höchi (7 km) nur schwach erkennbar.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Bedeckt, Vorfeld nass mit Pfützen, Windsack hängt schlaff, Höchi (7 km) nur schwach erkennbar."
+ },
+ {
+  "where": "ai_status_ab228a8.json kamera Bachtel",
+  "in": "Basis knapp über dem Turm, Kuppen um 1'200 m MSL streifen die Wolken, tiefe Fetzen über Hinwil, keine Fernsicht.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Basis knapp über dem Turm, Kuppen um 3'900 ft MSL streifen die Wolken, tiefe Fetzen über Hinwil, keine Fernsicht."
+ },
+ {
+  "where": "ai_status_ab228a8.json kamera Wangen-Lachen – Cam 1",
+  "in": "Regen, Vorfeld nass glänzend, Hügel am Obersee verhangen, Speer nicht sichtbar.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Regen, Vorfeld nass glänzend, Hügel am Obersee verhangen, Speer nicht sichtbar."
+ },
+ {
+  "where": "ai_status_ab228a8.json kamera Rapperswil",
+  "in": "Rapperswil (2,5 km) dunstig im Regen, Hirzli-Kette und Mürtschenstock in Wolken.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Rapperswil (2,5 km) dunstig im Regen, Hirzli-Kette und Mürtschenstock in Wolken."
+ },
+ {
+  "where": "ai_status_ab228a8.json kamera Säntis",
+  "in": "Gipfel in der Wolke, Raureif und Schnee auf der Station.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Gipfel in der Wolke, Raureif und Schnee auf der Station."
+ },
+ {
+  "where": "ai_status_ab228a8.json kamera Richtung Tödi",
+  "in": "Grosstal frei, Gipfel um den Tödi angezuckert, darüber geschlossene Wolkendecke.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Grosstal frei, Gipfel um den Tödi angezuckert, darüber geschlossene Wolkendecke."
+ },
+ {
+  "where": "ai_status_ab228a8.json kamera Elm – Schabell",
+  "in": "Dichte Wolken um 2'000 m MSL, Hauptkette Sardona–Hausstock verhangen, Neuschnee am Grat.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Dichte Wolken um 6'600 ft MSL, Hauptkette Sardona–Hausstock verhangen, Neuschnee am Grat."
+ },
+ {
+  "where": "ai_status_ab228a8.json kamera Klausenpass",
+  "in": "In der Wolke bei Schneefall, Basis unter 1'850 m MSL, Neuschnee.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "In der Wolke bei Schneefall, Basis unter 6'100 ft MSL, Neuschnee."
+ },
+ {
+  "where": "ai_status_ab228a8.json kamera Schneehüenerstock",
+  "in": "In der Wolke, Neuschnee, Hauptkamm am Oberalp verhangen.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "In der Wolke, Neuschnee, Hauptkamm am Oberalp verhangen."
+ },
+ {
+  "where": "ai_status_ab228a8.json kamera Gotthardpass",
+  "in": "Kein aktuelles Bild, keine Aussage möglich.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Kein aktuelles Bild, keine Aussage möglich."
+ },
+ {
+  "where": "ai_status_ab228a8.json kamera Parpaner Rothorn",
+  "in": "Wolken zwischen den Gipfeln, Hauptkamm verhangen, nach Westen Lücken, Neuschnee.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Wolken zwischen den Gipfeln, Hauptkamm verhangen, nach Westen Lücken, Neuschnee."
+ },
+ {
+  "where": "ai_status_ab228a8.json kamera Jakobshorn",
+  "in": "In der Wolke bei Schneefall, Basis unter 2'550 m MSL.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "In der Wolke bei Schneefall, Basis unter 8'400 ft MSL."
+ },
+ {
+  "where": "ai_status_ab228a8.json kamera Ambri Tarnolgio",
+  "in": "In der Wolke, Basis unter 1'600 m MSL.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "In der Wolke, Basis unter 5'200 ft MSL."
+ },
+ {
+  "where": "ai_status_ab228a8.json thermik",
+  "in": "Prognose: Nutzbare Thermik nur kurz um 13 Uhr in den Glarner Alpen, Basis und Arbeitshöhe um 2'000 m MSL, damit unter der Kammhöhe von 2'700 m MSL; Wind auf 3'000 m MSL um 40 kt, Thermik zerrissen, Lee beachten. Aktuell stecken die Glarner Gipfel in Wolken.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Prognose: Nutzbare Thermik nur kurz um 13 Uhr in den Glarner Alpen, Basis und Arbeitshöhe um 6'600 ft MSL, damit unter der Kammhöhe von 8'900 ft MSL; Wind auf 9'800 ft MSL um 40 kt, Thermik zerrissen, Lee beachten. Aktuell stecken die Glarner Gipfel in Wolken."
+ },
+ {
+  "where": "ai_status_live.json headline",
+  "in": "Platz gesperrt (nur Heli), Regen, Basis 1'000 m MSL",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Platz gesperrt (nur Heli), Regen, Basis 3'300 ft MSL"
+ },
+ {
+  "where": "ai_status_live.json text",
+  "in": "Platz gesperrt: nur Helikopterbetrieb. Am Platz leichter Regen, 7 °C bei einer Spreizung von 0,1 °C, Wind aus Südsüdost mit 5 kt, Böen bis 11 kt. Bedeckt, Bachtel in Wolken, Basis um 1'000 m MSL, Sicht 7 km (Höchi); Alpen verhangen, Föhn-Index +1 hPa. Prognose: Regen wahrscheinlich (100 % in den nächsten 3 h), ab Mittag Südwestwind mit Böen um 20 kt und Sicht über 30 km, um 14 Uhr kurz aufgelockert, ab 19 Uhr erneut Regen. DABS (Version 2, Stand 08:45 LT): LSD12 Sihltal 08:00–12:00 und 13:00–22:00 LT GND bis 3'000 m MSL, LSR39B/C Brisen/Stoos 09:00–11:00 und 14:00–16:00 LT ab 2'750 m MSL bis FL130.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Platz gesperrt: nur Helikopterbetrieb. Am Platz leichter Regen, 7 °C bei einer Spreizung von 0,1 °C, Wind aus Südsüdost mit 5 kt, Böen bis 11 kt. Bedeckt, Bachtel in Wolken, Basis um 3'300 ft MSL, Sicht 7 km (Höchi); Alpen verhangen, Föhn-Index +1 hPa. Prognose: Regen wahrscheinlich (100 % in den nächsten 3 h), ab Mittag Südwestwind mit Böen um 20 kt und Sicht über 30 km, um 14 Uhr kurz aufgelockert, ab 19 Uhr erneut Regen. DABS (Version 2, Stand 08:45 LT): LSD12 Sihltal 08:00–12:00 und 13:00–22:00 LT GND bis 9'850 ft MSL, LSR39B/C Brisen/Stoos 09:00–11:00 und 14:00–16:00 LT ab 9'000 ft MSL bis FL130."
+ },
+ {
+  "where": "ai_status_live.json region platz",
+  "in": "Vorfeld nass, Pfützen auf der Wendefläche am Pistenanfang 30.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Vorfeld nass, Pfützen auf der Wendefläche am Pistenanfang 30."
+ },
+ {
+  "where": "ai_status_live.json region zuercher_oberland",
+  "in": "Bachtelturm auf 1'180 m MSL in der Wolke, darunter nur schemenhafte Bodensicht.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Bachtelturm auf 3'900 ft MSL in der Wolke, darunter nur schemenhafte Bodensicht."
+ },
+ {
+  "where": "ai_status_live.json region voralpen",
+  "in": "Rapperswil gut erkennbar, Hirzli-Kette nur schemenhaft im Regen, Säntis in Wolken.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Rapperswil gut erkennbar, Hirzli-Kette nur schemenhaft im Regen, Säntis in Wolken."
+ },
+ {
+  "where": "ai_status_live.json region glarner_alpen",
+  "in": "Wolkenfetzen an den Talflanken des Grosstals ab rund 1'000 m MSL, Tödi verdeckt, Schabell auf 2'015 m MSL in Wolke mit Neuschnee.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Wolkenfetzen an den Talflanken des Grosstals ab rund 3'300 ft MSL, Tödi verdeckt, Schabell auf 6'600 ft MSL in Wolke mit Neuschnee."
+ },
+ {
+  "where": "ai_status_live.json region zentralalpen",
+  "in": "Klausenpass und Oberalp in Wolke mit Schneefall, verschneit ab spätestens 1'850 m MSL.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Klausenpass und Oberalp in Wolke mit Schneefall, verschneit ab spätestens 6'100 ft MSL."
+ },
+ {
+  "where": "ai_status_live.json region graubuenden",
+  "in": "Parpaner Rothorn und Jakobshorn in Wolke, Neuschnee.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Parpaner Rothorn und Jakobshorn in Wolke, Neuschnee."
+ },
+ {
+  "where": "ai_status_live.json region alpensuedseite",
+  "in": "Leventina auf 1'610 m MSL in Wolke, Basis darunter.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Leventina auf 5'300 ft MSL in Wolke, Basis darunter."
+ },
+ {
+  "where": "ai_status_live.json kamera Speck – Runway 30",
+  "in": "Graspiste nass, tiefe graue Bewölkung, Bodensicht über den Westsektor gegeben.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Graspiste nass, tiefe graue Bewölkung, Bodensicht über den Westsektor gegeben."
+ },
+ {
+  "where": "ai_status_live.json kamera Speck – Tankstelle",
+  "in": "Vorfeld nass, Pfützen am Pistenanfang 30, Windsack halb gefüllt, Oberland-Hügel nur dunstig erkennbar.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Vorfeld nass, Pfützen am Pistenanfang 30, Windsack halb gefüllt, Oberland-Hügel nur dunstig erkennbar."
+ },
+ {
+  "where": "ai_status_live.json kamera Bachtel",
+  "in": "Turm auf 1'180 m MSL in der Wolke, Basis darunter, nur Nahsicht.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Turm auf 3'900 ft MSL in der Wolke, Basis darunter, nur Nahsicht."
+ },
+ {
+  "where": "ai_status_live.json kamera Wangen-Lachen – Cam 1",
+  "in": "Vorfeld nass, Berge der Linthebene nur schemenhaft unter tiefer Bewölkung.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Vorfeld nass, Berge der Linthebene nur schemenhaft unter tiefer Bewölkung."
+ },
+ {
+  "where": "ai_status_live.json kamera Rapperswil",
+  "in": "Rapperswil auf 2,5 km klar, Hirzli-Kette nur schemenhaft im Regendunst.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Rapperswil auf 2,5 km klar, Hirzli-Kette nur schemenhaft im Regendunst."
+ },
+ {
+  "where": "ai_status_live.json kamera Säntis",
+  "in": "Gipfel auf 2'505 m MSL in der Wolke.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Gipfel auf 8'200 ft MSL in der Wolke."
+ },
+ {
+  "where": "ai_status_live.json kamera Richtung Tödi",
+  "in": "Wolkenfetzen an den Flanken ab rund 1'000 m MSL, Talschluss und Tödi verdeckt, Tal schneefrei.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Wolkenfetzen an den Flanken ab rund 3'300 ft MSL, Talschluss und Tödi verdeckt, Tal schneefrei."
+ },
+ {
+  "where": "ai_status_live.json kamera Elm – Schabell",
+  "in": "Station auf 2'015 m MSL in der Wolke, Neuschnee auf der Piste.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Station auf 6'600 ft MSL in der Wolke, Neuschnee auf der Piste."
+ },
+ {
+  "where": "ai_status_live.json kamera Klausenpass",
+  "in": "In der Wolke auf 1'850 m MSL, Schneefall, alles verschneit.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "In der Wolke auf 6'100 ft MSL, Schneefall, alles verschneit."
+ },
+ {
+  "where": "ai_status_live.json kamera Schneehüenerstock",
+  "in": "In der Wolke auf 2'600 m MSL, Neuschnee, Hauptkamm verdeckt.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "In der Wolke auf 8'500 ft MSL, Neuschnee, Hauptkamm verdeckt."
+ },
+ {
+  "where": "ai_status_live.json kamera Gotthardpass",
+  "in": "Kein aktuelles Bild vom Pass.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Kein aktuelles Bild vom Pass."
+ },
+ {
+  "where": "ai_status_live.json kamera Parpaner Rothorn",
+  "in": "Gipfel auf 2'865 m MSL in der Wolke, Neuschnee an den Felsen.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Gipfel auf 9'400 ft MSL in der Wolke, Neuschnee an den Felsen."
+ },
+ {
+  "where": "ai_status_live.json kamera Jakobshorn",
+  "in": "In der Wolke auf 2'590 m MSL, Schneefall, alles verschneit.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "In der Wolke auf 8'500 ft MSL, Schneefall, alles verschneit."
+ },
+ {
+  "where": "ai_status_live.json kamera Ambri Tarnolgio",
+  "in": "In der Wolke auf 1'610 m MSL, Basis darunter.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "In der Wolke auf 5'300 ft MSL, Basis darunter."
+ },
+ {
+  "where": "ai_status_1500.json headline",
+  "in": "Platz gesperrt (nur Heli), Basis um 1'200 m MSL",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Platz gesperrt (nur Heli), Basis um 3'900 ft MSL"
+ },
+ {
+  "where": "ai_status_1500.json text",
+  "in": "Platz gesperrt: nur Helikopterbetrieb. Wind aus Südwest mit 9 kt, Böen bis 16 kt, 10 °C; wechselnd bewölkt mit Wolkenfetzen am Bachtel, Basis um 1'200 m MSL, eine höhere Schicht um 2'100 m MSL, Sicht 39 km (Flumserberge), Schauer im Raum Kloten. Voralpen und Glarner Gipfel teilweise frei, der Hauptkamm an Gotthard, Oberalp und in Mittelbünden steckt in Wolken. Prognose: Regen wahrscheinlich (80 % in den nächsten 3 h), ab 18 Uhr bedeckt und ab 19 Uhr Regen, Wind auf 1'500 m MSL um 40 kt aus Westsüdwest, Nullgrad um 1'700–1'800 m MSL. DABS (Version 3, Stand 12:45 LT): D-Area LSD12 Sihltal 13:00–22:00 LT, GND bis 3'000 m MSL; R-Areas LSR39B Brisen und LSR39C Stoos 14:00–16:00 LT, 2'750 m MSL bis FL130.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Platz gesperrt: nur Helikopterbetrieb. Wind aus Südwest mit 9 kt, Böen bis 16 kt, 10 °C; wechselnd bewölkt mit Wolkenfetzen am Bachtel, Basis um 3'900 ft MSL, eine höhere Schicht um 6'900 ft MSL, Sicht 39 km (Flumserberge), Schauer im Raum Kloten. Voralpen und Glarner Gipfel teilweise frei, der Hauptkamm an Gotthard, Oberalp und in Mittelbünden steckt in Wolken. Prognose: Regen wahrscheinlich (80 % in den nächsten 3 h), ab 18 Uhr bedeckt und ab 19 Uhr Regen, Wind auf 4'900 ft MSL um 40 kt aus Westsüdwest, Nullgrad um 5'600–5'900 ft MSL. DABS (Version 3, Stand 12:45 LT): D-Area LSD12 Sihltal 13:00–22:00 LT, GND bis 9'850 ft MSL; R-Areas LSR39B Brisen und LSR39C Stoos 14:00–16:00 LT, 9'000 ft MSL bis FL130."
+ },
+ {
+  "where": "ai_status_1500.json region platz",
+  "in": "Vorfeld nass mit Pfützen, Windsack zeigt Wind aus Südwest bis West.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Vorfeld nass mit Pfützen, Windsack zeigt Wind aus Südwest bis West."
+ },
+ {
+  "where": "ai_status_1500.json region zuercher_oberland",
+  "in": "Wolkenfetzen auf Turmhöhe um 1'150 m MSL, Richtung Alpen verhangen.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Wolkenfetzen auf Turmhöhe um 3'800 ft MSL, Richtung Alpen verhangen."
+ },
+ {
+  "where": "ai_status_1500.json region voralpen",
+  "in": "Säntis in Wolke, Gipfel um den Obersee mit Wolken, Mürtschenstock frei und verschneit.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Säntis in Wolke, Gipfel um den Obersee mit Wolken, Mürtschenstock frei und verschneit."
+ },
+ {
+  "where": "ai_status_1500.json region glarner_alpen",
+  "in": "Wolkenbänder an den Flanken um 1'500 m MSL, Vorab und Hausstock zeitweise frei, Neuschnee bis etwa 1'700 m MSL.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Wolkenbänder an den Flanken um 4'900 ft MSL, Vorab und Hausstock zeitweise frei, Neuschnee bis etwa 5'600 ft MSL."
+ },
+ {
+  "where": "ai_status_1500.json region zentralalpen",
+  "in": "Gipfel am Klausen um 3'000 m MSL in Wolken, Oberalp und Gotthard tief verschneit unter geschlossener Decke.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Gipfel am Klausen um 9'800 ft MSL in Wolken, Oberalp und Gotthard tief verschneit unter geschlossener Decke."
+ },
+ {
+  "where": "ai_status_1500.json region graubuenden",
+  "in": "Parpaner Rothorn in Wolke (Basis unter 2'850 m MSL), um Davos aufgelockert mit Wolken an den Gipfeln.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Parpaner Rothorn in Wolke (Basis unter 9'400 ft MSL), um Davos aufgelockert mit Wolken an den Gipfeln."
+ },
+ {
+  "where": "ai_status_1500.json region alpensuedseite",
+  "in": "Leventina sonnig mit wenigen Quellwolken, Campo-Tencia-Gruppe frei.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Leventina sonnig mit wenigen Quellwolken, Campo-Tencia-Gruppe frei."
+ },
+ {
+  "where": "ai_status_1500.json kamera Speck – Runway 30",
+  "in": "Wechselnd bewölkt mit blauen Lücken, Graspiste grün ohne sichtbares Wasser.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Wechselnd bewölkt mit blauen Lücken, Graspiste grün ohne sichtbares Wasser."
+ },
+ {
+  "where": "ai_status_1500.json kamera Speck – Tankstelle",
+  "in": "Dunkle Wolkenbasis über dem Platz, Bachtel erkennbar, Vorfeld nass mit Pfützen, Windsack zeigt SW–W.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Dunkle Wolkenbasis über dem Platz, Bachtel erkennbar, Vorfeld nass mit Pfützen, Windsack zeigt SW–W."
+ },
+ {
+  "where": "ai_status_1500.json kamera Bachtel",
+  "in": "Wolkenfetzen auf Turmhöhe um 1'150 m MSL, Richtung Alpen verhangen.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Wolkenfetzen auf Turmhöhe um 3'800 ft MSL, Richtung Alpen verhangen."
+ },
+ {
+  "where": "ai_status_1500.json kamera Wangen-Lachen – Cam 1",
+  "in": "Stark bewölkt mit dunkler Basis über den Hügeln, Gipfel teils in Wolken, Vorfeld nass.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Stark bewölkt mit dunkler Basis über den Hügeln, Gipfel teils in Wolken, Vorfeld nass."
+ },
+ {
+  "where": "ai_status_1500.json kamera Rapperswil",
+  "in": "Mürtschenstock und Flumserberge klar erkennbar und verschneit, Hirzli-Kette frei, See bewegt.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Mürtschenstock und Flumserberge klar erkennbar und verschneit, Hirzli-Kette frei, See bewegt."
+ },
+ {
+  "where": "ai_status_1500.json kamera Säntis",
+  "in": "Gipfel in der Wolke, Basis unter 2'500 m MSL.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Gipfel in der Wolke, Basis unter 8'200 ft MSL."
+ },
+ {
+  "where": "ai_status_1500.json kamera Richtung Tödi",
+  "in": "Bedeckt, Wolkenbänder an den Flanken um 1'500 m MSL, Tödi-Gipfel verhangen.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Bedeckt, Wolkenbänder an den Flanken um 4'900 ft MSL, Tödi-Gipfel verhangen."
+ },
+ {
+  "where": "ai_status_1500.json kamera Elm – Schabell",
+  "in": "Vorab und Sardona zeitweise frei, Wolken im Tal und an den Flanken, Neuschnee bis etwa 1'700 m MSL.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Vorab und Sardona zeitweise frei, Wolken im Tal und an den Flanken, Neuschnee bis etwa 5'600 ft MSL."
+ },
+ {
+  "where": "ai_status_1500.json kamera Klausenpass",
+  "in": "Gipfel um 3'000 m MSL in Wolken, Neuschnee am Pass, Schächental frei.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Gipfel um 9'800 ft MSL in Wolken, Neuschnee am Pass, Schächental frei."
+ },
+ {
+  "where": "ai_status_1500.json kamera Schneehüenerstock",
+  "in": "Hauptkamm in Wolken, nur nahe Kuppen sichtbar, Sicht reduziert, Neuschnee.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Hauptkamm in Wolken, nur nahe Kuppen sichtbar, Sicht reduziert, Neuschnee."
+ },
+ {
+  "where": "ai_status_1500.json kamera Gotthardpass",
+  "in": "Geschlossene Decke knapp über den Gräten um 2'400 m MSL, Neuschnee am Pass.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Geschlossene Decke knapp über den Gräten um 7'900 ft MSL, Neuschnee am Pass."
+ },
+ {
+  "where": "ai_status_1500.json kamera Parpaner Rothorn",
+  "in": "Gipfel in der Wolke, Basis unter 2'850 m MSL, Neuschnee.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Gipfel in der Wolke, Basis unter 9'400 ft MSL, Neuschnee."
+ },
+ {
+  "where": "ai_status_1500.json kamera Jakobshorn",
+  "in": "Aufgelockert mit Wolken an den Gipfeln, Davos frei, Neuschnee.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Aufgelockert mit Wolken an den Gipfeln, Davos frei, Neuschnee."
+ },
+ {
+  "where": "ai_status_1500.json kamera Ambri Tarnolgio",
+  "in": "Sonnig mit wenigen Quellwolken über der Campo-Tencia-Gruppe, Gipfel frei und verschneit.",
+  "map": {
+   "2150": 7000,
+   "2750": 9000,
+   "3000": 9850,
+   "9600": 31500
+  },
+  "out": "Sonnig mit wenigen Quellwolken über der Campo-Tencia-Gruppe, Gipfel frei und verschneit."
+ }
+]
