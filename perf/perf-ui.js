@@ -11,6 +11,9 @@
    fällt beim Musterwechsel und beim Tageswechsel (Zürich) zurück auf das Höchstgewicht. Gerechnet wird der Start mit der
    AFM-Tabelle für das nächsthöhere Gewicht, die Landung mit dem maximalen Landegewicht. Ist der Start nicht möglich,
    nennt die Karte je Piste, bis zu welchem Gewicht er laut AFM möglich wäre (nicht bei nasser Piste ohne AFM-Wert).
+   Beim Hineingehen ins Feld ist sein Inhalt markiert. Mit Fokus ist ein Text, der durch Weitertippen noch gültig werden
+   kann (leer, oder nur Ziffern unter der Untergrenze), kein Fehler: Es gilt das zuletzt übernommene gültige Gewicht.
+   Beim Verlassen die volle Prüfung: leer heisst Höchstgewicht, unter der Untergrenze Fehler.
    Fehlen Box und Kurzzeile (alte Seite aus dem Cache), erscheint wie bisher nur die Karte.
    Die Kurzzeile zeigt Muster, Piste und die Rollstrecke für Start und Landung; die Farbe der Zahl folgt dem
    schlimmsten Fall der Karte. Nässe und Hinweise stehen nur in der aufgeklappten Karte. Platzstatus und Sperre zeigt
@@ -30,7 +33,7 @@
 }(typeof self !== 'undefined' ? self : this, function (core) {
   'use strict';
 
-  var VERSION = 5;
+  var VERSION = 6;
 
   var STALE_MIN = 45;          // Messwerte älter: keine Zahlen
   var FUTURE_MIN = 5;          // Messzeit weiter in der Zukunft: keine Zahlen
@@ -44,6 +47,7 @@
   var FGZO_TEXT_MAX = 40;      // Pistenzustand und Zeitstempel der FGZO
   var LABEL_MAX = 60;
   var MASS_DEBOUNCE_MS = 700;  // Abfluggewicht: nach so viel Ruhe beim Tippen rechnen (kein Fehler bei «1», «10», «105»)
+  var MASS_SELECT_MS = 1000;   // mouseup und click so lange nach Beginn des Antippens gehören noch zum Hineingehen ins Feld
   var NBSP = ' ';         // geschütztes Leerzeichen in reinen Texten (Fehlertext des Gewichtsfelds)
   // Entscheid F-C: Regen von MeteoSchweiz macht die Piste nass (neben einer FGZO-Meldung ungleich DRY)
   var WET_BY_RAIN = true;
@@ -86,6 +90,7 @@
     massLabel: 'Abfluggewicht in kg',
     massEmpty: 'Bitte das Abfluggewicht in kg eingeben.',
     massNotInt: 'Bitte eine ganze Zahl in kg eingeben, zum Beispiel 1050.',
+    limitMinimum: 'mit Mindestzuschlag',
     limitLowest: 'Für ein tieferes Gewicht hat das AFM keine Starttabelle.',
     limitWet: 'Ob er mit weniger Gewicht möglich wäre, lässt sich bei nasser Piste nicht sagen: Das AFM nennt dafür keinen Wert.',
     limitNoValue: 'Für tiefere Gewichte gibt es keinen Wert.'
@@ -495,21 +500,33 @@
   }
 
   /* ── Abfluggewicht ─────────────────────────────────────────────
-     Eingabe als Text: Leerzeichen und Apostrophe (' ’) fallen weg, dann nur ganze kg mit 1 bis 5 Ziffern. Erlaubt ist
-     das halbe Höchstgewicht (aufgerundet) bis zum Höchstgewicht. Die Untergrenze fängt Tippfehler wie «115» statt «1150»,
-     die sonst still mit der leichtesten Starttabelle gerechnet würden. Ergebnis { kg, error }: genau eines ist null. */
+     Eingabe als Text: Leerzeichen und Apostrophe (' ’) fallen weg, dann nur ganze kg mit 1 bis 6 Ziffern (so viele lässt
+     das Feld zu, maxlength 6; «123456» ergibt den Text «über dem maximalen Abfluggewicht»). Erlaubt ist das halbe
+     Höchstgewicht (aufgerundet) bis zum Höchstgewicht. Die Untergrenze fängt Tippfehler wie «115» statt «1150», die sonst
+     still mit der leichtesten Starttabelle gerechnet würden. Ergebnis { kg, error }: genau eines ist null. */
   function massMinKg(ac) { return Math.ceil(ac.mass.kg / 2); }
 
+  // Text des Felds ohne Leerzeichen und Apostrophe; leer heisst: kein Gewicht eingegeben
+  function massDigits(text) { return String(text == null ? '' : text).replace(/[\s'’]/g, ''); }
+
   function parseMass(text, ac) {
-    var t = String(text == null ? '' : text).replace(/[\s'’]/g, '');
+    var t = massDigits(text);
     if (!t) return { kg: null, error: TEXT.massEmpty };
-    if (!/^\d{1,5}$/.test(t)) return { kg: null, error: TEXT.massNotInt };
+    if (!/^\d{1,6}$/.test(t)) return { kg: null, error: TEXT.massNotInt };
     var kg = Number(t), max = ac.mass.kg, min = massMinKg(ac);
     if (kg > max) {
       return { kg: null, error: fmtInt(kg) + NBSP + 'kg liegt über dem maximalen Abfluggewicht von ' + fmtInt(max) + NBSP + 'kg – keine Berechnung.' };
     }
     if (kg < min) return { kg: null, error: fmtInt(kg) + NBSP + 'kg ist unplausibel tief (unter ' + fmtInt(min) + NBSP + 'kg) – keine Berechnung.' };
     return { kg: kg, error: null };
+  }
+
+  // Kann der Text durch Weitertippen noch ein gültiges Gewicht werden? Leer, oder nur Ziffern (nach dem Entfernen von
+  // Leerzeichen und Apostrophen) mit einem Wert unter der Untergrenze («1», «11», «115» auf dem Weg zu «1150»). Über dem
+  // Höchstgewicht oder mit anderen Zeichen hilft Weitertippen nicht. Mit Fokus gilt so ein Text als «noch am Tippen».
+  function massIncomplete(text, ac) {
+    var t = massDigits(text);
+    return !t || (/^\d{1,6}$/.test(t) && Number(t) < massMinKg(ac));
   }
 
   // Gewicht und Starttabelle für Kopf und Kurzzeile, solange es keine Rechnung gibt (gleiche Wahl wie im Kern);
@@ -829,7 +846,10 @@
 
   /* Zweite Zeile zum Start einer Piste aus dem Zustand des Kerns (takeoffLimit), nur wenn der Start mit der gewählten
      Tabelle einen Wert hat und nicht möglich ist; X ist das eingegebene Gewicht, sonst das Höchstgewicht.
-     limit:       «Start mit X kg laut AFM nicht möglich, möglich bis Y kg.»
+     limit:       «Start mit X kg laut AFM nicht möglich, möglich bis Y kg.»; ist ein Faktor mit minimum: true
+                  eingerechnet (Cessna, nasses Gras «mindestens +20 %»), «… möglich bis Y kg (mit Mindestzuschlag).».
+                  Die Rechnung mit der Tabelle Y hat dieselben Faktoren wie die mit der gewählten Tabelle (gleiche
+                  Korrekturen, gleiche Piste und Nässe; der Kern wendet Faktoren unabhängig von den Tabellenwerten an).
      none:        «Start laut AFM auch mit Z kg nicht möglich.» (Z: leichteste Tabelle)
      lowest:      keine leichtere Tabelle
      wet-unknown: nass ohne Nässewert im AFM – nie «möglich bis»
@@ -840,7 +860,9 @@
     if (!L || !p || !p.ok || !mass) return null;
     var no = 'Start mit ' + fmtInt(mass.inputKg !== null ? mass.inputKg : mass.maxKg) + '&nbsp;kg laut AFM nicht möglich';
     switch (L.state) {
-      case 'limit': return no + ', möglich bis ' + fmtInt(L.maxKg) + '&nbsp;kg.';
+      case 'limit':
+        var minFactor = p.factors.some(function (f) { return f.minimum === true; });
+        return no + ', möglich bis ' + fmtInt(L.maxKg) + '&nbsp;kg' + (minFactor ? ' (' + TEXT.limitMinimum + ')' : '') + '.';
       case 'none': return 'Start laut AFM auch mit ' + fmtInt(L.lightestKg) + '&nbsp;kg nicht möglich.';
       case 'lowest': return no + '. ' + TEXT.limitLowest;
       case 'wet-unknown': return no + '. ' + TEXT.limitWet;
@@ -1293,14 +1315,19 @@
     // box: <details id="perf-box"> mit der Kurzzeile, auf einer alten Seite die Karte selbst; teaser darf fehlen.
     // sel, mass und body liegen in #perf-content; lastSelKey ist das HTML der Auswahl ohne die Markierung «selected».
     // Abfluggewicht nur im Speicher: massDraft = getippt, noch nicht übernommen; massText = übernommen (null: Höchstgewicht);
-    // massSeq macht einen offenen Takt der Eingabe ungültig; massDay = Tag (Zürich) der Eingabe; massErrShown = Fehlertext am Feld.
+    // massOk = zuletzt übernommenes gültiges Gewicht (Text; null: Höchstgewicht), massOkDay = Tag (Zürich) dieser
+    // Übernahme (ein gültiges Gewicht vom Vortag lebt «am Tippen» nicht wieder auf); massPending = der Text im Feld ist als
+    // «noch am Tippen» übernommen und wird beim Verlassen voll geprüft; massSeq macht einen offenen Takt der Eingabe
+    // ungültig; massDay = Tag (Zürich) der Eingabe; massErrShown = Fehlertext am Feld; massEnterAt = Beginn eines
+    // Antippens des Felds ohne Fokus (0: keines); massSelectArmed = der Takt nach dem Fokus darf noch markieren.
     var S = {
       card: null, content: null, box: null, sel: null, mass: null, body: null, teaser: null, started: false,
       index: null, aircraft: null, airfield: null, selectedId: null, pendingId: null, notice: null,
       dataState: 'loading', lastLoadAttempt: 0, loadSeq: 0,
       wx: null, hasUpdate: false, fatal: false,
       fgzo: null, fgzoSeq: 0, fgzoLoaded: false, fgzoDeadline: 0,
-      massDraft: null, massText: null, massSeq: 0, massDay: null, massErrShown: '',
+      massDraft: null, massText: null, massOk: null, massOkDay: null, massPending: false, massSeq: 0, massDay: null, massErrShown: '',
+      massEnterAt: 0, massSelectArmed: false,
       lastSelKey: null, lastMass: null, lastBody: null, lastTeaser: null
     };
     var FATAL_MODEL = { kind: 'internal', ac: null, notice: null };
@@ -1377,15 +1404,45 @@
       S.massSeq++;
       S.massDraft = null;
       S.massText = null;
+      S.massOk = null;
+      S.massOkDay = null;
+      S.massPending = false;
       S.massDay = null;
     }
-    // Getippten Text übernehmen und rechnen
-    function commitMass() {
+    // Getippten Text übernehmen und rechnen. Mit Fokus ist ein Text, der durch Weitertippen noch gültig werden kann
+    // (massIncomplete: leer, oder nur Ziffern unter der Untergrenze), kein Fehler: Es gilt das zuletzt übernommene gültige
+    // Gewicht weiter (sonst das Höchstgewicht), ohne Fehlertext und mit Zahlen; voll geprüft wird er beim Verlassen.
+    // Ohne Fokus und mit full (Verlassen) die volle Prüfung: leer heisst Höchstgewicht, und es steht im Feld; sonst gilt
+    // parseMass, unter der Untergrenze also Fehler und keine Zahlen.
+    function commitMass(full) {
       try {
         if (S.massDraft === null) return;
+        var draft = S.massDraft;
         S.massSeq++;
-        S.massText = S.massDraft;
         S.massDraft = null;
+        if (!full && massFocused() && S.aircraft && massIncomplete(draft, S.aircraft)) {
+          // Ein gültiges Gewicht von einem anderen Tag gilt nicht weiter (E2), dann das Höchstgewicht
+          if (S.massOkDay !== dayKey(Date.now())) {
+            S.massOk = null;
+            S.massOkDay = null;
+          }
+          S.massText = S.massOk;
+          S.massPending = true;
+          render();
+          return;
+        }
+        S.massPending = false;
+        if (!massDigits(draft)) {
+          resetMass();
+          showMaxMass();
+          render();
+          return;
+        }
+        S.massText = draft;
+        if (S.aircraft && parseMass(draft, S.aircraft).kg !== null) {
+          S.massOk = draft;
+          S.massOkDay = dayKey(Date.now());
+        }
         S.massDay = dayKey(Date.now());
         render();
       } catch (e) {
@@ -1396,6 +1453,8 @@
     // Tippen: Text merken, nach MASS_DEBOUNCE_MS Ruhe rechnen
     function onMassInput(e) {
       if (!isMassEvent(e)) return;
+      S.massEnterAt = 0;
+      S.massSelectArmed = false;
       S.massDraft = String(e.target.value);
       if (S.massDay === null) S.massDay = dayKey(Date.now());
       var seq = ++S.massSeq;
@@ -1407,18 +1466,54 @@
       S.massDraft = String(e.target.value);
       commitMass();
     }
-    // Leeres Feld beim Verlassen: wieder das Höchstgewicht, und es steht im Feld
+    // Verlassen des Felds: volle Prüfung des Texts, wenn er leer ist, «noch am Tippen» übernommen wurde oder sein Takt
+    // noch offen ist. Leer heisst wieder das Höchstgewicht, und es steht im Feld; unter der Untergrenze Fehler.
     function onMassFocusOut(e) {
       if (!isMassEvent(e)) return;
+      S.massEnterAt = 0;
       try {
-        if (!String(e.target.value).replace(/[\s'’]/g, '')) {
-          resetMass();
-          if (S.aircraft) e.target.value = String(S.aircraft.mass.kg);
+        if (!massDigits(e.target.value) || S.massPending || S.massDraft !== null) {
+          S.massDraft = String(e.target.value);
+          commitMass(true);
+          return;
         }
         render();
       } catch (e2) {
         showFatal();
       }
+    }
+    /* Beim Hineingehen ins Feld den ganzen Inhalt markieren, damit die erste Ziffer die alte Zahl ersetzt. Markiert wird
+       kurz nach dem Fokus (setTimeout 0, sonst setzt der Browser danach den Cursor an die Tippstelle) und noch einmal beim
+       click desselben Antippens: Am iPhone wirkt eine Markierung im focus-Ereignis oft nicht. Beim mouseup dieses
+       Antippens wird die Standardaktion verhindert, mit der Safari die Markierung sonst aufhebt (click folgt trotzdem).
+       Zum Hineingehen zählt ein Antippen nur, wenn es bei nicht fokussiertem Feld begonnen hat (touchstart, mousedown)
+       und höchstens MASS_SELECT_MS her ist; ein Klick ins schon fokussierte Feld setzt den Cursor wie gewohnt. Der Takt
+       nach dem Fokus markiert nur, solange seither nicht getippt wurde (ein gedrosselter Takt, etwa im Hintergrund oder auf
+       einem langsamen Gerät, käme sonst nach der ersten Ziffer und liesse die nächste sie ersetzen). Der Wert des Felds
+       wird dabei nie geschrieben. */
+    function selectMass() {
+      var el = massField();
+      if (!el || !massFocused() || typeof el.setSelectionRange !== 'function') return;
+      try {
+        el.setSelectionRange(0, String(el.value).length);
+      } catch (e) { /* Markieren ist nur eine Hilfe */ }
+    }
+    function massEntering() { return S.massEnterAt > 0 && Date.now() - S.massEnterAt <= MASS_SELECT_MS; }
+    function onMassPointerDown(e) {
+      if (isMassEvent(e) && !massFocused()) S.massEnterAt = Date.now();
+    }
+    function onMassFocusIn(e) {
+      if (!isMassEvent(e)) return;
+      S.massSelectArmed = true;
+      if (typeof win.setTimeout === 'function') win.setTimeout(function () { if (S.massSelectArmed) selectMass(); }, 0);
+    }
+    function onMassMouseUp(e) {
+      if (isMassEvent(e) && massEntering() && typeof e.preventDefault === 'function') e.preventDefault();
+    }
+    function onMassClick(e) {
+      if (!isMassEvent(e)) return;
+      if (massEntering()) selectMass();
+      S.massEnterAt = 0;
     }
 
     // Behälter des Gewichtsfelds nur bei geändertem HTML neu schreiben (anderes Muster, neu geladene Daten); dann gilt
@@ -1659,10 +1754,16 @@
         (doc.head || doc.documentElement).appendChild(st);
       }
       S.sel.addEventListener('change', onChange);
-      // Gewichtsfeld: Ereignisse am stabilen Behälter (das Feld selbst wird beim Musterwechsel ersetzt)
+      // Gewichtsfeld: Ereignisse am stabilen Behälter (das Feld selbst wird beim Musterwechsel ersetzt); focusin und
+      // focusout steigen auf, focus und blur nicht
       S.mass.addEventListener('input', onMassInput);
       S.mass.addEventListener('change', onMassChange);
       S.mass.addEventListener('focusout', onMassFocusOut);
+      S.mass.addEventListener('focusin', onMassFocusIn);
+      S.mass.addEventListener('mousedown', onMassPointerDown);
+      S.mass.addEventListener('touchstart', onMassPointerDown, { passive: true });
+      S.mass.addEventListener('mouseup', onMassMouseUp);
+      S.mass.addEventListener('click', onMassClick);
       if (S.box !== card) {
         if (storeGet(OPEN_KEY) === '1') S.box.open = true;   // vor dem ersten Anzeigen
         S.box.addEventListener('toggle', onToggle);
@@ -1690,10 +1791,12 @@
     WET_BY_RAIN: WET_BY_RAIN,
     TEASER_AFM_TAG: TEASER_AFM_TAG,
     MASS_DEBOUNCE_MS: MASS_DEBOUNCE_MS,
+    MASS_SELECT_MS: MASS_SELECT_MS,
     TEXT: TEXT,
     TEASER: TEASER,
     CSS: CSS,
     parseMass: parseMass,
+    massIncomplete: massIncomplete,
     escapeHtml: esc,
     fmtInt: fmtInt,
     fmtDec: fmtDec,

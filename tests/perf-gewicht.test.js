@@ -1,6 +1,6 @@
-// Tests zum Abfluggewicht des Start-/Landestreckenrechners (VERSION 5): Abschriften der Starttabellen für tiefere
-// Gewichte, Datenschema (charts.takeoff.lowerWeights), Tabellenwahl, «Start möglich bis …» im Kern, Eingabe (parseMass)
-// und Anzeige in Karte und Kurzzeile.
+// Tests zum Abfluggewicht des Start-/Landestreckenrechners (seit VERSION 5, Nachbesserungen VERSION 6): Abschriften der
+// Starttabellen für tiefere Gewichte, Datenschema (charts.takeoff.lowerWeights), Tabellenwahl, «Start möglich bis …» im
+// Kern, Eingabe (parseMass) und Anzeige in Karte und Kurzzeile.
 // Sollwerte stammen aus den Abschriften und der Sollrechnung des Planers (tests/fixtures/c172d_5b_*kg.json,
 // p2010_*kg.json, gewicht_faelle.json) oder aus der eigenen Sollrechnung unten, die keinen Code aus perf/perf.js nutzt.
 // Die Tests des Browserteils (Feld, Takt, Fokus, Tageswechsel) stehen in tests/perf-ui.test.js.
@@ -34,6 +34,8 @@ const P2010_ISA = readJson('tests/fixtures/p2010_isa.json');
 const CASES = readJson('tests/fixtures/kontrollfaelle.json');
 // Sollrechnung des Planers: [Fall, Muster, Platz, [tempC, QNH, Richtung, Wind, nass], massKg (null: ohne), Tabelle kg,
 //  je gerechneter Piste [[Roll, 15 m] oder Grund je Starttabelle, Zustand, maxKg, maxPossibleKg]]
+// VERSION 6 (N3): maxPossibleKg ist null, wenn «möglich» bei nasser Piste ohne Nässewert des AFM gerechnet ist; bewusst
+// nachgeführt in zwölf Zeilen (K18 Tecnam nass: drei wet-unknown, fünf possible; C3 Cessna 152 nass: vier possible).
 const GEWICHT = readJson(FIX.faelle);
 
 // Abschrift spaltenweise (je Temperatur abwechselnd Rollstrecke und über 15 m, Höhe aufsteigend) → Zellen [Höhe][Temperatur]
@@ -79,10 +81,12 @@ function deepFreeze(o) {
    Tabellen-Rollstrecke auf beide Strecken, nasses Gras × 1,2 (Mindestzuschlag Note 4). Tecnam: −10 m je kt, Gras +10 %,
    × 1,10 immer (NOTE), Temperatur linear. Cessna 152 wie Cessna, Tabelle in ft. Kein Wert über 40 kt Gegenwind oder wenn
    der Wind eine Strecke um mehr als die Hälfte verkürzt. Nass ohne Nässewert im AFM: Tecnam, Cessna 152, Cessna auf Hartbelag. */
+// minimum: ein Mindestzuschlag des AFM ist eingerechnet (Cessna, nasses Gras «mindestens +20 %»); dann sagt die Zeile
+// «möglich bis …» «(mit Mindestzuschlag)» (VERSION 6, N7)
 const RULES = {
-  c172d: { pct: true, grass: 15, factor: (wet, grass) => (wet && grass ? 1.2 : 1), wetValue: (grass) => grass, ft: false, linear: false },
-  p2010: { pct: false, grass: 10, factor: () => 1.1, wetValue: () => false, ft: false, linear: true },
-  c152: { pct: true, grass: 15, factor: () => 1, wetValue: () => false, ft: true, linear: false }
+  c172d: { pct: true, grass: 15, factor: (wet, grass) => (wet && grass ? 1.2 : 1), wetValue: (grass) => grass, minimum: (wet, grass) => wet && grass, ft: false, linear: false },
+  p2010: { pct: false, grass: 10, factor: () => 1.1, wetValue: () => false, minimum: () => false, ft: false, linear: true },
+  c152: { pct: true, grass: 15, factor: () => 1, wetValue: () => false, minimum: () => false, ft: true, linear: false }
 };
 const up = (x) => Math.ceil(x - 1e-9);
 const sollPa = (elevFt, qnh) => elevFt + 145442.16 * (1 - Math.pow(qnh / 1013.25, 0.190263));
@@ -158,9 +162,10 @@ function sollLimit(tables, list, ti, avail, wetMissing) {
   }
   return [nov ? 'unknown' : 'none', null];
 }
-function sollMaxPossible(tables, list, avail) {
+// Schwerste mögliche Tabelle; ohne Aussage (null), wenn «möglich» bei nasser Piste ohne Nässewert gerechnet ist (N3)
+function sollMaxPossible(tables, list, avail, wetMissing) {
   const k = list.findIndex((x) => Array.isArray(x) && x[0] <= avail && x[1] <= avail);
-  return k < 0 ? null : tables[k][0];
+  return k < 0 || wetMissing ? null : tables[k][0];
 }
 // Grösster Tabellenbereich, in dem beide Phasen einen Wert haben (darüber above-range)
 function rangeOf(ac) {
@@ -223,13 +228,14 @@ function teaserOf(teaser) {
 const TXT = {
   lowest: 'Für ein tieferes Gewicht hat das AFM keine Starttabelle.',
   wet: 'Ob er mit weniger Gewicht möglich wäre, lässt sich bei nasser Piste nicht sagen: Das AFM nennt dafür keinen Wert.',
-  noValue: 'Für tiefere Gewichte gibt es keinen Wert.'
+  noValue: 'Für tiefere Gewichte gibt es keinen Wert.',
+  minimum: ' (mit Mindestzuschlag)'
 };
-function expectLine(state, x, maxKg, tables, byTable, ti) {
+function expectLine(state, x, maxKg, tables, byTable, ti, minimum) {
   const no = 'Start mit ' + kgTxt(x) + ' kg laut AFM nicht möglich';
   const list = (ks) => (ks.length > 1 ? ks.slice(0, -1).map(kgTxt).join(', ') + ' und ' : '') + kgTxt(ks[ks.length - 1]) + ' kg';
   switch (state) {
-    case 'limit': return no + ', möglich bis ' + kgTxt(maxKg) + ' kg.';
+    case 'limit': return no + ', möglich bis ' + kgTxt(maxKg) + ' kg' + (minimum ? TXT.minimum : '') + '.';
     case 'none': return 'Start laut AFM auch mit ' + kgTxt(tables[tables.length - 1][0]) + ' kg nicht möglich.';
     case 'lowest': return no + '. ' + TXT.lowest;
     case 'wet-unknown': return no + '. ' + TXT.wet;
@@ -376,16 +382,53 @@ test('Schema: Mutationen von lowerWeights ergeben bad-data mit Fehlertext; ohne 
       const top = ac.charts.takeoff.table.cells[10][6];                     // grösste Zelle: Monotonie bleibt erhalten
       l[0].table.cells[10][6] = [top[0] + 1, top[1] + 1];
     }, P + '[0].table.cells: länger als die nächstschwerere Tabelle'],
+    // VERSION 6 (N1): jede der beiden Strecken für sich; 1'134 kg gegen das Höchstgewicht, 1'111 kg gegen 1'134 kg
+    ['nur die Rollstrecke länger als in der schwereren Tabelle', C172D, (l, ac) => {
+      const top = ac.charts.takeoff.table.cells[10][6], own = l[0].table.cells[10][6];
+      l[0].table.cells[10][6] = [top[0] + 1, own[1]];
+    }, P + '[0].table.cells: länger als die nächstschwerere Tabelle'],
+    ['nur die Strecke über 15 m länger als in der schwereren Tabelle', C172D, (l, ac) => {
+      const top = ac.charts.takeoff.table.cells[10][6], own = l[0].table.cells[10][6];
+      l[0].table.cells[10][6] = [own[0], top[1] + 1];
+    }, P + '[0].table.cells: länger als die nächstschwerere Tabelle'],
+    ['1111 kg: nur die Rollstrecke länger als bei 1134 kg', C172D, (l) => {
+      const top = l[0].table.cells[10][6], own = l[1].table.cells[10][6];
+      l[1].table.cells[10][6] = [top[0] + 1, own[1]];
+    }, P + '[1].table.cells: länger als die nächstschwerere Tabelle'],
+    ['1111 kg: nur die Strecke über 15 m länger als bei 1134 kg', C172D, (l) => {
+      const top = l[0].table.cells[10][6], own = l[1].table.cells[10][6];
+      l[1].table.cells[10][6] = [own[0], top[1] + 1];
+    }, P + '[1].table.cells: länger als die nächstschwerere Tabelle'],
+    ['Tecnam: nur die Strecke über 15 m länger', P2010, (l, ac) => {
+      const top = ac.charts.takeoff.table.cells[6][3], own = l[0].table.cells[6][3];
+      l[0].table.cells[6][3] = [own[0], top[1] + 1];
+    }, P + '[0].table.cells: länger als die nächstschwerere Tabelle'],
     ['Tabellen getauscht (Gewichte bleiben)', C172D, (l) => { const t = l[0].table; l[0].table = l[1].table; l[1].table = t; },
       P + '[1].table.cells: länger als die nächstschwerere Tabelle'],
     ['Tecnam: Tabellen getauscht', P2010, (l) => { const t = l[0].table; l[0].table = l[1].table; l[1].table = t; },
-      P + '[1].table.cells: länger als die nächstschwerere Tabelle']
+      P + '[1].table.cells: länger als die nächstschwerere Tabelle'],
+    // VERSION 6 (N5): Quelle (Figure und Seite, nicht leer) und Titel (Zeichenkette) je weiterer Tabelle
+    ['Quelle fehlt', C172D, (l) => { delete l[0].ref; }, P + '[0].ref fehlt'],
+    ['Quelle kein Objekt', P2010, (l) => { l[1].ref = 'APV5-10'; }, P + '[1].ref fehlt'],
+    ['Quelle als Liste', C172D, (l) => { l[1].ref = ['Figure 5-1e (Section 5b)', '5b-9']; }, P + '[1].ref fehlt'],
+    ['Quelle als Liste mit Feldern', C172D, (l) => { l[1].ref = Object.assign([], { figure: 'Figure 5-1e (Section 5b)', page: '5b-9' }); }, P + '[1].ref fehlt'],
+    ['Figure leer', C172D, (l) => { l[0].ref.figure = ''; }, P + '[0].ref fehlt'],
+    ['Figure fehlt', P2010, (l) => { delete l[0].ref.figure; }, P + '[0].ref fehlt'],
+    ['Seite fehlt', C172D, (l) => { delete l[1].ref.page; }, P + '[1].ref fehlt'],
+    ['Seite als Zahl', P2010, (l) => { l[1].ref.page = 10; }, P + '[1].ref fehlt'],
+    ['Seite null', C172D, (l) => { l[0].ref.page = null; }, P + '[0].ref fehlt'],
+    ['Titel fehlt', C172D, (l) => { delete l[1].title; }, P + '[1].title fehlt'],
+    ['Titel als Zahl', P2010, (l) => { l[0].title = 1060; }, P + '[0].title fehlt'],
+    ['Titel null', C172D, (l) => { l[0].title = null; }, P + '[0].title fehlt']
   ];
+  // Synthetische weitere Tabelle (für Listen ohne Datei): Gewicht i kg unter 1'150 kg, Quelle, Titel, Tabelle der Vorlage
+  const entry = (ac, i) => ({ mass: { kg: 1150 - i, lb: Math.round((1150 - i) / core.LB_KG) }, title: 'Test ' + i,
+    ref: { figure: 'Test', page: String(i) }, table: clone(ac.charts.takeoff.table) });
   const listCases = [
     ['leere Liste', C172D, () => [], P + ' falsch'],
     ['kein Array', C172D, (l) => l[0], P + ' falsch'],
     ['null', P2010, () => null, P + ' falsch'],
-    ['neun Einträge', C172D, (l, ac) => Array.from({ length: 9 }, (x, i) => ({ mass: { kg: 1150 - i, lb: Math.round((1150 - i) / core.LB_KG) }, table: clone(ac.charts.takeoff.table) })), P + ' falsch']
+    ['neun Einträge', C172D, (l, ac) => Array.from({ length: 9 }, (x, i) => entry(ac, i)), P + ' falsch']
   ];
   const check = (name, ac, want) => {
     assert.deepEqual(core.validateAircraft(ac), { ok: false, errors: [want] }, name);
@@ -419,8 +462,13 @@ test('Schema: Mutationen von lowerWeights ergeben bad-data mit Fehlertext; ohne 
     assert.deepEqual(core.validateAircraft(ac), { ok: true, errors: [] }, base.id + ' ohne lowerWeights');
   });
   const eight = clone(C172D);
-  eight.charts.takeoff.lowerWeights = Array.from({ length: 8 }, (x, i) => ({ mass: { kg: 1150 - i, lb: Math.round((1150 - i) / core.LB_KG) }, table: clone(eight.charts.takeoff.table) }));
+  eight.charts.takeoff.lowerWeights = Array.from({ length: 8 }, (x, i) => entry(eight, i));
   assert.deepEqual(core.validateAircraft(eight), { ok: true, errors: [] }, 'acht Einträge, Tabellen gleich der schwereren');
+  // Titel darf leer sein (er wird nicht angezeigt), die Quelle nicht; weitere Felder der Quelle stören nicht
+  const noTitle = clone(P2010);
+  noTitle.charts.takeoff.lowerWeights[1].title = '';
+  noTitle.charts.takeoff.lowerWeights[0].ref.note = 'Zusatz';
+  assert.deepEqual(core.validateAircraft(noTitle), { ok: true, errors: [] }, 'leerer Titel');
   const edge = clone(C172D);
   edge.charts.takeoff.lowerWeights[0].mass.lb = 2502;                       // 2502 lb = 1134,89 kg: Abstand 0,89 kg
   assert.equal(core.validateAircraft(edge).ok, true, 'kg/lb innerhalb 1 kg');
@@ -527,7 +575,7 @@ test('Sollrechnung: Durchlauf über Muster, Plätze, Wetter, Nässe und Gewichte
   // LSZK mit Hartbelag (gleiche Längen): Cessna nass ohne Nässewert des AFM (Note 4 gilt nur für Gras)
   const pavedLszk = clone(AF);
   pavedLszk.runways.forEach((r) => { r.surface = 'paved'; });
-  const stats = { n: 0, rows: 0, states: {} };
+  const stats = { n: 0, rows: 0, states: {}, wetNoClaim: 0 };
   Object.keys(ACS).forEach((id) => {
     const ac = ACS[id], tables = SOLL_TABLES[id], R = RULES[id], range = rangeOf(ac);
     [AF, pavedLszk].forEach((af) => temps.forEach((t) => qnhs.forEach((q) => dirs.forEach((d) => winds.forEach((w) => [false, true].forEach((wet) => {
@@ -565,7 +613,7 @@ test('Sollrechnung: Durchlauf über Muster, Plätze, Wetter, Nässe und Gewichte
           const wetMissing = wet && !R.wetValue(grass);
           const [state, maxKg] = sollLimit(tables, list, ti, avail, wetMissing);
           const L = rw.takeoffLimit;
-          assert.deepEqual([L.state, L.maxKg, L.maxPossibleKg, L.tableKg, L.lightestKg], [state, maxKg, sollMaxPossible(tables, list, avail), tables[ti][0], tables[tables.length - 1][0]], label + ' ' + rw.id + ': Grenze');
+          assert.deepEqual([L.state, L.maxKg, L.maxPossibleKg, L.tableKg, L.lightestKg], [state, maxKg, sollMaxPossible(tables, list, avail, wetMissing), tables[ti][0], tables[tables.length - 1][0]], label + ' ' + rw.id + ': Grenze');
           rw.takeoffByMass.forEach((x, i) => {
             assert.equal(x.possible, Array.isArray(list[i]) && list[i][0] <= avail && list[i][1] <= avail, label + ' possible ' + i);
             assert.equal(x.wetFactorMissing, x.ok ? wetMissing : false, label + ' wetFactorMissing ' + i);
@@ -578,7 +626,10 @@ test('Sollrechnung: Durchlauf über Muster, Plätze, Wetter, Nässe und Gewichte
             assert.ok(L.maxPossibleKg === null || L.maxPossibleKg < L.tableKg, label + ': maxPossibleKg ' + L.maxPossibleKg);
           }
           if (L.state === 'limit') assert.equal(L.maxPossibleKg, L.maxKg, label);
-          if (L.state === 'possible') assert.ok(L.maxPossibleKg >= L.tableKg, label);
+          if (L.state === 'possible' && !wetMissing) assert.ok(L.maxPossibleKg >= L.tableKg, label);
+          // Nass ohne Nässewert: «möglich» ist ohne Zuschlag gerechnet, maxPossibleKg ohne Aussage (N3)
+          if (wetMissing) assert.equal(L.maxPossibleKg, null, label + ': maxPossibleKg bei nasser Piste ohne AFM-Wert');
+          if (wetMissing && list.some((x) => Array.isArray(x) && x[0] <= avail && x[1] <= avail)) stats.wetNoClaim++;
           // Landung unabhängig vom Gewicht
           assert.deepEqual(rw.landing, rwyOf(base, rw.id).landing, label + ': Landung');
           // Monotonie über das Gewicht: leichter nie länger, «möglich» bleibt möglich (sofern ein Wert da ist)
@@ -606,6 +657,7 @@ test('Sollrechnung: Durchlauf über Muster, Plätze, Wetter, Nässe und Gewichte
   ['possible', 'limit', 'none', 'lowest', 'no-value', 'wet-unknown'].forEach((s) => assert.ok(S['c172d ' + s] > 0, 'Cessna nie: ' + s + ' ' + JSON.stringify(S)));
   ['possible', 'lowest'].forEach((s) => assert.ok(S['c152 ' + s] > 0, 'Cessna 152 nie: ' + s));
   assert.ok(stats.n > 70000 && stats.rows > 60000, JSON.stringify({ n: stats.n, rows: stats.rows }));
+  assert.ok(stats.wetNoClaim > 1000, 'nass ohne Nässewert mit möglicher Tabelle: ' + stats.wetNoClaim);
 });
 
 test('Ohne Gewicht gleich wie vor der Gewichtseingabe: alle 64 Kontrollfälle, mit und ohne lowerWeights in den Daten', () => {
@@ -650,9 +702,19 @@ test('«Start möglich bis» direkt (_takeoffLimit): alle Zustände, Lücken, na
   assert.deepEqual(L([e(1160, true, false), e(1060, true, false), e(960, true, true)], 0), ['limit', 960, 960, 1160, 960]);
   assert.deepEqual(L([e(1160, true, false), e(1060, false), e(960, true, true)], 0), ['limit', 960, 960, 1160, 960]);
   assert.deepEqual(L([e(1160, true, false), e(1060, true, false), e(960, true, true)], 1), ['limit', 960, 960, 1060, 960]);
-  // wet-unknown: die leichtere Tabelle wäre möglich, aber ohne Nässewert gerechnet
-  assert.deepEqual(L([e(1160, true, false, true), e(1060, true, true, true), e(960, true, true, true)], 0), ['wet-unknown', null, 1060, 1160, 960]);
-  assert.deepEqual(L([e(1160, true, false, true), e(1060, false), e(960, true, true, true)], 0), ['wet-unknown', null, 960, 1160, 960]);
+  // wet-unknown: die leichtere Tabelle wäre möglich, aber ohne Nässewert gerechnet; maxPossibleKg ohne Aussage (N3)
+  assert.deepEqual(L([e(1160, true, false, true), e(1060, true, true, true), e(960, true, true, true)], 0), ['wet-unknown', null, null, 1160, 960]);
+  assert.deepEqual(L([e(1160, true, false, true), e(1060, false), e(960, true, true, true)], 0), ['wet-unknown', null, null, 1160, 960]);
+  // possible und no-value auf nasser Piste ohne Nässewert: maxPossibleKg ohne Aussage; trocken bleibt es (N3)
+  assert.deepEqual(L([e(1160, true, true, true), e(1060, true, true, true), e(960, true, true, true)], 0), ['possible', null, null, 1160, 960]);
+  assert.deepEqual(L([e(1160, true, false, true), e(1060, true, true, true), e(960, true, true, true)], 1), ['possible', null, null, 1060, 960]);
+  assert.deepEqual(L([e(1160, true, true, true), e(1060, false), e(960, true, true, true)], 1), ['no-value', null, null, 1060, 960]);
+  assert.deepEqual(L([e(1160, true, true), e(1060, false), e(960, true, true)], 1), ['no-value', null, 1160, 1060, 960]);
+  assert.deepEqual(L([e(758, true, true, true)], 0), ['possible', null, null, 758, 758]);
+  assert.deepEqual(L([e(758, true, true)], 0), ['possible', null, 758, 758, 758]);
+  // Massgebend ist die schwerste mögliche Tabelle: ist sie ohne Nässewert gerechnet, kein Wert einer leichteren
+  // (aus dem Kern kommen die Nässe-Angaben je Piste ohnehin für alle Tabellen gleich)
+  assert.deepEqual(L([e(1160, true, true, true), e(1060, true, true), e(960, true, true)], 0), ['possible', null, null, 1160, 960]);
   // none / lowest / unknown
   assert.deepEqual(L([e(1160, true, false), e(1060, true, false), e(960, true, false)], 0), ['none', null, null, 1160, 960]);
   assert.deepEqual(L([e(1160, true, false, true), e(1060, true, false, true), e(960, true, false, true)], 0), ['none', null, null, 1160, 960]);
@@ -709,12 +771,20 @@ test('parseMass: Leerzeichen und Apostrophe weg, ganze kg, halbes Höchstgewicht
     ['', null, EMPTY], ['   ', null, EMPTY], ["'", null, EMPTY], [null, null, EMPTY], [undefined, null, EMPTY],
     ['1050', 1050, null], [" 1'050 ", 1050, null], ['1’050', 1050, null], ['1 050', 1050, null], ['1 050', 1050, null], ['01050', 1050, null],
     ['1050,5', null, NOT_INT], ['1050.5', null, NOT_INT], ['1050 kg', null, NOT_INT], ['abc', null, NOT_INT], ['-1050', null, NOT_INT],
-    ['1e3', null, NOT_INT], ['+1050', null, NOT_INT], ['１０５０', null, NOT_INT], ['123456', null, NOT_INT],
+    ['1e3', null, NOT_INT], ['+1050', null, NOT_INT], ['１０５０', null, NOT_INT],
+    // bis sechs Ziffern (so viele lässt das Feld zu, maxlength 6) sind eine Zahl (VERSION 6, N2), sieben nicht
+    ['123456', null, over(123456, 1157)], ['999999', null, over(999999, 1157)], ["123'456", null, over(123456, 1157)], ['001157', 1157, null],
+    ['000578', null, low(578, 579)], ['1234567', null, NOT_INT], ['0001157', null, NOT_INT],
     ['1157', 1157, null], ['1158', null, over(1158, 1157)], ['1200', null, over(1200, 1157)], ['99999', null, over(99999, 1157)],
     ['579', 579, null], ['578', null, low(578, 579)], ['115', null, low(115, 579)], ['0', null, low(0, 579)]
   ];
   cases.forEach(([s, kg, err]) => assert.deepEqual(ui.parseMass(s, C172D), { kg, error: err }, JSON.stringify(s)));
   assert.equal(ui.parseMass(1050, C172D).kg, 1050, 'Zahl statt Text');
+  // So viele Ziffern, wie das Feld zulässt, ergeben eine Zahl und damit den Text zur Obergrenze
+  const ml = Number(/ maxlength="(\d+)"/.exec(parts(wxPfa()).mass)[1]);
+  assert.equal(ml, 6);
+  assert.deepEqual(ui.parseMass('9'.repeat(ml), C172D), { kg: null, error: over(Number('9'.repeat(ml)), 1157) });
+  assert.deepEqual(ui.parseMass('9'.repeat(ml + 1), C172D), { kg: null, error: NOT_INT });
   // Tecnam: 580 bis 1'160 kg (halbes Höchstgewicht aufgerundet)
   assert.deepEqual([ui.parseMass('1160', P2010), ui.parseMass('580', P2010)], [{ kg: 1160, error: null }, { kg: 580, error: null }]);
   assert.deepEqual(ui.parseMass('1161', P2010), { kg: null, error: over(1161, 1160) });
@@ -723,6 +793,18 @@ test('parseMass: Leerzeichen und Apostrophe weg, ganze kg, halbes Höchstgewicht
   [EMPTY, NOT_INT].forEach((s) => assert.ok(!/[<>&]/.test(s)));
   assert.ok(!/[<>&]/.test(over(1200, 1157)) && over(1200, 1157).includes('1\'200' + NB + 'kg'));
   assert.deepEqual([ui.TEXT.massEmpty, ui.TEXT.massNotInt], [EMPTY, NOT_INT]);
+});
+
+test('massIncomplete: «noch am Tippen» heisst leer oder nur Ziffern unter der Untergrenze (Weitertippen kann es gültig machen)', () => {
+  const yes = ['', '  ', "'", null, '0', '00', '1', '11', '115', '578', "1'1", '1’1', ' 57 ', '000578'];
+  const no = ['579', '1000', "1'157", '1157', '1158', '1200', '99999', '123456', '1234567', '1.5', '-1', '1e1', '1a', '1050,5', '1050 kg', '+1', '１'];
+  yes.forEach((s) => assert.equal(ui.massIncomplete(s, C172D), true, JSON.stringify(s)));
+  no.forEach((s) => assert.equal(ui.massIncomplete(s, C172D), false, JSON.stringify(s)));
+  assert.deepEqual(['579', '580'].map((s) => ui.massIncomplete(s, P2010)), [true, false], 'Tecnam: Untergrenze 580 kg');
+  // Was als «noch am Tippen» gilt, wäre übernommen nie ein gültiges Gewicht (leer oder unter der Untergrenze)
+  yes.forEach((s) => assert.equal(ui.parseMass(s, C172D).kg, null, JSON.stringify(s)));
+  // und alles mit gültigem Gewicht ist nicht «am Tippen»
+  ['579', '1000', '1111', '1157', " 1'100 "].forEach((s) => assert.ok(ui.parseMass(s, C172D).kg !== null && !ui.massIncomplete(s, C172D), s));
 });
 
 /* ── Anzeige ───────────────────────────────────────────────── */
@@ -828,6 +910,35 @@ test('Anzeige: Zeile «Start möglich bis …» je Zustand wörtlich, in der Far
   assert.deepEqual(lines(pT1, '12').slice(0, 2), [['perf-red', 'Start: Rollstrecke länger als die verfügbare Länge.'], ['perf-red', 'Start laut AFM auch mit 960 kg nicht möglich.']]);
   assert.deepEqual(lines(pT1, '30').slice(0, 2), [['perf-amber', 'Start: Strecke über 15 m länger als die verfügbare Länge.'],
     ['perf-amber', "Start mit 1'160 kg laut AFM nicht möglich, möglich bis 960 kg."]]);
+  // VERSION 6 (N7): Cessna auf nassem Gras (K5n, Sollzeile des Planers) – «möglich bis» beruht auf dem Mindestzuschlag des
+  // AFM («mindestens +20 %»); trocken (K5) und Tecnam (Faktor immer, ohne «mindestens», oben K8 und T1) ohne Zusatz
+  const k5n = GEWICHT.find((g) => g[0] === 'K5n' && g[4] === null)[6];
+  assert.deepEqual([k5n['30'][1], k5n['30'][2], k5n['12'][1]], ['limit', 1134, 'none']);
+  const pK5n = parts(CALM({ rain1hMm: 0.4 }));
+  assert.deepEqual(lines(pK5n, '30').slice(0, 2), [['perf-amber', 'Start: Strecke über 15 m länger als die verfügbare Länge.'],
+    ['perf-amber', "Start mit 1'157 kg laut AFM nicht möglich, möglich bis 1'134 kg (mit Mindestzuschlag)."]]);
+  assert.ok(pK5n.body.includes('möglich bis 1\'134&nbsp;kg (mit Mindestzuschlag).</div>'), 'HTML der Zeile');
+  assert.equal(lines(pK5n, '12')[1][1], "Start laut AFM auch mit 1'111 kg nicht möglich.");
+  assert.equal(lines(parts(CALM({ rain1hMm: 0.4 }), { massText: '1150' }), '30')[1][1],
+    "Start mit 1'150 kg laut AFM nicht möglich, möglich bis 1'134 kg (mit Mindestzuschlag).");
+  assert.equal(lines(parts(wxPfa({ tempC: -10, qnhHpa: 990, windDir: 124, windKt: 2, rain1hMm: 0.4 })), '12')[1][1],
+    "Start mit 1'157 kg laut AFM nicht möglich, möglich bis 1'111 kg (mit Mindestzuschlag).");
+  assert.deepEqual(lines(parts(CALM()), '12').slice(0, 2), [['perf-amber', 'Start: Strecke über 15 m länger als die verfügbare Länge.'],
+    ['perf-amber', "Start mit 1'157 kg laut AFM nicht möglich, möglich bis 1'134 kg."]]);
+  assert.equal(ui.TEXT.limitMinimum, 'mit Mindestzuschlag');
+  assert.ok(!parts(CALM()).body.includes('Mindestzuschlag') && !parts(wxPfa(), { aircraft: P2010 }).body.includes('Mindestzuschlag'));
+  // Massgebend ist minimum: true eines eingerechneten Faktors, nicht Nässe oder Belag (Daten verändert)
+  const cNoMin = clone(C172D), tMin = clone(P2010);
+  cNoMin.charts.takeoff.corrections.forEach((c) => { if (c.kind === 'factor') c.minimum = false; });
+  tMin.charts.takeoff.corrections.forEach((c) => { if (c.kind === 'factor') c.minimum = true; });
+  assert.equal(lines(parts(CALM({ rain1hMm: 0.4 }), { aircraft: cNoMin }), '30')[1][1], "Start mit 1'157 kg laut AFM nicht möglich, möglich bis 1'134 kg.");
+  assert.equal(lines(parts(wxPfa(), { aircraft: tMin }), '30')[1][1], "Start mit 1'160 kg laut AFM nicht möglich, möglich bis 1'060 kg (mit Mindestzuschlag).");
+  // Zwei eingerechnete Faktoren, nur einer mit minimum: true (Befund B3 der Prüfung von VERSION 6): Zusatz trotzdem
+  const cTwo = clone(C172D);
+  cTwo.charts.takeoff.corrections.push({ kind: 'factor', when: 'always', factor: 1.05, minimum: false, labelDe: 'Probefaktor', refDe: 'Test' });
+  const twoLine = lines(parts(CALM({ rain1hMm: 0.4 }), { aircraft: cTwo }), '30')[1][1];
+  assert.match(twoLine, /^Start mit 1'157 kg laut AFM nicht möglich, möglich bis 1'1\d\d kg \(mit Mindestzuschlag\)\.$/, twoLine);
+  assert.ok(!parts(CALM(), { aircraft: cTwo }).body.includes('Mindestzuschlag'), 'trocken: nur der Faktor ohne minimum');
   // lowest: Cessna mit 1'100 kg (kleinste Tabelle), nass, −10 °C, Piste 12; Cessna 152 ohne Eingabe (eine Tabelle)
   const wetCold = CALM({ tempC: -10, qnhHpa: 990, rain1hMm: 0.4 });
   assert.deepEqual(lines(parts(wetCold, { massText: '1100' }), '12')[1], ['perf-amber', "Start mit 1'100 kg laut AFM nicht möglich. " + TXT.lowest]);
@@ -871,7 +982,7 @@ test('Anzeige: Zeile je Starttabelle im Rechenweg nur, wenn der Start auf einer 
 });
 
 test('Anzeige: ungültiges Gewicht – keine Zahl in Karte und Kurzzeile, Fehlertext am Feld und in der Karte', () => {
-  ['115', '', 'abc', '1200', '1050,5', '1050 kg', '  '].forEach((mt) => {
+  ['115', '', 'abc', '1200', '123456', '1050,5', '1050 kg', '  '].forEach((mt) => {
     [wxPfa(), wxPfa({ windDir: null, windKt: 0 })].forEach((w) => {
       const p = parts(w, { massText: mt });
       const err = ui.parseMass(mt, C172D).error;
@@ -889,13 +1000,32 @@ test('Anzeige: ungültiges Gewicht – keine Zahl in Karte und Kurzzeile, Fehler
   assert.deepEqual([noWx.kind, noWx.massError], ['no-wx', ui.parseMass('115', C172D).error]);
   const pending = parts(wxPfa(), { massText: '115', fgzoPending: true });
   assert.deepEqual([pending.kind, pending.massError], ['fgzo-pending', ui.parseMass('115', C172D).error]);
-  // Rückfallebene des Kerns (above-mass) in Karte und Kurzzeile
+  // Rückfallebene des Kerns (above-mass) in Karte und Kurzzeile (VERSION 6, N6): Das Feld lässt kein Gewicht über dem
+  // Höchstgewicht zu, darum liefert hier ein ersetztes core.compute den Fehler. Eigener Text ohne Zahl der Rechnung;
+  // fehlen die Zahlen im Fehler, steht «Rechenfehler» (nie «undefined»), die Kurzzeile bleibt beim Gewichtstext.
   const res = core.compute(C172D, AF, inputOf([15, 1018, 290, 8, false], 1200));
-  assert.equal(res.error.code, 'above-mass');
+  assert.deepEqual(res.error, { code: 'above-mass', massKg: 1200, maxKg: 1157 });
+  const orig = core.compute;
+  try {
+    const seen = [];
+    core.compute = (ac, af, input) => { seen.push(input.massKg); return res; };
+    const p = parts(wxPfa(), { massText: '1100' });
+    assert.deepEqual([p.kind, seen], ['calc-error', [1100]]);
+    assert.ok(p.body.includes('<div class="perf-state" role="status">1\'200&nbsp;kg liegt über dem maximalen Abfluggewicht von 1\'157&nbsp;kg – keine Berechnung.</div>'), p.body);
+    assert.equal(text(p.teaser).trim(), 'Start- und Landestrecke · Cessna 172 Diesel ' + ui.TEASER.massError);
+    assert.ok(!p.body.includes('perf-grid') && !p.teaser.includes('perf-t-row'), 'Zahlen bei above-mass');
+    core.compute = () => ({ ok: false, error: { code: 'above-mass' }, input: res.input });
+    const q = parts(wxPfa(), { massText: '1100' });
+    assert.ok(q.body.includes('<div class="perf-state" role="status">' + ui.TEXT.internal + '</div>'), q.body);
+    assert.equal(text(q.teaser).trim(), 'Start- und Landestrecke · Cessna 172 Diesel ' + ui.TEASER.massError);
+    assertClean(q.body + q.teaser, 'above-mass ohne Zahlen');
+  } finally {
+    core.compute = orig;
+  }
 });
 
 test('Gleichlauf Karte und Kurzzeile über alle Sollzeilen des Planers (Zahl, Farbe, Gewicht im Kopf, Zeile «möglich bis»)', () => {
-  const stats = { rows: 0, lines: 0, kgHead: 0, red: 0, amber: 0, noValue: 0 };
+  const stats = { rows: 0, lines: 0, kgHead: 0, red: 0, amber: 0, noValue: 0, minimum: 0 };
   GEWICHT.forEach(([id, acId, field, inp, massKg, , rws]) => {
     const ac = ACS[acId], af = fieldOf(field), tables = SOLL_TABLES[acId];
     const p = parts(wxOf(inp), { aircraft: ac, airfield: af, massText: massKg === null ? undefined : String(massKg) });
@@ -925,10 +1055,12 @@ test('Gleichlauf Karte und Kurzzeile über alle Sollzeilen des Planers (Zahl, Fa
         assert.deepEqual(b.start, [null, null], label + ' ' + rid);
         nov = true;
       }
-      const want = expectLine(state, mk === null ? ac.mass.kg : mk, maxKg, tables, byTable, ti);
+      const minimum = RULES[acId].minimum(inp[4] === true, af.runways.find((x) => x.id === rid).surface === 'grass');
+      const want = expectLine(state, mk === null ? ac.mass.kg : mk, maxKg, tables, byTable, ti, minimum);
       const got = b.findings.filter((f) => /laut AFM/.test(f[1]));
       if (want === null) { assert.deepEqual(got, [], label + ' ' + rid + ': keine Zeile'); return; }
       stats.lines++;
+      if (state === 'limit' && minimum) stats.minimum++;
       assert.deepEqual(got, [[sel[0] > b.avail ? 'perf-red' : 'perf-amber', want]], label + ' ' + rid + ': Zeile');
       assert.equal(b.findings.indexOf(got[0]), 1, label + ': direkt nach der Feststellung zum Start');
     });

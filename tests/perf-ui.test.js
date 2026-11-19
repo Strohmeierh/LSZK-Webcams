@@ -873,18 +873,21 @@ function fakeEl(env, id, style) {
   };
 }
 // Gewichtsfeld: value schreibt nur das Skript (gezählt; bei Fokus zusätzlich als Fehler, denn Cursor und Tastatur gingen
-// verloren), typed() ist das Tippen des Benutzers; Attribute über setAttribute (aria-invalid)
+// verloren), typed() ist das Tippen des Benutzers (Cursor danach am Ende), caret() setzt der Browser beim Klick;
+// setSelectionRange markiert (gezählt in env.selects); Attribute über setAttribute (aria-invalid)
 function fakeInput(env) {
   let value = '';
   return {
-    id: 'perf-mass-in', attrs: {},
+    id: 'perf-mass-in', attrs: {}, selectionStart: 0, selectionEnd: 0,
     get value() { return value; },
     set value(v) {
       value = String(v);
       env.valueWrites++;
       if (env.doc.activeElement === this) env.focusedValueWrites++;
     },
-    typed(v) { value = String(v); },
+    typed(v) { value = String(v); this.selectionStart = this.selectionEnd = value.length; },
+    caret(n) { this.selectionStart = this.selectionEnd = n; },
+    setSelectionRange(a, b) { this.selectionStart = a; this.selectionEnd = b; env.selects++; },
     setAttribute(n, v) { this.attrs[n] = String(v); },
     getAttribute(n) { return Object.prototype.hasOwnProperty.call(this.attrs, n) ? this.attrs[n] : null; }
   };
@@ -897,7 +900,7 @@ function fakeBrowser(opts) {
   opts = opts || {};
   const env = {
     clock: NOW, fetchUrls: [], failPerf: !!opts.failPerf, intervals: [], timeouts: [], docListeners: {},
-    writes: 0, writesBy: {}, selectNodes: 0, nodes: {}, inputNodes: 0, valueWrites: 0, focusedValueWrites: 0, sessionWrites: 0,
+    writes: 0, writesBy: {}, selectNodes: 0, nodes: {}, inputNodes: 0, valueWrites: 0, focusedValueWrites: 0, sessionWrites: 0, selects: 0,
     store: Object.assign({}, opts.store),
     files: Object.assign({
       'perf/aircraft/index.json': INDEX_RAW,
@@ -1547,8 +1550,11 @@ test('boot: Gewichtsfeld – Höchstgewicht im Feld, Tippen rechnet erst nach 70
   assert.equal(massTimers(env).length, k1);
   assert.ok(headOf(env).startsWith("Abfluggewicht 1'133 kg: Start nach der AFM-Tabelle für 1'134 kg"), headOf(env));
   assert.ok(teaserText(env).includes("1'133 kg · Piste 30 Rollstrecke: Start " + k2Start(1133) + ' m'), teaserText(env));
-  // ungültig: Fehlertext am Feld und in der Karte, aria-invalid, keine Zahl in Karte und Kurzzeile
+  // ungültig: Fehlertext am Feld und in der Karte, aria-invalid, keine Zahl in Karte und Kurzzeile. «115» kann durch
+  // Weitertippen noch gültig werden und ist darum nur ohne Fokus ein Fehler («change» nach dem Fokuswechsel, VERSION 6)
+  env.doc.activeElement = null;
   changeMass(env, '115');
+  env.doc.activeElement = el;
   const e115 = ui.parseMass('115', C172D).error;
   assert.equal(massErr(env).textContent, e115);
   assert.equal(el.getAttribute('aria-invalid'), 'true');
@@ -1557,6 +1563,10 @@ test('boot: Gewichtsfeld – Höchstgewicht im Feld, Tippen rechnet erst nach 70
   assert.ok(!env.body.innerHTML.includes('perf-grid') && !/\d&nbsp;m/.test(env.body.innerHTML + env.teaser.innerHTML), 'Zahl bei ungültigem Gewicht');
   changeMass(env, '1200');
   assert.equal(massErr(env).textContent, ui.parseMass('1200', C172D).error);
+  assert.equal(el.getAttribute('aria-invalid'), 'true');
+  // sechs Ziffern (maxlength 6): Text zur Obergrenze, nicht «ganze Zahl» (VERSION 6, N2)
+  changeMass(env, '123456');
+  assert.equal(massErr(env).textContent.replace(/ /g, ' '), "123'456 kg liegt über dem maximalen Abfluggewicht von 1'157 kg – keine Berechnung.");
   assert.equal(el.getAttribute('aria-invalid'), 'true');
   changeMass(env, " 1'110 ");
   assert.equal(massErr(env).textContent, '');
@@ -1582,14 +1592,16 @@ test('boot: leeres Feld beim Verlassen – wieder das Höchstgewicht, und es ste
   env.doc.activeElement = el;
   changeMass(env, '1110');
   assert.ok(teaserText(env).includes("1'110 kg"));
-  // geleert: «change» zeigt den Fehler, «focusout» setzt auf das Höchstgewicht
+  // geleert, noch mit Fokus (Enter löst «change» aus): kein Fehler, es gilt weiter 1'110 kg (VERSION 6, N4);
+  // «focusout» setzt auf das Höchstgewicht
   el.typed('');
   env.mass.listeners.change({ target: el });
-  assert.equal(massErr(env).textContent, ui.TEXT.massEmpty);
+  assert.equal(massErr(env).textContent, '');
+  assert.ok(teaserText(env).includes("1'110 kg · Piste 30 Rollstrecke: Start " + k2Start(1110) + ' m'), teaserText(env));
   blurMass(env, false);
   assert.equal(el.value, '1157');
   assert.equal(massErr(env).textContent, '');
-  assert.equal(el.getAttribute('aria-invalid'), 'false');
+  assert.notEqual(el.getAttribute('aria-invalid'), 'true');
   assert.ok(headOf(env).startsWith('Maximales Abfluggewicht'), headOf(env));
   assert.equal(teaserText(env), K2_MAX());
   // nur Leerzeichen und Apostroph gelten als leer
@@ -1615,6 +1627,378 @@ test('boot: leeres Feld beim Verlassen – wieder das Höchstgewicht, und es ste
   assert.equal(massErr(env).textContent, '');
   assert.equal(teaserText(env), K2_MAX());
   assert.equal(env.focusedValueWrites, 0);
+});
+
+// Zeiger- und Fokusereignisse am Gewichtsfeld wie im Browser (steigen zum Behälter #perf-mass auf). Der Browser setzt
+// den Cursor beim Antippen an die Tippstelle (caret); Takte von 0 ms laufen nach dem Ereignis, das sie anlegt.
+const ptr = (el) => ({ target: el, prevented: false, preventDefault() { this.prevented = true; } });
+const zeroTimers = (env) => env.timeouts.filter((x) => x.ms === 0);
+function focusMass(env) {
+  const el = massInput(env);
+  env.doc.activeElement = el;
+  env.mass.listeners.focusin({ target: el });
+  return el;
+}
+// Hineinklicken mit der Maus: mousedown (Feld noch ohne Fokus), Fokus, Cursor an die Klickstelle, Takt, mouseup, click
+function enterByMouse(env, at) {
+  const el = massInput(env), z = zeroTimers(env).length, up = ptr(el);
+  env.mass.listeners.mousedown(ptr(el));
+  focusMass(env);
+  el.caret(at);
+  zeroTimers(env).slice(z).forEach((x) => x.fn());
+  env.mass.listeners.mouseup(up);
+  env.mass.listeners.click(ptr(el));
+  return up;
+}
+// Antippen am iPhone, ungünstigster Fall: touchstart, Fokus beim Loslassen, der Takt nach dem Fokus markiert, danach setzt
+// das System den Cursor doch an die Tippstelle; dann mousedown (Feld schon fokussiert), mouseup und click
+function enterByTouch(env, at) {
+  const el = massInput(env), z = zeroTimers(env).length, up = ptr(el);
+  env.mass.listeners.touchstart(ptr(el));
+  focusMass(env);
+  zeroTimers(env).slice(z).forEach((x) => x.fn());
+  el.caret(at);
+  env.mass.listeners.mousedown(ptr(el));
+  env.mass.listeners.mouseup(up);
+  env.mass.listeners.click(ptr(el));
+  return up;
+}
+// Klick ins schon fokussierte Feld: der Browser setzt beim mousedown den Cursor an die Klickstelle
+function clickFocused(env, at) {
+  const el = massInput(env), up = ptr(el);
+  env.mass.listeners.mousedown(ptr(el));
+  el.caret(at);
+  env.mass.listeners.mouseup(up);
+  env.mass.listeners.click(ptr(el));
+  return up;
+}
+const sel = (el) => [el.selectionStart, el.selectionEnd];
+
+test('boot: Gewichtsfeld – beim Hineingehen ist der ganze Inhalt markiert (Maus, Antippen, Tastatur); ein Klick ins fokussierte Feld setzt den Cursor', async (t) => {
+  const env = await bootK2(t);
+  const el = massInput(env);
+  const vw = env.valueWrites;
+  assert.equal(el.value, '1157');
+  assert.equal(ui.MASS_SELECT_MS, 1000);
+  // Maus: nach dem Fokus markiert; mouseup ohne Standardaktion (Safari höbe die Markierung sonst auf)
+  let up = enterByMouse(env, 2);
+  assert.deepEqual([sel(el), up.prevented], [[0, 4], true]);
+  // Klick ins schon fokussierte Feld, auch gleich danach: Cursor an der Klickstelle, nichts markiert, Standardaktion bleibt
+  const s0 = env.selects;
+  up = clickFocused(env, 1);
+  assert.deepEqual([sel(el), up.prevented, env.selects], [[1, 1], false, s0]);
+  up = clickFocused(env, 3);
+  assert.deepEqual([sel(el), up.prevented, env.selects], [[3, 3], false, s0]);
+  blurMass(env, false);
+  // Antippen am iPhone: touchstart vor dem Fokus zählt, das spätere mousedown (Feld schon fokussiert) hebt es nicht auf
+  up = enterByTouch(env, 4);
+  assert.deepEqual([sel(el), up.prevented], [[0, 4], true]);
+  up = clickFocused(env, 2);
+  assert.deepEqual([sel(el), up.prevented], [[2, 2], false]);
+  blurMass(env, false);
+  // Tastatur (Tab, Pfeile der iPhone-Tastatur): der Takt nach dem Fokus markiert; ein Klick danach setzt den Cursor
+  let z = zeroTimers(env).length;
+  focusMass(env);
+  el.caret(4);
+  zeroTimers(env).slice(z).forEach((x) => x.fn());
+  assert.deepEqual(sel(el), [0, 4]);
+  up = clickFocused(env, 2);
+  assert.deepEqual([sel(el), up.prevented], [[2, 2], false]);
+  blurMass(env, false);
+  // Ein Antippen, das zum Scrollen wurde (touchstart ohne Fokus), zählt 2 s später nicht mehr
+  env.mass.listeners.touchstart(ptr(el));
+  env.clock += 2000;
+  z = zeroTimers(env).length;
+  focusMass(env);
+  zeroTimers(env).slice(z).forEach((x) => x.fn());
+  up = clickFocused(env, 1);
+  assert.deepEqual([sel(el), up.prevented], [[1, 1], false]);
+  // Angetippt und gleich wieder verlassen (ohne click): das nächste Hineingehen per Tastatur zählt nicht als Antippen
+  blurMass(env, false);
+  env.mass.listeners.touchstart(ptr(el));
+  focusMass(env);
+  blurMass(env, false);
+  z = zeroTimers(env).length;
+  focusMass(env);
+  zeroTimers(env).slice(z).forEach((x) => x.fn());
+  up = clickFocused(env, 3);
+  assert.deepEqual([sel(el), up.prevented], [[3, 3], false]);
+  // Getippt zwischen Fokus und click, der Takt nach dem Fokus läuft erst danach (gedrosselt): nicht mehr markieren
+  blurMass(env, false);
+  env.mass.listeners.mousedown(ptr(el));
+  z = zeroTimers(env).length;
+  focusMass(env);
+  typeMass(env, '11');
+  const s1 = env.selects;
+  env.mass.listeners.mouseup(ptr(el));
+  env.mass.listeners.click(ptr(el));
+  zeroTimers(env).slice(z).forEach((x) => x.fn());
+  assert.deepEqual([sel(el), env.selects], [[2, 2], s1]);
+  changeMass(env, '1157');
+  // Hineingeklickt (der click markiert), «1» getippt, erst danach läuft der gedrosselte Takt nach dem Fokus (so im
+  // verborgenen Browserbereich beobachtet): er markiert die «1» nicht, die nächste Ziffer hängt an
+  blurMass(env, false);
+  z = zeroTimers(env).length;
+  env.mass.listeners.mousedown(ptr(el));
+  focusMass(env);
+  el.caret(2);
+  env.mass.listeners.mouseup(ptr(el));
+  env.mass.listeners.click(ptr(el));
+  assert.deepEqual(sel(el), [0, 4]);
+  typeMass(env, '1');
+  zeroTimers(env).slice(z).forEach((x) => x.fn());
+  assert.deepEqual(sel(el), [1, 1]);
+  changeMass(env, '1157');
+  // Feld verlassen, bevor der Takt nach dem Fokus läuft: nichts markiert
+  blurMass(env, false);
+  z = zeroTimers(env).length;
+  const s2 = env.selects;
+  focusMass(env);
+  blurMass(env, false);
+  zeroTimers(env).slice(z).forEach((x) => x.fn());
+  assert.equal(env.selects, s2);
+  // Ereignisse anderer Elemente im Behälter zählen nicht; markiert wird nur mit der Methode des Felds, der Wert bleibt
+  env.mass.listeners.mousedown(ptr({ id: 'anderes' }));
+  env.mass.listeners.focusin({ target: { id: 'anderes' } });
+  env.mass.listeners.mouseup(ptr({ id: 'anderes' }));
+  assert.equal(zeroTimers(env).length, z + 1);
+  assert.equal(env.valueWrites, vw, 'Markieren schreibt den Wert');
+  assert.equal(env.focusedValueWrites, 0);
+});
+
+test('boot: leeres Feld mit Fokus ist kein Fehler – es gilt weiter das zuletzt übernommene gültige Gewicht, mit Zahlen, ohne Fehlertext', async (t) => {
+  const env = await bootK2(t);
+  const el = focusMass(env);
+  changeMass(env, '1110');
+  const with1110 = "Cessna 172 Diesel · 1'110 kg · Piste 30 Rollstrecke: Start " + k2Start(1110) + ' m · Landung 265 m';
+  assert.equal(teaserText(env), with1110);
+  const check = (label, teaser) => {
+    assert.equal(massErr(env).textContent, '', label + ': Fehlertext');
+    assert.notEqual(el.getAttribute('aria-invalid'), 'true', label + ': aria-invalid');
+    assert.equal(teaserText(env), teaser || with1110, label);
+    assert.ok(env.body.innerHTML.includes('perf-grid'), label + ': Karte ohne Zahlen');
+    assert.equal(el.value.replace(/[\s']/g, ''), '', label + ': Feld beschrieben');
+  };
+  // geleert (Tippen), nach 700 ms Ruhe: Karte, Kopf und Kurzzeile weiter mit 1'110 kg
+  typeMass(env, '');
+  massTimers(env).slice(-1)[0].fn();
+  check('geleert');
+  assert.ok(headOf(env).startsWith("Abfluggewicht 1'110 kg: Start nach der kleinsten AFM-Tabelle (1'111 kg)"), headOf(env));
+  // Takt, neue Messwerte, Enter («change») und nur Leerzeichen und Apostroph ändern daran nichts
+  env.clock += MIN;
+  env.win.LszkPerf._tick();
+  env.win.LszkPerf.update(wxPfa({ time: env.clock - 15 * MIN }));
+  await settle();
+  check('Takt');
+  changeMass(env, '');
+  check('Enter');
+  typeMass(env, " ' ");
+  massTimers(env).slice(-1)[0].fn();
+  check('Leerzeichen und Apostroph');
+  // nach einem Fehler (über dem Höchstgewicht, auch mit Fokus ein Fehler): geleert verschwindet er, es gilt wieder das
+  // letzte gültige Gewicht
+  changeMass(env, '1200');
+  assert.equal(massErr(env).textContent, ui.parseMass('1200', C172D).error);
+  assert.equal(el.getAttribute('aria-invalid'), 'true');
+  typeMass(env, '');
+  massTimers(env).slice(-1)[0].fn();
+  check('nach dem Fehler geleert');
+  assert.equal(el.getAttribute('aria-invalid'), 'false');
+  // weiter getippt: das neue Gewicht gilt, auch wenn das Feld danach wieder leer ist
+  typeMass(env, '1133');
+  massTimers(env).slice(-1)[0].fn();
+  const with1133 = "Cessna 172 Diesel · 1'133 kg · Piste 30 Rollstrecke: Start " + k2Start(1133) + ' m · Landung 265 m';
+  assert.equal(teaserText(env), with1133);
+  typeMass(env, '');
+  massTimers(env).slice(-1)[0].fn();
+  check('1133 geleert', with1133);
+  // leer verlassen: Höchstgewicht, und es steht im Feld
+  blurMass(env, false);
+  assert.equal(el.value, '1157');
+  assert.equal(teaserText(env), K2_MAX());
+  // ohne übernommenes Gewicht und nach einem ungültigen: leer mit Fokus rechnet mit dem Höchstgewicht, ohne Fehler
+  focusMass(env);
+  typeMass(env, '');
+  massTimers(env).slice(-1)[0].fn();
+  check('ohne Gewicht', K2_MAX());
+  assert.ok(headOf(env).startsWith('Maximales Abfluggewicht'), headOf(env));
+  changeMass(env, '1050,5');
+  assert.equal(el.getAttribute('aria-invalid'), 'true');
+  typeMass(env, '');
+  massTimers(env).slice(-1)[0].fn();
+  check('nur ungültig übernommen', K2_MAX());
+  // leer ohne Fokus übernommen (Browser, die «change» erst nach dem Fokuswechsel melden): wie beim Verlassen
+  changeMass(env, '1110');
+  el.typed('');
+  env.doc.activeElement = null;
+  env.mass.listeners.change({ target: el });
+  assert.equal(el.value, '1157');
+  assert.equal(teaserText(env), K2_MAX());
+  assert.equal(massErr(env).textContent, '');
+  assert.equal(env.focusedValueWrites, 0);
+});
+
+test('boot: mit Fokus ist «noch am Tippen» kein Fehler (nur Ziffern unter der Untergrenze); beim Verlassen und bei change ohne Fokus die volle Prüfung', async (t) => {
+  const env = await bootK2(t);
+  const el = focusMass(env);
+  changeMass(env, '1133');
+  const with1133 = "Cessna 172 Diesel · 1'133 kg · Piste 30 Rollstrecke: Start " + k2Start(1133) + ' m · Landung 265 m';
+  assert.equal(teaserText(env), with1133);
+  const calm = (label, teaser) => {
+    assert.equal(massErr(env).textContent, '', label + ': Fehlertext');
+    assert.notEqual(el.getAttribute('aria-invalid'), 'true', label + ': aria-invalid');
+    assert.equal(teaserText(env), teaser || with1133, label);
+    assert.ok(env.body.innerHTML.includes('perf-grid'), label + ': Karte ohne Zahlen');
+  };
+  const failed = (label, v) => {
+    assert.equal(massErr(env).textContent, ui.parseMass(v, C172D).error, label);
+    assert.equal(el.getAttribute('aria-invalid'), 'true', label + ': aria-invalid');
+    assert.ok(!env.body.innerHTML.includes('perf-grid') && !env.teaser.innerHTML.includes('perf-t-row'), label + ': Zahlen');
+  };
+  const pause = () => massTimers(env).slice(-1)[0].fn();       // mehr als 700 ms Ruhe
+  // langsam getippt, je mit Pause: «1», «11», «110» (auch mit Apostroph) kein Fehler, es gilt weiter 1'133 kg
+  ['1', '11', '110', " 1'10"].forEach((v) => { typeMass(env, v); pause(); calm(JSON.stringify(v)); });
+  assert.ok(headOf(env).startsWith("Abfluggewicht 1'133 kg"), headOf(env));
+  // «1100» gilt (Tabelle 1'111 kg wie 1'110 kg in den Sollzeilen)
+  typeMass(env, '1100');
+  pause();
+  const with1100 = "Cessna 172 Diesel · 1'100 kg · Piste 30 Rollstrecke: Start " + k2Start(1110) + ' m · Landung 265 m';
+  assert.equal(teaserText(env), with1100);
+  // Untergrenze: 578 noch am Tippen, 579 gilt
+  typeMass(env, '578');
+  pause();
+  calm('578', with1100);
+  typeMass(env, '579');
+  pause();
+  assert.equal(teaserText(env), "Cessna 172 Diesel · 579 kg · Piste 30 Rollstrecke: Start " + k2Start(579) + ' m · Landung 265 m');
+  // durch Weitertippen nicht mehr gültig: über dem Höchstgewicht oder andere Zeichen – Fehler nach 700 ms, auch mit Fokus
+  ['1158', '1200', '123456', '1.5', '-1', '1e1', '1a', '1050,5'].forEach((v) => { typeMass(env, v); pause(); failed(v, v); });
+  // Enter («change» mit Fokus) bei «1»: noch am Tippen, es gilt das letzte gültige Gewicht (1'100 kg)
+  changeMass(env, '1100');
+  changeMass(env, '1');
+  calm('Enter bei «1»', with1100);
+  // Verlassen ohne «change» (Takt schon gelaufen): jetzt die volle Prüfung – unter der Untergrenze Fehler, keine Zahlen
+  blurMass(env, false);
+  failed('Verlassen mit «1»', '1');
+  assert.equal(el.value, '1');
+  // offener Takt beim Verlassen ohne «change»: ebenso voll geprüft
+  focusMass(env);
+  typeMass(env, '11');
+  blurMass(env, false);
+  failed('Verlassen mit offenem Takt', '11');
+  // «change» ohne Fokus (Chromium meldet es nach dem Fokuswechsel): sofort voll geprüft, schon vor focusout
+  focusMass(env);
+  changeMass(env, '1100');
+  el.typed('1');
+  env.doc.activeElement = null;
+  env.mass.listeners.change({ target: el });
+  failed('change ohne Fokus', '1');
+  env.mass.listeners.focusout({ target: el });
+  failed('change ohne Fokus, dann focusout', '1');
+  // focusout, während das Feld noch aktiv ist (das Fenster verliert den Fokus): ebenso die volle Prüfung
+  focusMass(env);
+  changeMass(env, '1100');
+  typeMass(env, '1');
+  pause();
+  calm('vor dem Fensterwechsel', with1100);
+  env.mass.listeners.focusout({ target: el });
+  failed('Fensterwechsel', '1');
+  // leer beim Verlassen, auch ohne vorheriges «input» (Feld anders geleert): Höchstgewicht, und es steht im Feld
+  focusMass(env);
+  changeMass(env, '1100');
+  el.typed('');
+  blurMass(env, false);
+  assert.equal(el.value, '1157');
+  assert.equal(teaserText(env), K2_MAX());
+  // über Mitternacht: am Tippen übernommen, dann gültig, verlassen am neuen Tag – zurück auf das Höchstgewicht
+  focusMass(env);
+  changeMass(env, '1100');                          // 18.11.2026
+  typeMass(env, '11');
+  pause();
+  calm('am Tippen', with1100);
+  changeMass(env, '1110');
+  env.clock = Date.UTC(2026, 10, 18, 23, 5);        // 19.11., 00:05 Uhr
+  env.win.LszkPerf._tick();
+  assert.ok(headOf(env).startsWith("Abfluggewicht 1'110 kg"), 'mit Fokus zurückgesetzt: ' + headOf(env));
+  blurMass(env, false);
+  assert.ok(headOf(env).startsWith('Maximales Abfluggewicht'), 'Tageswechsel nach dem Verlassen: ' + headOf(env));
+  assert.equal(el.value, '1157');
+  assert.equal(env.focusedValueWrites, 0);
+});
+
+test('boot: «noch am Tippen» nimmt kein gültiges Gewicht vom Vortag wieder auf (Fokus über Mitternacht, am neuen Tag ungültig verlassen)', async (t) => {
+  // Befund B1 der Prüfung von VERSION 6: am 18.11. «1000» übernommen, Fokus über Mitternacht (bleibt nach E2), am 19.11.
+  // «1» getippt und verlassen (Fehler), später wieder hinein und geleert – vorher rechnete die Seite dann mit 1'000 kg vom Vortag
+  const env = await bootK2(t);
+  focusMass(env);
+  changeMass(env, '1000');                          // 18.11.2026, 09:15 Uhr in Zürich
+  env.clock = Date.UTC(2026, 10, 18, 23, 10);       // 19.11., 00:10 Uhr, mit frischen Messwerten
+  env.win.LszkPerf._tick();
+  env.win.LszkPerf.update(wxPfa({ time: env.clock - 10 * MIN }));
+  await settle();
+  assert.ok(headOf(env).startsWith("Abfluggewicht 1'000 kg"), 'mit Fokus zurückgesetzt: ' + headOf(env));
+  assert.ok(teaserText(env).includes("1'000 kg"), teaserText(env));
+  typeMass(env, '1');
+  massTimers(env).slice(-1)[0].fn();               // am Tippen, am neuen Tag
+  assert.ok(headOf(env).startsWith('Maximales Abfluggewicht'), 'am Tippen mit dem Gewicht vom Vortag: ' + headOf(env));
+  assert.equal(massErr(env).textContent, '');
+  blurMass(env, false);                             // «1» voll geprüft: Fehler, keine Zahlen
+  assert.equal(massErr(env).textContent, ui.parseMass('1', C172D).error);
+  env.clock = Date.UTC(2026, 10, 18, 23, 41);       // 00:41 Uhr: wieder hinein und leeren
+  env.win.LszkPerf.update(wxPfa({ time: env.clock - 10 * MIN }));
+  await settle();
+  focusMass(env);
+  typeMass(env, '');
+  massTimers(env).slice(-1)[0].fn();
+  assert.ok(headOf(env).startsWith('Maximales Abfluggewicht'), 'leeres Feld am neuen Tag: ' + headOf(env));
+  assert.equal(teaserText(env), K2_MAX());
+  // am selben Tag gilt das letzte gültige Gewicht beim Tippen weiter
+  changeMass(env, '1100');
+  typeMass(env, '1');
+  massTimers(env).slice(-1)[0].fn();
+  assert.ok(headOf(env).startsWith("Abfluggewicht 1'100 kg"), 'gleicher Tag: ' + headOf(env));
+  assert.equal(env.focusedValueWrites, 0);
+});
+
+test('boot: getippt, aber noch nicht übernommen – schreibt das Skript den Behälter ohne Musterwechsel neu, gilt das Höchstgewicht, der offene Takt verfällt', async (t) => {
+  const env = await bootK2(t);
+  const el = massInput(env);
+  env.doc.activeElement = el;
+  typeMass(env, '1110');                            // getippt, Takt offen, nichts übernommen
+  const pending = massTimers(env).slice(-1)[0];
+  env.win.LszkPerf.update(evilWx());                // Rechenfehler leert den Behälter
+  assert.equal(env.mass.innerHTML, '');
+  env.win.LszkPerf.update(wxPfa({ time: env.clock - 10 * MIN }));
+  await settle();
+  const el2 = massInput(env);
+  assert.ok(el2 && el2 !== el, 'neues Feld');
+  assert.equal(el2.value, '1157');
+  assert.equal(teaserText(env), K2_MAX());
+  pending.fn();                                     // der alte Takt übernimmt nichts
+  assert.ok(headOf(env).startsWith('Maximales Abfluggewicht'), headOf(env));
+  assert.equal(teaserText(env), K2_MAX());
+  assert.equal(el2.value, '1157');
+  assert.equal(massErr(env).textContent, '');
+});
+
+test('boot: Tageswechsel über mehrere Tage, einen Monat und ein Jahr – jedes andere Datum in Zürich setzt zurück', async (t) => {
+  const env = await bootK2(t);
+  const el = massInput(env);
+  changeMass(env, '1110');                          // 18.11.2026, 09:15 Uhr
+  [
+    ['drei Tage später', Date.UTC(2026, 10, 21, 8, 15)],
+    ['ein Monat später, gleicher Tag im Monat', Date.UTC(2026, 11, 21, 8, 15)],
+    ['ein Jahr später, gleicher Tag und Monat', Date.UTC(2027, 11, 21, 8, 15)]
+  ].forEach(([label, ms]) => {
+    env.clock = ms;
+    env.win.LszkPerf._tick();
+    assert.ok(headOf(env).startsWith('Maximales Abfluggewicht'), label + ': ' + headOf(env));
+    assert.equal(el.value, '1157', label);
+    changeMass(env, '1110');                        // neu eingegeben, gilt bis Mitternacht
+    env.clock = ms + 12 * 60 * MIN;                 // gleicher Tag, 21:15 Uhr
+    env.win.LszkPerf._tick();
+    assert.ok(headOf(env).startsWith("Abfluggewicht 1'110 kg"), label + ', abends: ' + headOf(env));
+  });
 });
 
 test('boot: 100 Takte bei unveränderter Eingabe – derselbe Feldknoten, kein innerHTML auf #perf-mass, Fokus, Wert und Entwurf bleiben', async (t) => {

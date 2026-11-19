@@ -17,7 +17,7 @@
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  var VERSION = 5;
+  var VERSION = 6;
 
   var EPS = 1e-9;
   var FT_M = 0.3048;
@@ -220,7 +220,9 @@
      Die Haupttabelle (charts.takeoff.table) gilt für das Höchstgewicht (mass). Die weiteren Tabellen stehen absteigend
      nach Gewicht, alle unter dem Höchstgewicht, mit denselben Achsen, Ausgaben und derselben Einheit, und sind in
      keiner Zelle länger als die nächstschwerere Tabelle. Nur dann ist die Ablesung «Tabelle für das nächsthöhere
-     Gewicht» konservativ. Bei der Landung sind keine weiteren Tabellen erlaubt. */
+     Gewicht» konservativ. Jede Tabelle nennt ihre Quelle (ref.figure und ref.page, nicht leer; der Rechenweg zeigt sie
+     für die gewählte Tabelle) und hat einen Titel (title, Zeichenkette). Bei der Landung sind keine weiteren Tabellen
+     erlaubt. */
   function validateLowerWeights(ch, ph, mass, path, err) {
     var list = ch.lowerWeights;
     if (list === undefined) return;
@@ -234,6 +236,8 @@
       if (!isObj(e) || !isObj(e.mass) || !(isNum(e.mass.kg) && e.mass.kg > 0) || !(isNum(e.mass.lb) && e.mass.lb > 0)) { err(q + '.mass unbekannt'); return; }
       if (!(e.mass.kg < prevKg) || !(e.mass.lb < prevLb)) { err(q + '.mass nicht absteigend unter dem Höchstgewicht'); return; }
       if (Math.abs(e.mass.lb * LB_KG - e.mass.kg) > MASS_TOL_KG) err(q + '.mass: kg und lb passen nicht zusammen');
+      if (!isObj(e.ref) || !isStr(e.ref.figure) || !isStr(e.ref.page)) err(q + '.ref fehlt');
+      if (typeof e.title !== 'string') err(q + '.title fehlt');
       var bad = false;
       validateTable(e.table, q + '.table', function (m) { bad = true; err(m); });
       if (bad) return;
@@ -529,11 +533,15 @@
             'none'        auch mit der leichtesten Tabelle nicht möglich (lightestKg)
             'lowest'      nicht möglich, und es gibt keine leichtere Tabelle
             'unknown'     nicht möglich, und eine leichtere Tabelle ergibt keinen Wert, keine ist möglich
-     maxPossibleKg: schwerste Tabelle überhaupt, mit der der Start möglich ist (null: keine; bei 'wet-unknown' ohne Aussagekraft). */
+     maxPossibleKg: schwerste Tabelle überhaupt, mit der der Start möglich ist. null, wenn keine möglich ist, und null
+     ohne Aussage, wenn dieses «möglich» bei nasser Piste ohne Nässewert des AFM gerechnet ist (wetFactorMissing; so bei
+     'wet-unknown' und bei 'possible' auf nasser Piste ohne Nässewert). */
   function takeoffLimit(list, ti) {
     var cur = list[ti];
     var res = { state: 'no-value', tableKg: cur.kg, maxKg: null, lightestKg: list[list.length - 1].kg, maxPossibleKg: null };
-    for (var k = 0; k < list.length; k++) if (list[k].possible) { res.maxPossibleKg = list[k].kg; break; }
+    for (var k = 0; k < list.length; k++) {
+      if (list[k].possible) { res.maxPossibleKg = list[k].wetFactorMissing ? null : list[k].kg; break; }
+    }
     if (!cur.ok) return res;
     if (cur.possible) { res.state = 'possible'; return res; }
     if (ti === list.length - 1) { res.state = 'lowest'; return res; }
