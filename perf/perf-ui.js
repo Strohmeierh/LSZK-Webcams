@@ -7,7 +7,8 @@
    neu geschrieben) und #perf-body (Karteninhalt) an. Auf- und Zuklappen merkt sich lszk-perf-open.
    Fehlen Box und Kurzzeile (alte Seite aus dem Cache), erscheint wie bisher nur die Karte.
    Die Kurzzeile zeigt Muster, Piste und die Rollstrecke für Start und Landung; die Farbe der Zahl folgt dem
-   schlimmsten Fall der Karte. Nässe, Sperre und Hinweise stehen nur in der aufgeklappten Karte.
+   schlimmsten Fall der Karte. Nässe und Hinweise stehen nur in der aufgeklappten Karte. Platzstatus und Sperre zeigt
+   die Ampel der Seite, die Karte nicht.
    Grundsatz: lieber kein Wert als ein falscher. Ohne gültige, frische Messwerte keine Zahlen, auch nicht in der
    Kurzzeile.
    Gezeigt wird nur die Piste mit Gegenwind. Nass gilt die Piste bei einer FGZO-Meldung ungleich DRY oder bei Regen.
@@ -35,7 +36,6 @@
   var OPEN_KEY = 'lszk-perf-open';     // '1' = Kurzzeile aufgeklappt; zugeklappt: Schlüssel entfernt (Standard zu)
   var TZ = 'Europe/Zurich';
   var FGZO_TEXT_MAX = 40;      // Pistenzustand und Zeitstempel der FGZO
-  var FGZO_REASON_MAX = 60;    // Grund einer Platzsperre (flaeche_grund)
   var LABEL_MAX = 60;
   // Entscheid F-C: Regen von MeteoSchweiz macht die Piste nass (neben einer FGZO-Meldung ungleich DRY)
   var WET_BY_RAIN = true;
@@ -52,7 +52,8 @@
     loading: 'Lade Flugzeug- und Platzdaten …',
     fgzoLoading: 'Lade Flugplatzstatus …',
     noHeadwindRunway: 'Keine Piste mit Gegenwind in den Platzdaten – keine Berechnung.',
-    footerGeneric: 'Richtwert nach AFM ohne eigenen Sicherheitszuschlag. Massgebend sind das AFM der jeweiligen Maschine und die eigene Beurteilung.',
+    // Pflichthinweis am Fuss der Karte, in jedem Zustand und ohne Aufklappen sichtbar
+    advice: 'Die Werte sind nur ein Anhaltspunkt. Für die Flugvorbereitung in jedem Fall das AFM der Maschine heranziehen.',
     selectLabel: 'Flugzeug wählen',
     calm: 'Windstill (Mittelwind unter 1 kt): keine Gegenwindpiste. Beide Pisten ohne Windkorrektur gerechnet; mit Rückenwind sind die Strecken länger.',
     noDirection: 'Windrichtung fehlt bei mehr als 3 kt Wind: Die Gegenwindpiste lässt sich nicht bestimmen – keine Berechnung.',
@@ -64,18 +65,11 @@
     rainMissing: 'Ein Regenwert von MeteoSchweiz fehlt.',
     unknown: 'Pistenzustand unbekannt: keine aktuelle Meldung der FGZO und kein Regenwert von MeteoSchweiz.',
     reserve: 'Tau, Reif, eben einsetzenden Regen und Nässe von früherem Regen erkennt die Karte nicht.',
-    ruleWind: 'Wind: Gerechnet wird nur die Piste mit Gegenwind. Der Gegenwind stammt aus dem 10-min-Mittelwind, wird auf ganze kt ' +
-      'abgerundet und voll angerechnet. Bei Windstille (Mittelwind unter 1 kt), ohne gemeldete Windrichtung nur bis 3 kt Mittelwind, ' +
-      'oder bei Wind genau quer werden beide Pisten ohne Windkorrektur gerechnet. Rückenwind wird nicht gerechnet. Kein Wert bei ' +
-      'fehlender Windrichtung und mehr als 3 kt, bei Gegenwind über 40 kt oder wenn die Windkorrektur des AFM eine Strecke um mehr ' +
-      'als die Hälfte verkürzen würde.',
-    ruleRound: 'Rundung immer zur längeren Strecke: Gegenwind abgerundet, Ergebnis auf ganze Meter aufgerundet. Die Zwischenwerte im ' +
-      'Rechenweg sind exakt (höchstens vier Nachkommastellen); nur der letzte Wert vor dem Aufrunden ist auf 0,01 aufgerundet.',
-    ruleGrass: 'Gras: Zuschlag laut AFM in Prozent der Tabellen-Rollstrecke (bei Interpolation der interpolierten), auf beide Strecken. ' +
-      'Faktoren des AFM wirken auf beide Strecken nach Wind- und Graskorrektur. Kein eigener Sicherheitszuschlag.',
-    ruleWet: 'Nasse Piste: Die Piste gilt als nass, wenn die FGZO einen anderen Pistenzustand als DRY meldet oder MeteoSchweiz in der ' +
-      'letzten Stunde oder in den letzten 10 min Regen gemessen hat. Der Regenwert kann bis zu 60 min alt sein. Tau, Reif, eben ' +
-      'einsetzenden Regen und Nässe von früherem Regen erkennt die Karte nicht.'
+    // Rechenweg: Lesehilfe unter den Tabellen und Zeile für eine Phase ohne Nässewert im AFM
+    calcRules: 'Rundung immer zur längeren Strecke: nächsthöherer Tabellenwert, Gegenwind abgerundet, Ergebnis aufgerundet. ' +
+      'Gegenwind voll angerechnet. Graszuschlag in % der Tabellen-Rollstrecke, auf beide Strecken.',
+    calcLimits: 'Nicht berücksichtigt: Pistenneigung. Kein eigener Sicherheitszuschlag.',
+    calcNoWet: 'nasse Piste: kein Wert im AFM, ohne Zuschlag gerechnet'
   };
 
   // Kurzzeile unter der Ampel: Zustände ohne Zahlen, Wörter im Kopf, Zeile mit der Rollstrecke und die versteckten
@@ -137,7 +131,6 @@
     '.perf-note { color: #fcd34d; font-size: 0.78rem; margin: 0 0 8px; }',
     '.perf-cond { color: var(--text-muted); font-size: 0.78rem; margin: 0 0 12px; }',
     '.perf-cond.perf-warn { color: #fcd34d; background: rgba(245, 158, 11, 0.12); border-left: 3px solid #f59e0b; padding: 8px 10px; font-size: 0.82rem; font-weight: 600; }',
-    '.perf-cond.perf-warn div + div { margin-top: 4px; }',
     '.perf-hint { color: var(--text-muted); font-size: 0.78rem; margin: 0 0 8px; }',
     '.perf-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 12px; margin: 0 0 8px; }',
     '.perf-block { background: rgba(0, 0, 0, 0.2); border-radius: 8px; padding: 10px 12px; min-width: 0; }',
@@ -157,17 +150,28 @@
     '.perf-finding { font-size: 0.78rem; line-height: 1.45; margin: 3px 0 0; }',
     '.perf-finding.perf-red, .perf-finding.perf-amber { font-weight: 600; }',
     '.perf-nov { color: #f87171; }',
-    '.perf-skip { color: var(--text-muted); font-size: 0.78rem; margin: 0 0 8px; }',
     '.perf-factor { color: var(--text-muted); font-size: 0.78rem; margin: 0 0 10px; }',
     '.perf-state { color: #f87171; font-size: 0.85rem; margin: 4px 0 10px; }',
     '.perf-loading { color: var(--text-muted); font-size: 0.85rem; margin: 4px 0 10px; }',
     '.perf-details { margin: 0 0 10px; font-size: 0.78rem; color: var(--text-muted); }',
     '.perf-details summary { cursor: pointer; padding: 2px 0; }',
     '.perf-calc p { margin: 6px 0; }',
-    '.perf-calc ul { margin: 2px 0 6px; padding-left: 18px; }',
-    '.perf-calc li { margin: 2px 0; }',
     '.perf-calc-h { color: var(--text); font-weight: 600; }',
-    '.perf-foot { font-size: 0.72rem; color: var(--text-muted); line-height: 1.5; border-top: 1px solid var(--card-border); padding-top: 8px; margin-top: 4px; }',
+    // Schritt-Tabelle im Rechenweg: links der Schritt (bricht um), rechts Rollstrecke und über 15 m (brechen nie um).
+    // Höchstens 30rem breit, damit die Zahlen am Desktop beim Schritt bleiben.
+    '.perf-steps { width: 100%; max-width: 30rem; border-collapse: collapse; font-variant-numeric: tabular-nums; margin: 4px 0 10px; }',
+    '.perf-steps th, .perf-steps td { padding: 3px 0 3px 10px; text-align: right; vertical-align: top; font-weight: 400; }',
+    '.perf-steps th:first-child, .perf-steps td:first-child { padding-left: 0; text-align: left; }',
+    '.perf-steps td { color: var(--text); white-space: nowrap; }',
+    '.perf-steps thead th { font-size: 0.7rem; font-weight: 600; vertical-align: bottom; white-space: nowrap; }',
+    '.perf-steps tbody tr { border-top: 1px solid var(--card-border); }',
+    '.perf-steps .perf-steps-ph th { padding-top: 8px; color: var(--text); font-weight: 600; }',
+    '.perf-steps-src { color: var(--text-muted); font-weight: 400; }',
+    '.perf-steps .perf-steps-res th, .perf-steps .perf-steps-res td { color: var(--text); font-weight: 700; }',
+    '.perf-steps td.perf-steps-note { color: var(--text-muted); white-space: normal; }',
+    '.perf-steps td.perf-nov { color: #f87171; }',
+    // Pflichthinweis: gleiche Grösse wie die übrigen gedämpften Zeilen der Karte
+    '.perf-foot { font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; border-top: 1px solid var(--card-border); padding-top: 8px; margin-top: 4px; }',
     // Kurzzeile unter der Ampel: <details class="perf-box"> mit <summary class="perf-teaser">; gleiche Aussenmasse wie die Ampel.
     // display:block auf dem summary blendet das Dreieck aus (Safari: ::-webkit-details-marker); Flex sitzt im inneren span,
     // weil display:flex direkt auf <summary> in älterem Safari nicht greift.
@@ -269,9 +273,8 @@
   // Mittelwind: auf eine Nachkommastelle abgeschnitten, nicht gerundet (0,97 kt → 0,9 kt passt zu «unter 1 kt»)
   function fmtWind(v) { return fmtDec(Math.floor(v * 10 + 1e-9) / 10, 1); }
 
-  // Wind im Rechenweg (Mittelwind, Gegenwindkomponente und Rückenwindkomponente der nicht gerechneten Piste):
-  // auf zwei Nachkommastellen abgeschnitten, damit beide Pisten dieselbe Zahl zeigen
-  // (6,996 kt → 6,99 kt passt zu «abgerundet 6 kt», 0,999 kt → 0,99 kt zu «unter 1 kt»)
+  // Gegenwindkomponente im Rechenweg: auf zwei Nachkommastellen abgeschnitten, nicht gerundet
+  // (6,996 kt → 6,99 kt passt zu «abgerundet 6 kt»)
   function fmtKt2(v) { return fmtDec(Math.floor(v * 100 + 1e-7) / 100, 2); }
 
   // Faktor mit zwei Stellen (1,10), bei drei Dezimalen mit drei
@@ -348,14 +351,14 @@
     };
   }
 
-  /* ── FGZO-Status: Pistenzustand und Platzsperre ─────────────
+  /* ── FGZO-Status: Pistenzustand ─────────────────────────────
      Frisch heisst wie in index.html: letzter erfolgreicher Abruf (fetched_at_utc) jünger als 45 min; ok=false zählt nicht.
      Die letzte bekannte Meldung gilt weiter, in die vorsichtige Richtung:
      – «nicht DRY» zählt als nass, auch veraltet, bei ok=false oder ohne Zeitstempel (updated);
      – DRY gilt nur frisch und mit Zeitstempel als gesichert; veraltet oder nicht von heute erscheint sie als Hinweis,
-       ohne Zeitstempel gilt sie als unbekannt;
-     – eine Sperre aus einer frischen Meldung steht im gelben Kasten, aus einer veralteten als Hinweis.
-     Texte der FGZO (updated, runway_condition, flaeche_grund) werden nur als String übernommen. */
+       ohne Zeitstempel gilt sie als unbekannt.
+     Eine Platzsperre (flaeche, flaeche_grund) wertet die Karte nicht aus: Platzstatus und Sperre zeigt die Ampel der Seite.
+     Texte der FGZO (updated, runway_condition) werden nur als String übernommen. */
   function pad2(n) { return (n < 10 ? '0' : '') + n; }
 
   // Datum im FGZO-Zeitstempel «18.11.2026, 07:14» als «18.11.2026», sonst null
@@ -383,16 +386,11 @@
 
   function fgzoState(p, nowMs) {
     var st = { kind: 'unknown', fresh: false, ageMin: null, condition: null, updated: null, today: false, dayKnown: false,
-      dryNoStamp: false, closed: false, closedStale: false, closedReason: '' };
+      dryNoStamp: false };
     if (!p || typeof p !== 'object' || Array.isArray(p)) return st;
     var t = fgzoFetchedMs(p);
     if (isNum(t)) st.ageMin = (nowMs - t) / 60000;
     st.fresh = st.ageMin !== null && st.ageMin < FGZO_FRESH_MIN;
-    if (p.flaeche === 'gesperrt') {
-      st.closed = st.fresh;
-      st.closedStale = !st.fresh;
-      st.closedReason = typeof p.flaeche_grund === 'string' ? p.flaeche_grund : '';
-    }
     st.updated = typeof p.updated === 'string' && p.updated.trim() ? p.updated : null;
     // Ein vorhandener Zustand, der kein String ist, zählt vorsichtshalber als «nicht DRY»
     var rc = p.runway_condition;
@@ -463,10 +461,8 @@
   }
 
   /* ── HTML-Bausteine ────────────────────────────────────────── */
-  function footerHtml(ac) {
-    var t = ac && typeof ac.footerDe === 'string' && ac.footerDe ? esc(ac.footerDe) : TEXT.footerGeneric;
-    return '<div class="perf-foot">' + t + '</div>';
-  }
+  // Pflichthinweis am Fuss der Karte: fester Text in jedem Zustand (footerDe der Flugzeugdaten wird nicht mehr angezeigt)
+  function footerHtml() { return '<div class="perf-foot">' + TEXT.advice + '</div>'; }
   function stateHtml(text) { return '<div class="perf-state" role="status">' + text + '</div>'; }
 
   // Name des Musters in der Auswahl (die Kennzeichen stehen in der Unterzeile)
@@ -588,14 +584,7 @@
     return '<div class="perf-meas">' + s + '</div>';
   }
 
-  /* ── Pistenzustand, Sperre und Nässe ───────────────────────── */
-  function closureText(fg, stale) {
-    var tail = stale ? ' (veraltete Meldung).' : '.';
-    if (fg.closedReason === 'geschlossen') return 'Platz laut FGZO geschlossen' + tail;
-    var reason = clip(fg.closedReason, FGZO_REASON_MAX);
-    return 'Platz laut FGZO für Flächenflugzeuge gesperrt' + (reason ? ' (' + esc(reason) + ')' : '') + tail;
-  }
-
+  /* ── Pistenzustand und Nässe ───────────────────────────────── */
   function fmtMm(v) { return fmtTrim(v, 2); }
 
   // «Stand 18.11.2026, 10:38» oder «ohne Zeitstempel»
@@ -660,32 +649,28 @@
     return rn.basis === 'hour' ? TEXT.noRainHour : TEXT.noRainRate;
   }
 
-  // Welche Zustandszeilen die Karte zeigt; dieselben Flags bestimmen die Vorbehalte der Kurzzeile.
-  // Gelb (Kasten): closed, wet. Hinweisfarbe: closedStale, dryNotToday, dryStale, dryNoStamp, unknown.
+  // Welche Zustandszeilen die Karte zeigt.
+  // Gelb (Kasten): wet. Hinweisfarbe: dryNotToday, dryStale, dryNoStamp, unknown.
   // Gedämpft: dryToday. Die DRY-Flags und unknown gelten nur, wenn die Piste nicht als nass gilt.
   function condFlags(fg, ws) {
     var dry = !ws.wet && fg.kind === 'dry';
     return {
-      closed: fg.closed, closedStale: fg.closedStale, wet: ws.wet,
+      wet: ws.wet,
       dryToday: dry && fg.fresh && fg.today, dryNotToday: dry && fg.fresh && !fg.today, dryStale: dry && !fg.fresh,
       dryNoStamp: !ws.wet && fg.dryNoStamp, unknown: !ws.wet && ws.unknown
     };
   }
 
-  // Gelber Kasten: frische Sperre und Nässe. Hinweisfarbe: veraltete Sperre, unsichere DRY-Meldung, unbekannter Zustand.
+  // Gelber Kasten: Nässe. Hinweisfarbe: unsichere DRY-Meldung, unbekannter Zustand.
   // Gedämpft: frische DRY-Meldung von heute, Regensatz, «Gerechnet für …» und Vorbehalt.
   function conditionHtml(fg, rn, ws, ac, af, res) {
     var f = condFlags(fg, ws);
     var h = '';
-    var warn = [];
-    if (f.closed) warn.push('<div>' + closureText(fg, false) + '</div>');
     if (f.wet) {
       var wet = [wetSourceText(fg, rn, ws)].concat(wetConsequences(res));
       if (str(ac.wetNoteDe)) wet.push(esc(ac.wetNoteDe));
-      warn.push('<div>' + wet.join(' ') + '</div>');
+      h += '<div class="perf-cond perf-warn" role="note"><div>' + wet.join(' ') + '</div></div>';
     }
-    if (warn.length) h += '<div class="perf-cond perf-warn" role="note">' + warn.join('') + '</div>';
-    if (f.closedStale) h += '<div class="perf-note">' + closureText(fg, true) + '</div>';
     if (!f.wet) {
       var notes = [], muted = [];
       var dry = 'Pistenzustand laut FGZO: DRY (' + stampText(fg) + ')';
@@ -785,43 +770,15 @@
     return '<div class="perf-factor">Eingerechnet nach AFM: ' + (sameLabel ? esc(items[0].c.labelDe) + ' – ' : '') + parts.join(', ') + '.</div>';
   }
 
-  /* ── Rechenweg und Quellen ─────────────────────────────────── */
-  var AXIS_TEXT = { pressureAltitude: ['Druckhöhe', 'ft'], temperature: ['Temperatur', '°C'] };
-
-  function axisLine(lk, res, af) {
-    return lk.axes.map(function (a, k) {
-      // Der Kern lässt nur Druckhöhe und Temperatur zu; der Ersatztext stammt nie aus den Daten
-      var t = AXIS_TEXT[a.quantity] || ['Tabellenachse', ''];
-      var shown = a.quantity === 'pressureAltitude' ? fmtInt(ceilEps(a.input)) : fmtDec(a.input, 1);
-      var s = t[0] + ' ' + shown + '&nbsp;' + t[1];
-      if (a.quantity === 'pressureAltitude') {
-        s += ' (aus QNH ' + fmtQnh(res.input.qnhHpa) + '&nbsp;hPa und Platzhöhe ' + fmtInt(af.elevation.value) + '&nbsp;ft)';
-      }
-      if (a.weight !== undefined) {
-        return s + ' → zwischen den Tabellenspalten ' + fmtExact(a.lower) + '&nbsp;' + t[1] + ' und ' + fmtExact(a.upper) + '&nbsp;' + t[1] +
-          ' linear interpoliert (Gewicht ' + fmtExact(a.weight) + ')';
-      }
-      var word = k === 0 ? 'Tabellenzeile' : (k === 1 ? 'Tabellenspalte' : 'Tabellenwert');
-      return s + ' → ' + word + ' ' + fmtInt(a.value) + '&nbsp;' + t[1] + (a.belowLowest ? ' (kleinster Tabellenwert)' : '');
-    }).join(' · ');
-  }
-
-  function windDetail(r, inp) {
-    var w = r.wind;
-    if (w.mode === 'calm') return 'Mittelwind ' + fmtKt2(inp.windKt) + '&nbsp;kt, unter ' + fmtDec(core.CALM_BELOW_KT, 0) + '&nbsp;kt: windstill, ohne Windkorrektur.';
-    if (w.mode === 'nodir') return 'Windrichtung nicht gemeldet: ohne Windkorrektur.';
-    var s = 'Wind aus ' + fmtInt(inp.windDirTrue) + '°: ';
-    if (w.along === 0) return s + 'genau quer zur Piste, keine Längskomponente.';
-    return s + 'Gegenwindkomponente ' + fmtKt2(w.componentKt) + '&nbsp;kt aus dem Mittelwind ' + fmtKt2(inp.windKt) +
-      '&nbsp;kt, abgerundet ' + w.kt + '&nbsp;kt.';
-  }
-
-  // Rechenweg: Zwischenwerte exakt; nur das letzte Wertepaar vor dem Aufrunden auf ganze Meter (bei Tabellen in ft
-  // das Paar in m) erscheint auf 0,01 aufgerundet. Das ist zulässig, weil ceil(ceil_0,01(x)) = ceil(x).
-  function pair(a, b, unit, up) {
-    var f = up ? fmtUp2 : fmtExact;
-    return f(a) + '&nbsp;/&nbsp;' + f(b) + '&nbsp;' + unit;
-  }
+  /* ── Rechenweg und Quellen ─────────────────────────────────────
+     Aufbau: eine Zeile Eingaben, je Rechnung eine Schritt-Tabelle (Zeilen = Schritte, Spalten = Rollstrecke und
+     über 15 m, je Phase ein Block mit Quellenangabe), darunter die Lesehilfe. Pisten mit derselben Rechnung
+     (windstill, ohne Windrichtung, Wind quer bei gleichem Belag) teilen sich eine Tabelle.
+     Zwischenwerte exakt; nur das letzte Wertepaar vor dem Aufrunden auf ganze Meter (bei Tabellen in ft das Paar
+     in m) erscheint auf 0,01 aufgerundet. Das ist zulässig, weil ceil(ceil_0,01(x)) = ceil(x).
+     Nicht angezeigt werden footerDe, readingRuleDe, massNoteDe, conditionsDe, notesDe, der Titel der Tabelle und die
+     Einzelheiten der Quellen (title, number, issue …); sie bleiben als Beleg in den Flugzeugdaten. */
+  var AXIS_UNIT = { pressureAltitude: 'ft', temperature: '°C' };
 
   function lastStep(p) {
     if (!p.ok) return '';
@@ -832,116 +789,126 @@
     return 'table';
   }
 
-  function phaseLine(label, p) {
-    var u = p.unit;
-    var lk = p.lookup;
-    var last = lastStep(p);
-    var s = '<li>' + label + ': Tabelle ';
-    if (lk.interpolated) {
-      var c = lk.columns;
-      s += pair(c.lower.groundRoll, c.lower.overObstacle, u) + ' bei ' + fmtExact(c.lowerValue) + '&nbsp;°C und ' +
-        pair(c.upper.groundRoll, c.upper.overObstacle, u) + ' bei ' + fmtExact(c.upperValue) + '&nbsp;°C, Gewicht ' +
-        fmtExact(c.weight) + ' → ' + pair(p.table.groundRoll, p.table.overObstacle, u, last === 'table');
-    } else {
-      s += pair(p.table.groundRoll, p.table.overObstacle, u, last === 'table');
-    }
-    var w = p.wind;
-    if (!p.ok && p.reason === 'headwind-limit') return s + ' · Gegenwind ' + w.kt + '&nbsp;kt: über ' + fmtInt(p.limitKt) + '&nbsp;kt, kein Wert</li>';
-    if (w.kt >= 1 && w.applied) {
-      s += ' · Gegenwind ' + w.kt + '&nbsp;kt: ';
-      if (w.type === 'percentPer') {
-        s += '−' + w.percent + '&nbsp;%';
-      } else {
-        // ganzzahlig: «= −70 m»; sonst abgerundet (zur längeren Strecke)
-        var exact = Math.abs(w.perKt * w.kt / w.per - w.reduction) < 1e-9;
-        s += '−' + fmtExact(w.perKt) + '&nbsp;' + u + ' je ' + (w.per === 1 ? '' : fmtExact(w.per) + '&nbsp;') + 'kt' +
-          (exact ? ' = −' : ', abgerundet −') + fmtInt(w.reduction) + '&nbsp;' + u;
-      }
-      if (!p.ok && p.reason === 'wind-credit-limit') return s + ', mehr als die Hälfte – kein Wert</li>';
-      s += ' → ' + pair(p.afterWind.groundRoll, p.afterWind.overObstacle, u, last === 'wind');
-    } else if (w.kt >= 1) {
-      s += ' · Gegenwind ' + w.kt + '&nbsp;kt: nicht angerechnet (keine Regel in den Flugzeugdaten)';
-    } else {
-      s += ' · ohne Windkorrektur';
-    }
-    if (!p.ok) return s + ' · ' + (p.reason === 'no-surface-rule' ? 'keine Korrektur für den Belag' : 'Rechenfehler') + ' – kein Wert</li>';
-    if (p.surface) {
-      s += ' · ' + (SURFACE_LABEL[p.surface.surface] || esc(p.surface.surface)) + ' +' + fmtExact(p.surface.percent) + '&nbsp;% von ' +
-        fmtExact(p.surface.base) + '&nbsp;' + u + ' = +' + fmtExact(p.surface.inc) + '&nbsp;' + u + ' → ' +
-        pair(p.surface.after.groundRoll, p.surface.after.overObstacle, u, last === 'surface');
-    }
-    p.factors.forEach(function (f, i) {
-      s += ' · ' + esc(f.labelDe) + (f.minimum ? ': mindestens × ' : ' × ') + fmtFactor(f.factor) + ' (' + esc(f.refDe) + ') → ' +
-        pair(f.after.groundRoll, f.after.overObstacle, u, last === 'factor' + i);
-    });
-    if (u === 'ft') s += ' = ' + pair(p.meters.groundRoll, p.meters.overObstacle, 'm', true);
-    return s + ' → aufgerundet ' + fmtInt(p.m.groundRoll) + '&nbsp;/&nbsp;' + fmtInt(p.m.overObstacle) + '&nbsp;m</li>';
+  // Tabellenwerte der Achsen, «2'000 ft / 20 °C»; at ersetzt den Wert der interpolierten Achse k.
+  // Der Kern lässt nur Druckhöhe und Temperatur zu; eine andere Achse erschiene ohne Einheit.
+  function tablePoint(lk, k, at) {
+    return lk.axes.map(function (a, i) {
+      var unit = AXIS_UNIT[a.quantity];
+      return fmtExact(i === k ? at : a.value) + (unit ? '&nbsp;' + unit : '');
+    }).join(' / ');
   }
 
-  function sourceText(src) {
-    var s = [src.title, src.publisher, src.number, src.issue, src.approval].filter(function (x) { return typeof x === 'string' && x; }).map(esc).join(', ');
-    // englische Geltung (Seriennummern) in Klammern, deutsche Geltung als eigener Satz
-    if (str(src.applicability)) s += ' (' + esc(src.applicability) + ')';
-    s += '.';
-    if (str(src.applicabilityDe)) s += ' ' + esc(src.applicabilityDe);
-    if (str(src.pageMark)) s += ' Seitenkennung ' + esc(src.pageMark) + (str(src.pageMarkDe) ? ': ' + esc(src.pageMarkDe) : '.');
-    if (str(src.caveatDe)) s += ' ' + esc(src.caveatDe);
-    return s;
+  // Zeile eines Schritts: Beschriftung, Rollstrecke, Strecke über 15 m
+  function stepRow(label, v, unit, up) {
+    var f = up ? fmtUp2 : fmtExact;
+    return '<tr><th scope="row">' + label + '</th><td>' + f(v.groundRoll) + '&nbsp;' + unit + '</td><td>' + f(v.overObstacle) + '&nbsp;' + unit + '</td></tr>';
+  }
+  // Zeile ohne Zahlen
+  function noteRow(text) { return '<tr><td class="perf-steps-note" colspan="3">' + text + '</td></tr>'; }
+  // Abbruch der Phase: kein Wert
+  function stopRow(label) { return '<tr><th scope="row">' + label + '</th><td class="perf-nov" colspan="2">kein Wert</td></tr>'; }
+
+  // Gegenwind-Regel des AFM für die Beschriftung: wie findRule im Kern die erste (der Kern lässt höchstens eine je Tabelle zu)
+  function headwindRule(ch) {
+    for (var i = 0; i < ch.corrections.length; i++) if (ch.corrections[i].kind === 'headwind') return ch.corrections[i];
+    return null;
   }
 
-  function chartSource(label, ch, ac) {
+  // Block einer Phase: Kopfzeile mit Quelle (Handbuch, Tabelle, Seite), dann die Schritte bis zum aufgerundeten Ergebnis.
+  // Alle Werte stammen aus der Rechnung (p). Aus den Flugzeugdaten kommen nur Beschriftungen: die Quelle und bei der
+  // Prozentregel des Winds deren Satz je kt (das Ergebnis der Rechnung enthält nur das abgerundete Prozent).
+  function phaseRows(ph, p, ac) {
+    var ch = ac.charts[ph];
     var ref = ch.ref && typeof ch.ref === 'object' ? ch.ref : {};
     var src = ac.sources[ch.source] || {};
-    var notes = Array.isArray(ch.notesDe) ? ch.notesDe.filter(function (n) { return typeof n === 'string'; }) : [];
-    return '<p>' + label + ' (' + esc(str(src.labelDe) || ch.source) + '): ' + esc(str(ch.title)) + (ref.figure ? ', ' + esc(str(ref.figure)) : '') +
-      (ref.page ? ', Seite ' + esc(str(ref.page)) : '') + '. ' + esc(str(ch.conditionsDe)) + '</p>' +
-      (notes.length ? '<ul>' + notes.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('') + '</ul>' : '');
+    var where = [esc(str(src.labelDe) || ch.source)];
+    if (str(ref.figure)) where.push(esc(ref.figure));
+    if (str(ref.page)) where.push('Seite ' + esc(ref.page));
+    var h = '<tr class="perf-steps-ph"><th colspan="3" scope="rowgroup">' + PHASE_LABEL[ph] + ' <span class="perf-steps-src">· ' +
+      where.join(', ') + '</span></th></tr>';
+    var u = p.unit, lk = p.lookup, last = lastStep(p), w = p.wind;
+    if (lk.interpolated) {
+      var c = lk.columns, k = -1;
+      lk.axes.forEach(function (a, i) { if (a.weight !== undefined) k = i; });
+      var ax = lk.axes[k], axUnit = AXIS_UNIT[ax.quantity];
+      h += stepRow('Tabelle ' + tablePoint(lk, k, c.lowerValue), c.lower, u) +
+        stepRow('Tabelle ' + tablePoint(lk, k, c.upperValue), c.upper, u) +
+        stepRow('interpoliert für ' + fmtDec(ax.input, 1) + (axUnit ? '&nbsp;' + axUnit : ''), p.table, u, last === 'table');
+    } else {
+      h += stepRow('Tabelle ' + tablePoint(lk, -1), p.table, u, last === 'table');
+    }
+    if (!p.ok && p.reason === 'headwind-limit') return h + stopRow('Gegenwind ' + w.kt + '&nbsp;kt: über ' + fmtInt(p.limitKt) + '&nbsp;kt');
+    if (w.kt >= 1 && w.applied) {
+      // Regel des AFM und ihr Ergebnis: ganzzahlig «= −70 m», sonst «, abgerundet −22 m» (zur längeren Strecke)
+      var s = 'Gegenwind ' + w.kt + '&nbsp;kt: ', per = (w.per === 1 ? '' : fmtExact(w.per) + '&nbsp;') + 'kt';
+      if (w.type === 'percentPer') {
+        var rule = headwindRule(ch);
+        var pct = rule && rule.type === 'percentPer' ? Math.abs(rule.percent) : null;
+        if (pct !== null) s += '−' + fmtExact(pct) + '&nbsp;% je ' + per + (Math.abs(pct * w.kt / w.per - w.percent) < 1e-9 ? ' = ' : ', abgerundet ');
+        s += '−' + w.percent + '&nbsp;%';
+      } else {
+        s += '−' + fmtExact(w.perKt) + '&nbsp;' + u + ' je ' + per +
+          (Math.abs(w.perKt * w.kt / w.per - w.reduction) < 1e-9 ? ' = −' : ', abgerundet −') + fmtInt(w.reduction) + '&nbsp;' + u;
+      }
+      if (!p.ok && p.reason === 'wind-credit-limit') return h + stopRow(s + ', mehr als die Hälfte');
+      h += stepRow(s, p.afterWind, u, last === 'wind');
+    } else if (w.kt >= 1) {
+      h += noteRow('Gegenwind ' + w.kt + '&nbsp;kt: nicht angerechnet (keine Regel in den Flugzeugdaten)');
+    }
+    if (!p.ok) return h + stopRow(p.reason === 'no-surface-rule' ? 'keine Korrektur für den Belag' : 'Rechenfehler');
+    if (p.surface) {
+      h += stepRow((SURFACE_LABEL[p.surface.surface] || esc(p.surface.surface)) + ' +' + fmtExact(p.surface.percent) + '&nbsp;% von ' +
+        fmtExact(p.surface.base) + '&nbsp;' + u + ' = +' + fmtExact(p.surface.inc) + '&nbsp;' + u, p.surface.after, u, last === 'surface');
+    }
+    p.factors.forEach(function (f, i) {
+      h += stepRow(esc(f.labelDe) + (f.minimum ? ': mindestens × ' : ' × ') + fmtFactor(f.factor), f.after, u, last === 'factor' + i);
+    });
+    if (p.wetFactorMissing) h += noteRow(TEXT.calcNoWet);
+    if (u === 'ft') h += stepRow('in Meter (× ' + fmtExact(core.FT_M) + ')', p.meters, 'm', true);
+    return h + '<tr class="perf-steps-res"><th scope="row">aufgerundet</th><td>' + fmtInt(p.m.groundRoll) + '&nbsp;m</td><td>' +
+      fmtInt(p.m.overObstacle) + '&nbsp;m</td></tr>';
+  }
+
+  // Zusatz zur Piste: ohne Windkorrektur mit Grund, sonst Pistenrichtung und Gegenwindkomponente (abgeschnitten, fmtKt2)
+  function runwayNote(rw) {
+    var w = rw.wind;
+    if (w.mode === 'calm') return ' · windstill, ohne Windkorrektur';
+    if (w.mode === 'nodir') return ' · Windrichtung nicht gemeldet, ohne Windkorrektur';
+    if (w.along === 0) return ' · Wind genau quer, ohne Windkorrektur';
+    return ' (' + fmtInt(rw.bearingTrue) + '° rechtweisend) · Gegenwind ' + fmtKt2(w.componentKt) + '&nbsp;kt, abgerundet ' + w.kt + '&nbsp;kt';
+  }
+
+  function stepsTable(rw, ac) {
+    return '<table class="perf-steps"><thead><tr><th></th><th scope="col">Rollstrecke</th><th scope="col">über 15 m</th></tr></thead>' +
+      core.PHASES.map(function (ph) { return '<tbody>' + phaseRows(ph, rw[ph], ac) + '</tbody>'; }).join('') + '</table>';
   }
 
   function detailsHtml(ac, af, res, open) {
-    var h = [];
-    var lt = res.lookups.takeoff, ll = res.lookups.landing;
-    var lineT = axisLine(lt, res, af), lineL = axisLine(ll, res, af);
-    h.push('<details class="perf-details"' + (open ? ' open' : '') + '><summary>Rechenweg und Quellen</summary><div class="perf-calc">');
-    if (lineT === lineL) h.push('<p>' + lineT + '.</p>');
-    else h.push('<p>Start: ' + lineT + '.</p><p>Landung: ' + lineL + '.</p>');
+    var h = ['<details class="perf-details"' + (open ? ' open' : '') + '><summary>Rechenweg und Quellen</summary><div class="perf-calc">'];
+    // Eingaben der Rechnung. Platz für das Gewicht, sobald es eine Eingabe gibt: als erster Eintrag dieser Liste,
+    // etwa «Gewicht 1'000 kg, Tabelle für 1'060 kg».
+    h.push('<p><span class="perf-calc-h">Eingaben:</span> ' + [
+      'Druckhöhe ' + fmtInt(ceilEps(res.pressureAltitudeFt)) + '&nbsp;ft (QNH ' + fmtQnh(res.input.qnhHpa) + '&nbsp;hPa, Platzhöhe ' +
+        fmtInt(af.elevation.value) + '&nbsp;ft)',
+      'Temperatur ' + fmtDec(res.input.tempC, 1) + '&nbsp;°C',
+      res.input.runwayWet ? 'Piste nass' : 'Piste trocken'
+    ].join(' · ') + '</p>');
+    // Pisten mit gleicher Zeile und gleicher Tabelle teilen sich einen Block (Vergleich des fertigen HTML)
+    var groups = [];
     res.runways.forEach(function (rw) {
-      if (!rw.computed) {
-        if (rw.reason === 'tailwind') {
-          h.push('<p>Piste ' + esc(rw.id) + ': Wind aus ' + fmtInt(res.input.windDirTrue) + '°, Rückenwindkomponente ' + fmtKt2(rw.wind.componentKt) +
-            '&nbsp;kt aus dem Mittelwind – nicht berechnet.</p>');
-        }
-        return;
+      if (!rw.computed) return;
+      var body = runwayNote(rw) + '</p>' + stepsTable(rw, ac);
+      for (var i = 0; i < groups.length; i++) {
+        if (groups[i].body === body) { groups[i].ids.push(esc(rw.id)); return; }
       }
-      h.push('<p class="perf-calc-h">Piste ' + esc(rw.id) + ' (' + fmtInt(rw.bearingTrue) + '° rechtweisend)</p>');
-      h.push('<p>' + windDetail(rw, res.input) + '</p>');
-      h.push('<ul>' + phaseLine('Start', rw.takeoff) + phaseLine('Landung', rw.landing) + '</ul>');
+      groups.push({ ids: [esc(rw.id)], body: body });
     });
-    h.push('<p class="perf-calc-h">Regeln</p>');
-    h.push('<p>' + TEXT.ruleWind + '</p>');
-    h.push('<p>' + (str(ac.readingRuleDe) ? esc(ac.readingRuleDe) + ' ' : '') + TEXT.ruleRound + '</p>');
-    h.push('<p>' + TEXT.ruleGrass + '</p>');
-    h.push('<p>' + TEXT.ruleWet + '</p>');
-    h.push('<p class="perf-calc-h">Quellen</p>');
-    h.push(chartSource('Start', ac.charts.takeoff, ac));
-    h.push(chartSource('Landung', ac.charts.landing, ac));
-    var used = {};
-    core.PHASES.forEach(function (ph) { used[ac.charts[ph].source] = true; });
-    Object.keys(used).forEach(function (k) {
-      h.push('<p>' + esc(str(ac.sources[k].labelDe) || k) + ': ' + sourceText(ac.sources[k]) + '</p>');
+    groups.forEach(function (g) {
+      var n = g.ids.length;
+      h.push('<p><span class="perf-calc-h">' + (n === 1 ? 'Piste ' + g.ids[0] : 'Pisten ' + g.ids.slice(0, n - 1).join(', ') + ' und ' + g.ids[n - 1]) +
+        '</span>' + g.body);
     });
-    if (str(ac.massNoteDe)) {
-      h.push('<p>Gewicht ' + fmtInt(ac.mass.kg) + '&nbsp;kg (' + fmtInt(ac.mass.lb) + '&nbsp;lb): ' + esc(ac.massNoteDe) + '</p>');
-    }
-    var as = af.source && typeof af.source === 'object' ? af.source : {};
-    var rwys = af.runways.map(function (r) {
-      return 'Piste ' + esc(r.id) + ': ' + fmtInt(r.bearingTrue) + '° rechtweisend' +
-        (isNum(r.bearingMag) ? ' (' + fmtInt(r.bearingMag) + '° missweisend)' : '') + ', ' +
-        (SURFACE_LABEL[r.surface] || esc(r.surface)) + ', Start ' + fmtInt(r.takeoffAvailable.value) + '&nbsp;m, Landung ' +
-        fmtInt(r.landingAvailable.value) + '&nbsp;m verfügbar';
-    }).join('; ');
-    h.push('<p>Pistendaten: ' + [as.title, as.edition, as.lengthsRef, as.transcribed].filter(function (x) { return typeof x === 'string' && x; }).map(esc).join(', ') +
-      '. Platzhöhe ' + fmtInt(af.elevation.value) + '&nbsp;ft. ' + rwys + '.</p>');
+    h.push('<p>' + TEXT.calcRules + ' ' + TEXT.calcLimits + '</p>');
     h.push('</div></details>');
     return h.join('');
   }
@@ -957,7 +924,7 @@
     var m = {
       kind: 'internal', nowMs: isNum(ctx.nowMs) ? ctx.nowMs : Date.now(), list: ctx.list, selectedId: ctx.selectedId,
       notice: null, detailsOpen: !!ctx.detailsOpen, afmTag: typeof ctx.afmTag === 'boolean' ? ctx.afmTag : TEASER_AFM_TAG,
-      ac: null, af: null, a: null, fg: null, rn: null, ws: null, res: null, hintKind: null, computed: null, skipped: null
+      ac: null, af: null, a: null, fg: null, rn: null, ws: null, res: null, hintKind: null, computed: null
     };
     if (!core || core.VERSION !== VERSION) return m;
     if (ctx.dataState === 'loading') {
@@ -995,7 +962,6 @@
       else if (res.mode === 'nodir') m.hintKind = 'nodir';
       else if (isCross(res)) m.hintKind = 'cross';
       m.computed = res.runways.filter(function (r) { return r.computed; });
-      m.skipped = res.runways.filter(function (r) { return !r.computed && r.reason === 'tailwind'; });
       m.kind = 'result';
     }
     return m;
@@ -1010,13 +976,13 @@
 
   // Beginnt mit der Unterzeile der Auswahl (ausser im Zustand internal, der keine Auswahl zeigt)
   function bodyHtml(m) {
-    if (m.kind === 'internal') return stateHtml(TEXT.internal) + footerHtml(null);
+    var foot = footerHtml();
+    if (m.kind === 'internal') return stateHtml(TEXT.internal) + foot;
     var sub = subLineHtml(m.list, m.selectedId, m.ac);
-    if (m.kind === 'loading') return sub + '<div class="perf-loading">' + TEXT.loading + '</div>' + footerHtml(null);
-    if (m.kind === 'data-error') return sub + noticeHtml(m.notice) + stateHtml(TEXT.dataError) + footerHtml(null);
-    if (!m.ac) return stateHtml(TEXT.internal) + footerHtml(null);
+    if (m.kind === 'loading') return sub + '<div class="perf-loading">' + TEXT.loading + '</div>' + foot;
+    if (m.kind === 'data-error') return sub + noticeHtml(m.notice) + stateHtml(TEXT.dataError) + foot;
+    if (!m.ac) return stateHtml(TEXT.internal) + foot;
     var head = sub + headHtml(m.ac) + noticeHtml(m.notice);
-    var foot = footerHtml(m.ac);
     switch (m.kind) {
       case 'no-wx': return head + stateHtml(adapterText(m.a, m.nowMs)) + foot;
       case 'fgzo-pending': return head + '<div class="perf-loading">' + TEXT.fgzoLoading + '</div>' + foot;
@@ -1024,13 +990,12 @@
       case 'no-direction': return head + stateHtml(TEXT.noDirection) + foot;
       case 'no-runway': return head + stateHtml(TEXT.noHeadwindRunway) + foot;
       case 'result': break;
-      default: return stateHtml(TEXT.internal) + footerHtml(null);
+      default: return stateHtml(TEXT.internal) + foot;
     }
     var hint = m.hintKind ? HINT_TEXT[m.hintKind] : '';
     return head + measHtml(m.a, m.res, m.nowMs) + conditionHtml(m.fg, m.rn, m.ws, m.ac, m.af, m.res) +
       (hint ? '<div class="perf-hint">' + hint + '</div>' : '') +
       '<div class="perf-grid">' + m.computed.map(blockHtml).join('') + '</div>' +
-      m.skipped.map(function (r) { return '<div class="perf-skip">Piste ' + esc(r.id) + ': Rückenwind – nicht berechnet.</div>'; }).join('') +
       factorLineHtml(m.ac) +
       detailsHtml(m.ac, m.af, m.res, m.detailsOpen) + foot;
   }
@@ -1047,8 +1012,8 @@
      mehreren gerechneten Pisten die grösste («bis …», falls verschieden). Die Farbe zeigt den schlimmsten Fall aller
      gerechneten Pisten wie die Karte: rot, wenn eine Rollstrecke länger ist als verfügbar, sonst amber, wenn eine
      Strecke über 15 m länger ist als verfügbar; dahinter ein verstecktes Hinweiswort für Screenreader. Fehlt einer
-     Piste der Wert, steht «kein Wert». Keine Vorbehaltszeilen: Nässe, Sperre und Hinweise stehen nur in der
-     aufgeklappten Karte. Farben nur über Klassen. */
+     Piste der Wert, steht «kein Wert». Keine Vorbehaltszeilen: Nässe und Hinweise stehen nur in der aufgeklappten
+     Karte. Farben nur über Klassen. */
   // Zeigt diese Phase eine Zahl? Nur wenn jede gerechnete Piste in der Phase einen Wert hat, sonst «kein Wert».
   function phaseHasValue(ph, computed) {
     return computed.every(function (r) { return r[ph] && r[ph].ok; });

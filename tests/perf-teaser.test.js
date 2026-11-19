@@ -1,7 +1,8 @@
 // Tests für die Kurzzeile unter der Briefing-Ampel (perf/perf-ui.js: renderParts) und ihre Lage in index.html.
 // Die Kurzzeile zeigt Muster, Piste und die Rollstrecke für Start und Landung. Die Farbe der Zahl folgt dem schlimmsten
 // Fall der Karte (rot: Rollstrecke länger als verfügbar, amber: nur die Strecke über 15 m). Keine Vorbehaltszeilen:
-// Nässe, Sperre und Hinweise stehen nur in der aufgeklappten Karte. Zahlen nur, wenn die Karte Pistenblöcke zeigt.
+// Nässe und Hinweise stehen nur in der aufgeklappten Karte, eine Platzsperre nur in der Ampel der Seite. Zahlen nur,
+// wenn die Karte Pistenblöcke zeigt.
 // Eine Rechnung (core.compute höchstens einmal), zwei Darstellungen.
 // Die Tests des Browserteils (Box, Auswahl, Zustand lszk-perf-open) stehen in tests/perf-ui.test.js.
 // Aufruf im Repo-Root: node --test
@@ -201,7 +202,7 @@ test('Kurzzeile mit Ergebnis: Kopf und Rollstrecke Start und Landung, Farbe nach
   assert.ok(t1.includes('<span class="perf-nw">Landung <b class="perf-amber">485&nbsp;m</b><span class="perf-sr"> (' + SR_AMBER + ')</span></span>'), t1);
 });
 
-test('Kurzzeile ohne Vorbehaltszeilen: Nässe, Sperre, «unbekannt», unsichere DRY-Meldung, Hinweis und fehlende Windrichtung nur in der Karte', () => {
+test('Kurzzeile ohne Vorbehaltszeilen: Nässe, «unbekannt», unsichere DRY-Meldung, Hinweis und fehlende Windrichtung nur in der Karte, Platzsperre ändert nichts', () => {
   const H = HEAD + 'Cessna 172 Diesel · Piste 30';
   const DRY = [H, roll('331 m', '265 m')], WETR = [H, roll('397 m', '265 m')];
   const cases = [
