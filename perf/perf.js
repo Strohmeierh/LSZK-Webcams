@@ -5,7 +5,7 @@
    Wind alle Pisten ohne Windkorrektur. Rückenwind wird nicht gerechnet.
    Die Daten deklarieren ihr Schema, der Kern kennt eine Whitelist: Unbekanntes ergibt keinen Wert.
    Ablesung je Tabellenachse nach ihrer Regel (read): «linear» interpoliert zwischen den Tabellenwerten, «nextHigher»
-   nimmt den nächsthöheren; unter dem kleinsten Tabellenwert gilt dieser, darüber gibt es keinen Wert. Die Druckhöhe
+   nimmt den nächsthöheren; unter dem kleinsten Tabellenwert gilt dieser, über dem grössten gibt es keinen Wert. Die Druckhöhe
    geht auf ganze ft aufgerundet in die Tabelle.
    Abfluggewicht (freiwillig, input.massKg): Haupttabelle = Höchstgewicht, charts.takeoff.lowerWeights = tiefere
    Gewichte. charts.takeoff.massRead «linear»: zwischen zwei Starttabellen linear interpoliert; sonst (ohne Angabe

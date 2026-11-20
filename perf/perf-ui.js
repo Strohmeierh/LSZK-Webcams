@@ -82,7 +82,7 @@
     // für eine Phase ohne Nässewert im AFM
     calcLinear: 'linear interpoliert',
     calcNextHigher: 'nächsthöherer Tabellenwert',
-    calcBelow: 'Unter dem kleinsten Tabellenwert gilt dieser, darüber gibt es keinen Wert.',
+    calcBelow: 'Unter dem kleinsten Tabellenwert gilt dieser, über dem grössten gibt es keinen Wert.',
     calcRound: 'Rundung zur längeren Strecke: Druckhöhe auf ganze ft aufgerundet, Gegenwind abgerundet, Ergebnis aufgerundet. ' +
       'Gegenwind voll angerechnet.',
     calcSurface: 'Graszuschlag in % der Tabellen-Rollstrecke, auf beide Strecken.',
@@ -1092,8 +1092,11 @@
     }
     if (!p.ok) return h + stopRow(p.reason === 'no-surface-rule' ? 'keine Korrektur für den Belag' : 'Rechenfehler');
     if (p.surface) {
+      // Zuschlag mit Vorzeichen; gerundet «≈+38,83» statt «+≈38,83»
+      var inc = fmtExact(p.surface.inc);
+      inc = inc.charAt(0) === '≈' ? '≈+' + inc.slice(1) : '+' + inc;
       h += stepRow((SURFACE_LABEL[p.surface.surface] || esc(p.surface.surface)) + ' +' + fmtExact(p.surface.percent) + '&nbsp;% von ' +
-        fmtExact(p.surface.base) + '&nbsp;' + u + ' = +' + fmtExact(p.surface.inc) + '&nbsp;' + u, p.surface.after, u, last === 'surface');
+        fmtExact(p.surface.base) + '&nbsp;' + u + ' = ' + inc + '&nbsp;' + u, p.surface.after, u, last === 'surface');
     }
     p.factors.forEach(function (f, i) {
       h += stepRow(esc(f.labelDe) + (f.minimum ? ': mindestens × ' : ' × ') + fmtFactor(f.factor), f.after, u, last === 'factor' + i);

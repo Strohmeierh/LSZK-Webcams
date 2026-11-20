@@ -432,10 +432,11 @@ test('Gewicht linear: auf einer Tabelle deren Wert, dazwischen linear, darunter 
 /* ── Rechnung gegen die unabhängige Nachrechnung ───────────── */
 
 test('Rechnung gleich Nachrechnung: alle vier Muster, Wetter, Nässe und Gewichte (Tabellenwert, Strecken, Meter, Überschreitung)', () => {
-  const temps = [-30, -25, -20.1, -3.4, 0, 4.4, 7.9, 10, 12.5, 18.7, 25, 29.9, 33.3, 40, 45.5];
-  const qnhs = [968.2, 990, 1004.4, 1013.25, 1021.7, 1040];
-  const dirs = [null, 124, 175, 230, 304, 349];
-  const winds = [0, 0.6, 2.5, 4, 8.7, 14, 23, 39];
+  // Raster mit Werten unter, auf und zwischen den Tabellenpunkten (Laufzeit rund 20 s)
+  const temps = [-30, -25, -20.1, 0, 7.9, 12.5, 25, 29.9, 40, 45.5];
+  const qnhs = [968.2, 1004.4, 1013.25, 1040];
+  const dirs = [null, 124, 230, 304, 349];
+  const winds = [0, 0.6, 4, 8.7, 23, 39];
   let n = 0, values = 0;
   ALL.forEach((ac) => {
     const masses = [undefined].concat(startTables(ac).length > 1
@@ -623,6 +624,12 @@ test('«Start möglich bis …» direkt (_takeoffLimitLinear): lowest, unknown m
   // ab 1'020 kg abwärts kein Wert (Windgutschrift über die Hälfte), darüber zu lang: unknown mit Schwelle
   L = core._takeoffLimitLinear(P(true, true), 1100, 1160, 960, (kg) => (kg <= 1020 ? P(false) : P(true, true)));
   assert.deepEqual([L.state, L.noValueFromKg, L.maxKg], ['unknown', 1020, null]);
+  // Grenze zu «lowest» genau: 1 kg über der leichtesten Tabelle wird gesucht (und dort gefunden), auf ihr nicht
+  L = core._takeoffLimitLinear(P(true, true), 1112, 1157, 1111, () => P(true, false));
+  assert.deepEqual([L.state, L.maxKg], ['limit', 1111]);
+  L = core._takeoffLimitLinear(P(true, true), 1111.5, 1157, 1111, () => P(true, false));
+  assert.deepEqual([L.state, L.maxKg], ['limit', 1111]);
+  assert.equal(core._takeoffLimitLinear(P(true, true), 1111, 1157, 1111, () => P(true, false)).state, 'lowest');
   // nass ohne Nässewert des AFM: kein «möglich bis»
   L = core._takeoffLimitLinear(P(true, true, true), 1100, 1160, 960, (kg) => P(true, kg > 1000, true));
   assert.deepEqual([L.state, L.maxKg, L.maxPossibleKg], ['wet-unknown', null, null]);
@@ -682,6 +689,9 @@ test('Anzeige (linear): Kopf, Hinweis am Gewichtsfeld und Eingaben für zwischen
   assert.ok(t.includes("höchstens 1'157 kg · zwischen den AFM-Tabellen für 1'157, 1'134 und 1'111 kg interpoliert, darunter gilt die Tabelle für 1'111 kg"), t);
   assert.ok(t.includes("Eingaben: Gewicht 1'120 kg, zwischen den Starttabellen 1'134 und 1'111 kg interpoliert · Druckhöhe 2'002 ft"), t);
   assert.ok(t.includes("Start · Supplement, Figure 5-1c (Section 5b), Seite 5b-6 und Figure 5-1e (Section 5b), Seite 5b-9 · Tabellen 1'134 und 1'111 kg"), t);
+  // gerundeter Zuschlag mit «≈» vor dem Vorzeichen (Befund N2 der Prüfung)
+  assert.ok(t.includes('Gras +15 % von ≈258,86 m = ≈+38,83 m 289,93 m 431,22 m aufgerundet 290 m 432 m'), t);
+  assert.ok(!t.includes('+≈'), t);
   t = head(1134);
   assert.ok(t.includes("Abfluggewicht 1'134 kg: Start nach der AFM-Tabelle für 1'134 kg, Landung") && t.includes("Gewicht 1'134 kg, Starttabelle 1'134 kg"), t);
   assert.ok(t.includes("Start · Supplement, Figure 5-1c (Section 5b), Seite 5b-6 · Tabelle 1'134 kg"), t);
@@ -823,6 +833,87 @@ test('Anzeige (linear): «möglich bis» auf ganze kg in der Karte, Text bei «u
   const t2 = text(ui.renderHtml({ dataState: 'ready', list: LIST, aircraft: ac, airfield: af, nowMs: NOW, fgzo: fgzo(), detailsOpen: false,
     wx: wxPfa({ tempC: 45, qnhHpa: 1013.25, windDir: 360, windKt: 10 }) }));
   assert.ok(t2.includes("Start mit 1'160 kg laut AFM nicht möglich, auch nicht mit " + ui.fmtInt(L2.noValueFromKg + 1) + ' kg. ' + ui.TEXT.limitNoValue), t2);
+  // Eingabe genau auf dem leichtesten Gewicht mit Wert: schon 1 kg darunter kein Wert, also ohne «auch nicht mit …»
+  const first = L2.noValueFromKg + 1;
+  const t3 = text(ui.renderHtml({ dataState: 'ready', list: LIST, aircraft: ac, airfield: af, nowMs: NOW, fgzo: fgzo(), detailsOpen: false,
+    wx: wxPfa({ tempC: 45, qnhHpa: 1013.25, windDir: 360, windKt: 10 }), massText: String(first) }));
+  assert.ok(t3.includes('Start mit ' + ui.fmtInt(first) + ' kg laut AFM nicht möglich. ' + ui.TEXT.limitNoValue), t3);
+  assert.ok(!t3.includes('auch nicht mit'), t3);
+});
+
+test('Rechenweg (linear): Zeile je Starttabelle zeigt bei Interpolation den Wert jeder Tabelle selbst, nicht den interpolierten', () => {
+  // P2010, heisser Tag, Piste 30: mit 1'160 kg nicht möglich, möglich erst unter 1'060 kg; Eingabe 1'110 kg liegt
+  // zwischen den Tabellen 1'160 und 1'060 kg (interpoliert, ebenfalls nicht möglich), dann steht im Rechenweg die Zeile
+  // «Über 15 m je Starttabelle»
+  const base = { tempC: 27.5, qnhHpa: 1008.1, windDirTrue: 300, windKt: 2, runwayWet: false };
+  const L = rwy(core.compute(P2010, AF, base), '30').takeoffLimit;
+  assert.equal(L.state, 'limit');
+  const m = 1110;
+  assert.ok(L.maxKg < m, 'Grenze unter der Eingabe: ' + L.maxKg);
+  const res = core.compute(P2010, AF, Object.assign({}, base, { massKg: m }));
+  assert.equal(res.mass.interpolated, true);
+  const own = (kg) => rwy(core.compute(P2010, AF, Object.assign({}, base, { massKg: kg })), '30').takeoff.m.overObstacle;
+  const row = "Über 15 m je Starttabelle: 1'160 kg " + ui.fmtInt(own(1160)) + " m · 1'060 kg " + ui.fmtInt(own(1060)) + ' m · 960 kg ' + ui.fmtInt(own(960)) + ' m';
+  assert.ok(own(1160) > rwy(res, '30').takeoff.m.overObstacle, 'die schwerere Tabelle ist länger als der interpolierte Wert');
+  const t = text(render(wxPfa({ tempC: 27.5, qnhHpa: 1008.1, windDir: 300, windKt: 2 }), { aircraft: P2010, massText: String(m) }));
+  assert.ok(t.includes(row), row + '\n' + t);
+  assert.ok(t.includes('Start mit ' + ui.fmtInt(m) + ' kg laut AFM nicht möglich, möglich bis ' + ui.fmtInt(L.maxKg) + ' kg.'), t);
+});
+
+test('Durchlauf (linear): ganze Rechenkette steigt mit Temperatur, Druckhöhe und Gewicht; nass nie kürzer als trocken', () => {
+  // Meter je Piste und Phase; nicht gerechnete Piste [0, 0], kein Wert [∞, ∞]
+  function allM(res) {
+    const out = [];
+    ['12', '30'].forEach((id) => core.PHASES.forEach((ph) => {
+      const r = res.ok ? rwy(res, id) : null;
+      const p = r && r.computed ? r[ph] : null;
+      out.push(p && p.ok ? meters(p) : (r && !r.computed ? [0, 0] : [Infinity, Infinity]));
+    }));
+    return out;
+  }
+  const notShorter = (cur, prev) => cur.every((pair, k) => pair[0] >= prev[k][0] && pair[1] >= prev[k][1]);
+  let n = 0;
+  ALL.forEach((ac) => {
+    const kgs = [undefined].concat(startTables(ac).length > 1 ? [Math.round((ac.mass.kg + startTables(ac)[1].kg) / 2)] : []);
+    [null, 304].forEach((d) => [0, 9].forEach((w) => [false, true].forEach((wet) => kgs.forEach((kg) => {
+      for (const q of [990, 1013.25, 1035]) {
+        let prev = null;
+        for (let t = -35; t <= 52; t += 1.5) {
+          const cur = allM(core.compute(ac, AF, wx(t, q, d, w, wet, kg)));
+          if (prev) assert.ok(notShorter(cur, prev), ac.id + ' Temperatur ' + t + ' ' + JSON.stringify([q, d, w, wet, kg]));
+          prev = cur;
+          n++;
+        }
+      }
+      for (const t of [-5, 12, 29]) {
+        let prev = null;
+        for (let q = 1060; q >= 950; q -= 1.5) {             // fallendes QNH = steigende Druckhöhe
+          const cur = allM(core.compute(ac, AF, wx(t, q, d, w, wet, kg)));
+          if (prev) assert.ok(notShorter(cur, prev), ac.id + ' QNH ' + q + ' ' + JSON.stringify([t, d, w, wet, kg]));
+          prev = cur;
+          n++;
+        }
+      }
+      // nass nie kürzer als trocken
+      if (wet) {
+        const a = allM(core.compute(ac, AF, wx(15, 1018, d, w, false, kg))), b = allM(core.compute(ac, AF, wx(15, 1018, d, w, true, kg)));
+        assert.ok(notShorter(b, a), ac.id + ' nass');
+      }
+    }))));
+    // im Gewicht auf ganze kg (Wind bis 6 kt: die Windgutschrift bleibt unter der Hälfte)
+    if (startTables(ac).length > 1) {
+      [124, 304].forEach((d) => [0, 6].forEach((w) => [false, true].forEach((wet) => {
+        let prev = null;
+        for (let kg = Math.ceil(ac.mass.kg / 2); kg <= ac.mass.kg; kg += 1) {
+          const cur = allM(core.compute(ac, AF, wx(15, 1005, d, w, wet, kg)));
+          if (prev) assert.ok(notShorter(cur, prev), ac.id + ' Gewicht ' + kg + ' ' + JSON.stringify([d, w, wet]));
+          prev = cur;
+          n++;
+        }
+      })));
+    }
+  });
+  assert.ok(n > 15000, n + ' Rechnungen');
 });
 
 test('Anzeige P2008: Auswahl, Kennzeichen, Kopf, Faktorzeile, Rechenweg ohne Graszuschlag, Pflichthinweis rot und fett', () => {

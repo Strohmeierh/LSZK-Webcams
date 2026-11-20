@@ -300,7 +300,7 @@ test('Rechenweg K2: genauer Aufbau und Wortlaut, direkt darunter der Pflichthinw
   // Lesehilfe (seit VERSION 7 aus den Ableseregeln der Daten zusammengesetzt)
   assert.equal(ui.TEXT.calcLinear, 'linear interpoliert');
   assert.equal(ui.TEXT.calcNextHigher, 'nächsthöherer Tabellenwert');
-  assert.equal(ui.TEXT.calcBelow, 'Unter dem kleinsten Tabellenwert gilt dieser, darüber gibt es keinen Wert.');
+  assert.equal(ui.TEXT.calcBelow, 'Unter dem kleinsten Tabellenwert gilt dieser, über dem grössten gibt es keinen Wert.');
   assert.equal(ui.TEXT.calcRound, 'Rundung zur längeren Strecke: Druckhöhe auf ganze ft aufgerundet, Gegenwind abgerundet, Ergebnis aufgerundet. ' +
     'Gegenwind voll angerechnet.');
   assert.equal(ui.TEXT.calcSurface, 'Graszuschlag in % der Tabellen-Rollstrecke, auf beide Strecken.');

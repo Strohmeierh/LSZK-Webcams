@@ -6,7 +6,7 @@
   "massNoteDe": "Maximales Abfluggewicht und maximales Landegewicht 650 kg (1433 lb) nach Supplement S9 (Section 2, Ziffer 14, S. MT2-12).",
   "variantDe": "P2008 JC, Rotax 912 S2, Propeller MTV-34-1-A/170-202",
   "techniqueDe": "Klappen T/O beim Start und LAND bei der Landung, Geschwindigkeiten nach AFM",
-  "readingRuleDe": "Druckhöhe, Temperatur und beim Start das Gewicht linear zwischen den Tabellenwerten interpoliert; unter dem kleinsten Tabellenwert gilt dieser (unter −25 °C die Spalte −25 °C, unter 550 kg die Tabelle für 550 kg), darüber gibt es keinen Wert. Die Spalte ISA wird nicht verwendet.",
+  "readingRuleDe": "Druckhöhe, Temperatur und beim Start das Gewicht linear zwischen den Tabellenwerten interpoliert; unter dem kleinsten Tabellenwert gilt dieser (unter −25 °C die Spalte −25 °C, unter 550 kg die Tabelle für 550 kg), über dem grössten gibt es keinen Wert. Die Spalte ISA wird nicht verwendet.",
   "footerDe": "Richtwert nach AFM ohne eigenen Sicherheitszuschlag: Klappen T/O beim Start und LAND bei der Landung, Geschwindigkeiten nach AFM, ebene Graspiste; Start mit dem eingegebenen Abfluggewicht, Landung mit dem maximalen Landegewicht. Die Tabellen des AFM gelten für Graspisten. Druckhöhe, Temperatur und Startgewicht sind zwischen den Tabellenwerten linear interpoliert. Eingerechnet sind die Faktoren des AFM für Abweichungen im Betrieb (Start 1,10, Landung 1,67). Für nasses Gras nennt das AFM keinen Wert. Nicht berücksichtigt sind die Pistenneigung (laut AFM beim Start +7 % der Rollstrecke je 1 % Steigung, bei der Landung −3 %), Zustand von Flugzeug und Motor sowie die Pilotentechnik. Massgebend sind das AFM der Maschine und die eigene Beurteilung.",
   "sources": {
     "afm": {
