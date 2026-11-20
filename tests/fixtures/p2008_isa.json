@@ -1,0 +1,16 @@
+{
+  "noteDe": "Tecnam P2008 JC, Supplement S9: Spalte ISA der Starttabellen MT5-7, MT5-8 und MT5-9 (650, 600 und 550 kg) und der Landetabelle MT5-14 (650 kg) in m, am Seitenbild abgelesen am 20.11.2026 (gleich der Textebene). ISA-Temperatur = 15 °C − 1,98 °C je 1000 ft. Nur zur Probe der linearen Interpolation: Start interpoliert −0,4 bis +2,1 m, Landung −0,4 bis +0,4 m neben dem gedruckten Wert.",
+  "rows": [
+    { "pressureAltitudeFt": 0, "isaTempC": 15, "takeoff650": [213, 371], "takeoff600": [176, 308], "takeoff550": [143, 252], "landing650": [173, 382] },
+    { "pressureAltitudeFt": 1000, "isaTempC": 13.02, "takeoff650": [228, 397], "takeoff600": [188, 330], "takeoff550": [153, 270], "landing650": [178, 387] },
+    { "pressureAltitudeFt": 2000, "isaTempC": 11.04, "takeoff650": [245, 425], "takeoff600": [202, 353], "takeoff550": [164, 289], "landing650": [183, 392] },
+    { "pressureAltitudeFt": 3000, "isaTempC": 9.06, "takeoff650": [263, 455], "takeoff600": [217, 378], "takeoff550": [176, 309], "landing650": [189, 398] },
+    { "pressureAltitudeFt": 4000, "isaTempC": 7.08, "takeoff650": [283, 488], "takeoff600": [234, 406], "takeoff550": [190, 332], "landing650": [195, 404] },
+    { "pressureAltitudeFt": 5000, "isaTempC": 5.1, "takeoff650": [304, 524], "takeoff600": [251, 435], "takeoff550": [204, 356], "landing650": [201, 410] },
+    { "pressureAltitudeFt": 6000, "isaTempC": 3.12, "takeoff650": [327, 562], "takeoff600": [270, 467], "takeoff550": [219, 382], "landing650": [207, 416] },
+    { "pressureAltitudeFt": 7000, "isaTempC": 1.14, "takeoff650": [352, 603], "takeoff600": [291, 501], "takeoff550": [236, 410], "landing650": [213, 422] },
+    { "pressureAltitudeFt": 8000, "isaTempC": -0.84, "takeoff650": [379, 648], "takeoff600": [313, 538], "takeoff550": [254, 440], "landing650": [220, 429] },
+    { "pressureAltitudeFt": 9000, "isaTempC": -2.82, "takeoff650": [409, 696], "takeoff600": [337, 578], "takeoff550": [274, 473], "landing650": [227, 436] },
+    { "pressureAltitudeFt": 10000, "isaTempC": -4.8, "takeoff650": [441, 748], "takeoff600": [364, 622], "takeoff550": [295, 508], "landing650": [234, 443] }
+  ]
+}

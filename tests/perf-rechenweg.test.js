@@ -14,9 +14,12 @@ const ROOT = path.join(__dirname, '..');
 const ui = require(path.join(ROOT, 'perf', 'perf-ui.js'));
 const core = require(path.join(ROOT, 'perf', 'perf.js'));
 const readJson = (rel) => JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
-const C172D = readJson('perf/aircraft/c172d.json');
-const P2010 = readJson('perf/aircraft/p2010.json');
-const C152 = readJson('perf/aircraft/c152.json');
+// Tests der Anzeige mit der Ableseregel bis VERSION 6 (tests/helpers/ablesung.js); die ausgelieferte Ablesung (linear)
+// prüft tests/perf-interpolation.test.js.
+const { alteAblesung } = require('./helpers/ablesung.js');
+const C172D = alteAblesung(readJson('perf/aircraft/c172d.json'));
+const P2010 = alteAblesung(readJson('perf/aircraft/p2010.json'));
+const C152 = alteAblesung(readJson('perf/aircraft/c152.json'));
 const AF = readJson('perf/airfields/lszk.json');
 const LIST = ui.parseIndex(readJson('perf/aircraft/index.json')).list;
 const CASES = readJson('tests/fixtures/kontrollfaelle.json');
@@ -264,6 +267,12 @@ function checkPhase(P, ph, ac, rwy, inp, pa, kt, ctx, stats, note) {
 
 /* ── Aufbau und Wortlaut ──────────────────────────────────── */
 
+// Erster Satz der Lesehilfe mit der alten Ableseregel der Tests (tests/helpers/ablesung.js)
+const RULE_NH3 = 'Druckhöhe, Temperatur und Startgewicht: nächsthöherer Tabellenwert.';         // Cessna 172 Diesel
+const RULE_NH2 = 'Druckhöhe und Temperatur: nächsthöherer Tabellenwert.';                     // Cessna 152 (eine Starttabelle)
+const RULE_P2010_ALT = 'Temperatur linear interpoliert. Druckhöhe und Startgewicht: nächsthöherer Tabellenwert.';
+function ruleOf(acId) { return acId === 'p2010' ? RULE_P2010_ALT : (acId === 'c152' ? RULE_NH2 : RULE_NH3); }
+
 test('Rechenweg K2: genauer Aufbau und Wortlaut, direkt darunter der Pflichthinweis', () => {
   const html = render(wxPfa());
   const row = (label, a, b) => '<tr><th scope="row">' + label + '</th><td>' + a + '</td><td>' + b + '</td></tr>';
@@ -282,33 +291,38 @@ test('Rechenweg K2: genauer Aufbau und Wortlaut, direkt darunter der Pflichthinw
     row('Gras +45&nbsp;% von 630&nbsp;ft = +283,5&nbsp;ft', '869,4&nbsp;ft', '1\'604,1&nbsp;ft') +
     row('in Meter (× 0,3048)', '265&nbsp;m', '488,93&nbsp;m') +
     '<tr class="perf-steps-res"><th scope="row">aufgerundet</th><td>265&nbsp;m</td><td>489&nbsp;m</td></tr></tbody></table>' +
-    '<p>' + ui.TEXT.calcRules + ' ' + ui.TEXT.calcLimits + '</p></div></details>';
+    '<p>' + RULE_NH3 + ' ' + ui.TEXT.calcBelow + ' ' + ui.TEXT.calcRound + ' ' + ui.TEXT.calcSurface + ' ' + ui.TEXT.calcLimits + '</p></div></details>';
   assert.equal(calcOf(html), expected);
   assert.ok(html.endsWith(expected + FOOT), 'Pflichthinweis direkt nach dem Rechenweg');
   assert.equal(calcOf(render(wxPfa(), { detailsOpen: true })), expected.replace('<details class="perf-details">', '<details class="perf-details" open>'));
   // Wortlaut der festen Texte
   assert.equal(ui.TEXT.advice, 'Die Werte sind nur ein Anhaltspunkt. Für die Flugvorbereitung in jedem Fall das AFM der Maschine heranziehen.');
-  assert.equal(ui.TEXT.calcRules, 'Rundung immer zur längeren Strecke: nächsthöherer Tabellenwert, Gegenwind abgerundet, Ergebnis aufgerundet. ' +
-    'Gegenwind voll angerechnet. Graszuschlag in % der Tabellen-Rollstrecke, auf beide Strecken.');
-  assert.equal(ui.TEXT.calcRulesInterp, 'Rundung zur längeren Strecke: Druckhöhe auf den nächsthöheren Tabellenwert, Gegenwind abgerundet, Ergebnis aufgerundet. ' +
-    'Temperatur linear interpoliert. Gegenwind voll angerechnet. Graszuschlag in % der Tabellen-Rollstrecke, auf beide Strecken.');
+  // Lesehilfe (seit VERSION 7 aus den Ableseregeln der Daten zusammengesetzt)
+  assert.equal(ui.TEXT.calcLinear, 'linear interpoliert');
+  assert.equal(ui.TEXT.calcNextHigher, 'nächsthöherer Tabellenwert');
+  assert.equal(ui.TEXT.calcBelow, 'Unter dem kleinsten Tabellenwert gilt dieser, darüber gibt es keinen Wert.');
+  assert.equal(ui.TEXT.calcRound, 'Rundung zur längeren Strecke: Druckhöhe auf ganze ft aufgerundet, Gegenwind abgerundet, Ergebnis aufgerundet. ' +
+    'Gegenwind voll angerechnet.');
+  assert.equal(ui.TEXT.calcSurface, 'Graszuschlag in % der Tabellen-Rollstrecke, auf beide Strecken.');
   assert.equal(ui.TEXT.calcLimits, 'Nicht berücksichtigt: Pistenneigung. Kein eigener Sicherheitszuschlag.');
   assert.equal(ui.TEXT.calcNoWet, 'nasse Piste: kein Wert im AFM, ohne Zuschlag gerechnet');
-  ['footerGeneric', 'ruleWind', 'ruleRound', 'ruleGrass', 'ruleWet'].forEach((k) => assert.equal(ui.TEXT[k], undefined, 'TEXT.' + k));
+  ['footerGeneric', 'ruleWind', 'ruleRound', 'ruleGrass', 'ruleWet', 'calcRules', 'calcRulesInterp'].forEach((k) => assert.equal(ui.TEXT[k], undefined, 'TEXT.' + k));
 });
 
 test('Rechenweg: 1 kt Gegenwind wird angerechnet (Prozentregel abgerundet), Tecnam mit interpolierter Temperatur hat die eigene Lesehilfe', () => {
+  const tail = ' ' + ui.TEXT.calcBelow + ' ' + ui.TEXT.calcRound + ' ' + ui.TEXT.calcSurface + ' ' + ui.TEXT.calcLimits + '</p>';
   // C172 Diesel, Piste 30 (304°), Wind 304°/1,4 kt: Gegenwind 1 kt, −10 % je 9 kt = −1,11 %, abgerundet −1 %
   const html = render(wxPfa({ windDir: 304, windKt: 1.4 }), { detailsOpen: true });
   assert.ok(html.includes('<th scope="row">Gegenwind 1&nbsp;kt: −10&nbsp;% je 9&nbsp;kt, abgerundet −1&nbsp;%</th>'), text(calcOf(html)));
   assert.ok(!html.includes('nicht angerechnet'), text(calcOf(html)));
-  assert.ok(html.includes('<p>' + ui.TEXT.calcRules + ' ' + ui.TEXT.calcLimits + '</p>'), 'Cessna: nächsthöherer Tabellenwert');
+  assert.ok(html.includes('<p>' + RULE_NH3 + tail), 'Cessna: nächsthöherer Tabellenwert');
   // Tecnam bei 15 °C: zwischen den Spalten 0 und 25 °C interpoliert; auf der Spalte 25 °C und unter −25 °C nicht
   const tec = (tempC) => calcOf(render(wxPfa({ tempC: tempC }), { aircraft: P2010, detailsOpen: true }));
-  assert.ok(tec(15).includes('interpoliert für 15,0') && tec(15).includes('<p>' + ui.TEXT.calcRulesInterp + ' ' + ui.TEXT.calcLimits + '</p>'));
+  assert.ok(tec(15).includes('interpoliert für 15,0') && tec(15).includes('<p>' + RULE_P2010_ALT + tail));
+  // Die Lesehilfe beschreibt die Regel der Daten, auch wenn die Temperatur genau auf einer Spalte oder darunter liegt
   [25, -30].forEach((tempC) => {
     const c = tec(tempC);
-    assert.ok(!c.includes('interpoliert') && c.includes('<p>' + ui.TEXT.calcRules + ' ' + ui.TEXT.calcLimits + '</p>'), tempC + ' °C: ' + text(c));
+    assert.ok(!c.includes('interpoliert für') && c.includes('<p>' + RULE_P2010_ALT + tail), tempC + ' °C: ' + text(c));
   });
 });
 
@@ -367,7 +381,10 @@ test('Rechenweg gleich Rechnung: alle Kontrollfälle – Eingaben, Tabellenables
     const noteFor = (rid) => (kgs.length > 1 && notPossible ? 'Über 15 m je Starttabelle: ' + soll[6][rid][0].map((v, i) =>
       ui.fmtInt(kgs[i]) + ' kg ' + (Array.isArray(v) ? ui.fmtInt(v[1]) + ' m' : 'kein Wert')).join(' · ') : null);
     if (noteFor(shown[0][0].id)) stats.notes++;
-    assert.equal(calc.rules, (interpolates(ac, inp[0]) ? ui.TEXT.calcRulesInterp : ui.TEXT.calcRules) + ' ' + ui.TEXT.calcLimits, id + ': Lesehilfe');
+    // Lesehilfe: Ableseregel des Musters (alte Regel der Tests), Belagssatz nach Platz und gerechneten Phasen
+    const anyValue = shown.some(([r]) => [want[r.id][1], want[r.id][2]].some(Array.isArray));
+    const surfaceSentence = field === 'lszk' ? (anyValue ? ' ' + ui.TEXT.calcSurface : '') : ' AFM-Tabellen für Hartbelag, ohne Belagszuschlag.';
+    assert.equal(calc.rules, ruleOf(acId) + ' ' + ui.TEXT.calcBelow + ' ' + ui.TEXT.calcRound + surfaceSentence + ' ' + ui.TEXT.calcLimits, id + ': Lesehilfe');
     assert.deepEqual(calc.groups.map((g) => g.ids).flat(), shown.map((x) => x[0].id), id + ': jede gerechnete Piste genau einmal, keine Rückenwindpiste');
     const res = core.compute(ac, af, { tempC: inp[0], qnhHpa: inp[1], windDirTrue: inp[2], windKt: inp[3], runwayWet: inp[4] });
     calc.groups.forEach((g) => {
@@ -603,7 +620,8 @@ test('Pflichthinweis: in jedem Zustand genau einmal am Schluss der Karte, ausser
   assert.equal(render(wxPfa(), { aircraft: ac }), render(wxPfa()));
   // Sichtbar: gleiche Grösse wie die übrigen gedämpften Zeilen, keine Regel blendet ihn aus
   const rule = /\n\.perf-foot \{([^}]*)\}/.exec(ui.CSS);
-  assert.equal(rule && rule[1].trim(), 'font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; border-top: 1px solid var(--card-border); padding-top: 8px; margin-top: 4px;');
+  // seit 20.11.2026 immer rot und fett (Wunsch des Benutzers)
+  assert.equal(rule && rule[1].trim(), 'font-size: 0.78rem; color: #f87171; font-weight: 700; line-height: 1.5; border-top: 1px solid var(--card-border); padding-top: 8px; margin-top: 4px;');
   assert.equal(ui.CSS.split('.perf-foot').length - 1, 1, 'genau eine Regel für den Pflichthinweis');
 });
 

@@ -4,10 +4,15 @@
    Gerechnet wird nur die Piste mit Gegenwind; bei Windstille, fehlender Richtung (bis 3 kt) oder genau querem
    Wind alle Pisten ohne Windkorrektur. Rückenwind wird nicht gerechnet.
    Die Daten deklarieren ihr Schema, der Kern kennt eine Whitelist: Unbekanntes ergibt keinen Wert.
-   Abfluggewicht (freiwillig, input.massKg): Start nach der AFM-Tabelle für das nächsthöhere Gewicht (Haupttabelle =
-   Höchstgewicht, charts.takeoff.lowerWeights = tiefere Gewichte), unter der kleinsten Tabelle diese; ohne Angabe das
-   Höchstgewicht. Die Landung rechnet immer mit ihrer einen Tabelle (maximales Landegewicht). Je gerechneter Piste
-   zusätzlich der Start mit jeder Starttabelle und daraus «Start möglich bis …» (takeoffLimit).
+   Ablesung je Tabellenachse nach ihrer Regel (read): «linear» interpoliert zwischen den Tabellenwerten, «nextHigher»
+   nimmt den nächsthöheren; unter dem kleinsten Tabellenwert gilt dieser, darüber gibt es keinen Wert. Die Druckhöhe
+   geht auf ganze ft aufgerundet in die Tabelle.
+   Abfluggewicht (freiwillig, input.massKg): Haupttabelle = Höchstgewicht, charts.takeoff.lowerWeights = tiefere
+   Gewichte. charts.takeoff.massRead «linear»: zwischen zwei Starttabellen linear interpoliert; sonst (ohne Angabe
+   oder «nextHigher») die Tabelle für das nächsthöhere Gewicht. Unter der kleinsten Tabelle gilt diese, ohne Angabe
+   das Höchstgewicht. Die Landung rechnet immer mit ihrer einen Tabelle (maximales Landegewicht). Je gerechneter Piste
+   zusätzlich der Start mit jeder Starttabelle und daraus «Start möglich bis …» (takeoffLimit; bei «linear» auf
+   ganze kg genau).
    Browser: window.LszkPerfCore. Node: module.exports.
    VERSION gleich dem ?v= in index.html und in perf/perf-ui.js halten. */
 (function (root, factory) {
@@ -17,7 +22,7 @@
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  var VERSION = 6;
+  var VERSION = 7;
 
   var EPS = 1e-9;
   var FT_M = 0.3048;
@@ -41,9 +46,10 @@
   var SCHEMA = 2;
   var PHASES = ['takeoff', 'landing'];
   var AXES = {
-    pressureAltitude: { unit: 'ft', range: [-2000, 20000], reads: ['nextHigher'] },
+    pressureAltitude: { unit: 'ft', range: [-2000, 20000], reads: ['nextHigher', 'linear'] },
     temperature: { unit: 'degC', range: [-60, 60], reads: ['nextHigher', 'linear'] }
   };
+  var MASS_READS = ['nextHigher', 'linear'];    // Ablesung über die Starttabellen (charts.takeoff.massRead)
   var OUTPUT_IDS = ['groundRoll', 'overObstacle'];
   var TABLE_MAX = { ft: 30000, m: 9000 };       // Tabellenwerte: 0 < Wert ≤ Grenze der Einheit
   var OBSTACLE_FT = 50;                         // die Anzeige schreibt «über 15 m»
@@ -220,9 +226,9 @@
      Die Haupttabelle (charts.takeoff.table) gilt für das Höchstgewicht (mass). Die weiteren Tabellen stehen absteigend
      nach Gewicht, alle unter dem Höchstgewicht, mit denselben Achsen, Ausgaben und derselben Einheit, und sind in
      keiner Zelle länger als die nächstschwerere Tabelle. Nur dann ist die Ablesung «Tabelle für das nächsthöhere
-     Gewicht» konservativ. Jede Tabelle nennt ihre Quelle (ref.figure und ref.page, nicht leer; der Rechenweg zeigt sie
-     für die gewählte Tabelle) und hat einen Titel (title, Zeichenkette). Bei der Landung sind keine weiteren Tabellen
-     erlaubt. */
+     Gewicht» konservativ und die Strecke steigt mit dem Gewicht (auch interpoliert). Jede Tabelle nennt ihre Quelle
+     (ref.figure und ref.page, nicht leer; der Rechenweg zeigt sie für die gewählte Tabelle) und hat einen Titel
+     (title, Zeichenkette). Bei der Landung sind keine weiteren Tabellen erlaubt. */
   function validateLowerWeights(ch, ph, mass, path, err) {
     var list = ch.lowerWeights;
     if (list === undefined) return;
@@ -295,9 +301,25 @@
         validateCorrections(ch.corrections, tableUnit(ch.table), p + '.corrections', err);
         // Ist die Haupttabelle schon fehlerhaft, bleibt es bei deren Meldung (das Ergebnis ist ohnehin bad-data)
         if (!tableBad) validateLowerWeights(ch, ph, ac.mass, p, err);
+        validateMassRead(ch, ph, ac.mass, p, err);
       });
     }
     return { ok: errors.length === 0, errors: errors };
+  }
+
+  /* Ablesung über die Starttabellen (charts.takeoff.massRead, freiwillig): «nextHigher» oder «linear», nur beim Start.
+     Bei «linear» sind alle Tabellengewichte ganze kg: «Start möglich bis …» wird auf ganze kg gesucht. */
+  function validateMassRead(ch, ph, mass, path, err) {
+    if (ch.massRead === undefined) return;
+    var p = path + '.massRead';
+    if (ph !== 'takeoff') { err(p + ' nur beim Start erlaubt'); return; }
+    if (!inList(MASS_READS, ch.massRead)) { err(p + ' unbekannt'); return; }
+    if (ch.massRead !== 'linear') return;
+    var kgs = [isObj(mass) ? mass.kg : NaN];
+    if (Array.isArray(ch.lowerWeights)) {
+      ch.lowerWeights.forEach(function (e) { kgs.push(isObj(e) && isObj(e.mass) ? e.mass.kg : NaN); });
+    }
+    if (!kgs.every(function (k) { return isNum(k) && Math.floor(k) === k; })) err(p + ': Tabellengewichte nicht ganze kg');
   }
 
   function validateAirfieldUnsafe(af) {
@@ -345,12 +367,15 @@
   }
 
   /* ── Tabellenablesung ──────────────────────────────────────────
-     nextHigher: erster Wert ≥ Eingabe, darunter der kleinste, darüber kein Wert.
-     linear: unter dem kleinsten Wert der kleinste, über dem grössten kein Wert, genau auf einer Spalte deren Wert,
-     dazwischen linear mit demselben Gewicht für beide Ausgaben. */
+     Je Achse nach ihrer Regel (read); für beide Regeln gilt unter dem kleinsten Wert der kleinste (es wird nicht
+     hochgerechnet), über dem grössten gibt es keinen Wert, genau auf einem Tabellenwert dieser.
+     nextHigher: erster Wert ≥ Eingabe.
+     linear:     zwischen zwei Tabellenwerten linear, mit demselben Gewicht für beide Ausgaben.
+     Mehrere interpolierte Achsen der Reihe nach, die letzte Achse zuerst: bei Druckhöhe × Temperatur zuerst die
+     Temperatur in beiden Höhenzeilen, dann die Höhe (gleiches Ergebnis wie bilinear).
+     corners: die verwendeten Tabellenzellen (eine, zwei oder vier) mit ihren Achsenwerten, für den Rechenweg. */
   function lookupTable(table, inputs) {
     var axes = [], above = [];
-    var linearAxis = -1;
     for (var k = 0; k < table.axes.length; k++) {
       var ax = table.axes[k];
       var v = inputs[ax.quantity];
@@ -363,39 +388,54 @@
       }
       var j = 0;
       while (vals[j] < v) j++;                  // erster Wert ≥ Eingabe (unter dem kleinsten: 0)
-      var a = { quantity: ax.quantity, read: ax.read, input: v, index: j, value: vals[j], belowLowest: v < vals[0] };
+      var a = { quantity: ax.quantity, read: ax.read, input: v, index: j, value: vals[j], belowLowest: v < vals[0], interpolated: false };
       if (ax.read === 'linear' && v > vals[0] && vals[j] !== v) {
+        a.interpolated = true;
         a.lowerIndex = j - 1;
         a.lower = vals[j - 1];
         a.upper = vals[j];
         a.num = v - vals[j - 1];                // Gewicht = num / den
         a.den = vals[j] - vals[j - 1];
         a.weight = a.num / a.den;
-        linearAxis = k;
       }
       axes.push(a);
     }
     if (above.length) return { ok: false, above: above };
-    var idx = axes.map(function (a) { return a.index; });
-    var hi = cellAt(table.cells, idx);
-    var values = {}, columns = null;
-    if (linearAxis < 0) {
-      table.outputs.forEach(function (o, n) { values[o.id] = hi[n]; });
-    } else {
-      var la = axes[linearAxis];
-      var loIdx = idx.slice();
-      loIdx[linearAxis] = la.lowerIndex;
-      var lo = cellAt(table.cells, loIdx);
-      columns = { lowerValue: la.lower, upperValue: la.upper, weight: la.weight, lower: {}, upper: {} };
-      table.outputs.forEach(function (o, n) {
-        // a + (v − a0)·(b − a)/(a1 − a0): erst multiplizieren, dann teilen
-        values[o.id] = lo[n] + la.num * (hi[n] - lo[n]) / la.den;
-        columns.lower[o.id] = lo[n];
-        columns.upper[o.id] = hi[n];
-      });
+    var nOut = table.outputs.length;
+    // Wert an der Eingabe ab Achse k im Teilbaum node; untere vor oberer Zelle, damit corners geordnet ist
+    function valueAt(node, k) {
+      if (k === axes.length) return node.slice(0, nOut);
+      var a = axes[k];
+      if (!a.interpolated) return valueAt(node[a.index], k + 1);
+      var lo = valueAt(node[a.lowerIndex], k + 1);
+      var hi = valueAt(node[a.index], k + 1);
+      // a + (v − a0)·(b − a)/(a1 − a0): erst multiplizieren, dann teilen
+      return lo.map(function (x, n) { return x + a.num * (hi[n] - x) / a.den; });
     }
+    var raw = valueAt(table.cells, 0);
+    var values = {};
+    table.outputs.forEach(function (o, n) { values[o.id] = raw[n]; });
+    // Ecken: je interpolierter Achse untere und obere Zelle, sonst die gewählte
+    var corners = [{ indices: [], axisValues: [] }];
+    axes.forEach(function (a) {
+      var next = [];
+      corners.forEach(function (c) {
+        var picks = a.interpolated ? [[a.lowerIndex, a.lower], [a.index, a.upper]] : [[a.index, a.value]];
+        picks.forEach(function (pk) {
+          next.push({ indices: c.indices.concat([pk[0]]), axisValues: c.axisValues.concat([pk[1]]) });
+        });
+      });
+      corners = next;
+    });
+    corners.forEach(function (c) {
+      var cell = cellAt(table.cells, c.indices);
+      c.values = {};
+      table.outputs.forEach(function (o, n) { c.values[o.id] = cell[n]; });
+    });
+    var idx = axes.map(function (a) { return a.index; });
     return {
-      ok: true, axes: axes, values: values, columns: columns, interpolated: linearAxis >= 0,
+      ok: true, axes: axes, values: values, corners: corners,
+      interpolated: axes.some(function (a) { return a.interpolated; }),
       indices: idx, axisValues: axes.map(function (a) { return a.value; }), quantities: axes.map(function (a) { return a.quantity; })
     };
   }
@@ -519,6 +559,51 @@
     return idx;
   }
 
+  // Ablesung über die Starttabellen: «linear» nur mit ausdrücklicher Angabe in den Daten
+  function massReadOf(aircraft) { return aircraft.charts.takeoff.massRead === 'linear' ? 'linear' : 'nextHigher'; }
+
+  /* Starttabelle(n) für ein Gewicht: upper = Tabelle für das nächsthöhere Gewicht (wie pickTakeoffTable). Bei «linear»
+     und einem Gewicht echt zwischen zwei Tabellen zusätzlich lower = die nächstleichtere Tabelle und das Gewicht
+     dazwischen (num / den, in kg). Auf einer Tabelle, unter der leichtesten und ohne Eingabe: nur upper. */
+  function massBracket(tables, massKg, read) {
+    var hi = pickTakeoffTable(tables, massKg);
+    var res = { upper: hi, lower: null, num: null, den: null, weight: null };
+    if (read === 'linear' && massKg !== null && hi < tables.length - 1 && tables[hi].kg > massKg) {
+      res.lower = hi + 1;                       // tables[hi + 1].kg < massKg, sonst wäre hi + 1 gewählt
+      res.num = massKg - tables[hi + 1].kg;
+      res.den = tables[hi].kg - tables[hi + 1].kg;
+      res.weight = res.num / res.den;
+    }
+    return res;
+  }
+
+  // Für die Anzeige: Starttabelle(n) eines Musters für ein Gewicht (null = Höchstgewicht), wie compute sie wählt
+  function takeoffMassBracket(aircraft, massKg) {
+    return massBracket(takeoffTables(aircraft), massKg === undefined ? null : massKg, massReadOf(aircraft));
+  }
+
+  /* Ablesung beim Start für ein Gewicht: ohne lower die Tabelle upper, sonst beide Tabellen gleich abgelesen und
+     dazwischen linear im Gewicht (erst multiplizieren, dann teilen). Achsen und Ausgaben sind in allen Starttabellen
+     gleich (validateLowerWeights), ein Wert über dem Tabellenbereich trifft also beide. */
+  function massLookup(tables, br, axisInputs) {
+    var hi = lookupTable(tables[br.upper].table, axisInputs);
+    if (br.lower === null || !hi.ok) return hi;
+    var lo = lookupTable(tables[br.lower].table, axisInputs);
+    if (!lo.ok) return lo;
+    var values = {};
+    Object.keys(hi.values).forEach(function (k) {
+      values[k] = lo.values[k] + br.num * (hi.values[k] - lo.values[k]) / br.den;
+    });
+    return {
+      ok: true, axes: hi.axes, values: values, corners: hi.corners, interpolated: true,
+      indices: hi.indices, axisValues: hi.axisValues, quantities: hi.quantities,
+      mass: {
+        kg: tables[br.lower].kg + br.num, upperKg: tables[br.upper].kg, lowerKg: tables[br.lower].kg,
+        num: br.num, den: br.den, weight: br.weight, upper: hi, lower: lo
+      }
+    };
+  }
+
   // Start-Chart mit einer anderen Tabelle, sonst gleich (Quelle, Belag der Tabelle, Korrekturen); die Daten bleiben unverändert
   function chartWithTable(chart, table) {
     return { source: chart.source, base: chart.base, corrections: chart.corrections, table: table };
@@ -559,6 +644,41 @@
     return res;
   }
 
+  /* «Start möglich bis …» bei massRead «linear», auf ganze kg. m: Gewicht der Rechnung (Eingabe, sonst Höchstgewicht),
+     cur: Start mit m, at(kg): Start mit kg (gleiche Kette). Gesucht wird von unter m abwärts bis zur leichtesten
+     Tabelle; darunter gilt deren Wert, eine Suche brächte nichts. Zustände wie takeoffLimit:
+     'possible', 'no-value', 'limit' (maxKg: schwerstes ganzes Gewicht unter m, mit dem der Start möglich ist),
+     'wet-unknown', 'none' (auch mit lightestKg nicht), 'lowest' (m nicht über der leichtesten Tabelle),
+     'unknown' (kein Gewicht möglich, ab noValueFromKg abwärts ergibt sich kein Wert).
+     maxPossibleKg: schwerstes ganzes Gewicht bis zum Höchstgewicht, mit dem der Start möglich ist (null wie bei
+     takeoffLimit, auch bei nasser Piste ohne Nässewert des AFM). */
+  function takeoffLimitLinear(cur, m, maxKg, lightestKg, at) {
+    var res = { state: 'no-value', tableKg: null, maxKg: null, lightestKg: lightestKg, maxPossibleKg: null, noValueFromKg: null };
+    function possible(p) { return p.ok && !p.exceeds.groundRoll && !p.exceeds.overObstacle; }
+    for (var k = maxKg; k >= lightestKg; k--) {
+      var q = k === m ? cur : at(k);
+      if (possible(q)) { res.maxPossibleKg = q.wetFactorMissing ? null : k; break; }
+    }
+    if (!cur.ok) return res;
+    if (possible(cur)) { res.state = 'possible'; return res; }
+    if (!(m > lightestKg)) { res.state = 'lowest'; return res; }
+    for (var kg = Math.ceil(m) - 1; kg >= lightestKg; kg--) {
+      var p = at(kg);
+      if (!p.ok) {
+        if (res.noValueFromKg === null) res.noValueFromKg = kg;
+        continue;
+      }
+      if (possible(p)) {
+        if (p.wetFactorMissing) { res.state = 'wet-unknown'; return res; }
+        res.state = 'limit';
+        res.maxKg = kg;
+        return res;
+      }
+    }
+    res.state = res.noValueFromKg !== null ? 'unknown' : 'none';
+    return res;
+  }
+
   /* ── Hauptfunktion ─────────────────────────────────────────── */
   function compute(aircraft, airfield, input) {
     try {
@@ -580,14 +700,18 @@
       return { ok: false, error: { code: 'above-mass', massKg: massKg, maxKg: aircraft.mass.kg }, input: inp };
     }
     var tables = takeoffTables(aircraft);
-    var ti = pickTakeoffTable(tables, massKg);
+    var read = massReadOf(aircraft);
+    var br = massBracket(tables, massKg, read);
+    var ti = br.upper;
     var charts = { takeoff: chartWithTable(aircraft.charts.takeoff, tables[ti].table), landing: aircraft.charts.landing };
     var pa = pressureAltitudeFt(airfield.elevation.value, inp.qnhHpa);
-    var axisInputs = { pressureAltitude: pa, temperature: inp.tempC };
+    // Druckhöhe für die Tabellen auf ganze ft aufgerundet (zur längeren Strecke, gleich wie angezeigt)
+    var paTable = Math.ceil(pa - EPS);
+    var axisInputs = { pressureAltitude: paTable, temperature: inp.tempC };
     var lookups = {};
     var above = [];
     PHASES.forEach(function (ph) {
-      var lk = lookupTable(charts[ph].table, axisInputs);
+      var lk = ph === 'takeoff' ? massLookup(tables, br, axisInputs) : lookupTable(charts[ph].table, axisInputs);
       lookups[ph] = lk;
       if (!lk.ok) {
         if (lk.missing) throw new Error('Eingabe für Achse fehlt: ' + lk.missing);
@@ -601,8 +725,9 @@
       }
     });
     if (above.length) {
-      return { ok: false, error: { code: 'above-range', above: above }, input: inp, pressureAltitudeFt: pa };
+      return { ok: false, error: { code: 'above-range', above: above }, input: inp, pressureAltitudeFt: pa, pressureAltitudeTableFt: paTable };
     }
+    var lightest = tables[tables.length - 1];
     var mode = null;
     var runways = airfield.runways.map(function (rwy) {
       var w = windForRunway(inp, rwy.bearingTrue);
@@ -614,33 +739,52 @@
       if (w.computed) {
         out.takeoff = computePhase(charts.takeoff, lookups.takeoff, rwy, w, inp.runwayWet, rwy.takeoffAvailable.value);
         out.landing = computePhase(charts.landing, lookups.landing, rwy, w, inp.runwayWet, rwy.landingAvailable.value);
-        // Start je Starttabelle mit derselben Kette (Wind, Belag, Faktoren, Nässe) und daraus «möglich bis»
+        // Start mit einer Tabelle bzw. einem Gewicht mit derselben Kette (Wind, Belag, Faktoren, Nässe)
+        var phaseWith = function (lk, table) {
+          return computePhase(chartWithTable(aircraft.charts.takeoff, table), lk, rwy, w, inp.runwayWet, rwy.takeoffAvailable.value);
+        };
+        // Start je Starttabelle und daraus «möglich bis» (bei «linear» als Übersicht im Rechenweg)
         out.takeoffByMass = tables.map(function (t, i) {
           var p = out.takeoff;
-          if (i !== ti) {
+          if (i !== ti || br.lower !== null) {
             var lk = lookupTable(t.table, axisInputs);
             if (!lk.ok) return { kg: t.kg, ok: false, reason: 'no-lookup', m: null, possible: false, wetFactorMissing: false };
-            p = computePhase(chartWithTable(aircraft.charts.takeoff, t.table), lk, rwy, w, inp.runwayWet, rwy.takeoffAvailable.value);
+            p = phaseWith(lk, t.table);
           }
           // Möglich: Wert vorhanden, beide Strecken innerhalb der verfügbaren Länge (heute folgt das eine aus dem anderen,
           // weil die Strecke über 15 m nie kürzer ist als die Rollstrecke; die doppelte Bedingung hält auch ohne das)
           var possible = p.ok && !p.exceeds.groundRoll && !p.exceeds.overObstacle;
           return { kg: t.kg, ok: p.ok, reason: p.reason, m: p.m, possible: possible, wetFactorMissing: p.wetFactorMissing };
         });
-        out.takeoffLimit = takeoffLimit(out.takeoffByMass, ti);
+        if (read === 'linear') {
+          var atKg = function (kg) {
+            var b = massBracket(tables, kg, read);
+            var lk = massLookup(tables, b, axisInputs);
+            if (!lk.ok) return { ok: false, reason: 'no-lookup', m: null, exceeds: null, wetFactorMissing: false };
+            return phaseWith(lk, tables[b.upper].table);
+          };
+          out.takeoffLimit = takeoffLimitLinear(out.takeoff, massKg === null ? aircraft.mass.kg : massKg, aircraft.mass.kg, lightest.kg, atKg);
+          out.takeoffLimit.tableKg = tables[ti].kg;
+        } else {
+          out.takeoffLimit = takeoffLimit(out.takeoffByMass, ti);
+        }
       }
       return out;
     });
-    var lightest = tables[tables.length - 1];
+    var interpKg = br.lower !== null;
     return {
-      ok: true, error: null, input: inp, pressureAltitudeFt: pa, mode: mode,
+      ok: true, error: null, input: inp, pressureAltitudeFt: pa, pressureAltitudeTableFt: paTable, mode: mode,
       lookups: lookups, runways: runways,
-      // inputKg null: kein Gewicht eingegeben, gerechnet mit dem Höchstgewicht. table*: gewählte Starttabelle.
+      // inputKg null: kein Gewicht eingegeben, gerechnet mit dem Höchstgewicht. table*: Starttabelle für das
+      // nächsthöhere Gewicht; bei Interpolation im Gewicht (interpolated) zusätzlich die nächstleichtere (lower*).
       // Die Landung rechnet immer mit der einen Landetabelle (maximales Landegewicht).
       mass: {
-        inputKg: massKg, maxKg: aircraft.mass.kg, maxLb: aircraft.mass.lb,
+        inputKg: massKg, maxKg: aircraft.mass.kg, maxLb: aircraft.mass.lb, read: read,
         tableKg: tables[ti].kg, tableLb: tables[ti].lb, tableIndex: ti, tableCount: tables.length,
         tableRef: tables[ti].ref, tableTitle: tables[ti].title,
+        interpolated: interpKg,
+        lowerKg: interpKg ? tables[br.lower].kg : null, lowerIndex: interpKg ? br.lower : null,
+        lowerRef: interpKg ? tables[br.lower].ref : null, lowerTitle: interpKg ? tables[br.lower].title : null,
         lightestKg: lightest.kg, belowLowest: massKg !== null && massKg < lightest.kg,
         tablesKg: tables.map(function (t) { return t.kg; })
       },
@@ -663,6 +807,7 @@
     PHASES: PHASES,
     pressureAltitudeFt: pressureAltitudeFt,
     ceilMeters: ceilMeters,
+    MASS_READS: MASS_READS,
     validateAircraft: validateAircraft,
     validateAirfield: validateAirfield,
     checkInput: checkInput,
@@ -670,9 +815,11 @@
     windForRunway: windForRunway,
     takeoffTables: takeoffTables,
     pickTakeoffTable: pickTakeoffTable,
+    takeoffMassBracket: takeoffMassBracket,
     compute: compute,
-    // nur für Tests: Auswertung «möglich bis» aus einer Liste je Starttabelle
+    // nur für Tests: Auswertung «möglich bis» aus einer Liste je Starttabelle bzw. auf ganze kg
     _takeoffLimit: takeoffLimit,
+    _takeoffLimitLinear: takeoffLimitLinear,
     // nur für Tests: eine Phase direkt rechnen (Schlussprobe ist mit geprüften Daten nicht erreichbar)
     _computePhase: computePhase
   };

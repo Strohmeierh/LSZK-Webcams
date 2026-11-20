@@ -18,9 +18,12 @@ const readBuf = (rel) => fs.readFileSync(path.join(ROOT, rel));
 const readJson = (rel) => JSON.parse(readBuf(rel).toString('utf8'));
 const clone = (o) => JSON.parse(JSON.stringify(o));
 
-const C172D = readJson('perf/aircraft/c172d.json');
-const P2010 = readJson('perf/aircraft/p2010.json');
-const C152 = readJson('perf/aircraft/c152.json');
+// Tests der Anzeige mit der Ableseregel bis VERSION 6 (tests/helpers/ablesung.js); die ausgelieferte Ablesung (linear)
+// prüft tests/perf-interpolation.test.js.
+const { alteAblesung } = require('./helpers/ablesung.js');
+const C172D = alteAblesung(readJson('perf/aircraft/c172d.json'));
+const P2010 = alteAblesung(readJson('perf/aircraft/p2010.json'));
+const C152 = alteAblesung(readJson('perf/aircraft/c152.json'));
 const AF = readJson('perf/airfields/lszk.json');
 const LIST = ui.parseIndex(readJson('perf/aircraft/index.json')).list;
 const ACS = { c172d: C172D, p2010: P2010, c152: C152 };
@@ -493,7 +496,9 @@ test('Tabellenwahl an allen Grenzen: nächsthöheres Gewicht, darunter die klein
       const ti = tabs.findIndex((t) => t.kg === want);
       assert.deepEqual(r.mass, {
         inputKg: kg, maxKg: ac.mass.kg, maxLb: ac.mass.lb, tableKg: want, tableLb: tabs[ti].lb, tableIndex: ti, tableCount: tabs.length,
-        tableRef: tabs[ti].ref, tableTitle: tabs[ti].title, lightestKg: lightest, belowLowest: kg < lightest, tablesKg: tabs.map((t) => t.kg)
+        tableRef: tabs[ti].ref, tableTitle: tabs[ti].title, lightestKg: lightest, belowLowest: kg < lightest, tablesKg: tabs.map((t) => t.kg),
+        // seit VERSION 7: Ableseregel und (bei «linear») die nächstleichtere Tabelle; mit der alten Regel nie interpoliert
+        read: 'nextHigher', interpolated: false, lowerKg: null, lowerIndex: null, lowerRef: null, lowerTitle: null
       }, id + ' ' + kg);
       // Der Start der Piste rechnet mit der gewählten Tabelle (Ablesung), die Landung nie mit einer Starttabelle
       assert.deepEqual(r.lookups.takeoff.values, core.lookupTable(tabs[ti].table, { pressureAltitude: r.pressureAltitudeFt, temperature: 15 }).values);

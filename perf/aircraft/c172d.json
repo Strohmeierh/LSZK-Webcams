@@ -6,8 +6,8 @@
   "massNoteDe": "Maximales Abfluggewicht und maximales Landegewicht der C172 S, Normal Category (Supplement, Section 2).",
   "variantDe": "Motor TAE 125-02-114, Propeller MTV-6-A/190-69",
   "techniqueDe": "Kurzstart- und Kurzlandetechnik",
-  "readingRuleDe": "Ablesung beim nächsthöheren Tabellenwert von Höhe und Temperatur, keine Interpolation (so auch die Beispielrechnungen im Supplement, Section 5, S. 5-2, und im Grundhandbuch, S. 5-5).",
-  "footerDe": "Richtwert nach AFM ohne eigenen Sicherheitszuschlag: maximales Abfluggewicht, Kurzstart- und Kurzlandetechnik, ebene Graspiste. Start nach dem Supplement für den Dieselmotor TAE 125-02-114 mit Propeller MTV-6-A/190-69, Landung nach dem Grundhandbuch. Gilt die Piste als nass, ist beim Start der Mindestzuschlag des Supplements von 20 % eingerechnet; für die Landung nennt das AFM keinen Wert. Nicht berücksichtigt sind Pistenneigung, Zustand von Flugzeug und Motor sowie die Pilotentechnik. Massgebend sind das AFM der jeweiligen Maschine und die eigene Beurteilung.",
+  "readingRuleDe": "Druckhöhe, Temperatur und beim Start das Gewicht linear zwischen den Tabellenwerten interpoliert; unter dem kleinsten Tabellenwert gilt dieser (unter 1111 kg die Tabelle für 1111 kg), darüber gibt es keinen Wert. Die Beispielrechnungen im Supplement (Section 5, S. 5-2) und im Grundhandbuch (S. 5-5) lesen zur Sicherheit beim nächsthöheren Tabellenwert ab.",
+  "footerDe": "Richtwert nach AFM ohne eigenen Sicherheitszuschlag: Kurzstart- und Kurzlandetechnik, ebene Graspiste; Start mit dem eingegebenen Abfluggewicht (zwischen den Tabellen interpoliert), Landung mit dem maximalen Landegewicht. Start nach dem Supplement für den Dieselmotor TAE 125-02-114 mit Propeller MTV-6-A/190-69, Landung nach dem Grundhandbuch. Gilt die Piste als nass, ist beim Start der Mindestzuschlag des Supplements von 20 % eingerechnet; für die Landung nennt das AFM keinen Wert. Nicht berücksichtigt sind Pistenneigung, Zustand von Flugzeug und Motor sowie die Pilotentechnik. Massgebend sind das AFM der jeweiligen Maschine und die eigene Beurteilung.",
   "sources": {
     "supplement": {
       "labelDe": "Supplement",
@@ -43,11 +43,12 @@
         "Nicht gerechnet: Rückenwind (im AFM bis 10 kt: +10 % je 2 kt)."
       ],
       "base": { "surface": "paved", "surfaceCondition": "dry" },
+      "massRead": "linear",
       "table": {
         "type": "grid",
         "axes": [
-          { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000], "read": "nextHigher", "below": "lowest", "above": "none" },
-          { "quantity": "temperature", "unit": "degC", "values": [-20, 0, 10, 20, 30, 40, 50], "read": "nextHigher", "below": "lowest", "above": "none" }
+          { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000], "read": "linear", "below": "lowest", "above": "none" },
+          { "quantity": "temperature", "unit": "degC", "values": [-20, 0, 10, 20, 30, 40, 50], "read": "linear", "below": "lowest", "above": "none" }
         ],
         "outputs": [{ "id": "groundRoll", "unit": "m" }, { "id": "overObstacle", "unit": "m" }],
         "obstacle": { "value": 50, "unit": "ft" },
@@ -74,8 +75,8 @@
           "table": {
             "type": "grid",
             "axes": [
-              { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000], "read": "nextHigher", "below": "lowest", "above": "none" },
-              { "quantity": "temperature", "unit": "degC", "values": [-20, 0, 10, 20, 30, 40, 50], "read": "nextHigher", "below": "lowest", "above": "none" }
+              { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000], "read": "linear", "below": "lowest", "above": "none" },
+              { "quantity": "temperature", "unit": "degC", "values": [-20, 0, 10, 20, 30, 40, 50], "read": "linear", "below": "lowest", "above": "none" }
             ],
             "outputs": [{ "id": "groundRoll", "unit": "m" }, { "id": "overObstacle", "unit": "m" }],
             "obstacle": { "value": 50, "unit": "ft" },
@@ -102,8 +103,8 @@
           "table": {
             "type": "grid",
             "axes": [
-              { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000], "read": "nextHigher", "below": "lowest", "above": "none" },
-              { "quantity": "temperature", "unit": "degC", "values": [-20, 0, 10, 20, 30, 40, 50], "read": "nextHigher", "below": "lowest", "above": "none" }
+              { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000], "read": "linear", "below": "lowest", "above": "none" },
+              { "quantity": "temperature", "unit": "degC", "values": [-20, 0, 10, 20, 30, 40, 50], "read": "linear", "below": "lowest", "above": "none" }
             ],
             "outputs": [{ "id": "groundRoll", "unit": "m" }, { "id": "overObstacle", "unit": "m" }],
             "obstacle": { "value": 50, "unit": "ft" },
@@ -152,8 +153,8 @@
       "table": {
         "type": "grid",
         "axes": [
-          { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000], "read": "nextHigher", "below": "lowest", "above": "none" },
-          { "quantity": "temperature", "unit": "degC", "values": [0, 10, 20, 30, 40], "read": "nextHigher", "below": "lowest", "above": "none" }
+          { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000], "read": "linear", "below": "lowest", "above": "none" },
+          { "quantity": "temperature", "unit": "degC", "values": [0, 10, 20, 30, 40], "read": "linear", "below": "lowest", "above": "none" }
         ],
         "outputs": [{ "id": "groundRoll", "unit": "ft" }, { "id": "overObstacle", "unit": "ft" }],
         "obstacle": { "value": 50, "unit": "ft" },

@@ -6,8 +6,8 @@
   "massNoteDe": "Maximales Abfluggewicht und maximales Landegewicht (AFM, Section 2).",
   "variantDe": "Lycoming IO-360-M1A, Verstellpropeller MTV-15-B/193-52",
   "techniqueDe": "Klappen T/O beim Start und LAND bei der Landung, Geschwindigkeiten nach AFM",
-  "readingRuleDe": "Druckhöhe: nächsthöherer Tabellenwert. Temperatur: linear zwischen den Tabellenspalten interpoliert; unter −25 °C gilt die Spalte −25 °C, über 50 °C gibt es keinen Wert. Die Spalte ISA wird nicht verwendet.",
-  "footerDe": "Richtwert nach AFM ohne eigenen Sicherheitszuschlag: maximales Abfluggewicht, Klappen T/O beim Start und LAND bei der Landung, Geschwindigkeiten nach AFM, ebene Graspiste. Die Temperatur ist zwischen den Tabellenspalten linear interpoliert, die Druckhöhe auf den nächsthöheren Tabellenwert gerundet. Eingerechnet sind die Faktoren des AFM für Abweichungen im Betrieb (Start 1,10, Landung 1,67). Für nasses Gras nennt das AFM keinen Wert. Nicht berücksichtigt sind die Pistenneigung (laut AFM beim Start +10 % der Rollstrecke je 1 % Steigung), Zustand von Flugzeug und Motor sowie die Pilotentechnik. Massgebend sind das AFM der Maschine und die eigene Beurteilung.",
+  "readingRuleDe": "Druckhöhe, Temperatur und beim Start das Gewicht linear zwischen den Tabellenwerten interpoliert; unter dem kleinsten Tabellenwert gilt dieser (unter −25 °C die Spalte −25 °C, unter 960 kg die Tabelle für 960 kg), darüber gibt es keinen Wert. Die Spalte ISA wird nicht verwendet.",
+  "footerDe": "Richtwert nach AFM ohne eigenen Sicherheitszuschlag: Klappen T/O beim Start und LAND bei der Landung, Geschwindigkeiten nach AFM, ebene Graspiste; Start mit dem eingegebenen Abfluggewicht, Landung mit dem maximalen Landegewicht. Druckhöhe, Temperatur und Startgewicht sind zwischen den Tabellenwerten linear interpoliert. Eingerechnet sind die Faktoren des AFM für Abweichungen im Betrieb (Start 1,10, Landung 1,67). Für nasses Gras nennt das AFM keinen Wert. Nicht berücksichtigt sind die Pistenneigung (laut AFM beim Start +10 % der Rollstrecke je 1 % Steigung), Zustand von Flugzeug und Motor sowie die Pilotentechnik. Massgebend sind das AFM der Maschine und die eigene Beurteilung.",
   "wetNoteDe": "Laut AFM (Section 4, Ziffer 5.16) verschlechtert Regen die Leistung, besonders die Startstrecke.",
   "sources": {
     "afm": {
@@ -33,10 +33,11 @@
         "Nicht gerechnet: Rückenwind (+20 m je kt) und Pistenneigung (+10 % der Rollstrecke je 1 % Steigung)."
       ],
       "base": { "surface": "paved", "surfaceCondition": "dry" },
+      "massRead": "linear",
       "table": {
         "type": "grid",
         "axes": [
-          { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000], "read": "nextHigher", "below": "lowest", "above": "none" },
+          { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000], "read": "linear", "below": "lowest", "above": "none" },
           { "quantity": "temperature", "unit": "degC", "values": [-25, 0, 25, 50], "read": "linear", "below": "lowest", "above": "none" }
         ],
         "outputs": [{ "id": "groundRoll", "unit": "m" }, { "id": "overObstacle", "unit": "m" }],
@@ -60,7 +61,7 @@
           "table": {
             "type": "grid",
             "axes": [
-              { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000], "read": "nextHigher", "below": "lowest", "above": "none" },
+              { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000], "read": "linear", "below": "lowest", "above": "none" },
               { "quantity": "temperature", "unit": "degC", "values": [-25, 0, 25, 50], "read": "linear", "below": "lowest", "above": "none" }
             ],
             "outputs": [{ "id": "groundRoll", "unit": "m" }, { "id": "overObstacle", "unit": "m" }],
@@ -84,7 +85,7 @@
           "table": {
             "type": "grid",
             "axes": [
-              { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000], "read": "nextHigher", "below": "lowest", "above": "none" },
+              { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000], "read": "linear", "below": "lowest", "above": "none" },
               { "quantity": "temperature", "unit": "degC", "values": [-25, 0, 25, 50], "read": "linear", "below": "lowest", "above": "none" }
             ],
             "outputs": [{ "id": "groundRoll", "unit": "m" }, { "id": "overObstacle", "unit": "m" }],
@@ -129,7 +130,7 @@
       "table": {
         "type": "grid",
         "axes": [
-          { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000], "read": "nextHigher", "below": "lowest", "above": "none" },
+          { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000], "read": "linear", "below": "lowest", "above": "none" },
           { "quantity": "temperature", "unit": "degC", "values": [-25, 0, 25, 50], "read": "linear", "below": "lowest", "above": "none" }
         ],
         "outputs": [{ "id": "groundRoll", "unit": "m" }, { "id": "overObstacle", "unit": "m" }],

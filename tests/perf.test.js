@@ -13,9 +13,16 @@ function readJson(rel) {
   const buf = fs.readFileSync(path.join(ROOT, rel));
   return { buf, data: JSON.parse(buf.toString('utf8')) };
 }
-const C172D = readJson('perf/aircraft/c172d.json').data;
-const P2010 = readJson('perf/aircraft/p2010.json').data;
-const C152 = readJson('perf/aircraft/c152.json').data;
+// Die Daten, wie sie ausgeliefert werden (Ablesung linear), für die Datentests; die Tests der Rechenmechanik rechnen
+// mit der Ableseregel bis VERSION 6 (tests/helpers/ablesung.js), die Interpolation prüft perf-interpolation.test.js.
+const { alteAblesung } = require('./helpers/ablesung.js');
+const C172D_DATA = readJson('perf/aircraft/c172d.json').data;
+const P2010_DATA = readJson('perf/aircraft/p2010.json').data;
+const C152_DATA = readJson('perf/aircraft/c152.json').data;
+const P2008_DATA = readJson('perf/aircraft/p2008.json').data;
+const C172D = alteAblesung(C172D_DATA);
+const P2010 = alteAblesung(P2010_DATA);
+const C152 = alteAblesung(C152_DATA);
 const INDEX = readJson('perf/aircraft/index.json').data;
 const AF = readJson('perf/airfields/lszk.json').data;
 const LYC = readJson('tests/fixtures/c172s_lycoming.json').data;
@@ -61,29 +68,33 @@ function sample5a1111() {
 /* ── Daten ─────────────────────────────────────────────────── */
 
 test('Daten: JSON ohne BOM, Schema 2, Validierung ok', () => {
-  ['perf/aircraft/c172d.json', 'perf/aircraft/p2010.json', 'perf/aircraft/c152.json', 'perf/aircraft/index.json', 'perf/airfields/lszk.json',
-    'tests/fixtures/c172s_lycoming.json', 'tests/fixtures/c172d_5b_1157kg_ft.json', 'tests/fixtures/c172d_5a_1111kg_m.json',
+  ['perf/aircraft/c172d.json', 'perf/aircraft/p2010.json', 'perf/aircraft/c152.json', 'perf/aircraft/p2008.json', 'perf/aircraft/index.json',
+    'perf/airfields/lszk.json', 'tests/fixtures/c172s_lycoming.json', 'tests/fixtures/c172d_5b_1157kg_ft.json', 'tests/fixtures/c172d_5a_1111kg_m.json',
     'tests/fixtures/p2010_ft.json', 'tests/fixtures/p2010_isa.json', 'tests/fixtures/kontrollfaelle.json'].forEach((rel) => {
     const { buf } = readJson(rel);
     assert.ok(!(buf[0] === 0xef && buf[1] === 0xbb && buf[2] === 0xbf), rel + ' hat ein BOM');
   });
-  [C172D, P2010, C152, LYC].forEach((ac) => assert.deepEqual(core.validateAircraft(ac), { ok: true, errors: [] }, ac.id));
+  [C172D_DATA, P2010_DATA, C152_DATA, P2008_DATA, C172D, P2010, C152, LYC].forEach((ac) => {
+    assert.deepEqual(core.validateAircraft(ac), { ok: true, errors: [] }, ac.id);
+  });
   assert.deepEqual(core.validateAirfield(AF), { ok: true, errors: [] });
   assert.equal(AF.schema, 2);
   assert.equal(INDEX.schema, 2);
 });
 
-test('Daten: Auswahl mit drei Mustern und Kennzeichen, Lycoming nicht mehr in perf/aircraft', () => {
+test('Daten: Auswahl mit vier Mustern und Kennzeichen, Lycoming nicht mehr in perf/aircraft', () => {
   assert.equal(INDEX.default, 'c172d');
   assert.deepEqual(INDEX.aircraft.map((a) => [a.id, a.label, a.file, a.registrations]), [
     ['c172d', 'Cessna 172 Diesel', 'c172d.json', ['HB-TDA', 'HB-TDB', 'HB-TDC', 'HB-TDD']],
     ['p2010', 'Tecnam P2010', 'p2010.json', ['HB-KMD']],
-    ['c152', 'Cessna 152', 'c152.json', ['HB-CFA', 'HB-CYF', 'HB-CYP']]
+    ['c152', 'Cessna 152', 'c152.json', ['HB-CFA', 'HB-CYF', 'HB-CYP']],
+    ['p2008', 'Tecnam P2008', 'p2008.json', ['HB-KMG', 'HB-KMH', 'HB-KMX']]
   ]);
-  assert.equal(C172D.label, 'Cessna 172 Diesel');
-  assert.equal(P2010.label, 'Tecnam P2010');
-  assert.deepEqual([C152.id, C152.label], ['c152', 'Cessna 152']);
-  assert.deepEqual(fs.readdirSync(path.join(ROOT, 'perf', 'aircraft')).sort(), ['c152.json', 'c172d.json', 'index.json', 'p2010.json']);
+  assert.equal(C172D_DATA.label, 'Cessna 172 Diesel');
+  assert.equal(P2010_DATA.label, 'Tecnam P2010');
+  assert.deepEqual([C152_DATA.id, C152_DATA.label], ['c152', 'Cessna 152']);
+  assert.deepEqual([P2008_DATA.id, P2008_DATA.label], ['p2008', 'Tecnam P2008']);
+  assert.deepEqual(fs.readdirSync(path.join(ROOT, 'perf', 'aircraft')).sort(), ['c152.json', 'c172d.json', 'index.json', 'p2008.json', 'p2010.json']);
 });
 
 test('Daten: keine Rückenwind-Regel, Quelle je Chart, Masse wie gedruckt', () => {
@@ -215,25 +226,41 @@ test('Daten: alle Texte der Flugzeug-, Listen- und Platzdateien wörtlich (Absch
   assert.ok(FIX['perf/aircraft/c152.json'].footerDe.startsWith('Richtwert nach AFM ohne eigenen Sicherheitszuschlag'));
 });
 
-test('Daten: Achsen, Einheiten und Ablesung je Tabelle', () => {
+test('Daten: Achsen, Einheiten und Ablesung je Tabelle (alles linear, Startgewicht linear; Wunsch 20.11.2026)', () => {
   const ax = (ch) => ch.table.axes.map((a) => [a.quantity, a.values, a.read]);
-  assert.deepEqual(ax(C172D.charts.takeoff), [['pressureAltitude', [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000], 'nextHigher'],
-    ['temperature', [-20, 0, 10, 20, 30, 40, 50], 'nextHigher']]);
-  assert.deepEqual(ax(C172D.charts.landing), [['pressureAltitude', [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000], 'nextHigher'],
-    ['temperature', [0, 10, 20, 30, 40], 'nextHigher']]);
-  [P2010.charts.takeoff, P2010.charts.landing].forEach((ch) => {
-    assert.deepEqual(ax(ch), [['pressureAltitude', [0, 1000, 2000, 3000, 4000, 5000, 6000], 'nextHigher'], ['temperature', [-25, 0, 25, 50], 'linear']]);
+  const PA = (max) => Array.from({ length: max / 1000 + 1 }, (_, i) => i * 1000);
+  assert.deepEqual(ax(C172D_DATA.charts.takeoff), [['pressureAltitude', PA(10000), 'linear'], ['temperature', [-20, 0, 10, 20, 30, 40, 50], 'linear']]);
+  assert.deepEqual(ax(C172D_DATA.charts.landing), [['pressureAltitude', PA(8000), 'linear'], ['temperature', [0, 10, 20, 30, 40], 'linear']]);
+  [P2010_DATA.charts.takeoff, P2010_DATA.charts.landing].forEach((ch) => {
+    assert.deepEqual(ax(ch), [['pressureAltitude', PA(6000), 'linear'], ['temperature', [-25, 0, 25, 50], 'linear']]);
   });
+  [P2008_DATA.charts.takeoff, P2008_DATA.charts.landing].forEach((ch) => {
+    assert.deepEqual(ax(ch), [['pressureAltitude', PA(10000), 'linear'], ['temperature', [-25, 0, 25, 50], 'linear']]);
+  });
+  // Starttabellen für tiefere Gewichte: gleiche Achsen wie die Haupttabelle (der Kern prüft das), Ablesung linear
+  [C172D_DATA, P2010_DATA, P2008_DATA].forEach((ac) => {
+    assert.equal(ac.charts.takeoff.massRead, 'linear', ac.id);
+    assert.equal(ac.charts.landing.massRead, undefined, ac.id);
+    ac.charts.takeoff.lowerWeights.forEach((e) => assert.deepEqual(ax(e), ax(ac.charts.takeoff), ac.id + ' ' + e.mass.kg));
+  });
+  assert.equal(C152_DATA.charts.takeoff.lowerWeights, undefined);
   const units = (ch) => ch.table.outputs.map((o) => o.unit);
-  assert.deepEqual(units(C172D.charts.takeoff), ['m', 'm']);
-  assert.deepEqual(units(C172D.charts.landing), ['ft', 'ft']);
-  assert.deepEqual(units(P2010.charts.takeoff), ['m', 'm']);
-  assert.deepEqual(units(P2010.charts.landing), ['m', 'm']);
-  [C152.charts.takeoff, C152.charts.landing].forEach((ch) => {
-    assert.deepEqual(ax(ch), [['pressureAltitude', [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000], 'nextHigher'], ['temperature', [0, 10, 20, 30, 40], 'nextHigher']]);
+  assert.deepEqual(units(C172D_DATA.charts.takeoff), ['m', 'm']);
+  assert.deepEqual(units(C172D_DATA.charts.landing), ['ft', 'ft']);
+  assert.deepEqual(units(P2010_DATA.charts.takeoff), ['m', 'm']);
+  assert.deepEqual(units(P2010_DATA.charts.landing), ['m', 'm']);
+  assert.deepEqual(units(P2008_DATA.charts.takeoff), ['m', 'm']);
+  assert.deepEqual(units(P2008_DATA.charts.landing), ['m', 'm']);
+  [C152_DATA.charts.takeoff, C152_DATA.charts.landing].forEach((ch) => {
+    assert.deepEqual(ax(ch), [['pressureAltitude', PA(8000), 'linear'], ['temperature', [0, 10, 20, 30, 40], 'linear']]);
     assert.deepEqual(units(ch), ['ft', 'ft']);
     assert.deepEqual(ch.base, { surface: 'paved', surfaceCondition: 'dry' });
   });
+  // Die Hilfe für die Mechanik-Tests stellt genau die Regel bis VERSION 6 her
+  const old = (ac) => [ac.charts.takeoff.table, ac.charts.landing.table].concat((ac.charts.takeoff.lowerWeights || []).map((e) => e.table))
+    .map((t) => t.axes.map((a) => a.read).join('/'));
+  assert.deepEqual([old(C172D), old(P2010), old(C152)].map((x) => [...new Set(x)]), [['nextHigher/nextHigher'], ['nextHigher/linear'], ['nextHigher/nextHigher']]);
+  assert.deepEqual([C172D, P2010, C152].map((ac) => ac.charts.takeoff.massRead), [undefined, undefined, undefined]);
 });
 
 function fp(cells, o, cols) {
@@ -383,11 +410,11 @@ test('Interpolation Tecnam: Spaltentreffer, Klemmen unter −25 °C, kein Wert �
   assert.deepEqual(at(50.1).above, [{ quantity: 'temperature', unit: 'degC', value: 50.1, max: 50 }]);
   const mid = at(12.5);
   assert.equal(mid.interpolated, true);
-  assert.deepEqual([mid.columns.lowerValue, mid.columns.upperValue, mid.columns.weight], [0, 25, 0.5]);
+  assert.deepEqual([mid.axes[1].lower, mid.axes[1].upper, mid.axes[1].weight], [0, 25, 0.5]);
   assert.deepEqual(mid.values, { groundRoll: (352 + 434) / 2, overObstacle: (622 + 762) / 2 });
   // gleiches Gewicht für beide Ausgaben
   const lk = at(10.8, 3000);
-  const w = lk.columns.weight;
+  const w = lk.axes[1].weight;
   close(w, 0.432, 1e-12);
   close(lk.values.groundRoll, 384 + w * (474 - 384), 1e-9);
   close(lk.values.overObstacle, 678 + w * (830 - 678), 1e-9);
@@ -668,8 +695,8 @@ test('Kontrollbeispiele: ungerundete Zwischenwerte (K1, K3, K8, K20a, K21)', () 
   close(p.final.groundRoll, 231, 1e-9);                       // 210 × 1,1: Gleitkommarest darf nicht aufrunden
   assert.equal(p.m.groundRoll, 231);
   const k21 = rwy(run(wx(10.8, 998.2, 247, 8.7), P2010), '30').takeoff;
-  assert.deepEqual([k21.lookup.columns.lowerValue, k21.lookup.columns.upperValue], [0, 25]);
-  close(k21.lookup.columns.weight, 0.432, 1e-12);
+  assert.deepEqual([k21.lookup.axes[1].lower, k21.lookup.axes[1].upper], [0, 25]);
+  close(k21.lookup.axes[1].weight, 0.432, 1e-12);
   close(k21.final.groundRoll, 467.6848, 1e-9);
 });
 
@@ -899,8 +926,17 @@ test('Fail-closed: unbekannte oder unplausible Schema-Werte ergeben bad-data', (
     'quantity': (ac) => { ac.charts[L].table.axes[1].quantity = 'weight'; },
     'Achseinheit': (ac) => { ac.charts[T].table.axes[1].unit = 'degF'; },
     'read unbekannt': (ac) => { ac.charts[T].table.axes[0].read = 'interpolate'; },
-    'linear bei Druckhöhe': (ac) => { ac.charts[T].table.axes[0].read = 'linear'; },
-    'linear mit einem Wert': (ac) => { const a = ac.charts[T].table.axes[1]; a.read = 'linear'; a.values = [20]; ac.charts[T].table.cells = ac.charts[T].table.cells.map((r) => [r[3]]); },
+    // Druckhöhe linear ist seit VERSION 7 erlaubt, aber alle Starttabellen müssen gleich ablesen
+    'linear nur in der Haupttabelle': (ac) => { ac.charts[T].table.axes[0].read = 'linear'; },
+    'linear mit einem Wert': (ac) => { const a = ac.charts[L].table.axes[1]; a.read = 'linear'; a.values = [20]; ac.charts[L].table.cells = ac.charts[L].table.cells.map((r) => [r[2]]); },
+    'massRead unbekannt': (ac) => { ac.charts[T].massRead = 'interpolate'; },
+    'massRead leer': (ac) => { ac.charts[T].massRead = ''; },
+    'massRead bei der Landung': (ac) => { ac.charts[L].massRead = 'linear'; },
+    'massRead linear, Tabellengewicht nicht ganz': (ac) => {
+      ac.charts[T].massRead = 'linear';
+      ac.charts[T].lowerWeights[0].mass = { kg: 1133.98, lb: 2500 };
+    },
+    'massRead linear, Höchstgewicht nicht ganz': (ac) => { ac.charts[T].massRead = 'linear'; ac.mass.kg = 1156.6; },
     'Druckhöhe 25000 ft': (ac) => { ac.charts[T].table.axes[0].values[10] = 25000; },
     'Temperatur 70 °C': (ac) => { ac.charts[T].table.axes[1].values[6] = 70; },
     'Ausgabe km': (ac) => { ac.charts[T].table.outputs.forEach((o) => { o.unit = 'km'; }); },
@@ -946,6 +982,22 @@ test('Fail-closed: unbekannte oder unplausible Schema-Werte ergeben bad-data', (
     (ac) => { ac.charts[T].table.cells[10][6][1] = 9000; }].forEach((m, i) => {
     assert.equal(badData(m).ok, true, 'Grenzwert ' + i);
   });
+  // Seit VERSION 7 gültig: Druckhöhe linear in allen Tabellen, massRead «nextHigher» oder «linear» beim Start
+  const allLinear = (ac) => [ac.charts[T].table, ac.charts[L].table].concat(ac.charts[T].lowerWeights.map((e) => e.table))
+    .forEach((t) => t.axes.forEach((a) => { a.read = 'linear'; }));
+  [allLinear, (ac) => { ac.charts[T].massRead = 'nextHigher'; }, (ac) => { ac.charts[T].massRead = 'linear'; },
+    (ac) => { allLinear(ac); ac.charts[T].massRead = 'linear'; }].forEach((m, i) => {
+    assert.equal(badData(m).ok, true, 'gültig ' + i);
+  });
+  // Die Fehlertexte der neuen Fälle sind eindeutig (nicht nur irgendein bad-data)
+  const errs = (m) => badData(m).error.errors;
+  assert.deepEqual(errs(cases['linear nur in der Haupttabelle']), ['charts.takeoff.lowerWeights[0].table: Achsen oder Ausgaben anders als in der Haupttabelle']);
+  assert.deepEqual(errs(cases['linear mit einem Wert']), ['charts.landing.table.axes[1].values: Interpolation braucht zwei Werte']);
+  assert.deepEqual(errs(cases['massRead unbekannt']), ['charts.takeoff.massRead unbekannt']);
+  assert.deepEqual(errs(cases['massRead leer']), ['charts.takeoff.massRead unbekannt']);
+  assert.deepEqual(errs(cases['massRead bei der Landung']), ['charts.landing.massRead nur beim Start erlaubt']);
+  assert.deepEqual(errs(cases['massRead linear, Tabellengewicht nicht ganz']), ['charts.takeoff.massRead: Tabellengewichte nicht ganze kg']);
+  assert.ok(errs(cases['massRead linear, Höchstgewicht nicht ganz']).includes('charts.takeoff.massRead: Tabellengewichte nicht ganze kg'));
 });
 
 test('Fail-closed: fehlende Gras-Regel ergibt für diese Phase keinen Wert, fehlende Gegenwind-Regel keine Gutschrift', () => {

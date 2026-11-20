@@ -1,0 +1,175 @@
+{
+  "schema": 2,
+  "id": "p2008",
+  "label": "Tecnam P2008",
+  "mass": { "kg": 650, "lb": 1433 },
+  "massNoteDe": "Maximales Abfluggewicht und maximales Landegewicht 650 kg (1433 lb) nach Supplement S9 (Section 2, Ziffer 14, S. MT2-12).",
+  "variantDe": "P2008 JC, Rotax 912 S2, Propeller MTV-34-1-A/170-202",
+  "techniqueDe": "Klappen T/O beim Start und LAND bei der Landung, Geschwindigkeiten nach AFM",
+  "readingRuleDe": "Druckhöhe, Temperatur und beim Start das Gewicht linear zwischen den Tabellenwerten interpoliert; unter dem kleinsten Tabellenwert gilt dieser (unter −25 °C die Spalte −25 °C, unter 550 kg die Tabelle für 550 kg), darüber gibt es keinen Wert. Die Spalte ISA wird nicht verwendet.",
+  "footerDe": "Richtwert nach AFM ohne eigenen Sicherheitszuschlag: Klappen T/O beim Start und LAND bei der Landung, Geschwindigkeiten nach AFM, ebene Graspiste; Start mit dem eingegebenen Abfluggewicht, Landung mit dem maximalen Landegewicht. Die Tabellen des AFM gelten für Graspisten. Druckhöhe, Temperatur und Startgewicht sind zwischen den Tabellenwerten linear interpoliert. Eingerechnet sind die Faktoren des AFM für Abweichungen im Betrieb (Start 1,10, Landung 1,67). Für nasses Gras nennt das AFM keinen Wert. Nicht berücksichtigt sind die Pistenneigung (laut AFM beim Start +7 % der Rollstrecke je 1 % Steigung, bei der Landung −3 %), Zustand von Flugzeug und Motor sowie die Pilotentechnik. Massgebend sind das AFM der Maschine und die eigene Beurteilung.",
+  "sources": {
+    "afm": {
+      "labelDe": "AFM",
+      "title": "Tecnam P2008 JC Aircraft Flight Manual",
+      "number": "Doc. No. 2008/100",
+      "issue": "Ed. 2 – Rev. 1, 12 March 2018; Section 5 nach Supplement S9 «MTV-34 Propeller for aircraft with MTOW Increment at 650 kg» (Seiten MT5, Ed 2, Rev. 0), das den Abschnitt 5 des Grundhandbuchs ganz ersetzt",
+      "approval": "EASA Type Certificate A.583",
+      "applicabilityDe": "Handbuch der baugleichen HB-KMG, HB-KMH und HB-KMX. Die vorliegende Kopie nennt weder Seriennummer noch Kennzeichen, und die Liste der Supplemente (S. 9-3) ist nicht angekreuzt.",
+      "caveatDe": "Stand der vorliegenden Kopie; massgebend ist das AFM im Flugzeug."
+    }
+  },
+  "charts": {
+    "takeoff": {
+      "source": "afm",
+      "title": "Take-Off Performance, Weight = 650 kg",
+      "ref": { "figure": "Section 5, Ziffer 7", "page": "MT5-7" },
+      "conditionsDe": "Klappen T/O, Abheben mit 50 KIAS, 61 KIAS in 15 m Höhe, Gashebel ganz vorn; Graspiste. Die Tabelle gilt ohne Wind auf ebener Piste; trockenes Gras ist angenommen (das AFM nennt nur «Grass»).",
+      "notesDe": [
+        "Gegenwind: −5 m je kt, auf beide Strecken.",
+        "Die Tabelle gilt für Graspiste; Hartbelag (−10 % der Rollstrecke) wird nicht gerechnet.",
+        "NOTE: Faktor 1,10 auf die Strecken, um Abweichungen im Betrieb zu berücksichtigen.",
+        "Nicht gerechnet: Rückenwind (+15 m je kt) und Pistenneigung (+7 % der Rollstrecke je 1 % Steigung)."
+      ],
+      "base": { "surface": "grass", "surfaceCondition": "dry" },
+      "massRead": "linear",
+      "table": {
+        "type": "grid",
+        "axes": [
+          { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000], "read": "linear", "below": "lowest", "above": "none" },
+          { "quantity": "temperature", "unit": "degC", "values": [-25, 0, 25, 50], "read": "linear", "below": "lowest", "above": "none" }
+        ],
+        "outputs": [{ "id": "groundRoll", "unit": "m" }, { "id": "overObstacle", "unit": "m" }],
+        "obstacle": { "value": 50, "unit": "ft" },
+        "cells": [
+          [[149, 262], [187, 328], [231, 401], [280, 484]],
+          [[162, 285], [204, 356], [252, 437], [306, 526]],
+          [[177, 311], [223, 388], [275, 475], [334, 572]],
+          [[193, 338], [244, 422], [301, 517], [365, 623]],
+          [[211, 368], [266, 460], [328, 564], [398, 679]],
+          [[231, 402], [291, 502], [359, 614], [436, 740]],
+          [[253, 438], [319, 547], [393, 670], [477, 808]],
+          [[277, 478], [349, 597], [430, 732], [522, 882]],
+          [[304, 522], [382, 652], [472, 799], [572, 963]],
+          [[333, 571], [419, 713], [517, 874], [627, 1053]],
+          [[365, 624], [460, 780], [567, 956], [688, 1152]]
+        ]
+      },
+      "lowerWeights": [
+        {
+          "mass": { "kg": 600, "lb": 1323 },
+          "title": "Take-Off Performance, Weight = 600 kg",
+          "ref": { "figure": "Section 5, Ziffer 7", "page": "MT5-8" },
+          "conditionsRefDe": "Bedingungen und Corrections auf MT5-8 wie auf MT5-7 (Klappen T/O, 50 KIAS, 61 KIAS in 15 m Höhe, Graspiste). Die NOTE mit dem Faktor 1,10 steht einmal auf MT5-7 unter der Überschrift von Ziffer 7 und gilt für das ganze Kapitel. Das AFM nennt das Gewicht nur in kg; die Pfund sind umgerechnet.",
+          "table": {
+            "type": "grid",
+            "axes": [
+              { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000], "read": "linear", "below": "lowest", "above": "none" },
+              { "quantity": "temperature", "unit": "degC", "values": [-25, 0, 25, 50], "read": "linear", "below": "lowest", "above": "none" }
+            ],
+            "outputs": [{ "id": "groundRoll", "unit": "m" }, { "id": "overObstacle", "unit": "m" }],
+            "obstacle": { "value": 50, "unit": "ft" },
+            "cells": [
+              [[123, 218], [155, 272], [191, 333], [231, 402]],
+              [[134, 237], [169, 296], [208, 363], [252, 437]],
+              [[146, 258], [184, 322], [227, 395], [275, 476]],
+              [[160, 281], [201, 351], [248, 430], [301, 518]],
+              [[174, 306], [220, 382], [271, 468], [329, 564]],
+              [[191, 334], [240, 417], [296, 510], [360, 615]],
+              [[209, 364], [263, 455], [324, 557], [394, 671]],
+              [[229, 397], [288, 496], [355, 608], [431, 732]],
+              [[251, 434], [315, 542], [389, 664], [472, 800]],
+              [[275, 474], [346, 592], [427, 726], [518, 875]],
+              [[301, 519], [379, 648], [468, 794], [568, 957]]
+            ]
+          }
+        },
+        {
+          "mass": { "kg": 550, "lb": 1213 },
+          "title": "Take-Off Performance, Weight = 550 kg",
+          "ref": { "figure": "Section 5, Ziffer 7", "page": "MT5-9" },
+          "conditionsRefDe": "Bedingungen und Corrections auf MT5-9 wie auf MT5-7 (Klappen T/O, 50 KIAS, 61 KIAS in 15 m Höhe, Graspiste). Die NOTE mit dem Faktor 1,10 steht einmal auf MT5-7 unter der Überschrift von Ziffer 7 und gilt für das ganze Kapitel. Das AFM nennt das Gewicht nur in kg; die Pfund sind umgerechnet.",
+          "table": {
+            "type": "grid",
+            "axes": [
+              { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000], "read": "linear", "below": "lowest", "above": "none" },
+              { "quantity": "temperature", "unit": "degC", "values": [-25, 0, 25, 50], "read": "linear", "below": "lowest", "above": "none" }
+            ],
+            "outputs": [{ "id": "groundRoll", "unit": "m" }, { "id": "overObstacle", "unit": "m" }],
+            "obstacle": { "value": 50, "unit": "ft" },
+            "cells": [
+              [[100, 178], [125, 223], [155, 273], [188, 329]],
+              [[109, 194], [137, 242], [169, 297], [205, 357]],
+              [[119, 211], [149, 263], [184, 323], [224, 389]],
+              [[130, 230], [163, 287], [201, 351], [244, 423]],
+              [[142, 250], [178, 313], [220, 383], [267, 461]],
+              [[155, 273], [195, 341], [241, 417], [292, 503]],
+              [[169, 298], [213, 372], [263, 455], [319, 549]],
+              [[186, 325], [234, 406], [288, 497], [350, 599]],
+              [[203, 355], [256, 443], [316, 543], [383, 654]],
+              [[223, 388], [281, 484], [346, 593], [420, 715]],
+              [[245, 424], [308, 530], [380, 649], [461, 782]]
+            ]
+          }
+        }
+      ],
+      "corrections": [
+        { "kind": "headwind", "type": "absolutePer", "amount": -5, "amountUnit": "m", "per": 1, "unit": "kt" },
+        {
+          "kind": "factor",
+          "when": "always",
+          "factor": 1.1,
+          "minimum": false,
+          "labelDe": "Faktor für Abweichungen im Betrieb",
+          "refDe": "NOTE, MT5-7"
+        }
+      ]
+    },
+    "landing": {
+      "source": "afm",
+      "title": "Landing Performance, Weight = 650 kg",
+      "ref": { "figure": "Section 5, Ziffer 11", "page": "MT5-14" },
+      "conditionsDe": "Klappen LAND, 54 KIAS im kurzen Endanflug, Gashebel im Leerlauf; Graspiste. Die Tabelle gilt ohne Wind auf ebener Piste; trockenes Gras ist angenommen (das AFM nennt nur «Grass»).",
+      "notesDe": [
+        "Gegenwind: −4 m je kt, auf beide Strecken.",
+        "Die Tabelle gilt für Graspiste; Hartbelag (−10 % der Rollstrecke) wird nicht gerechnet.",
+        "NOTE: Faktor 1,67 auf die Strecken, um Abweichungen im Betrieb zu berücksichtigen.",
+        "Nicht gerechnet: Rückenwind (+13 m je kt) und Pistenneigung (−3 % der Rollstrecke je 1 % Steigung)."
+      ],
+      "base": { "surface": "grass", "surfaceCondition": "dry" },
+      "table": {
+        "type": "grid",
+        "axes": [
+          { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000], "read": "linear", "below": "lowest", "above": "none" },
+          { "quantity": "temperature", "unit": "degC", "values": [-25, 0, 25, 50], "read": "linear", "below": "lowest", "above": "none" }
+        ],
+        "outputs": [{ "id": "groundRoll", "unit": "m" }, { "id": "overObstacle", "unit": "m" }],
+        "obstacle": { "value": 50, "unit": "ft" },
+        "cells": [
+          [[149, 358], [164, 373], [179, 388], [194, 403]],
+          [[154, 363], [170, 379], [186, 395], [201, 410]],
+          [[160, 369], [176, 385], [192, 401], [209, 418]],
+          [[166, 375], [183, 392], [200, 409], [216, 425]],
+          [[172, 381], [190, 399], [207, 416], [225, 434]],
+          [[179, 388], [197, 406], [215, 424], [233, 442]],
+          [[186, 395], [205, 414], [223, 432], [242, 451]],
+          [[193, 402], [212, 421], [232, 441], [251, 460]],
+          [[200, 410], [221, 430], [241, 450], [261, 470]],
+          [[208, 417], [229, 438], [250, 459], [271, 480]],
+          [[217, 426], [238, 447], [260, 469], [282, 491]]
+        ]
+      },
+      "corrections": [
+        { "kind": "headwind", "type": "absolutePer", "amount": -4, "amountUnit": "m", "per": 1, "unit": "kt" },
+        {
+          "kind": "factor",
+          "when": "always",
+          "factor": 1.67,
+          "minimum": false,
+          "labelDe": "Faktor für Abweichungen im Betrieb",
+          "refDe": "NOTE, MT5-14"
+        }
+      ]
+    }
+  }
+}

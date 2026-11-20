@@ -854,9 +854,9 @@
         Wetter LSZK
       </button>
 
-      <button class="top-btn ai-btn" id="ai-toggle" type="button" onclick="openAiModal()" aria-haspopup="dialog" title="KI-Briefing">
+      <button class="top-btn ai-btn" id="ai-toggle" type="button" onclick="openAiModal()" aria-haspopup="dialog" title="Briefing">
         <span class="brf-dot ai-dot loading" id="ai-dot" aria-hidden="true"></span>
-        KI-Briefing<span class="ai-time" id="ai-time"></span><span class="ai-warn" id="ai-warn" aria-hidden="true"></span><span class="brf-new ai-new" id="ai-new" hidden>neu</span>
+        Briefing<span class="ai-time" id="ai-time"></span><span class="ai-warn" id="ai-warn" aria-hidden="true"></span><span class="brf-new ai-new" id="ai-new" hidden>neu</span>
       </button>
 
       <div class="dropdown">
@@ -2200,7 +2200,7 @@
           tm = document.getElementById('ai-time'), nw = document.getElementById('ai-new'),
           wn = document.getElementById('ai-warn');
       if (!btn || !dot || !tm || !nw) return;
-      var st = aiState(), now = new Date(), time = '', label = 'KI-Briefing';
+      var st = aiState(), now = new Date(), time = '', label = 'Briefing';
       dot.className = 'brf-dot ai-dot';
       dot.style.background = AI_GREY;
       if (st.kind === 'loading') {
@@ -4420,8 +4420,8 @@ load();
   </script>
 
   <!-- Start-/Landestreckenrechner (Kurzzeile #perf-box mit der Rollstrecke unter der Ampel, Karte #perf-card darin): erst Rechenkern, dann Anzeige. ?v= bei jeder Änderung an perf/*.js in beiden Zeilen erhöhen. -->
-  <script defer src="perf/perf.js?v=6"></script>
-  <script defer src="perf/perf-ui.js?v=6"></script>
+  <script defer src="perf/perf.js?v=7"></script>
+  <script defer src="perf/perf-ui.js?v=7"></script>
 
   <!-- GoatCounter: cookielose Aufruf-Statistik (strohmeierh.goatcounter.com) -->
   <!-- Pfad-Präfix: Unter lszk.strowa.ch wäre der Pfad nur "/" (wie bei EDSF). Mit Präfix zählt LSZK weiter als /LSZK-Webcams/ wie vor dem Domainwechsel (16.11.2026). -->

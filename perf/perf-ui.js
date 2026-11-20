@@ -8,9 +8,10 @@
    Daten neu geschrieben, sonst bleibt das Feld derselbe Knoten) und #perf-body (Karteninhalt) an. Auf- und Zuklappen
    merkt sich lszk-perf-open.
    Abfluggewicht: Vorgabe ist das Höchstgewicht. Eine Eingabe gilt nur im Speicher der Seite (kein localStorage) und
-   fällt beim Musterwechsel und beim Tageswechsel (Zürich) zurück auf das Höchstgewicht. Gerechnet wird der Start mit der
-   AFM-Tabelle für das nächsthöhere Gewicht, die Landung mit dem maximalen Landegewicht. Ist der Start nicht möglich,
-   nennt die Karte je Piste, bis zu welchem Gewicht er laut AFM möglich wäre (nicht bei nasser Piste ohne AFM-Wert).
+   fällt beim Musterwechsel und beim Tageswechsel (Zürich) zurück auf das Höchstgewicht. Gerechnet wird der Start
+   zwischen den AFM-Tabellen interpoliert (massRead «linear»; sonst die Tabelle für das nächsthöhere Gewicht), unter der
+   leichtesten Tabelle mit dieser, die Landung mit dem maximalen Landegewicht. Ist der Start nicht möglich, nennt die
+   Karte je Piste, bis zu welchem Gewicht er laut AFM möglich wäre (nicht bei nasser Piste ohne AFM-Wert).
    Beim Hineingehen ins Feld ist sein Inhalt markiert. Mit Fokus ist ein Text, der durch Weitertippen noch gültig werden
    kann (leer, oder nur Ziffern unter der Untergrenze), kein Fehler: Es gilt das zuletzt übernommene gültige Gewicht.
    Beim Verlassen die volle Prüfung: leer heisst Höchstgewicht, unter der Untergrenze Fehler.
@@ -33,7 +34,7 @@
 }(typeof self !== 'undefined' ? self : this, function (core) {
   'use strict';
 
-  var VERSION = 6;
+  var VERSION = 7;
 
   var STALE_MIN = 45;          // Messwerte älter: keine Zahlen
   var FUTURE_MIN = 5;          // Messzeit weiter in der Zukunft: keine Zahlen
@@ -77,12 +78,14 @@
     rainMissing: 'Ein Regenwert von MeteoSchweiz fehlt.',
     unknown: 'Pistenzustand unbekannt: keine aktuelle Meldung der FGZO und kein Regenwert von MeteoSchweiz.',
     reserve: 'Tau, Reif, eben einsetzenden Regen und Nässe von früherem Regen erkennt die Karte nicht.',
-    // Rechenweg: Lesehilfe unter den Tabellen und Zeile für eine Phase ohne Nässewert im AFM
-    calcRules: 'Rundung immer zur längeren Strecke: nächsthöherer Tabellenwert, Gegenwind abgerundet, Ergebnis aufgerundet. ' +
-      'Gegenwind voll angerechnet. Graszuschlag in % der Tabellen-Rollstrecke, auf beide Strecken.',
-    // dasselbe, wenn der Kern die Temperatur interpoliert hat (Tecnam); die Datenprüfung erlaubt Interpolation nur dort
-    calcRulesInterp: 'Rundung zur längeren Strecke: Druckhöhe auf den nächsthöheren Tabellenwert, Gegenwind abgerundet, Ergebnis aufgerundet. ' +
-      'Temperatur linear interpoliert. Gegenwind voll angerechnet. Graszuschlag in % der Tabellen-Rollstrecke, auf beide Strecken.',
+    // Rechenweg: Lesehilfe unter den Tabellen (readingText setzt sie aus den Ableseregeln der Daten zusammen) und Zeile
+    // für eine Phase ohne Nässewert im AFM
+    calcLinear: 'linear interpoliert',
+    calcNextHigher: 'nächsthöherer Tabellenwert',
+    calcBelow: 'Unter dem kleinsten Tabellenwert gilt dieser, darüber gibt es keinen Wert.',
+    calcRound: 'Rundung zur längeren Strecke: Druckhöhe auf ganze ft aufgerundet, Gegenwind abgerundet, Ergebnis aufgerundet. ' +
+      'Gegenwind voll angerechnet.',
+    calcSurface: 'Graszuschlag in % der Tabellen-Rollstrecke, auf beide Strecken.',
     calcLimits: 'Nicht berücksichtigt: Pistenneigung. Kein eigener Sicherheitszuschlag.',
     calcNoWet: 'nasse Piste: kein Wert im AFM, ohne Zuschlag gerechnet',
     // Abfluggewicht: Beschriftung des Felds, Fehlertexte (reiner Text, ohne HTML; Über- und Untergrenze mit Zahlen in
@@ -209,8 +212,9 @@
     '.perf-steps .perf-steps-res th, .perf-steps .perf-steps-res td { color: var(--text); font-weight: 700; }',
     '.perf-steps td.perf-steps-note { color: var(--text-muted); white-space: normal; }',
     '.perf-steps td.perf-nov { color: #f87171; }',
-    // Pflichthinweis: gleiche Grösse wie die übrigen gedämpften Zeilen der Karte
-    '.perf-foot { font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; border-top: 1px solid var(--card-border); padding-top: 8px; margin-top: 4px; }',
+    // Pflichthinweis: immer rot und fett (Wunsch 20.11.), gleiche Grösse wie die übrigen kleinen Zeilen der Karte;
+    // #f87171 auf --card-bg hat Kontrast 5 : 1
+    '.perf-foot { font-size: 0.78rem; color: #f87171; font-weight: 700; line-height: 1.5; border-top: 1px solid var(--card-border); padding-top: 8px; margin-top: 4px; }',
     // Kurzzeile unter der Ampel: <details class="perf-box"> mit <summary class="perf-teaser">; gleiche Aussenmasse wie die Ampel.
     // display:block auf dem summary blendet das Dreieck aus (Safari: ::-webkit-details-marker); Flex sitzt im inneren span,
     // weil display:flex direkt auf <summary> in älterem Safari nicht greift.
@@ -300,13 +304,13 @@
   // Letzter Wert vor dem Aufrunden im Rechenweg: auf 0,01 aufgerundet (ceil(ceil_0,01(x)) = ceil(x))
   function fmtUp2(x) { return fmtTrim(Math.ceil(x * 100 - 1e-6) / 100, 2); }
 
-  // Zwischenwert im Rechenweg: exakt, höchstens vier Nachkommastellen, ohne nachgestellte Nullen.
-  // Mit Tabellenwerten, Prozenten und Faktoren der Daten und Temperaturen mit höchstens zwei Dezimalen sind alle
-  // Zwischenwerte Vielfache von 0,0001; das Runden auf 0,0001 entfernt nur Gleitkommareste. Wäre ein Wert so nicht
-  // exakt darstellbar, steht «≈» davor.
+  // Zwischenwert im Rechenweg: exakt, höchstens vier Nachkommastellen, ohne nachgestellte Nullen; das Runden auf
+  // 0,0001 entfernt nur Gleitkommareste. Ist ein Wert so nicht exakt darstellbar (Interpolation, z. B. Gewicht
+  // 9/23), steht «≈» davor und er erscheint auf zwei Nachkommastellen gerundet.
   function fmtExact(x) {
     var s = x * 10000, r = Math.round(s);
-    return (Math.abs(s - r) > 1e-3 ? '≈' : '') + fmtTrim(r / 10000, 4);
+    if (Math.abs(s - r) > 1e-3) return '≈' + fmtTrim(Math.round(x * 100) / 100, 2);
+    return fmtTrim(r / 10000, 4);
   }
 
   // Mittelwind: auf eine Nachkommastelle abgeschnitten, nicht gerundet (0,97 kt → 0,9 kt passt zu «unter 1 kt»)
@@ -529,17 +533,23 @@
     return !t || (/^\d{1,6}$/.test(t) && Number(t) < massMinKg(ac));
   }
 
-  // Gewicht und Starttabelle für Kopf und Kurzzeile, solange es keine Rechnung gibt (gleiche Wahl wie im Kern);
+  // Gewicht und Starttabelle(n) für Kopf und Kurzzeile, solange es keine Rechnung gibt (gleiche Wahl wie im Kern);
   // mit Rechnung gilt deren Feld mass. inputKg null: keine Eingabe, gerechnet mit dem Höchstgewicht.
   function massInfo(ac, massKg) {
     var tables = core.takeoffTables(ac);
-    var ti = core.pickTakeoffTable(tables, massKg);
+    var br = core.takeoffMassBracket(ac, massKg);
+    var ti = br.upper;
     var lightest = tables[tables.length - 1].kg;
+    var interp = br.lower !== null;
     return {
       inputKg: massKg, maxKg: ac.mass.kg, maxLb: ac.mass.lb, tableKg: tables[ti].kg, tableIndex: ti, tableCount: tables.length,
+      interpolated: interp, lowerKg: interp ? tables[br.lower].kg : null,
       lightestKg: lightest, belowLowest: massKg !== null && massKg < lightest
     };
   }
+
+  // Liest das Muster das Startgewicht linear zwischen den Tabellen?
+  function massLinear(ac) { return ac.charts.takeoff.massRead === 'linear'; }
 
   // Weicht die Eingabe vom Höchstgewicht ab? (Eingabe = Höchstgewicht zählt wie keine Eingabe)
   function massDiffers(mass) { return !!mass && mass.inputKg !== null && mass.inputKg !== mass.maxKg; }
@@ -584,19 +594,32 @@
       return '<div class="perf-mass-one">Abfluggewicht: ' + fmtInt(ac.mass.kg) + '&nbsp;kg – das AFM hat nur diese Starttabelle.</div>';
     }
     var kgs = tables.map(function (t) { return fmtInt(t.kg); });
+    var rule = massLinear(ac)
+      ? 'zwischen den AFM-Tabellen für ' + kgs.slice(0, -1).join(', ') + ' und ' + kgs[kgs.length - 1] + '&nbsp;kg interpoliert, ' +
+        'darunter gilt die Tabelle für ' + kgs[kgs.length - 1] + '&nbsp;kg'
+      : 'gerechnet wird mit der AFM-Tabelle für das nächsthöhere Gewicht (' + kgs.slice(0, -1).join(', ') + ' oder ' +
+        kgs[kgs.length - 1] + '&nbsp;kg)';
     return '<div class="perf-mass"><label class="perf-mass-label" for="perf-mass-in">' + TEXT.massLabel + '</label>' +
       '<input id="perf-mass-in" class="perf-mass-in" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="6" ' +
       'aria-describedby="perf-mass-hint perf-mass-err">' +
-      '<div class="perf-mass-hint" id="perf-mass-hint">höchstens ' + fmtInt(ac.mass.kg) + '&nbsp;kg · gerechnet wird mit der AFM-Tabelle für das ' +
-      'nächsthöhere Gewicht (' + kgs.slice(0, -1).join(', ') + ' oder ' + kgs[kgs.length - 1] + '&nbsp;kg)</div>' +
+      '<div class="perf-mass-hint" id="perf-mass-hint">höchstens ' + fmtInt(ac.mass.kg) + '&nbsp;kg · ' + rule + '</div>' +
       '<div class="perf-mass-err" id="perf-mass-err" role="alert"></div></div>';
+  }
+
+  // Starttabelle(n) zu einem eingegebenen Gewicht: «zwischen den AFM-Tabellen für 1'134 und 1'111 kg interpoliert»,
+  // «nach der AFM-Tabelle für 1'134 kg» bzw. «nach der kleinsten AFM-Tabelle (1'111 kg)»
+  function massTableText(mass) {
+    if (mass.interpolated) {
+      return 'zwischen den AFM-Tabellen für ' + fmtInt(mass.tableKg) + ' und ' + fmtInt(mass.lowerKg) + '&nbsp;kg interpoliert';
+    }
+    return 'nach der ' + (mass.belowLowest ? 'kleinsten AFM-Tabelle (' + fmtInt(mass.tableKg) + '&nbsp;kg)'
+      : 'AFM-Tabelle für ' + fmtInt(mass.tableKg) + '&nbsp;kg');
   }
 
   function headHtml(ac, mass) {
     var parts;
     if (massDiffers(mass)) {
-      parts = ['Abfluggewicht ' + fmtInt(mass.inputKg) + '&nbsp;kg: Start nach der ' + (mass.belowLowest
-        ? 'kleinsten AFM-Tabelle (' + fmtInt(mass.tableKg) + '&nbsp;kg)' : 'AFM-Tabelle für ' + fmtInt(mass.tableKg) + '&nbsp;kg') +
+      parts = ['Abfluggewicht ' + fmtInt(mass.inputKg) + '&nbsp;kg: Start ' + massTableText(mass) +
         ', Landung mit dem maximalen Landegewicht ' + fmtInt(mass.maxKg) + '&nbsp;kg'];
     } else {
       parts = ['Maximales Abfluggewicht ' + fmtInt(ac.mass.kg) + '&nbsp;kg (' + fmtInt(ac.mass.lb) + '&nbsp;lb)'];
@@ -850,15 +873,19 @@
                   eingerechnet (Cessna, nasses Gras «mindestens +20 %»), «… möglich bis Y kg (mit Mindestzuschlag).».
                   Die Rechnung mit der Tabelle Y hat dieselben Faktoren wie die mit der gewählten Tabelle (gleiche
                   Korrekturen, gleiche Piste und Nässe; der Kern wendet Faktoren unabhängig von den Tabellenwerten an).
+     Bei massRead «linear» ist Y auf ganze kg gesucht (zwischen den Tabellen interpoliert).
      none:        «Start laut AFM auch mit Z kg nicht möglich.» (Z: leichteste Tabelle)
      lowest:      keine leichtere Tabelle
      wet-unknown: nass ohne Nässewert im AFM – nie «möglich bis»
-     unknown:     leichtere Tabellen ohne Wert (und keine möglich); mit Wert, aber nicht möglich, werden sie genannt
+     unknown:     leichtere Tabellen ohne Wert (und keine möglich); mit Wert, aber nicht möglich, werden sie genannt.
+                  Bei «linear» (noValueFromKg): «…, auch nicht mit W kg. Für tiefere Gewichte gibt es keinen Wert.»
+                  mit W = leichtestes Gewicht mit Wert; gibt es schon direkt unter X keinen Wert, ohne «auch nicht mit».
      possible, no-value: keine Zeile */
   function limitText(rw, mass) {
     var L = rw.takeoffLimit, p = rw.takeoff;
     if (!L || !p || !p.ok || !mass) return null;
-    var no = 'Start mit ' + fmtInt(mass.inputKg !== null ? mass.inputKg : mass.maxKg) + '&nbsp;kg laut AFM nicht möglich';
+    var kgUsed = mass.inputKg !== null ? mass.inputKg : mass.maxKg;
+    var no = 'Start mit ' + fmtInt(kgUsed) + '&nbsp;kg laut AFM nicht möglich';
     switch (L.state) {
       case 'limit':
         var minFactor = p.factors.some(function (f) { return f.minimum === true; });
@@ -867,6 +894,10 @@
       case 'lowest': return no + '. ' + TEXT.limitLowest;
       case 'wet-unknown': return no + '. ' + TEXT.limitWet;
       case 'unknown':
+        if (isNum(L.noValueFromKg)) {
+          if (L.noValueFromKg >= Math.ceil(kgUsed) - 1) return no + '. ' + TEXT.limitNoValue;
+          return no + ', auch nicht mit ' + fmtInt(L.noValueFromKg + 1) + '&nbsp;kg. ' + TEXT.limitNoValue;
+        }
         var lighter = (rw.takeoffByMass || []).filter(function (t) { return t.kg < L.tableKg; });
         var val = lighter.filter(function (t) { return t.ok; }), noVal = lighter.filter(function (t) { return !t.ok; });
         if (!val.length || !noVal.length) return no + '. ' + TEXT.limitNoValue;
@@ -947,13 +978,31 @@
     return 'table';
   }
 
-  // Tabellenwerte der Achsen, «2'000 ft / 20 °C»; at ersetzt den Wert der interpolierten Achse k.
-  // Der Kern lässt nur Druckhöhe und Temperatur zu; eine andere Achse erschiene ohne Einheit.
-  function tablePoint(lk, k, at) {
+  // Werte der Achsen, «2'000 ft / 20 °C». Der Kern lässt nur Druckhöhe und Temperatur zu; eine andere Achse erschiene
+  // ohne Einheit.
+  function axesText(lk, vals) {
     return lk.axes.map(function (a, i) {
       var unit = AXIS_UNIT[a.quantity];
-      return fmtExact(i === k ? at : a.value) + (unit ? '&nbsp;' + unit : '');
+      return fmtExact(vals[i]) + (unit ? '&nbsp;' + unit : '');
     }).join(' / ');
+  }
+
+  // Punkt der Interpolation: nur die interpolierten Achsen mit ihrer Eingabe, «2'002 ft / 7,9 °C» bzw. «15,0 °C»
+  // (die übrigen stehen in den Tabellenzeilen darüber). Temperatur mit einer Nachkommastelle wie in den Eingaben.
+  function inputText(lk) {
+    return lk.axes.filter(function (a) { return a.interpolated; }).map(function (a) {
+      var unit = AXIS_UNIT[a.quantity];
+      return (a.quantity === 'temperature' ? fmtDec(a.input, 1) : fmtExact(a.input)) + (unit ? '&nbsp;' + unit : '');
+    }).join(' / ');
+  }
+
+  // Ablesung einer Tabelle: die verwendeten Zellen (eine, zwei oder vier) und bei Interpolation der Wert dazwischen.
+  // pre: Gewicht der Tabelle, wenn zwischen zwei Starttabellen interpoliert wird («1'134 kg»), sonst leer.
+  function lookupRows(lk, u, pre, up) {
+    var tab = 'Tabelle ' + (pre ? pre + ' · ' : '');
+    if (!lk.interpolated) return stepRow(tab + axesText(lk, lk.corners[0].axisValues), lk.values, u, up);
+    return lk.corners.map(function (c) { return stepRow(tab + axesText(lk, c.axisValues), c.values, u); }).join('') +
+      stepRow((pre ? pre + ' · ' : '') + 'interpoliert für ' + inputText(lk), lk.values, u, up);
   }
 
   // Zeile eines Schritts: Beschriftung, Rollstrecke, Strecke über 15 m
@@ -972,20 +1021,37 @@
     return null;
   }
 
+  // Fundstelle einer Tabelle: «Figure 5-1c (Section 5b), Seite 5b-6»
+  function refText(ref) {
+    if (!ref || typeof ref !== 'object') ref = {};
+    var out = [];
+    if (str(ref.figure)) out.push(esc(ref.figure));
+    if (str(ref.page)) out.push('Seite ' + esc(ref.page));
+    return out.join(', ');
+  }
+
   // Block einer Phase: Kopfzeile mit Quelle (Handbuch, Tabelle, Seite), dann die Schritte bis zum aufgerundeten Ergebnis,
-  // danach extra (Zeile je Starttabelle). Beim Start ist die Quelle die gewählte Starttabelle (res.mass.tableRef). Hat das
-  // Muster mehrere Starttabellen, nennt der Kopf beim Start deren Gewicht und bei der Landung das maximale Landegewicht.
+  // danach extra (Zeile je Starttabelle). Beim Start ist die Quelle die gewählte Starttabelle (res.mass.tableRef), bei
+  // Interpolation im Gewicht beide Starttabellen (tableRef und lowerRef). Hat das Muster mehrere Starttabellen, nennt
+  // der Kopf beim Start deren Gewicht und bei der Landung das maximale Landegewicht.
   function phaseRows(ph, p, ac, mass, extra) {
     var ch = ac.charts[ph];
-    var ref = ph === 'takeoff' && mass ? mass.tableRef : ch.ref;
-    if (!ref || typeof ref !== 'object') ref = {};
     var src = ac.sources[ch.source] || {};
     var where = [esc(str(src.labelDe) || ch.source)];
-    if (str(ref.figure)) where.push(esc(ref.figure));
-    if (str(ref.page)) where.push('Seite ' + esc(ref.page));
+    var two = ph === 'takeoff' && mass && mass.interpolated;
+    var r1 = ph === 'takeoff' && mass ? mass.tableRef : ch.ref, r2 = two ? mass.lowerRef : null;
+    if (two && r1 && r2 && str(r1.figure) && r1.figure === r2.figure && str(r1.page) && str(r2.page)) {
+      // gleiche Fundstelle, zwei Seiten: «Section 5, Ziffer 7, Seiten MT5-7 und MT5-8»
+      where.push(esc(r1.figure) + ', Seiten ' + esc(r1.page) + ' und ' + esc(r2.page));
+    } else {
+      var refs = [refText(r1)].concat(two ? [refText(r2)] : []).filter(Boolean);
+      if (refs.length) where.push(refs.join(' und '));
+    }
     var add = '';
     if (mass && mass.tableCount > 1) {
-      add = ph === 'takeoff' ? ' · Tabelle ' + fmtInt(mass.tableKg) + '&nbsp;kg' : ' · maximales Landegewicht ' + fmtInt(mass.maxKg) + '&nbsp;kg';
+      add = ph === 'takeoff'
+        ? (two ? ' · Tabellen ' + fmtInt(mass.tableKg) + ' und ' + fmtInt(mass.lowerKg) : ' · Tabelle ' + fmtInt(mass.tableKg)) + '&nbsp;kg'
+        : ' · maximales Landegewicht ' + fmtInt(mass.maxKg) + '&nbsp;kg';
     }
     return '<tr class="perf-steps-ph"><th colspan="3" scope="rowgroup">' + PHASE_LABEL[ph] + ' <span class="perf-steps-src">· ' +
       where.join(', ') + add + '</span></th></tr>' + stepRows(p, ac.charts[ph]) + (extra || '');
@@ -993,18 +1059,18 @@
 
   // Schritte einer Phase. Alle Werte stammen aus der Rechnung (p). Aus den Flugzeugdaten (ch) kommt nur bei der
   // Prozentregel des Winds deren Satz je kt (das Ergebnis der Rechnung enthält nur das abgerundete Prozent).
+  // Ablesung: die verwendeten Tabellenzellen und, wo interpoliert wird, der Wert dazwischen; bei Interpolation im
+  // Gewicht zuerst die schwerere, dann die leichtere Starttabelle und zuletzt der Wert für das Gewicht.
   function stepRows(p, ch) {
     var h = '';
     var u = p.unit, lk = p.lookup, last = lastStep(p), w = p.wind;
-    if (lk.interpolated) {
-      var c = lk.columns, k = -1;
-      lk.axes.forEach(function (a, i) { if (a.weight !== undefined) k = i; });
-      var ax = lk.axes[k], axUnit = AXIS_UNIT[ax.quantity];
-      h += stepRow('Tabelle ' + tablePoint(lk, k, c.lowerValue), c.lower, u) +
-        stepRow('Tabelle ' + tablePoint(lk, k, c.upperValue), c.upper, u) +
-        stepRow('interpoliert für ' + fmtDec(ax.input, 1) + (axUnit ? '&nbsp;' + axUnit : ''), p.table, u, last === 'table');
+    if (lk.mass) {
+      var mm = lk.mass;
+      h += lookupRows(mm.upper, u, fmtInt(mm.upperKg) + '&nbsp;kg', false) +
+        lookupRows(mm.lower, u, fmtInt(mm.lowerKg) + '&nbsp;kg', false) +
+        stepRow('interpoliert für ' + fmtInt(mm.kg) + '&nbsp;kg', p.table, u, last === 'table');
     } else {
-      h += stepRow('Tabelle ' + tablePoint(lk, -1), p.table, u, last === 'table');
+      h += lookupRows(lk, u, '', last === 'table');
     }
     if (!p.ok && p.reason === 'headwind-limit') return h + stopRow('Gegenwind ' + w.kt + '&nbsp;kt: über ' + fmtInt(p.limitKt) + '&nbsp;kt');
     if (w.kt >= 1 && w.applied) {
@@ -1062,11 +1128,57 @@
       }).join('') + '</table>';
   }
 
-  // Erster Eintrag der Eingaben: Gewicht und Starttabelle
+  // Erster Eintrag der Eingaben: Gewicht und Starttabelle(n)
   function massEntry(mass) {
     if (mass.tableCount < 2) return 'Gewicht ' + fmtInt(mass.maxKg) + '&nbsp;kg (einzige Starttabelle)';
     if (!massDiffers(mass)) return 'Gewicht ' + fmtInt(mass.maxKg) + '&nbsp;kg (maximales Abfluggewicht)';
+    if (mass.interpolated) {
+      return 'Gewicht ' + fmtInt(mass.inputKg) + '&nbsp;kg, zwischen den Starttabellen ' + fmtInt(mass.tableKg) + ' und ' +
+        fmtInt(mass.lowerKg) + '&nbsp;kg interpoliert';
+    }
     return 'Gewicht ' + fmtInt(mass.inputKg) + '&nbsp;kg, Starttabelle ' + fmtInt(mass.tableKg) + '&nbsp;kg';
+  }
+
+  var QTY_LABEL = { pressureAltitude: 'Druckhöhe', temperature: 'Temperatur' };
+
+  // Aufzählung «A», «A und B», «A, B und C»
+  function listDe(items) {
+    return items.length > 1 ? items.slice(0, -1).join(', ') + ' und ' + items[items.length - 1] : (items[0] || '');
+  }
+
+  /* Lesehilfe unter dem Rechenweg, so wie die Daten abgelesen werden: Grössen mit «linear» interpoliert, mit
+     «nextHigher» nächsthöherer Tabellenwert (je Grösse über Start- und Landetabelle), dazu das Startgewicht bei mehreren
+     Starttabellen. Der Graszuschlag nur, wenn er in einer gerechneten Phase eingerechnet ist; sonst bei gleichem Belag
+     wie die Tabellen der Hinweis, dass die Tabellen dafür gelten. */
+  function readingText(ac, res) {
+    var by = { linear: [], nextHigher: [] };
+    ['pressureAltitude', 'temperature'].forEach(function (q) {
+      var reads = {};
+      core.PHASES.forEach(function (ph) {
+        ac.charts[ph].table.axes.forEach(function (a) { if (a.quantity === q) reads[a.read] = true; });
+      });
+      Object.keys(by).forEach(function (r) { if (reads[r]) by[r].push(QTY_LABEL[q]); });
+    });
+    if (core.takeoffTables(ac).length > 1) by[massLinear(ac) ? 'linear' : 'nextHigher'].push('Startgewicht');
+    var s = [];
+    if (by.linear.length) s.push(listDe(by.linear) + ' ' + TEXT.calcLinear + '.');
+    if (by.nextHigher.length) s.push(listDe(by.nextHigher) + ': ' + TEXT.calcNextHigher + '.');
+    s.push(TEXT.calcBelow, TEXT.calcRound);
+    var computed = res.runways.filter(function (rw) { return rw.computed; });
+    var surf = computed.some(function (rw) {
+      return core.PHASES.some(function (ph) { return rw[ph] && rw[ph].ok && rw[ph].surface; });
+    });
+    if (surf) {
+      s.push(TEXT.calcSurface);
+    } else {
+      var same = {};
+      computed.forEach(function (rw) {
+        core.PHASES.forEach(function (ph) { if (rw.surface === ac.charts[ph].base.surface) same[rw.surface] = true; });
+      });
+      var keys = Object.keys(same);
+      if (keys.length === 1 && SURFACE_LABEL[keys[0]]) s.push('AFM-Tabellen für ' + SURFACE_LABEL[keys[0]] + ', ohne Belagszuschlag.');
+    }
+    return s.join(' ');
   }
 
   function detailsHtml(ac, af, res, open, mass) {
@@ -1097,12 +1209,8 @@
       h.push('<p><span class="perf-calc-h">' + (n === 1 ? 'Piste ' + g.ids[0] : 'Pisten ' + g.ids.slice(0, n - 1).join(', ') + ' und ' + g.ids[n - 1]) +
         '</span>' + g.body);
     });
-    // Lesehilfe so, wie gerechnet wurde: Zeigt eine Schritt-Tabelle «interpoliert für» (gleiche Quelle wie phaseRows),
-    // gilt der nächsthöhere Tabellenwert nur für die Druckhöhe.
-    var interp = res.runways.some(function (rw) {
-      return rw.computed && core.PHASES.some(function (ph) { return rw[ph] && rw[ph].lookup && rw[ph].lookup.interpolated; });
-    });
-    h.push('<p>' + (interp ? TEXT.calcRulesInterp : TEXT.calcRules) + ' ' + TEXT.calcLimits + '</p>');
+    // Lesehilfe so, wie die Daten abgelesen werden
+    h.push('<p>' + readingText(ac, res) + ' ' + TEXT.calcLimits + '</p>');
     h.push('</div></details>');
     return h.join('');
   }

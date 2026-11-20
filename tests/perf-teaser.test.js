@@ -16,9 +16,12 @@ const ROOT = path.join(__dirname, '..');
 const ui = require(path.join(ROOT, 'perf', 'perf-ui.js'));
 const core = require(path.join(ROOT, 'perf', 'perf.js'));
 const readJson = (rel) => JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
-const C172D = readJson('perf/aircraft/c172d.json');
-const P2010 = readJson('perf/aircraft/p2010.json');
-const C152 = readJson('perf/aircraft/c152.json');
+// Tests der Anzeige mit der Ableseregel bis VERSION 6 (tests/helpers/ablesung.js); die ausgelieferte Ablesung (linear)
+// prüft tests/perf-interpolation.test.js.
+const { alteAblesung } = require('./helpers/ablesung.js');
+const C172D = alteAblesung(readJson('perf/aircraft/c172d.json'));
+const P2010 = alteAblesung(readJson('perf/aircraft/p2010.json'));
+const C152 = alteAblesung(readJson('perf/aircraft/c152.json'));
 const AF = readJson('perf/airfields/lszk.json');
 const INDEX_RAW = readJson('perf/aircraft/index.json');
 const LIST = ui.parseIndex(INDEX_RAW).list;

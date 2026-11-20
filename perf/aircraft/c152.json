@@ -6,7 +6,7 @@
   "massNoteDe": "Maximum Takeoff Weight und Maximum Landing Weight 1670 lbs (Section 2, S. 2-5). Das Handbuch nennt nur Pfund; umgerechnet sind es 757,5 kg.",
   "variantDe": "Motor Lycoming O-235-L2C, Festpropeller",
   "techniqueDe": "Kurzstart- und Kurzlandetechnik",
-  "readingRuleDe": "Ablesung beim nächsthöheren Tabellenwert von Höhe und Temperatur, keine Interpolation (so auch das Sample Problem im Handbuch, Section 5, S. 5-4 und 5-7).",
+  "readingRuleDe": "Druckhöhe und Temperatur linear zwischen den Tabellenwerten interpoliert; unter dem kleinsten Tabellenwert gilt dieser, darüber gibt es keinen Wert. Das Sample Problem im Handbuch (Section 5, S. 5-4 und 5-7) liest zur Sicherheit beim nächsthöheren Tabellenwert ab.",
   "footerDe": "Richtwert nach AFM ohne eigenen Sicherheitszuschlag: maximales Abfluggewicht, Kurzstart- und Kurzlandetechnik, ebene Graspiste. Für nasses Gras nennt das AFM weder beim Start noch bei der Landung einen Wert; die Strecken können dann deutlich länger sein. Nicht berücksichtigt sind Pistenneigung, Zustand von Flugzeug und Motor sowie die Pilotentechnik. Massgebend sind das AFM der jeweiligen Maschine und die eigene Beurteilung.",
   "sources": {
     "poh": {
@@ -36,8 +36,8 @@
       "table": {
         "type": "grid",
         "axes": [
-          { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000], "read": "nextHigher", "below": "lowest", "above": "none" },
-          { "quantity": "temperature", "unit": "degC", "values": [0, 10, 20, 30, 40], "read": "nextHigher", "below": "lowest", "above": "none" }
+          { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000], "read": "linear", "below": "lowest", "above": "none" },
+          { "quantity": "temperature", "unit": "degC", "values": [0, 10, 20, 30, 40], "read": "linear", "below": "lowest", "above": "none" }
         ],
         "outputs": [{ "id": "groundRoll", "unit": "ft" }, { "id": "overObstacle", "unit": "ft" }],
         "obstacle": { "value": 50, "unit": "ft" },
@@ -73,8 +73,8 @@
       "table": {
         "type": "grid",
         "axes": [
-          { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000], "read": "nextHigher", "below": "lowest", "above": "none" },
-          { "quantity": "temperature", "unit": "degC", "values": [0, 10, 20, 30, 40], "read": "nextHigher", "below": "lowest", "above": "none" }
+          { "quantity": "pressureAltitude", "unit": "ft", "values": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000], "read": "linear", "below": "lowest", "above": "none" },
+          { "quantity": "temperature", "unit": "degC", "values": [0, 10, 20, 30, 40], "read": "linear", "below": "lowest", "above": "none" }
         ],
         "outputs": [{ "id": "groundRoll", "unit": "ft" }, { "id": "overObstacle", "unit": "ft" }],
         "obstacle": { "value": 50, "unit": "ft" },

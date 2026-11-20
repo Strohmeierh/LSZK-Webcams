@@ -10,9 +10,12 @@ const ROOT = path.join(__dirname, '..');
 const ui = require(path.join(ROOT, 'perf', 'perf-ui.js'));
 const core = require(path.join(ROOT, 'perf', 'perf.js'));
 const readJson = (rel) => JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
-const C172D = readJson('perf/aircraft/c172d.json');
-const P2010 = readJson('perf/aircraft/p2010.json');
-const C152 = readJson('perf/aircraft/c152.json');
+// Tests der Anzeige mit der Ableseregel bis VERSION 6 (tests/helpers/ablesung.js); die ausgelieferte Ablesung (linear)
+// prüft tests/perf-interpolation.test.js.
+const { alteAblesung } = require('./helpers/ablesung.js');
+const C172D = alteAblesung(readJson('perf/aircraft/c172d.json'));
+const P2010 = alteAblesung(readJson('perf/aircraft/p2010.json'));
+const C152 = alteAblesung(readJson('perf/aircraft/c152.json'));
 const AF = readJson('perf/airfields/lszk.json');
 const INDEX_RAW = readJson('perf/aircraft/index.json');
 const LIST = ui.parseIndex(INDEX_RAW).list;
@@ -246,7 +249,7 @@ test('Cessna trocken (K2): Auswahl, Kopf, Messwerte, nur Gegenwindpiste, Zustand
   const t = text(html);
   assert.ok(html.includes('<label class="perf-ac-label" for="perf-ac">Flugzeug wählen</label><select id="perf-ac" class="perf-select" aria-describedby="perf-ac-sub">'));
   assert.ok(html.includes('<select id="perf-ac" class="perf-select" aria-describedby="perf-ac-sub"><option value="c172d" selected>Cessna 172 Diesel</option>' +
-    '<option value="p2010">Tecnam P2010</option><option value="c152">Cessna 152</option></select></div>' +
+    '<option value="p2010">Tecnam P2010</option><option value="c152">Cessna 152</option><option value="p2008">Tecnam P2008</option></select></div>' +
     '<div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-TDA</span> · <span class="perf-nw">HB-TDB</span> · ' +
     '<span class="perf-nw">HB-TDC</span> · <span class="perf-nw">HB-TDD</span></div><div class="perf-mass">'), html);
   assert.ok(t.includes("Maximales Abfluggewicht 1'157 kg (2'550 lb) · Kurzstart- und Kurzlandetechnik · Motor TAE 125-02-114, Propeller MTV-6-A/190-69"), t);
@@ -327,18 +330,18 @@ test('Tecnam nass durch Regen: Hinweis ohne Zuschlag, Zahlen unverändert, Gewic
   assert.ok(has(html, "Tabelle 3'000 ft / 0 °C 384 m 678 m Tabelle 3'000 ft / 25 °C 474 m 830 m interpoliert für 10,8 °C 422,88 m 743,664 m"), text(html));
   assert.ok(text(block(html, '30')).includes('Start 468 m 821 m') && text(block(html, '30')).includes('Landung 453 m 927 m'));
   html = render(wxPfa({ tempC: -30, windKt: 0 }), { aircraft: P2010 });                                  // T3
-  assert.ok(has(html, "Temperatur −30,0 °C · Piste trocken") && has(html, "Tabelle 2'000 ft / −25 °C 279 m 499 m Gras") && !has(html, 'interpoliert'), text(html));
+  assert.ok(has(html, "Temperatur −30,0 °C · Piste trocken") && has(html, "Tabelle 2'000 ft / −25 °C 279 m 499 m Gras") && !has(html, 'interpoliert für'), text(html));
 });
 
 /* ── Anzeige Cessna 152 ────────────────────────────────────── */
 
-test('Cessna 152 trocken (C2): Auswahl mit drei Mustern, Kopf, Zahlen, Rechenweg in ft, Quellen, Pflichthinweis', () => {
+test('Cessna 152 trocken (C2): Auswahl mit vier Mustern, Kopf, Zahlen, Rechenweg in ft, Quellen, Pflichthinweis', () => {
   const html = render(wxPfa(), { aircraft: C152 });
   assertClean(html, 'C2');
   const t = text(html);
-  assert.equal((html.match(/<option /g) || []).length, 3);
+  assert.equal((html.match(/<option /g) || []).length, 4);
   assert.ok(html.includes('<option value="c172d">Cessna 172 Diesel</option><option value="p2010">Tecnam P2010</option>' +
-    '<option value="c152" selected>Cessna 152</option>'), html);
+    '<option value="c152" selected>Cessna 152</option><option value="p2008">Tecnam P2008</option>'), html);
   // Eine Starttabelle: Kennzeichen, darunter statt des Felds der Satz zur einzigen Starttabelle
   assert.ok(html.includes('<div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-CFA</span> · <span class="perf-nw">HB-CYF</span> · ' +
     '<span class="perf-nw">HB-CYP</span></div><div class="perf-mass-one">Abfluggewicht: 758&nbsp;kg – das AFM hat nur diese Starttabelle.</div>'), html);
@@ -672,14 +675,15 @@ test('Format: QNH ohne Tausendertrenner, Druckhöhe aufgerundet, Zwischenwerte e
     ['396,58', '589,65', '265', '284,58', '45,9']);
   assert.deepEqual([ui.fmtExact(743.664), ui.fmtExact(26.0936), ui.fmtExact(1604.1), ui.fmtExact(0.1 + 0.2), ui.fmtExact(401.2 - 70), ui.fmtExact(-25), ui.fmtExact(1420)],
     ['743,664', '26,0936', "1'604,1", '0,3', '331,2', '−25', "1'420"]);
-  assert.deepEqual([ui.fmtExact(1 / 3), ui.fmtExact(375.36336)], ['≈0,3333', '≈375,3634'], 'nicht exakt darstellbar: mit «≈»');
+  // nicht exakt auf vier Stellen darstellbar (seit VERSION 7): «≈» und zwei Nachkommastellen
+  assert.deepEqual([ui.fmtExact(1 / 3), ui.fmtExact(375.36336), ui.fmtExact(258.86245)], ['≈0,33', '≈375,36', '≈258,86'], 'nicht exakt darstellbar: mit «≈»');
   // Tecnam K21: Zwischenwerte mit drei und vier Nachkommastellen exakt, nur der letzte Wert auf 0,01 aufgerundet
   t = text(render(wxPfa({ tempC: 10.8, qnhHpa: 998.2, windDir: 247, windKt: 8.7 }), { aircraft: P2010 }));
   assert.ok(t.includes("Tabelle 3'000 ft / 0 °C 251 m 535 m Tabelle 3'000 ft / 25 °C 274 m 558 m interpoliert für 10,8 °C 260,936 m 544,936 m Gegenwind 4 kt: −4 m je kt = −16 m 244,936 m 528,936 m " +
     'Gras +10 % von 260,936 m = +26,0936 m 271,0296 m 555,0296 m Faktor für Abweichungen im Betrieb × 1,67 452,62 m 926,9 m aufgerundet 453 m 927 m'), t);
   // Temperatur mit drei Dezimalen (kommt bei MeteoSchweiz nicht vor): nicht exakt darstellbare Werte mit «≈»
   t = text(render(wxPfa({ tempC: 7.123 }), { aircraft: P2010 }));
-  assert.ok(t.includes('interpoliert für 7,1 °C ≈375,3634 m 661,8888 m'), t);
+  assert.ok(t.includes('interpoliert für 7,1 °C ≈375,36 m 661,8888 m'), t);
   assert.ok(t.includes('Faktor für Abweichungen im Betrieb × 1,10 377,19 m 692,37 m aufgerundet 378 m 693 m'), t);
 });
 
@@ -1306,7 +1310,7 @@ test('boot: Wechsel zur Cessna 152 und zurück; die gespeicherte Wahl gilt beim 
   await settle();
   env.win.LszkPerf.update(wxPfa());
   await settle();
-  assert.equal((env.content.innerHTML.match(/<option /g) || []).length, 3);
+  assert.equal((env.content.innerHTML.match(/<option /g) || []).length, 4);
   choose(env, 'c152');
   assert.equal(env.sel.querySelector('select').value, 'c152', 'Auswahl während des Ladens');
   assert.ok(!shown(env).includes('331 m'), 'Zahlen der Cessna 172 während des Ladens');
