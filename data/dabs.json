@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "quelle": "https://www.skybriefing.com/o/dabs?today",
-  "abgerufen_utc": "2026-11-20T04:08:55+00:00",
+  "abgerufen_utc": "2026-11-20T08:03:58+00:00",
   "datum": "2026-11-20",
-  "version": 1,
-  "stand_utc": "2026-11-19T14:43:00+00:00",
+  "version": 2,
+  "stand_utc": "2026-11-20T07:45:00+00:00",
   "fehler": null,
   "eintraege": [
     {
@@ -57,116 +57,6 @@
     },
     {
       "sec": 1,
-      "notam": "W3127/26",
-      "gebiet": "LSR11",
-      "fenster": [
-        [
-          "2026-11-20T07:00:00+00:00",
-          "2026-11-20T11:00:00+00:00"
-        ]
-      ],
-      "zeit_roh": "0700 - 1100",
-      "unten": "GND",
-      "oben": "9600m / 31500ft",
-      "unten_ft": 0,
-      "mitte": [
-        46.681666666666665,
-        9.951666666666666
-      ],
-      "radius_km": 8.9,
-      "text": "R-AREA LSR11 S-CHANF ACT.",
-      "unsicher": false
-    },
-    {
-      "sec": 1,
-      "notam": "W3129/26",
-      "gebiet": "LSR11A",
-      "fenster": [
-        [
-          "2026-11-20T07:00:00+00:00",
-          "2026-11-20T11:00:00+00:00"
-        ]
-      ],
-      "zeit_roh": "0700 - 1100",
-      "unten": "2150m / 7000ft",
-      "oben": "9600m / 31500ft",
-      "unten_ft": 7000,
-      "mitte": [
-        46.60138888888889,
-        9.999722222222221
-      ],
-      "radius_km": 8.3,
-      "text": "R-AREA LSR11A S-CHANF ACT.",
-      "unsicher": false
-    },
-    {
-      "sec": 1,
-      "notam": "W3117/26",
-      "gebiet": "LSR15",
-      "fenster": [
-        [
-          "2026-11-20T07:45:00+00:00",
-          "2026-11-20T11:00:00+00:00"
-        ]
-      ],
-      "zeit_roh": "0745 - 1100",
-      "unten": "1700m / 5500ft",
-      "oben": "FL100",
-      "unten_ft": 5500,
-      "mitte": [
-        46.99944444444444,
-        8.026944444444446
-      ],
-      "radius_km": 13.3,
-      "text": "R-AREA LSR15 ENTLEBUCH ACT.",
-      "unsicher": false
-    },
-    {
-      "sec": 1,
-      "notam": "W3087/26",
-      "gebiet": "LSR16",
-      "fenster": [
-        [
-          "2026-11-20T07:00:00+00:00",
-          "2026-11-20T16:30:00+00:00"
-        ]
-      ],
-      "zeit_roh": "0700 - 1630",
-      "unten": "GND",
-      "oben": "3200m / 10500ft",
-      "unten_ft": 0,
-      "mitte": [
-        46.126666666666665,
-        9.033333333333333
-      ],
-      "radius_km": 3.7,
-      "text": "R-AREA LSR16 ISONE 1 ACT DUE TO MIL UAV.",
-      "unsicher": false
-    },
-    {
-      "sec": 1,
-      "notam": "W3089/26",
-      "gebiet": "LSR17",
-      "fenster": [
-        [
-          "2026-11-20T07:00:00+00:00",
-          "2026-11-20T16:30:00+00:00"
-        ]
-      ],
-      "zeit_roh": "0700 - 1630",
-      "unten": "GND",
-      "oben": "3200m / 10500ft",
-      "unten_ft": 0,
-      "mitte": [
-        46.10777777777778,
-        8.994444444444444
-      ],
-      "radius_km": 2.6,
-      "text": "R-AREA LSR17 ISONE 2 ACT DUE TO MIL UAV.",
-      "unsicher": false
-    },
-    {
-      "sec": 1,
       "notam": "W3131/26",
       "gebiet": "LSR39B",
       "fenster": [
@@ -215,28 +105,6 @@
       ],
       "radius_km": 14.2,
       "text": "R-AREA LSR39C STOOS ACT. LOWER LIMIT 9000FT AMSL OR 2000FT GND WHICHEVER IS HIGHER.",
-      "unsicher": false
-    },
-    {
-      "sec": 1,
-      "notam": "W3015/26",
-      "gebiet": "",
-      "fenster": [
-        [
-          "2026-11-20T00:00:00+00:00",
-          "2026-11-20T04:00:00+00:00"
-        ]
-      ],
-      "zeit_roh": "0000 - 0400",
-      "unten": "GND",
-      "oben": "FL195",
-      "unten_ft": 0,
-      "mitte": [
-        47.573888888888895,
-        9.047777777777778
-      ],
-      "radius_km": 0.3,
-      "text": "TEMPO R-AREA AMLIKON ESTABLISHED RADIUS 0.2KM (473426N0090252E RADIUS 0.2NM). WX MEASUREMENTS BY REMOTELY PILOTED AERIAL SYSTEM WILL TAKE PLACE. WHITE BLINKING PSN LGT WITH VISUAL RANGE OF AT LEAST 3KM. ENTRY PROHIBITED WHEN ACT EXC HEL EMERG MEDICAL SER (HEMS). FOR INFO ON ACT AND HEMS CTC TEL +41 79 772 93 32 AND REFER TO WWW.MAP.GEO.ADMIN.CH TOPIC AVIATION UAS AWARENESS MAP.",
       "unsicher": false
     }
   ]
