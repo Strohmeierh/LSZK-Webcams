@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "quelle": "https://www.skybriefing.com/o/dabs?today",
-  "abgerufen_utc": "2026-11-19T15:04:08+00:00",
-  "datum": "2026-11-19",
-  "version": 4,
-  "stand_utc": "2026-11-19T14:45:00+00:00",
+  "abgerufen_utc": "2026-11-20T04:08:55+00:00",
+  "datum": "2026-11-20",
+  "version": 1,
+  "stand_utc": "2026-11-19T14:43:00+00:00",
   "fehler": null,
   "eintraege": [
     {
@@ -13,11 +13,15 @@
       "gebiet": "LSD12",
       "fenster": [
         [
-          "2026-11-19T12:00:00+00:00",
-          "2026-11-19T21:00:00+00:00"
+          "2026-11-20T07:00:00+00:00",
+          "2026-11-20T11:00:00+00:00"
+        ],
+        [
+          "2026-11-20T12:00:00+00:00",
+          "2026-11-20T17:00:00+00:00"
         ]
       ],
-      "zeit_roh": "1200 - 2100",
+      "zeit_roh": "0700 - 1100, 1200 - 1700",
       "unten": "GND",
       "oben": "3000m / 9850ft",
       "unten_ft": 0,
@@ -35,11 +39,11 @@
       "gebiet": "LSR7",
       "fenster": [
         [
-          "2026-11-19T06:30:00+00:00",
-          "2026-11-19T21:00:00+00:00"
+          "2026-11-20T06:30:00+00:00",
+          "2026-11-20T15:00:00+00:00"
         ]
       ],
-      "zeit_roh": "0630 - 2100",
+      "zeit_roh": "0630 - 1500",
       "unten": "GND",
       "oben": "4700m / 15500ft",
       "unten_ft": 0,
@@ -57,11 +61,11 @@
       "gebiet": "LSR11",
       "fenster": [
         [
-          "2026-11-19T07:00:00+00:00",
-          "2026-11-19T20:30:00+00:00"
+          "2026-11-20T07:00:00+00:00",
+          "2026-11-20T11:00:00+00:00"
         ]
       ],
-      "zeit_roh": "0700 - 2030",
+      "zeit_roh": "0700 - 1100",
       "unten": "GND",
       "oben": "9600m / 31500ft",
       "unten_ft": 0,
@@ -79,11 +83,11 @@
       "gebiet": "LSR11A",
       "fenster": [
         [
-          "2026-11-19T07:00:00+00:00",
-          "2026-11-19T20:30:00+00:00"
+          "2026-11-20T07:00:00+00:00",
+          "2026-11-20T11:00:00+00:00"
         ]
       ],
-      "zeit_roh": "0700 - 2030",
+      "zeit_roh": "0700 - 1100",
       "unten": "2150m / 7000ft",
       "oben": "9600m / 31500ft",
       "unten_ft": 7000,
@@ -97,12 +101,34 @@
     },
     {
       "sec": 1,
+      "notam": "W3117/26",
+      "gebiet": "LSR15",
+      "fenster": [
+        [
+          "2026-11-20T07:45:00+00:00",
+          "2026-11-20T11:00:00+00:00"
+        ]
+      ],
+      "zeit_roh": "0745 - 1100",
+      "unten": "1700m / 5500ft",
+      "oben": "FL100",
+      "unten_ft": 5500,
+      "mitte": [
+        46.99944444444444,
+        8.026944444444446
+      ],
+      "radius_km": 13.3,
+      "text": "R-AREA LSR15 ENTLEBUCH ACT.",
+      "unsicher": false
+    },
+    {
+      "sec": 1,
       "notam": "W3087/26",
       "gebiet": "LSR16",
       "fenster": [
         [
-          "2026-11-19T07:00:00+00:00",
-          "2026-11-19T16:30:00+00:00"
+          "2026-11-20T07:00:00+00:00",
+          "2026-11-20T16:30:00+00:00"
         ]
       ],
       "zeit_roh": "0700 - 1630",
@@ -123,8 +149,8 @@
       "gebiet": "LSR17",
       "fenster": [
         [
-          "2026-11-19T07:00:00+00:00",
-          "2026-11-19T16:30:00+00:00"
+          "2026-11-20T07:00:00+00:00",
+          "2026-11-20T16:30:00+00:00"
         ]
       ],
       "zeit_roh": "0700 - 1630",
@@ -141,37 +167,19 @@
     },
     {
       "sec": 1,
-      "notam": "W2991/26",
-      "gebiet": "LSR18",
-      "fenster": [
-        [
-          "2026-11-19T07:00:00+00:00",
-          "2026-11-19T20:00:00+00:00"
-        ]
-      ],
-      "zeit_roh": "0700 - 2000",
-      "unten": "GND",
-      "oben": "1350m / 4500ft",
-      "unten_ft": 0,
-      "mitte": [
-        47.43666666666666,
-        7.003055555555555
-      ],
-      "radius_km": 3.8,
-      "text": "R-AREA LSR18 BURE ACT DUE TO MIL UAV ACT.",
-      "unsicher": false
-    },
-    {
-      "sec": 1,
-      "notam": "W3115/26",
+      "notam": "W3131/26",
       "gebiet": "LSR39B",
       "fenster": [
         [
-          "2026-11-19T13:00:00+00:00",
-          "2026-11-19T15:00:00+00:00"
+          "2026-11-20T08:00:00+00:00",
+          "2026-11-20T10:00:00+00:00"
+        ],
+        [
+          "2026-11-20T13:00:00+00:00",
+          "2026-11-20T15:00:00+00:00"
         ]
       ],
-      "zeit_roh": "1300 - 1500",
+      "zeit_roh": "0800 - 1000, 1300 - 1500",
       "unten": "2750m / 9000ft",
       "oben": "FL130",
       "unten_ft": 9000,
@@ -185,15 +193,19 @@
     },
     {
       "sec": 1,
-      "notam": "W3114/26",
+      "notam": "W3132/26",
       "gebiet": "LSR39C",
       "fenster": [
         [
-          "2026-11-19T13:00:00+00:00",
-          "2026-11-19T15:00:00+00:00"
+          "2026-11-20T08:00:00+00:00",
+          "2026-11-20T10:00:00+00:00"
+        ],
+        [
+          "2026-11-20T13:00:00+00:00",
+          "2026-11-20T15:00:00+00:00"
         ]
       ],
-      "zeit_roh": "1300 - 1500",
+      "zeit_roh": "0800 - 1000, 1300 - 1500",
       "unten": "2750m / 9000ft",
       "oben": "FL130",
       "unten_ft": 9000,
@@ -211,11 +223,11 @@
       "gebiet": "",
       "fenster": [
         [
-          "2026-11-19T22:30:00+00:00",
-          "2026-11-19T23:59:00+00:00"
+          "2026-11-20T00:00:00+00:00",
+          "2026-11-20T04:00:00+00:00"
         ]
       ],
-      "zeit_roh": "2230 - 2359",
+      "zeit_roh": "0000 - 0400",
       "unten": "GND",
       "oben": "FL195",
       "unten_ft": 0,
@@ -225,28 +237,6 @@
       ],
       "radius_km": 0.3,
       "text": "TEMPO R-AREA AMLIKON ESTABLISHED RADIUS 0.2KM (473426N0090252E RADIUS 0.2NM). WX MEASUREMENTS BY REMOTELY PILOTED AERIAL SYSTEM WILL TAKE PLACE. WHITE BLINKING PSN LGT WITH VISUAL RANGE OF AT LEAST 3KM. ENTRY PROHIBITED WHEN ACT EXC HEL EMERG MEDICAL SER (HEMS). FOR INFO ON ACT AND HEMS CTC TEL +41 79 772 93 32 AND REFER TO WWW.MAP.GEO.ADMIN.CH TOPIC AVIATION UAS AWARENESS MAP.",
-      "unsicher": false
-    },
-    {
-      "sec": 2,
-      "notam": "W3133/26",
-      "gebiet": "",
-      "fenster": [
-        [
-          "2026-11-19T16:25:00+00:00",
-          "2026-11-19T21:00:00+00:00"
-        ]
-      ],
-      "zeit_roh": "1625 - 2100",
-      "unten": "GND",
-      "oben": "FL120",
-      "unten_ft": 0,
-      "mitte": [
-        46.75,
-        8.133333333333333
-      ],
-      "radius_km": 181.5,
-      "text": "MIL NGT FLT WITH HEL WILL TAKE PLACE WI FLW TRG AREAS: WOLHUSEN OLTEN ZUGERSEE TRIENGEN SUSTEN GRAUBUNDEN SCHANGNAU. REF VFR MANUAL RAC 3-2-3 (MIL NGT FLT CHART). UPPER LIMIT: AIRSPACE CLASS E OR MAX ACCORDING TO ITEM G.",
       "unsicher": false
     }
   ]
