@@ -1,21 +1,21 @@
 {
   "stats": {
     "month": "2026-11",
-    "cost_month_usd": 5.4416,
+    "cost_month_usd": 5.3032,
     "attempts_month": 21,
     "date": "2026-11-21",
-    "cost_today_usd": 0.9264,
+    "cost_today_usd": 0.788,
     "attempts_today": 3,
     "budget_month_usd": 80.0,
-    "reserved_usd": 0.4
+    "reserved_usd": 0.0
   },
   "schema_version": 1,
-  "ok": false,
+  "ok": true,
   "attempted_at_utc": "2026-11-21T14:03:57+00:00",
   "slot": "15:00",
   "reserved_run": "44911916324.1",
-  "fail_streak": 1,
-  "error": "Versuch läuft oder wurde abgebrochen (kein Ergebnis gespeichert)",
+  "fail_streak": 0,
+  "error": null,
   "sun": {
     "rise": "07:37",
     "set": "16:44"
@@ -40,65 +40,61 @@
     "fehlend": [],
     "fehler": []
   },
-  "generated_at_utc": "2026-11-21T09:03:50+00:00",
+  "generated_at_utc": "2026-11-21T14:04:03+00:00",
   "model": "claude-opus-5-5",
   "served_by": "claude-opus-5-5",
   "effort": "medium",
-  "request_id": "req_011ChFod21kF7BKsQ8vCno37",
+  "request_id": "req_011ChGCWgwniXwqAWfiWTAVM",
   "usage": {
-    "input_tokens": 38292,
-    "output_tokens": 5876,
+    "input_tokens": 37325,
+    "output_tokens": 5615,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 0,
     "attempts": 1,
-    "cost_usd": 0.2707
+    "cost_usd": 0.2616
   },
   "briefing": {
-    "headline": "Platz gesperrt (nur Heli), bedeckt, Basis um 1'100 m MSL",
+    "headline": "Platz gesperrt (nur Heli), Basis um 1'600 m MSL",
     "fgzo_hinweis": "",
-    "text": "Platz gesperrt: nur Helikopterbetrieb. Am Platz bedeckt und fast windstill, Wind aus Südwest mit 1 kt, Böen bis 4 kt, bei 6.6 °C und Taupunkt 5.2 °C. Basis um 1'100–1'300 m MSL mit einzelnen tieferen Fetzen, der Bachtel steckte zuletzt in der Wolke; Sicht 17 km (Hirzli-Kette). Bei Nordlage (Föhn-Index -4 hPa) Stau an Säntis, Glarner Alpen und Klausen, Gotthard und Alpensüdseite dagegen sonnig. Prognose: bis 15 Uhr bedeckt, Regen wahrscheinlich (95 % in den nächsten 3 h, kaum messbare Mengen), ab 16 Uhr aufgelockert, gegen 21 Uhr fast wolkenlos. Thermik laut Prognose nur in den Glarner Alpen von 14 bis 15 Uhr mit Arbeitshöhe um 1'700 m MSL, deutlich unter der Kammhöhe und vom starken Höhenwind zerrissen; die Kameras zeigen dort derzeit Stau mit Wolken an den Flanken.",
+    "text": "Platz gesperrt: nur Helikopterbetrieb. Am Platz Wind aus West mit 3 kt, Böen bis 4 kt, Boden nass, stark bewölkt mit Basis um 1'600 m MSL und einzelnen Fetzen um 1'100 m MSL, Sicht 33 km (Mürtschenstock). Föhn-Index -4 hPa (Nordlage): Säntis und Teile der Glarner Alpen in Wolken, der Alpenhauptkamm an Oberalp und Gotthard sowie die Leventina dagegen frei und sonnig. Prognose: Regen wahrscheinlich (90 % in den nächsten 3 h), ab 17 Uhr Auflockerung, um 19 Uhr nur noch leicht bewölkt, ab 21 Uhr hohe Bewölkung und ab 01 Uhr erneut bedeckt. DABS für Sa 21.11. (Version 3, herausgegeben 12:45 LT): keine Einträge.",
     "lage": "maessig"
   },
   "himmel": {
     "bedeckung_achtel": 7,
-    "wolkenbasis_m": 1100,
+    "wolkenbasis_m": 1600,
     "basis_quelle": "kombiniert",
-    "sicht": "maessig",
-    "sicht_km": 17,
+    "sicht": "gut",
+    "sicht_km": 33,
     "nebel": "kein",
     "nebel_obergrenze_m": null,
-    "alpen": "teilweise",
-    "schneegrenze_m": 1500,
+    "alpen": "frei",
+    "schneegrenze_m": null,
     "niederschlag": "kein",
     "zusammenfassung": "",
     "regionen": [
       {
         "region": "platz",
-        "zustand": "Vorfeld nass, Pfützen an der Wendefläche beim Pistenanfang 30."
-      },
-      {
-        "region": "zuercher_oberland",
-        "zustand": "Bachtelturm in der Wolke, Kuppen über rund 1'100 m MSL eingehüllt."
+        "zustand": "Windsack hängt schlaff, Vorfeld und Wendefläche nass mit Pfützen."
       },
       {
         "region": "voralpen",
-        "zustand": "Hirzli-Kette bis an den Kamm in Wolken mit Fetzen an den unteren Hängen, Speer und Mürtschenstock verdeckt."
+        "zustand": "Hirzli-Kette und Speer erkennbar, Wolkenbänke in der Linthebene um 1'000–1'200 m MSL, Säntis in Wolken."
       },
       {
         "region": "glarner_alpen",
-        "zustand": "Im Grosstal Wolken an den Flanken ab rund 1'300 m MSL, Tödi verdeckt, Schabell auf 2'015 m MSL in der Wolke, Neuschnee an den oberen Hängen."
+        "zustand": "Hauptkette Sardona–Vorab–Hausstock tief verschneit und meist frei, Wolken an den Flanken des Grosstals ab etwa 1'300 m MSL, Talnebel im Sernftal."
       },
       {
         "region": "zentralalpen",
-        "zustand": "Klausenpass in der Wolke; Gotthardpass sonnig mit Quellwolken über den Gipfeln, tief verschneit."
+        "zustand": "Gotthard und Oberalp sonnig mit freien Gipfeln, Nebelreste in der Surselva und im Schächental."
       },
       {
         "region": "graubuenden",
-        "zustand": "Gipfel um die Lenzerheide im Osten teils frei, gegen Westen in Wolken; über Davos Wolken an den Gipfeln, Tal verschneit."
+        "zustand": "Wechselnd bewölkt, Gipfel meist frei, Nebelmeer über Churer Rheintal und Albulatal."
       },
       {
         "region": "alpensuedseite",
-        "zustand": "Leventina sonnig mit lockeren Quellwolken, Campo-Tencia-Gruppe frei."
+        "zustand": "Leventina sonnig mit wenigen Quellwolken, Gipfel frei."
       }
     ]
   },
@@ -107,17 +103,18 @@
       "titel": "Speck – Runway 30",
       "key": "https://wsrv.nl/?url=fgzo.ch/webcam/images/fgzo.jpg",
       "bildalter_min": 1,
-      "satz": "Bedeckt mit geschlossener Schicht, Graspiste ohne sichtbares Wasser, kein Flugbetrieb.",
+      "satz": "Bedeckter Himmel, Graspiste nass, gute Bodensicht im Westsektor.",
       "tags": [
-        "bedeckt"
+        "bedeckt",
+        "nasse_piste"
       ],
       "problem": "keins"
     },
     {
       "titel": "Speck – Tankstelle",
       "key": "https://wsrv.nl/?url=fgzo.ch/webcam/images/fgzo2.jpg",
-      "bildalter_min": 1,
-      "satz": "Bedeckt, Windsack hängt schlaff, Vorfeld nass, Pfützen an der Wendefläche; Oberland-Hügel erkennbar.",
+      "bildalter_min": 0,
+      "satz": "Windsack hängt schlaff, Vorfeld nass mit Pfützen, Oberland-Hügel unter der Wolkendecke erkennbar.",
       "tags": [
         "bedeckt",
         "nasse_piste"
@@ -128,21 +125,17 @@
       "titel": "Bachtel",
       "key": "https://wsrv.nl/?url=bachtel.it-wms.com/panorama1_raw.jpg",
       "bildalter_min": 29,
-      "satz": "Turm auf rund 1'180 m MSL in der Wolke, Basis dort darunter.",
-      "tags": [
-        "in_wolke",
-        "tiefe_wolken"
-      ],
-      "problem": "keins"
+      "satz": "Keine verlässliche Beurteilung möglich.",
+      "tags": [],
+      "problem": "linse_nass"
     },
     {
       "titel": "Wangen-Lachen – Cam 1",
       "key": "cam1",
       "bildalter_min": 4,
-      "satz": "Bedeckt, Hügel um 1'300 m MSL in Wolken, Speer verdeckt, Vorfeld nass.",
+      "satz": "Stark bewölkt, Speer erkennbar mit Wolken knapp über dem Gipfel, Vorfeld nass.",
       "tags": [
         "bedeckt",
-        "tiefe_wolken",
         "nasse_piste"
       ],
       "problem": "keins"
@@ -150,19 +143,19 @@
     {
       "titel": "Rapperswil",
       "key": "https://wsrv.nl/?url=images-webcams.windy.com/91/1614073791/current/original/1614073791.jpg",
-      "bildalter_min": 7,
-      "satz": "Hirzli-Kette bis an den Kamm in Wolken, tiefe Fetzen an den Hängen, Mürtschenstock verdeckt.",
+      "bildalter_min": 2,
+      "satz": "Mürtschenstock und Flumserberge klar, verschneit, Wolkenbänke in der Linthebene um 1'000–1'200 m MSL.",
       "tags": [
-        "bedeckt",
-        "tiefe_wolken"
+        "tiefe_wolken",
+        "schnee"
       ],
       "problem": "keins"
     },
     {
       "titel": "Säntis",
       "key": "https://wsrv.nl/?url=saentis.roundshot.com/cams/156/medium",
-      "bildalter_min": 0,
-      "satz": "Gipfel auf 2'505 m MSL in der Wolke.",
+      "bildalter_min": 30,
+      "satz": "Gipfel in der Wolke, Basis unter 2'500 m MSL.",
       "tags": [
         "in_wolke"
       ],
@@ -172,10 +165,9 @@
       "titel": "Richtung Tödi",
       "key": "https://wsrv.nl/?url=decoral.ch/Kameratoedi.jpg",
       "bildalter_min": 4,
-      "satz": "Wolken an den Talflanken ab rund 1'300 m MSL, Tödi verdeckt, Neuschnee an den oberen Hängen.",
+      "satz": "Tödi zeitweise sichtbar, Wolken an den Talflanken ab etwa 1'300 m MSL, Gipfel verschneit.",
       "tags": [
         "tiefe_wolken",
-        "bedeckt",
         "schnee"
       ],
       "problem": "keins"
@@ -183,11 +175,12 @@
     {
       "titel": "Elm – Schabell",
       "key": "https://wsrv.nl/?url=sportbahnenelm.roundshot.com/cams/1721/medium",
-      "bildalter_min": 12,
-      "satz": "Station auf 2'015 m MSL in der Wolke, Glarner Hauptkette verdeckt, tief verschneit.",
+      "bildalter_min": 8,
+      "satz": "Hauptkette tief verschneit und meist frei, Talnebel im Sernftal, Wolkendecke über den Gipfeln.",
       "tags": [
-        "in_wolke",
-        "schnee"
+        "bedeckt",
+        "schnee",
+        "nebel"
       ],
       "problem": "keins"
     },
@@ -195,9 +188,10 @@
       "titel": "Klausenpass",
       "key": "https://wsrv.nl/?url=webcam.hotel-klausenpass.ch/panorama.jpg",
       "bildalter_min": 4,
-      "satz": "In der Wolke, Basis unter 1'850 m MSL, Neuschnee.",
+      "satz": "Sonnige Lücken, Wolken im Schächental unterhalb der Passhöhe, alles verschneit.",
       "tags": [
-        "in_wolke",
+        "quellwolken",
+        "tiefe_wolken",
         "schnee"
       ],
       "problem": "keins"
@@ -205,19 +199,22 @@
     {
       "titel": "Schneehüenerstock",
       "key": "https://wsrv.nl/?url=andermatt-sedrun-disentis.roundshot.com/cams/1768/medium",
-      "bildalter_min": 10,
-      "satz": "Keine verlässliche Beobachtung möglich.",
-      "tags": [],
-      "problem": "eingefroren"
+      "bildalter_min": 9,
+      "satz": "Sonnig, Gipfel am Oberalp und Gotthard frei, Nebel in der Surselva.",
+      "tags": [
+        "sonnig",
+        "schnee",
+        "nebel"
+      ],
+      "problem": "keins"
     },
     {
       "titel": "Gotthardpass",
       "key": "https://wsrv.nl/?url=webcam.afbn.ch/H_OSG_017,200_S_KAM_001_Sued.jpg",
       "bildalter_min": 4,
-      "satz": "Sonnig mit Quellwolken über den Gipfeln, Übergang frei, tief verschneit.",
+      "satz": "Wolkenlos, Pass frei, viel Neuschnee.",
       "tags": [
         "sonnig",
-        "quellwolken",
         "schnee"
       ],
       "problem": "keins"
@@ -226,7 +223,19 @@
       "titel": "Parpaner Rothorn",
       "key": "https://wsrv.nl/?url=lenzerheide.roundshot.com/cams/52/medium",
       "bildalter_min": 12,
-      "satz": "Gipfel im Osten teils frei, gegen Westen und Norden in Wolken, frischer Schnee.",
+      "satz": "Wechselnd bewölkt, Hauptkamm frei, Nebelmeer über Churer Rheintal und Albulatal.",
+      "tags": [
+        "quellwolken",
+        "hochnebel",
+        "schnee"
+      ],
+      "problem": "keins"
+    },
+    {
+      "titel": "Jakobshorn",
+      "key": "https://wsrv.nl/?url=images-webcams.windy.com/30/1678358730/current/original/1678358730.jpg",
+      "bildalter_min": 1,
+      "satz": "Stark bewölkt mit Lücken, Gipfel meist frei, Wolkenfetzen über den Tälern.",
       "tags": [
         "bedeckt",
         "tiefe_wolken",
@@ -235,25 +244,12 @@
       "problem": "keins"
     },
     {
-      "titel": "Jakobshorn",
-      "key": "https://wsrv.nl/?url=images-webcams.windy.com/30/1678358730/current/original/1678358730.jpg",
-      "bildalter_min": 6,
-      "satz": "Wolken an den Gipfeln um Davos, Tal einsehbar, alles verschneit.",
-      "tags": [
-        "bedeckt",
-        "schnee"
-      ],
-      "problem": "keins"
-    },
-    {
       "titel": "Ambri Tarnolgio",
       "key": "https://wsrv.nl/?url=www.tarnolgio.ch/webcam00.jpg",
       "bildalter_min": 4,
-      "satz": "Sonnig mit lockeren Quellwolken, Campo-Tencia-Gruppe frei, gute Sicht.",
+      "satz": "Sonnig, wenige Quellwolken, Gipfel frei.",
       "tags": [
-        "sonnig",
-        "quellwolken",
-        "schnee"
+        "sonnig"
       ],
       "problem": "keins"
     }
@@ -261,148 +257,22 @@
   "dabs": {
     "ok": true,
     "datum": "2026-11-21",
-    "version": 2,
-    "stand_utc": "2026-11-21T07:45:00+00:00",
-    "abgerufen_utc": "2026-11-21T08:04:00+00:00",
+    "version": 3,
+    "stand_utc": "2026-11-21T11:45:00+00:00",
+    "abgerufen_utc": "2026-11-21T11:53:53+00:00",
     "quelle": "https://www.skybriefing.com/o/dabs?today",
     "filter": "Fluggebiet LSZK–Säntis–Flüela–Julier–Gotthard–Mythen mit 15 km Marge, Untergrenze unter FL150, bis 30 min nach Sonnenuntergang",
-    "eintraege_total": 2,
-    "treffer": [
-      {
-        "gebiet": "",
-        "notam": "",
-        "zeit": "Zeit unlesbar",
-        "unten": "",
-        "oben": "",
-        "text": "",
-        "karte": true,
-        "unsicher": true,
-        "beendet": false
-      },
-      {
-        "gebiet": "",
-        "notam": "",
-        "zeit": "Zeit unlesbar",
-        "unten": "",
-        "oben": "",
-        "text": "",
-        "karte": false,
-        "unsicher": true,
-        "beendet": false
-      }
-    ],
+    "eintraege_total": 0,
+    "leer": true,
+    "treffer": [],
     "fehler": null,
     "zwischenspeicher": true,
     "aktuell": true,
     "abruf_fehler": null
   },
-  "slot_planned_utc": "2026-11-21T09:00:00+00:00",
+  "slot_planned_utc": "2026-11-21T14:00:00+00:00",
   "korrekturen": [],
-  "thermik": {
-    "quelle": "Open-Meteo",
-    "tag": "2026-11-21",
-    "zusammenfassung": "Prognose: nur Glarner Alpen 14–15 Uhr, Basis und Arbeitshöhe um 1'700 m MSL, rund 1'000 m unter der Kammhöhe von 2'700 m MSL; Wind auf 3'000 m MSL um 26 kt aus West, Thermik zerrissen, Lee beachten. Gewitterrisiko gering, derzeit Stau statt Quellbewölkung.",
-    "regionen": [
-      {
-        "region": "alpstein",
-        "nutzbar": false,
-        "von": null,
-        "bis": null,
-        "arbeitshoehe_m": null,
-        "basis_m": null,
-        "blau": null,
-        "cape_max": 10,
-        "risiko": "gering",
-        "wind700_kt": 30,
-        "wind700_dir": 274,
-        "wind_stark": true
-      },
-      {
-        "region": "mythen",
-        "nutzbar": false,
-        "von": null,
-        "bis": null,
-        "arbeitshoehe_m": null,
-        "basis_m": null,
-        "blau": null,
-        "cape_max": 10,
-        "risiko": "gering",
-        "wind700_kt": 27,
-        "wind700_dir": 272,
-        "wind_stark": true
-      },
-      {
-        "region": "glarner_alpen",
-        "nutzbar": true,
-        "von": "14:00",
-        "bis": "15:00",
-        "arbeitshoehe_m": 1700,
-        "basis_m": 1700,
-        "blau": false,
-        "cape_max": 10,
-        "risiko": "gering",
-        "wind700_kt": 26,
-        "wind700_dir": 282,
-        "wind_stark": true
-      },
-      {
-        "region": "urseren",
-        "nutzbar": false,
-        "von": null,
-        "bis": null,
-        "arbeitshoehe_m": null,
-        "basis_m": null,
-        "blau": null,
-        "cape_max": 0,
-        "risiko": "gering",
-        "wind700_kt": 24,
-        "wind700_dir": 297,
-        "wind_stark": false
-      },
-      {
-        "region": "surselva",
-        "nutzbar": false,
-        "von": null,
-        "bis": null,
-        "arbeitshoehe_m": null,
-        "basis_m": null,
-        "blau": null,
-        "cape_max": 10,
-        "risiko": "gering",
-        "wind700_kt": 20,
-        "wind700_dir": 304,
-        "wind_stark": false
-      },
-      {
-        "region": "mittelbuenden",
-        "nutzbar": false,
-        "von": null,
-        "bis": null,
-        "arbeitshoehe_m": null,
-        "basis_m": null,
-        "blau": null,
-        "cape_max": 0,
-        "risiko": "gering",
-        "wind700_kt": 18,
-        "wind700_dir": 320,
-        "wind_stark": false
-      },
-      {
-        "region": "davos",
-        "nutzbar": false,
-        "von": null,
-        "bis": null,
-        "arbeitshoehe_m": null,
-        "basis_m": null,
-        "blau": null,
-        "cape_max": 0,
-        "risiko": "gering",
-        "wind700_kt": 16,
-        "wind700_dir": 298,
-        "wind_stark": false
-      }
-    ]
-  },
+  "thermik": null,
   "platz": {
     "flaeche": "gesperrt",
     "grund": "nur Helikopterbetrieb",
@@ -411,14 +281,14 @@
   "open_meteo": {
     "prognose": {
       "ok": true,
-      "abgerufen_utc": "2026-11-21T08:38:55+00:00",
-      "alter_min": 25,
+      "abgerufen_utc": "2026-11-21T13:58:51+00:00",
+      "alter_min": 5,
       "zwischenspeicher": true,
       "abruf_fehler": null
     },
     "thermik": {
       "ok": true,
-      "abgerufen_utc": "2026-11-21T08:59:06+00:00",
+      "abgerufen_utc": "2026-11-21T13:58:51+00:00",
       "alter_min": 5,
       "zwischenspeicher": true,
       "abruf_fehler": null
