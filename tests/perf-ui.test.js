@@ -248,8 +248,8 @@ test('Cessna trocken (K2): Auswahl, Kopf, Messwerte, nur Gegenwindpiste, Zustand
   assertClean(html, 'K2');
   const t = text(html);
   assert.ok(html.includes('<label class="perf-ac-label" for="perf-ac">Flugzeug wählen</label><select id="perf-ac" class="perf-select" aria-describedby="perf-ac-sub">'));
-  assert.ok(html.includes('<select id="perf-ac" class="perf-select" aria-describedby="perf-ac-sub"><option value="c172d" selected>Cessna 172 Diesel</option>' +
-    '<option value="p2010">Tecnam P2010</option><option value="c152">Cessna 152</option><option value="p2008">Tecnam P2008</option></select></div>' +
+  assert.ok(html.includes('<select id="perf-ac" class="perf-select" aria-describedby="perf-ac-sub"><option value="c172d" selected>Cessna 172 JT-A G1000</option>' +
+    '<option value="p2010">Tecnam P2010</option><option value="c152">Cessna 152</option><option value="p2008">Tecnam P2008JC</option></select></div>' +
     '<div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-TDA</span> · <span class="perf-nw">HB-TDB</span> · ' +
     '<span class="perf-nw">HB-TDC</span> · <span class="perf-nw">HB-TDD</span></div><div class="perf-mass">'), html);
   assert.ok(t.includes("Maximales Abfluggewicht 1'157 kg (2'550 lb) · Kurzstart- und Kurzlandetechnik · Motor TAE 125-02-114, Propeller MTV-6-A/190-69"), t);
@@ -340,8 +340,8 @@ test('Cessna 152 trocken (C2): Auswahl mit vier Mustern, Kopf, Zahlen, Rechenweg
   assertClean(html, 'C2');
   const t = text(html);
   assert.equal((html.match(/<option /g) || []).length, 4);
-  assert.ok(html.includes('<option value="c172d">Cessna 172 Diesel</option><option value="p2010">Tecnam P2010</option>' +
-    '<option value="c152" selected>Cessna 152</option><option value="p2008">Tecnam P2008</option>'), html);
+  assert.ok(html.includes('<option value="c172d">Cessna 172 JT-A G1000</option><option value="p2010">Tecnam P2010</option>' +
+    '<option value="c152" selected>Cessna 152</option><option value="p2008">Tecnam P2008JC</option>'), html);
   // Eine Starttabelle: Kennzeichen, darunter statt des Felds der Satz zur einzigen Starttabelle
   assert.ok(html.includes('<div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-CFA</span> · <span class="perf-nw">HB-CYF</span> · ' +
     '<span class="perf-nw">HB-CYP</span></div><div class="perf-mass-one">Abfluggewicht: 758&nbsp;kg – das AFM hat nur diese Starttabelle.</div>'), html);
@@ -653,7 +653,7 @@ test('Maskierung: Marke in jedem Textfeld von Flugzeug-, Platz- und Listendatei,
 test('Auswahl: ein Muster ohne select, Laden und Fehler mit erreichbarer Auswahl', () => {
   let html = render(wxPfa(), { list: [LIST[0]] });
   assert.ok(!html.includes('<select'));
-  assert.ok(html.includes('<div class="perf-ac perf-ac-one">Cessna 172 Diesel</div><div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-TDA</span> · ' +
+  assert.ok(html.includes('<div class="perf-ac perf-ac-one">Cessna 172 JT-A G1000</div><div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-TDA</span> · ' +
     '<span class="perf-nw">HB-TDB</span> · <span class="perf-nw">HB-TDC</span> · <span class="perf-nw">HB-TDD</span></div><div class="perf-mass">'), html);
   html = render(wxPfa(), { dataState: 'loading', selectedId: 'p2010', aircraft: null });
   assert.ok(html.includes('<option value="p2010" selected>'));
@@ -1002,10 +1002,10 @@ test('boot: Kurzzeile und Karte versteckt bis zum ersten update, dann Zahlen nac
   assert.equal(env.box.style.display, 'block');
   assert.equal(env.card.style.display, undefined, 'die Karte selbst bekommt kein display');
   assert.ok(shown(env).includes('Lade Flugplatzstatus …'), 'vor dem FGZO-Abruf keine Trockenrechnung');
-  assert.equal(teaserText(env), 'Start- und Landestrecke · Cessna 172 Diesel Lade Flugplatzstatus …');
+  assert.equal(teaserText(env), 'Start- und Landestrecke · Cessna 172 JT-A G1000 Lade Flugplatzstatus …');
   await settle();
   assert.ok(shown(env).includes('Start 331 m 492 m 625 m'), shown(env));
-  assert.equal(teaserText(env), 'Cessna 172 Diesel · Piste 30 Rollstrecke: Start 331 m · Landung 265 m');
+  assert.equal(teaserText(env), 'Cessna 172 JT-A G1000 · Piste 30 Rollstrecke: Start 331 m · Landung 265 m');
   // Der Weg über boot nimmt die ausgelieferte Stellung des Zusatzes «Richtwert AFM»
   assert.equal(env.teaser.innerHTML.includes('<span class="perf-t-tag">Richtwert AFM</span>'), ui.TEASER_AFM_TAG);
   assert.ok(env.fetchUrls.some((u) => u.startsWith('data/fgzo_status.json?t=')));
@@ -1058,7 +1058,7 @@ test('boot: Altern über Takt, Sichtbarkeit und _tick lässt die Zahlen in Karte
   env.intervals[0].fn();
   assert.ok(!env.content.innerHTML.includes('perf-grid'));
   assert.ok(shown(env).includes('Messwerte veraltet'));
-  assert.equal(teaserText(env), 'Start- und Landestrecke · Cessna 172 Diesel Messwerte veraltet – keine Berechnung');
+  assert.equal(teaserText(env), 'Start- und Landestrecke · Cessna 172 JT-A G1000 Messwerte veraltet – keine Berechnung');
   env.win.LszkPerf.update(wxPfa({ time: env.clock - 44 * MIN }));
   await settle();
   assert.ok(env.content.innerHTML.includes('perf-grid') && env.teaser.innerHTML.includes('perf-t-row'));
@@ -1092,7 +1092,7 @@ test('boot: kaputtes update wirft nicht, Rechenfehler in Karte und Kurzzeile ble
   assert.ok(env.content.innerHTML.includes('<select id="perf-ac"'), 'Auswahl wieder da');
   [42, 'x', undefined, null, []].forEach((v) => assert.doesNotThrow(() => env.win.LszkPerf.update(v)));
   assert.ok(shown(env).includes('Keine aktuellen Messwerte vom Platz – keine Berechnung.'));
-  assert.equal(teaserText(env), 'Start- und Landestrecke · Cessna 172 Diesel Keine aktuellen Messwerte – keine Berechnung');
+  assert.equal(teaserText(env), 'Start- und Landestrecke · Cessna 172 JT-A G1000 Keine aktuellen Messwerte – keine Berechnung');
   // Derselbe Messwert vor und nach einem Rechenfehler: die Karte zeigt danach wieder die Zahlen, nicht «Rechenfehler»
   const same = wxPfa({ time: env.clock - 10 * MIN });
   env.win.LszkPerf.update(same);
@@ -1139,7 +1139,7 @@ test('boot: Übergang vom Ergebnis zu Rechenabbruch und fehlender Windrichtung �
     assert.ok(teaserText(env).includes('Start 331 m'), 'Ergebnis vor «' + state + '»');
     env.win.LszkPerf.update(w);
     await settle();
-    assert.equal(teaserText(env), 'Start- und Landestrecke · Cessna 172 Diesel ' + state);
+    assert.equal(teaserText(env), 'Start- und Landestrecke · Cessna 172 JT-A G1000 ' + state);
     assert.ok(!env.teaser.innerHTML.includes('perf-t-row') && !/\d&nbsp;m/.test(env.teaser.innerHTML), state + ': ' + env.teaser.innerHTML);
     assert.ok(!env.content.innerHTML.includes('perf-grid'), state + ': Karte');
   }
@@ -1198,7 +1198,7 @@ test('boot: Der Takt schreibt die Karte neu, das Auswahlfeld nicht (gleicher Kno
   // Neuer Messwert mit anderem Ergebnis: Karte und Kurzzeile neu, die Auswahl bleibt derselbe Knoten
   env.win.LszkPerf.update(wxPfa({ time: env.clock - 5 * MIN, tempC: 25, qnhHpa: 1015, windDir: 214, windKt: 10 }));     // K6
   await settle();
-  assert.equal(teaserText(env), 'Cessna 172 Diesel · Wind quer Rollstrecke: Start 375 m · Landung 288 m');
+  assert.equal(teaserText(env), 'Cessna 172 JT-A G1000 · Wind quer Rollstrecke: Start 375 m · Landung 288 m');
   assert.ok(env.teaser.innerHTML.includes('<b class="perf-amber">375&nbsp;m</b>'));
   assert.equal(env.writesBy['perf-sel'], w['perf-sel']);
   assert.equal(env.selectNodes, nodes0);
@@ -1297,7 +1297,7 @@ test('boot: Wechsel Cessna ↔ Tecnam, Wahl erst nach erfolgreichem Laden gespei
   await settle();
   assert.equal(env.store['lszk-perf-aircraft'], 'c172d');
   assert.ok(shown(env).includes('Start 331 m 492 m') && shown(env).includes('Start · Supplement, Figure 5-1a (Section 5b), Seite 5b-3') && !shown(env).includes('APV5'));
-  assert.ok(teaserText(env).startsWith('Cessna 172 Diesel · Piste 30'));
+  assert.ok(teaserText(env).startsWith('Cessna 172 JT-A G1000 · Piste 30'));
   env.sel.listeners.change({ target: { id: 'perf-ac', value: '../x' } });
   env.sel.listeners.change({ target: { id: 'anderes', value: 'p2010' } });
   await settle();
@@ -1347,7 +1347,7 @@ test('boot: nicht ladbare Wahl fällt auf den Standard zurück, Speicher geleert
   assert.ok(env.content.innerHTML.includes('<option value="c172d" selected>'));
   assert.ok(shown(env).includes('Flugzeugdaten für «Fehlt» nicht verfügbar – Standardmuster gewählt.'));
   assert.ok(shown(env).includes('Start 331 m'));
-  assert.ok(teaserText(env) === 'Cessna 172 Diesel · Piste 30 Rollstrecke: Start 331 m · Landung 265 m' && !env.teaser.innerHTML.includes('perf-t-warn'),
+  assert.ok(teaserText(env) === 'Cessna 172 JT-A G1000 · Piste 30 Rollstrecke: Start 331 m · Landung 265 m' && !env.teaser.innerHTML.includes('perf-t-warn'),
     'Hinweis «Standardmuster gewählt» nur in der Karte');
   const node = env.sel.querySelector('select'), selWrites = env.writesBy['perf-sel'];
   choose(env, 'x');
@@ -1359,7 +1359,7 @@ test('boot: nicht ladbare Wahl fällt auf den Standard zurück, Speicher geleert
   assert.equal(env.sel.querySelector('select'), node);
   assert.equal(node.value, 'c172d', 'Rückfall auf den Standard setzt value');
   assert.equal(env.writesBy['perf-sel'], selWrites);
-  assert.equal(teaserText(env), 'Cessna 172 Diesel · Piste 30 Rollstrecke: Start 331 m · Landung 265 m');
+  assert.equal(teaserText(env), 'Cessna 172 JT-A G1000 · Piste 30 Rollstrecke: Start 331 m · Landung 265 m');
 });
 
 test('boot: Flugzeugdatei mit falscher id gilt als nicht ladbar', async (t) => {
@@ -1462,7 +1462,7 @@ test('boot: veraltete Antworten werden verworfen (Musterwechsel und FGZO-Abruf)'
   slow.resolve(okResponse(P2010));
   await settle();
   assert.ok(shown(env).includes('Start 331 m 492 m') && !shown(env).includes('409 m'), shown(env));
-  assert.ok(teaserText(env).startsWith('Cessna 172 Diesel · Piste 30') && !teaserText(env).includes('409'), teaserText(env));
+  assert.ok(teaserText(env).startsWith('Cessna 172 JT-A G1000 · Piste 30') && !teaserText(env).includes('409'), teaserText(env));
   assert.equal(env.sel.querySelector('select').value, 'c172d');
   assert.notEqual(env.store['lszk-perf-aircraft'], 'p2010');
   // FGZO: die Antwort des älteren Abrufs (nass, gesperrt) kommt nach der des neueren (DRY)
@@ -1514,7 +1514,7 @@ function blurMass(env, changed) {
 }
 const massTimers = (env) => env.timeouts.filter((x) => x.ms === ui.MASS_DEBOUNCE_MS);
 const headOf = (env) => { const m = /<div class="perf-head">(.*?)<\/div>/.exec(env.body.innerHTML); return m ? text(m[1]).trim() : null; };
-const K2_MAX = () => 'Cessna 172 Diesel · Piste 30 Rollstrecke: Start ' + k2Start(null) + ' m · Landung 265 m';
+const K2_MAX = () => 'Cessna 172 JT-A G1000 · Piste 30 Rollstrecke: Start ' + k2Start(null) + ' m · Landung 265 m';
 async function bootK2(t, opts) {
   const env = startBrowser(t, opts);
   await settle();
@@ -1546,7 +1546,7 @@ test('boot: Gewichtsfeld – Höchstgewicht im Feld, Tippen rechnet erst nach 70
   assert.equal(env.body.innerHTML, body0, 'ein überholter Takt rechnet');
   timers[3].fn();
   assert.ok(headOf(env).startsWith("Abfluggewicht 1'110 kg: Start nach der kleinsten AFM-Tabelle (1'111 kg), Landung mit dem maximalen Landegewicht 1'157 kg"), headOf(env));
-  assert.equal(teaserText(env), "Cessna 172 Diesel · 1'110 kg · Piste 30 Rollstrecke: Start " + k2Start(1110) + ' m · Landung 265 m');
+  assert.equal(teaserText(env), "Cessna 172 JT-A G1000 · 1'110 kg · Piste 30 Rollstrecke: Start " + k2Start(1110) + ' m · Landung 265 m');
   assert.equal(el.value, '1110', 'der getippte Wert bleibt');
   // change: sofort, ohne Takt
   const k1 = massTimers(env).length;
@@ -1563,7 +1563,7 @@ test('boot: Gewichtsfeld – Höchstgewicht im Feld, Tippen rechnet erst nach 70
   assert.equal(massErr(env).textContent, e115);
   assert.equal(el.getAttribute('aria-invalid'), 'true');
   assert.ok(shown(env).includes(e115.replace(/ /g, ' ')), shown(env));
-  assert.equal(teaserText(env), 'Start- und Landestrecke · Cessna 172 Diesel ' + ui.TEASER.massError);
+  assert.equal(teaserText(env), 'Start- und Landestrecke · Cessna 172 JT-A G1000 ' + ui.TEASER.massError);
   assert.ok(!env.body.innerHTML.includes('perf-grid') && !/\d&nbsp;m/.test(env.body.innerHTML + env.teaser.innerHTML), 'Zahl bei ungültigem Gewicht');
   changeMass(env, '1200');
   assert.equal(massErr(env).textContent, ui.parseMass('1200', C172D).error);
@@ -1774,7 +1774,7 @@ test('boot: leeres Feld mit Fokus ist kein Fehler – es gilt weiter das zuletzt
   const env = await bootK2(t);
   const el = focusMass(env);
   changeMass(env, '1110');
-  const with1110 = "Cessna 172 Diesel · 1'110 kg · Piste 30 Rollstrecke: Start " + k2Start(1110) + ' m · Landung 265 m';
+  const with1110 = "Cessna 172 JT-A G1000 · 1'110 kg · Piste 30 Rollstrecke: Start " + k2Start(1110) + ' m · Landung 265 m';
   assert.equal(teaserText(env), with1110);
   const check = (label, teaser) => {
     assert.equal(massErr(env).textContent, '', label + ': Fehlertext');
@@ -1811,7 +1811,7 @@ test('boot: leeres Feld mit Fokus ist kein Fehler – es gilt weiter das zuletzt
   // weiter getippt: das neue Gewicht gilt, auch wenn das Feld danach wieder leer ist
   typeMass(env, '1133');
   massTimers(env).slice(-1)[0].fn();
-  const with1133 = "Cessna 172 Diesel · 1'133 kg · Piste 30 Rollstrecke: Start " + k2Start(1133) + ' m · Landung 265 m';
+  const with1133 = "Cessna 172 JT-A G1000 · 1'133 kg · Piste 30 Rollstrecke: Start " + k2Start(1133) + ' m · Landung 265 m';
   assert.equal(teaserText(env), with1133);
   typeMass(env, '');
   massTimers(env).slice(-1)[0].fn();
@@ -1846,7 +1846,7 @@ test('boot: mit Fokus ist «noch am Tippen» kein Fehler (nur Ziffern unter der 
   const env = await bootK2(t);
   const el = focusMass(env);
   changeMass(env, '1133');
-  const with1133 = "Cessna 172 Diesel · 1'133 kg · Piste 30 Rollstrecke: Start " + k2Start(1133) + ' m · Landung 265 m';
+  const with1133 = "Cessna 172 JT-A G1000 · 1'133 kg · Piste 30 Rollstrecke: Start " + k2Start(1133) + ' m · Landung 265 m';
   assert.equal(teaserText(env), with1133);
   const calm = (label, teaser) => {
     assert.equal(massErr(env).textContent, '', label + ': Fehlertext');
@@ -1866,7 +1866,7 @@ test('boot: mit Fokus ist «noch am Tippen» kein Fehler (nur Ziffern unter der 
   // «1100» gilt (Tabelle 1'111 kg wie 1'110 kg in den Sollzeilen)
   typeMass(env, '1100');
   pause();
-  const with1100 = "Cessna 172 Diesel · 1'100 kg · Piste 30 Rollstrecke: Start " + k2Start(1110) + ' m · Landung 265 m';
+  const with1100 = "Cessna 172 JT-A G1000 · 1'100 kg · Piste 30 Rollstrecke: Start " + k2Start(1110) + ' m · Landung 265 m';
   assert.equal(teaserText(env), with1100);
   // Untergrenze: 578 noch am Tippen, 579 gilt
   typeMass(env, '578');
@@ -1874,7 +1874,7 @@ test('boot: mit Fokus ist «noch am Tippen» kein Fehler (nur Ziffern unter der 
   calm('578', with1100);
   typeMass(env, '579');
   pause();
-  assert.equal(teaserText(env), "Cessna 172 Diesel · 579 kg · Piste 30 Rollstrecke: Start " + k2Start(579) + ' m · Landung 265 m');
+  assert.equal(teaserText(env), "Cessna 172 JT-A G1000 · 579 kg · Piste 30 Rollstrecke: Start " + k2Start(579) + ' m · Landung 265 m');
   // durch Weitertippen nicht mehr gültig: über dem Höchstgewicht oder andere Zeichen – Fehler nach 700 ms, auch mit Fokus
   ['1158', '1200', '123456', '1.5', '-1', '1e1', '1a', '1050,5'].forEach((v) => { typeMass(env, v); pause(); failed(v, v); });
   // Enter («change» mit Fokus) bei «1»: noch am Tippen, es gilt das letzte gültige Gewicht (1'100 kg)

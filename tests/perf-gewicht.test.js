@@ -996,7 +996,7 @@ test('Anzeige: ungültiges Gewicht – keine Zahl in Karte und Kurzzeile, Fehler
       assert.ok(p.body.includes('<div class="perf-state" role="status">' + err.replace(/'/g, '&#39;') + '</div>'), p.body);
       assert.ok(!/\d&nbsp;m\b|\d m\b/.test(p.body.replace(/<[^>]+>/g, ' ')) && !p.body.includes('perf-grid') && !p.body.includes('perf-details'), JSON.stringify(mt) + ': Zahl in der Karte');
       assert.ok(!/&nbsp;m|\bm\b/.test(p.teaser.replace(/<[^>]+>/g, ' ')) && !p.teaser.includes('perf-t-row'), JSON.stringify(mt) + ': Zahl in der Kurzzeile');
-      assert.equal(text(p.teaser).trim(), 'Start- und Landestrecke · Cessna 172 Diesel ' + ui.TEASER.massError);
+      assert.equal(text(p.teaser).trim(), 'Start- und Landestrecke · Cessna 172 JT-A G1000 ' + ui.TEASER.massError);
       assert.ok(p.body.includes('<div class="perf-head">Maximales Abfluggewicht'), 'Kopf ohne gültiges Gewicht');
     });
   });
@@ -1017,12 +1017,12 @@ test('Anzeige: ungültiges Gewicht – keine Zahl in Karte und Kurzzeile, Fehler
     const p = parts(wxPfa(), { massText: '1100' });
     assert.deepEqual([p.kind, seen], ['calc-error', [1100]]);
     assert.ok(p.body.includes('<div class="perf-state" role="status">1\'200&nbsp;kg liegt über dem maximalen Abfluggewicht von 1\'157&nbsp;kg – keine Berechnung.</div>'), p.body);
-    assert.equal(text(p.teaser).trim(), 'Start- und Landestrecke · Cessna 172 Diesel ' + ui.TEASER.massError);
+    assert.equal(text(p.teaser).trim(), 'Start- und Landestrecke · Cessna 172 JT-A G1000 ' + ui.TEASER.massError);
     assert.ok(!p.body.includes('perf-grid') && !p.teaser.includes('perf-t-row'), 'Zahlen bei above-mass');
     core.compute = () => ({ ok: false, error: { code: 'above-mass' }, input: res.input });
     const q = parts(wxPfa(), { massText: '1100' });
     assert.ok(q.body.includes('<div class="perf-state" role="status">' + ui.TEXT.internal + '</div>'), q.body);
-    assert.equal(text(q.teaser).trim(), 'Start- und Landestrecke · Cessna 172 Diesel ' + ui.TEASER.massError);
+    assert.equal(text(q.teaser).trim(), 'Start- und Landestrecke · Cessna 172 JT-A G1000 ' + ui.TEASER.massError);
     assertClean(q.body + q.teaser, 'above-mass ohne Zahlen');
   } finally {
     core.compute = orig;
@@ -1082,13 +1082,13 @@ test('Gleichlauf Karte und Kurzzeile über alle Sollzeilen des Planers (Zahl, Fa
 test('Anzeige: Kurzzeile mit Gewicht im Kopf, ohne «beide Pisten» (Entscheid E3), Gewicht = Höchstgewicht ohne Zusatz', () => {
   const head = (p) => teaserOf(p.teaser).head;
   const CALM = wxPfa({ tempC: 20, qnhHpa: 1013.25, windDir: null, windKt: 0 });
-  assert.equal(head(parts(wxPfa(), { massText: '1050' })), "Cessna 172 Diesel · 1'050 kg · Piste 30");
-  assert.equal(head(parts(CALM, { massText: '1050' })), "Cessna 172 Diesel · 1'050 kg · windstill");
-  assert.equal(head(parts(wxPfa({ tempC: 25, qnhHpa: 1015, windDir: 214, windKt: 10 }), { massText: '1100' })), "Cessna 172 Diesel · 1'100 kg · Wind quer");
+  assert.equal(head(parts(wxPfa(), { massText: '1050' })), "Cessna 172 JT-A G1000 · 1'050 kg · Piste 30");
+  assert.equal(head(parts(CALM, { massText: '1050' })), "Cessna 172 JT-A G1000 · 1'050 kg · windstill");
+  assert.equal(head(parts(wxPfa({ tempC: 25, qnhHpa: 1015, windDir: 214, windKt: 10 }), { massText: '1100' })), "Cessna 172 JT-A G1000 · 1'100 kg · Wind quer");
   assert.equal(head(parts(wxPfa({ tempC: 3, qnhHpa: 1022, windDir: null, windKt: 2 }), { aircraft: P2010, massText: '960' })), 'Tecnam P2010 · 960 kg · ohne Windrichtung');
-  [undefined, '1157', " 1'157"].forEach((mt) => assert.equal(head(parts(CALM, { massText: mt })), 'Cessna 172 Diesel · windstill', String(mt)));
+  [undefined, '1157', " 1'157"].forEach((mt) => assert.equal(head(parts(CALM, { massText: mt })), 'Cessna 172 JT-A G1000 · windstill', String(mt)));
   // ohne Ergebnis kein Gewicht im Kopf (keine Zahlen)
-  assert.equal(text(parts(undefined, { massText: '1050' }).teaser).trim(), 'Start- und Landestrecke · Cessna 172 Diesel ' + ui.TEASER.noData);
+  assert.equal(text(parts(undefined, { massText: '1050' }).teaser).trim(), 'Start- und Landestrecke · Cessna 172 JT-A G1000 ' + ui.TEASER.noData);
 });
 
 test('Anzeige: Durchlauf mit Gewicht – nie NaN, undefined, null oder Infinity; Texte aus lowerWeights maskiert', () => {

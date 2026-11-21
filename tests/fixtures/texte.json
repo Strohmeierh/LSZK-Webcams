@@ -1,7 +1,7 @@
 {
   "perf/aircraft/c172d.json": {
     "id": "c172d",
-    "label": "Cessna 172 Diesel",
+    "label": "Cessna 172 JT-A G1000",
     "massNoteDe": "Maximales Abfluggewicht und maximales Landegewicht der C172 S, Normal Category (Supplement, Section 2).",
     "variantDe": "Motor TAE 125-02-114, Propeller MTV-6-A/190-69",
     "techniqueDe": "Kurzstart- und Kurzlandetechnik",
@@ -367,7 +367,7 @@
   },
   "perf/aircraft/p2008.json": {
     "id": "p2008",
-    "label": "Tecnam P2008",
+    "label": "Tecnam P2008JC",
     "massNoteDe": "Maximales Abfluggewicht und maximales Landegewicht 650 kg (1433 lb) nach Supplement S9 (Section 2, Ziffer 14, S. MT2-12).",
     "variantDe": "P2008 JC, Rotax 912 S2, Propeller MTV-34-1-A/170-202",
     "techniqueDe": "Klappen T/O beim Start und LAND bei der Landung, Geschwindigkeiten nach AFM",
@@ -378,7 +378,7 @@
     "sources.afm.number": "Doc. No. 2008/100",
     "sources.afm.issue": "Ed. 2 – Rev. 1, 12 March 2018; Section 5 nach Supplement S9 «MTV-34 Propeller for aircraft with MTOW Increment at 650 kg» (Seiten MT5, Ed 2, Rev. 0), das den Abschnitt 5 des Grundhandbuchs ganz ersetzt",
     "sources.afm.approval": "EASA Type Certificate A.583",
-    "sources.afm.applicabilityDe": "Handbuch der baugleichen HB-KMG, HB-KMH und HB-KMX. Die vorliegende Kopie nennt weder Seriennummer noch Kennzeichen, und die Liste der Supplemente (S. 9-3) ist nicht angekreuzt.",
+    "sources.afm.applicabilityDe": "Handbuch der baugleichen HB-KMG, HB-KMH und HB-KMX. Die vorliegende Kopie nennt weder Seriennummer noch Kennzeichen, und die Liste der Supplemente (S. 9-3) ist nicht angekreuzt. Am 20.11.2026 bestätigt: Alle drei haben das Supplement S9 (Propeller MTV-34, MTOW 650 kg).",
     "sources.afm.caveatDe": "Stand der vorliegenden Kopie; massgebend ist das AFM im Flugzeug.",
     "charts.takeoff.source": "afm",
     "charts.takeoff.title": "Take-Off Performance, Weight = 650 kg",
@@ -495,7 +495,7 @@
   "perf/aircraft/index.json": {
     "default": "c172d",
     "aircraft[0].id": "c172d",
-    "aircraft[0].label": "Cessna 172 Diesel",
+    "aircraft[0].label": "Cessna 172 JT-A G1000",
     "aircraft[0].registrations[0]": "HB-TDA",
     "aircraft[0].registrations[1]": "HB-TDB",
     "aircraft[0].registrations[2]": "HB-TDC",
@@ -512,7 +512,7 @@
     "aircraft[2].registrations[2]": "HB-CYP",
     "aircraft[2].file": "c152.json",
     "aircraft[3].id": "p2008",
-    "aircraft[3].label": "Tecnam P2008",
+    "aircraft[3].label": "Tecnam P2008JC",
     "aircraft[3].registrations[0]": "HB-KMG",
     "aircraft[3].registrations[1]": "HB-KMH",
     "aircraft[3].registrations[2]": "HB-KMX",

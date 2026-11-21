@@ -193,10 +193,12 @@
     .ai-st-row + .ai-st-row { margin-top: 4px; }
     .ai-st-row .brf-dot { transform: translateY(1px); }
     .ai-st-row .ai-muted { font-size: 0.74rem; }
-    .ai-st-row.zu { color: #fca5a5; }
-    .ai-lage { font-size: 0.78rem; color: var(--text-muted); margin: 4px 0 0 18px; }
-    .ai-lage b { color: var(--text); }
-    .ai-platz.zu { color: #fca5a5; font-weight: 600; }
+    /* Platz gesperrt (Wunsch 21.11.: einmal und prominent): roter Kasten ganz oben im KI-Fenster */
+    .ai-sperre { margin: 4px 0 10px; padding: 8px 10px; border-left: 3px solid #ef4444; background: rgba(239, 68, 68, 0.14); border-radius: 0 6px 6px 0; }
+    .ai-sperre-titel { display: flex; gap: 8px; align-items: baseline; font-size: 1rem; font-weight: 700; line-height: 1.35; color: #fca5a5; }
+    .ai-sperre-titel .brf-dot { transform: translateY(1px); }
+    .ai-sperre-sub { font-size: 0.78rem; line-height: 1.45; color: var(--text-muted); margin: 2px 0 0 18px; }
+    .brf-note .ai-pflicht { display: block; margin-top: 4px; color: #f87171; font-weight: 700; }
     .ai-text { font-size: 0.85rem; line-height: 1.55; margin: 8px 0 12px; color: var(--text); }
     .ai-text.ai-small { font-size: 0.78rem; color: var(--text-muted); margin: 8px 0 0; }
     .ai-muted { color: var(--text-muted); font-weight: 400; }
@@ -1331,6 +1333,7 @@
       <div id="ai-modal-content"></div>
       <div class="brf-note">
         <strong>KI-generiert, ohne Gewähr.</strong> Automatische Einschätzung aus Webcam-Bildern, Messwerten (am Platz: Quelle MeteoSchweiz) und Modellprognose (Claude von Anthropic); sie kann falsch oder überholt sein. Massgebend sind die offizielle Flugwetterberatung (MeteoSchweiz, Skybriefing), AIP, NOTAM/DABS, die Flugplatzleitung (fgzo.ch) und die eigene Beobachtung.
+        <span class="ai-pflicht">Diese Information ersetzt keine Flugplanung.</span>
       </div>
     </div>
   </div>
@@ -2149,12 +2152,34 @@
       var t = Date.parse(fz.fetched_at_utc);
       return !isNaN(t) && (Date.now() - t) / 60000 < FGZO_FRESH_MIN;
     }
-    // Platz für Flächenflugzeuge gesperrt (Wunsch 17.11.): klare Sperrzeile, gleicher Wortlaut wie SPERRE_TEXT im Job.
-    // grund stammt vom Job (abgeleitet), wird trotzdem escaped; Rückgabe ist HTML-sicher.
-    function aiSperreText(grund) {
-      if (grund === 'nur Helikopterbetrieb') return 'Platz für Flächenflugzeuge gesperrt – nur Helikopterbetrieb erlaubt';
-      if (grund === 'geschlossen') return 'Platz geschlossen';
-      return 'Platz für Flächenflugzeuge gesperrt' + ((typeof grund === 'string' && grund) ? ' (' + escHtml(grund) + ')' : '');
+    // Platz für Flächenflugzeuge gesperrt (Wunsch 17.11.; seit 21.11. «einmal prominent dargestellt reicht»): ein roter
+    // Kasten ganz oben im KI-Fenster, Wortlaut wie SPERRE_TEXT im Job. grund und stand stammen vom Job bzw. aus
+    // fgzo_status.json und werden escaped; Rückgabe ist HTML-sicher.
+    function aiSperreBox(grund, stand, aktuell) {
+      var titel = grund === 'geschlossen' ? 'Platz geschlossen' : 'Platz für Flächenflugzeuge gesperrt', sub = [];
+      if (grund === 'nur Helikopterbetrieb') sub.push('nur Helikopterbetrieb erlaubt');
+      else if (typeof grund === 'string' && grund && grund !== 'geschlossen') sub.push(escHtml(grund));
+      if (typeof stand === 'string' && stand) sub.push(escHtml(stand));
+      return '<div class="ai-sperre"><div class="ai-sperre-titel"><span class="brf-dot" style="background:' + AI_PLATZ_COLOR.gesperrt +
+        '"></span><span>' + (aktuell ? 'Aktuell laut FGZO: ' : '') + titel + '</span></div>' +
+        (sub.length ? '<div class="ai-sperre-sub">' + sub.join(' · ') + '</div>' : '') + '</div>';
+    }
+    // Headline und Text beginnen bei Sperre mit «Platz gesperrt …» (verlangt der Job seit 15.11.). Seit 21.11. steht die
+    // Sperre nur noch im Kasten oben; weggelassen wird hier nur dieser Anfang: «Platz gesperrt», eine Klammer dahinter und
+    // der Grund «nur Heli…» (bzw. «geschlossen», «siehe fgzo.ch»), bis zum nächsten Satzzeichen. Passt etwas nicht genau,
+    // bleibt der Text unverändert (lieber doppelt als verstümmelt). satz: im Text bleibt «Platz gesperrt: <anderes> …» ganz.
+    var AI_SPERRE_KOPF = /^\s*(?:der\s+)?(?:flug)?platz\s+(?:ist\s+)?(?:für\s+flächenflugzeuge\s+)?(?:gesperrt|geschlossen)(?![A-Za-zÄÖÜäöüß])(?:\s*\([^()]*\))?/i;
+    var AI_SPERRE_GRUND = /^\s*(?:[:,;–-]\s*)?(?:nur\s+heli[A-Za-zäöü-]*(?:\s+erlaubt)?|geschlossen|siehe\s+fgzo\.ch)(?![A-Za-zÄÖÜäöüß])/i;
+    function aiOhneSperre(s, satz) {
+      s = typeof s === 'string' ? s : '';
+      var m = AI_SPERRE_KOPF.exec(s);
+      if (!m) return s;
+      var rest = s.slice(m[0].length), g = AI_SPERRE_GRUND.exec(rest);
+      if (g) rest = rest.slice(g[0].length);
+      var sep = /^\s*(?:[.;,:–-]\s*|$)/.exec(rest);   // die Sperre muss dort zu Ende sein
+      if (!sep || (satz && !g && /^\s*:/.test(rest))) return s;
+      rest = rest.slice(sep[0].length);
+      return rest.charAt(0).toUpperCase() + rest.slice(1);
     }
     // Sätze wie SENTENCE_SPLIT_RE in ai_briefing.py (kein Satzende nach einem Datum «14.11.»), ohne Lookbehind (ältere Safari)
     function aiSentences(txt) {
@@ -2233,6 +2258,19 @@
       btn.setAttribute('aria-label', label);
     }
 
+    // Kopf des DABS-Auszugs (Wunsch 21.11.): für welchen Tag er gilt und wann die Version herauskam. Version 1 eines Tages
+    // erscheint am Vortag, gilt aber für den Tag selbst. Der Auszug erscheint nur am eigenen Tag, darum «heute».
+    var AI_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+    function aiDabsKopf(x, tag, stand) {
+      var vortag = aiDay(new Date(tag.getTime() - 86400000)), sd = aiDay(stand);
+      var aus = sd === x.datum ? aiHM(stand) + ' LT'
+        : (sd === vortag ? 'am Vortag (' + aiDM(stand) + ' ' + aiHM(stand) + ' LT)' : aiDM(stand) + ' ' + aiHM(stand) + ' LT');
+      var ver = (typeof x.version === 'number' && isFinite(x.version)) ? 'Version ' + x.version + ', ' : '';
+      return '<div class="ai-row"><b>Gültig für heute, ' + AI_WT[tag.getUTCDay()] + ' ' + aiDM(tag) + '</b> · ' + ver + 'herausgegeben ' + aus + '</div>';
+    }
+    // leeres DABS (keine Einträge, Wunsch 21.11.): «heisst für uns keine Einschränkung aufgrund des DABS»
+    var AI_DABS_LEER = '<div class="ai-status" style="border-left-color:#10b981"><div class="ai-st-row">' +
+      '<span class="brf-dot" style="background:#10b981"></span><span>Keine Einträge im DABS – keine Einschränkung durch das DABS.</span></div></div>';
     function aiDabsHtml(d, now) {            // DABS-Auszug: Trefferliste vom Programm, nicht von der KI
       var x = (d.dabs && typeof d.dabs === 'object' && !Array.isArray(d.dabs)) ? d.dabs : null;
       if (!x) return '';                       // Datensatz ohne DABS-Feld: kein Abschnitt
@@ -2245,7 +2283,9 @@
       var tag = /^\d{4}-\d{2}-\d{2}$/.test(str(x.datum)) ? aiDate(x.datum + 'T12:00:00+00:00') : null;
       if (x.ok !== true || !stand || !tag) return html + '<div class="ai-row">DABS nicht auswertbar – bitte das Original öffnen.</div>';
       if (aiDay(tag) !== aiDay(now)) return html + '<div class="ai-row">Der Auszug ist nicht von heute und wird nicht mehr angezeigt.</div>';
+      html += aiDabsKopf(x, tag, stand);
       var hits = Array.isArray(x.treffer) ? x.treffer.filter(function (t) { return t && typeof t === 'object'; }) : [];
+      var total = (typeof x.eintraege_total === 'number' && isFinite(x.eintraege_total)) ? x.eintraege_total : null;
       var nDone = 0;
       hits.forEach(function (t) {
         var done = t.beendet === true;         // heute schon vorbei: grau, damit die Liste zur DABS-Karte passt (Wunsch 16.11.)
@@ -2260,13 +2300,15 @@
           '<br>' + escHtml(str(t.text)) +
           (t.karte === false ? ' <span class="ai-muted">· nicht auf der DABS-Karte</span>' : '') + '</div>';
       });
-      if (!hits.length) html += '<div class="ai-row">Keine DABS-Einträge im Fluggebiet gefunden.</div>';
+      var leer = x.leer === true && total === 0 && !hits.length;   // nur wenn das DABS selbst «no planned activities» meldet
+      if (leer) html += AI_DABS_LEER;
+      else if (!hits.length) html += '<div class="ai-row">Keine DABS-Einträge im Fluggebiet gefunden.</div>';
       else if (nDone === hits.length) html += '<div class="ai-row">Keine weiteren DABS-Einträge im Fluggebiet bis 30 min nach Sonnenuntergang.</div>';
-      var ver = (typeof x.version === 'number' && isFinite(x.version)) ? 'Version ' + x.version + ', ' : '';
-      var tot = (typeof x.eintraege_total === 'number' && isFinite(x.eintraege_total))
-        ? ' · ' + hits.length + ' von ' + x.eintraege_total + ' Einträgen' + (nDone ? ' (' + nDone + ' beendet)' : '') : '';
-      return html + '<div class="brf-src">Stand ' + ver + aiDM(stand) + ' ' + aiHM(stand) + ' LT' + tot +
-        (str(x.filter) ? ' · ' + escHtml(x.filter) : '') + ' · neue Versionen um 09:00, 13:00 und 16:00 LT · LT = Lokalzeit</div>';
+      var src = [];                            // Version und Ausgabe stehen seit 21.11. im Kopf (aiDabsKopf)
+      if (total !== null && total > 0) src.push(hits.length + ' von ' + total + ' Einträgen' + (nDone ? ' (' + nDone + ' beendet)' : ''));
+      if (str(x.filter) && !leer) src.push(escHtml(x.filter));
+      src.push('neue Versionen um 09:00, 13:00 und 16:00 LT', 'LT = Lokalzeit');
+      return html + '<div class="brf-src">' + src.join(' · ') + '</div>';
     }
     function aiThermikHtml(d, st) {
       var t = d.thermik;
@@ -2300,8 +2342,10 @@
       if (st.running) html += '<div class="ai-banner warn">Wird gerade aktualisiert…</div>';
       if (st.kind === 'none') {
         if (st.failed) html += '<div class="ai-banner">Der letzte Versuch' + (st.tri ? ' (' + aiWhen(st.tri, now) + ')' : '') + ' ist fehlgeschlagen.</div>';
-        if (st.sperreJetzt) html += '<div class="ai-lage ai-platz zu">Aktuell laut FGZO: ' + aiSperreText(briefing.platz.flaeche_grund) +
-          ' – Lokalflüge nicht möglich</div>';
+        if (st.sperreJetzt) {
+          var fz0 = briefing.platz;
+          html += aiSperreBox(fz0.flaeche_grund, (typeof fz0.updated === 'string' && fz0.updated) ? 'FGZO-Stand ' + fz0.updated : '', true);
+        }
         return html + '<div class="ai-text">Noch kein KI-Briefing vorhanden. ' + sched + '</div>';
       }
       var d = st.data, b = st.b, ftMap = aiDabsFtMap(d);
@@ -2315,33 +2359,36 @@
           (d.error ? '<details><summary>Technische Details</summary>' + escHtml(d.error) + '</details>' : '') + '</div>';
       }
       var lg = st.lage ? AI_LAGE[st.lage] : null;
-      html += '<div class="ai-headline"><span class="brf-dot" style="background:' + (st.sperre ? AI_LAGE.schlecht.color : (lg ? lg.color : AI_GREY)) + '"></span>' +
-        '<span>' + escHtml(aiFtText(b.headline || '', ftMap)) + '</span></div>';
-
-      // Platzstatus und Lage hervorgehoben (Wunsch 15.11.); Farben nur aus festen Maps, nie aus dem Datensatz.
-      // Für Flächenflugzeuge gesperrt (im Briefing oder inzwischen laut FGZO): nur die Sperre, Lage «nicht möglich»,
-      // kein FGZO-Hinweis zum Flugbetrieb (Wunsch 17.11.)
       var pz = (d.platz && typeof d.platz === 'object' && !Array.isArray(d.platz)) ? d.platz : null;
       var pzKey = (pz && aiHas(AI_PLATZ_COLOR, pz.flaeche)) ? pz.flaeche : 'unbekannt';
       var dot = function (c) { return '<span class="brf-dot" style="background:' + c + '"></span>'; };
       var muted = function (s) { return ' <span class="ai-muted">' + escHtml(s) + '</span>'; };
       var pm = (pz && typeof pz.text === 'string') ? /^([\s\S]*?)\s*(\(FGZO-Stand[^)]*\))\s*$/.exec(pz.text) : null;
-      html += '<div class="ai-status" style="border-left-color:' + (st.sperre ? AI_PLATZ_COLOR.gesperrt : AI_PLATZ_COLOR[pzKey]) + '">';
+      var txt = typeof b.text === 'string' ? b.text : '';
       if (st.sperre) {
-        var fz = briefing.platz, live = st.sperreJetzt;   // der aktuelle FGZO-Stand geht dem Briefing vor
-        var upd = (live && typeof fz.updated === 'string' && fz.updated) ? muted('(FGZO-Stand ' + fz.updated + ')') : '';
-        html += '<div class="ai-st-row zu">' + dot(AI_PLATZ_COLOR.gesperrt) + '<span>' +
-          (live && !st.sperreBriefing ? 'Aktuell laut FGZO: ' : '') + aiSperreText(live ? fz.flaeche_grund : (pz && pz.grund)) +
-          (live ? upd : (pm ? muted(pm[2]) : '')) + '</span></div>';
-      } else if (pz && typeof pz.text === 'string' && pz.text) {
-        html += '<div class="ai-st-row">' + dot(AI_PLATZ_COLOR[pzKey]) +
-          '<span>' + escHtml(pm ? pm[1] : pz.text) + (pm ? muted(pm[2]) : '') + '</span></div>';
+        // Für Flächenflugzeuge gesperrt (im Briefing oder inzwischen laut FGZO): die Sperre steht einmal, ganz oben
+        // (Wunsch 21.11.); Headline und Text ohne die wiederholte Sperre, kein Statuskasten mit «Lage für Lokalflüge»
+        // und kein FGZO-Hinweis zum Flugbetrieb (Wunsch 17.11.). Der aktuelle FGZO-Stand geht dem Briefing vor.
+        var fz = briefing.platz, live = st.sperreJetzt;
+        html += aiSperreBox(live ? fz.flaeche_grund : (pz && pz.grund),
+          live ? ((typeof fz.updated === 'string' && fz.updated) ? 'FGZO-Stand ' + fz.updated : '') : (pm ? pm[2].slice(1, -1) : ''),
+          live && !st.sperreBriefing);
+        var hl = aiOhneSperre(b.headline, false);
+        if (/\S/.test(hl)) html += '<div class="ai-headline"><span>' + escHtml(aiFtText(hl, ftMap)) + '</span></div>';
+        txt = aiOhneSperre(txt, true);
+      } else {
+        html += '<div class="ai-headline">' + dot(lg ? lg.color : AI_GREY) + '<span>' + escHtml(aiFtText(b.headline || '', ftMap)) + '</span></div>';
+        // Platzstatus und Lage hervorgehoben (Wunsch 15.11.); Farben nur aus festen Maps, nie aus dem Datensatz
+        html += '<div class="ai-status" style="border-left-color:' + AI_PLATZ_COLOR[pzKey] + '">';
+        if (pz && typeof pz.text === 'string' && pz.text) {
+          html += '<div class="ai-st-row">' + dot(AI_PLATZ_COLOR[pzKey]) +
+            '<span>' + escHtml(pm ? pm[1] : pz.text) + (pm ? muted(pm[2]) : '') + '</span></div>';
+        }
+        html += '<div class="ai-st-row">' + dot(lg ? lg.color : AI_GREY) +
+          '<span>Lage für Lokalflüge: ' + (lg ? lg.label : '–') + '</span></div></div>';
       }
-      html += '<div class="ai-st-row' + (st.sperre ? ' zu' : '') + '">' + dot(st.sperre ? AI_PLATZ_COLOR.gesperrt : (lg ? lg.color : AI_GREY)) +
-        '<span>Lage für Lokalflüge: ' + (st.sperre ? 'nicht möglich' : (lg ? lg.label : '–')) + '</span></div></div>';
 
       // ältere Datensätze beginnen noch mit der Platzzeile: hier nicht ein zweites Mal zeigen
-      var txt = typeof b.text === 'string' ? b.text : '';
       if (pz && pz.flaeche !== 'gesperrt' && typeof pz.text === 'string') {
         var line = pz.text.replace(/\s*\(FGZO-Stand[^)]*\)\s*$/, '');
         var rest = (line && txt.indexOf(line + '.') === 0) ? txt.slice(line.length + 1).replace(/^\s+/, '') : '';
@@ -2350,7 +2397,8 @@
       // FGZO-Hinweis (eigenes Feld seit 17.11.) direkt vor dem Text, aber nur solange der Platz nicht gesperrt ist
       var hint = (typeof b.fgzo_hinweis === 'string') ? b.fgzo_hinweis.replace(/^\s+|\s+$/g, '') : '';
       if (st.sperre) { hint = ''; txt = aiDropFgzoHint(txt); }
-      html += '<div class="ai-text">' + escHtml(aiFtText(hint ? hint + ' ' + txt : txt, ftMap)) + '</div>';
+      var full = hint ? hint + ' ' + txt : txt;   // bei Sperre kann der Text nur aus dem Sperrsatz bestanden haben
+      if (/\S/.test(full)) html += '<div class="ai-text">' + escHtml(aiFtText(full, ftMap)) + '</div>';
 
       var basis = aiFeet(sky.wolkenbasis_m), bq = aiMap(AI_MAPS.basis_quelle, sky.basis_quelle);
       var sichtTxt = aiMap(AI_MAPS.sicht, sky.sicht), sk = aiNum(sky.sicht_km, ' km');

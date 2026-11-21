@@ -442,8 +442,10 @@ test('index.html: Wetter-Panel, Thermik-Karte, Ampel und KI-Fenster zeigen ft', 
   assert.ok(SRC.includes("aiThousands(densAlt) + '&nbsp;ft</div></div>';"));
   // aiSwiss nur noch in der Definition und in aiFtText; alle KI-Texte laufen über aiFtText
   assert.equal(SRC.split('aiSwiss(').length - 1, 2);
-  ['aiFtText(b.headline', 'aiFtText(hint ? hint', 'aiFtText(r.zustand', 'aiFtText(k.satz', 'aiFtText(t.zusammenfassung']
+  // seit 21.11.: bei Platzsperre läuft die Headline ohne Sperre (hl) über aiFtText, der Text als «full» (Hinweis + Text)
+  ['aiFtText(b.headline', 'aiFtText(hl, ftMap)', 'aiFtText(full, ftMap)', 'aiFtText(r.zustand', 'aiFtText(k.satz', 'aiFtText(t.zusammenfassung']
     .forEach((s) => assert.equal(SRC.split(s).length - 1, 1, s));
+  assert.ok(SRC.includes("var full = hint ? hint + ' ' + txt : txt;"));
   ['aiFeet(sky.wolkenbasis_m)', 'aiFeet(sky.nebel_obergrenze_m)', 'aiFeet(sky.schneegrenze_m)', 'aiFeet(r.arbeitshoehe_m)', 'aiFeet(r.basis_m)']
     .forEach((s) => assert.equal(SRC.split(s).length - 1, 1, s));
 });

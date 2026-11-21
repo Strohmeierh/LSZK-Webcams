@@ -85,15 +85,15 @@ test('Daten: JSON ohne BOM, Schema 2, Validierung ok', () => {
 test('Daten: Auswahl mit vier Mustern und Kennzeichen, Lycoming nicht mehr in perf/aircraft', () => {
   assert.equal(INDEX.default, 'c172d');
   assert.deepEqual(INDEX.aircraft.map((a) => [a.id, a.label, a.file, a.registrations]), [
-    ['c172d', 'Cessna 172 Diesel', 'c172d.json', ['HB-TDA', 'HB-TDB', 'HB-TDC', 'HB-TDD']],
+    ['c172d', 'Cessna 172 JT-A G1000', 'c172d.json', ['HB-TDA', 'HB-TDB', 'HB-TDC', 'HB-TDD']],
     ['p2010', 'Tecnam P2010', 'p2010.json', ['HB-KMD']],
     ['c152', 'Cessna 152', 'c152.json', ['HB-CFA', 'HB-CYF', 'HB-CYP']],
-    ['p2008', 'Tecnam P2008', 'p2008.json', ['HB-KMG', 'HB-KMH', 'HB-KMX']]
+    ['p2008', 'Tecnam P2008JC', 'p2008.json', ['HB-KMG', 'HB-KMH', 'HB-KMX']]
   ]);
-  assert.equal(C172D_DATA.label, 'Cessna 172 Diesel');
+  assert.equal(C172D_DATA.label, 'Cessna 172 JT-A G1000');
   assert.equal(P2010_DATA.label, 'Tecnam P2010');
   assert.deepEqual([C152_DATA.id, C152_DATA.label], ['c152', 'Cessna 152']);
-  assert.deepEqual([P2008_DATA.id, P2008_DATA.label], ['p2008', 'Tecnam P2008']);
+  assert.deepEqual([P2008_DATA.id, P2008_DATA.label], ['p2008', 'Tecnam P2008JC']);
   assert.deepEqual(fs.readdirSync(path.join(ROOT, 'perf', 'aircraft')).sort(), ['c152.json', 'c172d.json', 'index.json', 'p2008.json', 'p2010.json']);
 });
 

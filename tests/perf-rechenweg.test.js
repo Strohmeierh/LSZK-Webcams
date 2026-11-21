@@ -268,7 +268,7 @@ function checkPhase(P, ph, ac, rwy, inp, pa, kt, ctx, stats, note) {
 /* ── Aufbau und Wortlaut ──────────────────────────────────── */
 
 // Erster Satz der Lesehilfe mit der alten Ableseregel der Tests (tests/helpers/ablesung.js)
-const RULE_NH3 = 'Druckhöhe, Temperatur und Startgewicht: nächsthöherer Tabellenwert.';         // Cessna 172 Diesel
+const RULE_NH3 = 'Druckhöhe, Temperatur und Startgewicht: nächsthöherer Tabellenwert.';         // Cessna 172 JT-A G1000
 const RULE_NH2 = 'Druckhöhe und Temperatur: nächsthöherer Tabellenwert.';                     // Cessna 152 (eine Starttabelle)
 const RULE_P2010_ALT = 'Temperatur linear interpoliert. Druckhöhe und Startgewicht: nächsthöherer Tabellenwert.';
 function ruleOf(acId) { return acId === 'p2010' ? RULE_P2010_ALT : (acId === 'c152' ? RULE_NH2 : RULE_NH3); }

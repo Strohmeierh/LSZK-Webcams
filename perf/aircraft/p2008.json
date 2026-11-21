@@ -1,7 +1,7 @@
 {
   "schema": 2,
   "id": "p2008",
-  "label": "Tecnam P2008",
+  "label": "Tecnam P2008JC",
   "mass": { "kg": 650, "lb": 1433 },
   "massNoteDe": "Maximales Abfluggewicht und maximales Landegewicht 650 kg (1433 lb) nach Supplement S9 (Section 2, Ziffer 14, S. MT2-12).",
   "variantDe": "P2008 JC, Rotax 912 S2, Propeller MTV-34-1-A/170-202",
@@ -15,7 +15,7 @@
       "number": "Doc. No. 2008/100",
       "issue": "Ed. 2 – Rev. 1, 12 March 2018; Section 5 nach Supplement S9 «MTV-34 Propeller for aircraft with MTOW Increment at 650 kg» (Seiten MT5, Ed 2, Rev. 0), das den Abschnitt 5 des Grundhandbuchs ganz ersetzt",
       "approval": "EASA Type Certificate A.583",
-      "applicabilityDe": "Handbuch der baugleichen HB-KMG, HB-KMH und HB-KMX. Die vorliegende Kopie nennt weder Seriennummer noch Kennzeichen, und die Liste der Supplemente (S. 9-3) ist nicht angekreuzt.",
+      "applicabilityDe": "Handbuch der baugleichen HB-KMG, HB-KMH und HB-KMX. Die vorliegende Kopie nennt weder Seriennummer noch Kennzeichen, und die Liste der Supplemente (S. 9-3) ist nicht angekreuzt. Am 20.11.2026 bestätigt: Alle drei haben das Supplement S9 (Propeller MTV-34, MTOW 650 kg).",
       "caveatDe": "Stand der vorliegenden Kopie; massgebend ist das AFM im Flugzeug."
     }
   },

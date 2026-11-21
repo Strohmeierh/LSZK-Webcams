@@ -1,7 +1,7 @@
 {
   "schema": 2,
   "id": "c172d",
-  "label": "Cessna 172 Diesel",
+  "label": "Cessna 172 JT-A G1000",
   "mass": { "kg": 1157, "lb": 2550 },
   "massNoteDe": "Maximales Abfluggewicht und maximales Landegewicht der C172 S, Normal Category (Supplement, Section 2).",
   "variantDe": "Motor TAE 125-02-114, Propeller MTV-6-A/190-69",

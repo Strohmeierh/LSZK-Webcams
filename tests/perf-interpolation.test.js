@@ -195,7 +195,7 @@ function field(elevFt) {
   return Object.assign(clone(AF), { elevation: { value: elevFt, unit: 'ft' } });
 }
 
-/* ── Daten Tecnam P2008 ────────────────────────────────────── */
+/* ── Daten Tecnam P2008JC ────────────────────────────────────── */
 
 test('P2008 Daten: alle Tabellenwerte wörtlich (4 × 88), Fingerabdrücke', () => {
   assert.deepEqual(P2008.charts.takeoff.table.cells, P2008_TO650);
@@ -243,8 +243,8 @@ test('P2008 Daten: Plausibilität – monoton, Landung überall 209 m Luftstreck
 
 test('P2008 Daten: Gewichte, Quellen, Bedingungen und Korrekturen wie im AFM', () => {
   assert.deepEqual(core.validateAircraft(P2008), { ok: true, errors: [] });
-  assert.deepEqual([P2008.id, P2008.label, P2008.schema], ['p2008', 'Tecnam P2008', 2]);
-  assert.deepEqual(LIST.find((e) => e.id === 'p2008'), { id: 'p2008', label: 'Tecnam P2008', file: 'p2008.json', registrations: ['HB-KMG', 'HB-KMH', 'HB-KMX'] });
+  assert.deepEqual([P2008.id, P2008.label, P2008.schema], ['p2008', 'Tecnam P2008JC', 2]);
+  assert.deepEqual(LIST.find((e) => e.id === 'p2008'), { id: 'p2008', label: 'Tecnam P2008JC', file: 'p2008.json', registrations: ['HB-KMG', 'HB-KMH', 'HB-KMX'] });
   // Section 2, Ziffer 14 (S. MT2-12): MTOW = MLW = 650 kg (1433 lb); Starttabellen 650, 600, 550 kg (das AFM nennt dort nur kg)
   assert.deepEqual(P2008.mass, { kg: 650, lb: 1433 });
   assert.deepEqual(P2008.charts.takeoff.lowerWeights.map((e) => [e.mass.kg, e.mass.lb, e.ref.page, e.title]),
@@ -503,7 +503,7 @@ test('Interpolation ist nie kürzer als der Tabellenwert darunter und nie länge
 
 /* ── Von Hand nachgerechnet ────────────────────────────────── */
 
-test('Von Hand: Cessna 172 Diesel mit 1\'120 kg, 7,9 °C, QNH 1004,4, 230°/11,7 kt (zwei Starttabellen, Höhe und Temperatur interpoliert)', () => {
+test('Von Hand: Cessna 172 JT-A G1000 mit 1\'120 kg, 7,9 °C, QNH 1004,4, 230°/11,7 kt (zwei Starttabellen, Höhe und Temperatur interpoliert)', () => {
   const r = run(C172D, wx(7.9, 1004.4, 230, 11.7, false, 1120));
   assert.equal(r.pressureAltitudeTableFt, 2002);                 // 2001,56 ft aufgerundet
   const rw = rwy(r, '30');
@@ -538,7 +538,7 @@ test('Von Hand: Cessna 172 Diesel mit 1\'120 kg, 7,9 °C, QNH 1004,4, 230°/11,7
   assert.deepEqual([meters(old.takeoff), meters(old.landing)], [[325, 484], [273, 508]]);
 });
 
-test('Von Hand: Tecnam P2008 mit 600 kg und 620 kg, 7,9 °C, QNH 1004,4, 230°/11,7 kt', () => {
+test('Von Hand: Tecnam P2008JC mit 600 kg und 620 kg, 7,9 °C, QNH 1004,4, 230°/11,7 kt', () => {
   let r = run(P2008, wx(7.9, 1004.4, 230, 11.7, false, 600));
   let p = rwy(r, '30').takeoff;
   // 600 kg (MT5-8): 2'000 ft 184/322 (0 °C), 227/395 (25 °C); 3'000 ft 201/351, 248/430; Temperatur 7,9/25 = 0,316
@@ -919,7 +919,7 @@ test('Durchlauf (linear): ganze Rechenkette steigt mit Temperatur, Druckhöhe un
 test('Anzeige P2008: Auswahl, Kennzeichen, Kopf, Faktorzeile, Rechenweg ohne Graszuschlag, Pflichthinweis rot und fett', () => {
   const html = render(wxPfa(), { aircraft: P2008, detailsOpen: false });
   const t = text(html);
-  assert.ok(html.includes('<option value="p2008" selected>Tecnam P2008</option>'), html);
+  assert.ok(html.includes('<option value="p2008" selected>Tecnam P2008JC</option>'), html);
   assert.ok(html.includes('<div class="perf-ac-sub" id="perf-ac-sub"><span class="perf-nw">HB-KMG</span> · <span class="perf-nw">HB-KMH</span> · <span class="perf-nw">HB-KMX</span></div>'), html);
   assert.ok(t.includes('Maximales Abfluggewicht 650 kg (1\'433 lb) · Klappen T/O beim Start und LAND bei der Landung, Geschwindigkeiten nach AFM · P2008 JC, Rotax 912 S2, Propeller MTV-34-1-A/170-202'), t);
   assert.ok(t.includes('Eingerechnet nach AFM: Faktor für Abweichungen im Betrieb – Start × 1,10 (NOTE, MT5-7), Landung × 1,67 (NOTE, MT5-14).'), t);
