@@ -1,6 +1,6 @@
 {
-  "fetched_at_utc": "2026-11-21T17:21:10+00:00",
-  "station_last_received_utc": "2026-11-21T17:20:38+00:00",
+  "fetched_at_utc": "2026-11-21T17:31:13+00:00",
+  "station_last_received_utc": "2026-11-21T17:30:41+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
     "windDirection": 309,
@@ -52,18 +52,18 @@
     "temperatureFeelLike": "6",
     "temperature": "6",
     "hiTemp": "8",
-    "hiTempDate": 1795266610740,
+    "hiTempDate": 1795266612805,
     "loTemp": "-68",
-    "loTempDate": 1795225870740,
+    "loTempDate": 1795225872805,
     "wind": "0",
     "gust": "14",
-    "gustAt": 1795218070740,
+    "gustAt": 1795218072805,
     "humidity": "95",
     "rain": "1.4",
     "seasonalRain": "606.8",
     "barometer": "1016.8",
     "barometerTrend": "Steady",
-    "lastReceived": 1795281638000,
+    "lastReceived": 1795282241000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1795281638000,
+    "lastReceived": 1795282241000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
@@ -290,9 +290,9 @@
         "sensorDataTypeId": 71,
         "sensorDataName": "Wet Bulb",
         "displayName": "Wet Bulb",
-        "reportedValue": 6,
-        "value": 6,
-        "convertedValue": "6",
+        "reportedValue": 5,
+        "value": 5,
+        "convertedValue": "5",
         "depthLabel": null,
         "category": "main",
         "assocSensorDataTypeId": null,
@@ -722,13 +722,13 @@
       {
         "sensorDataName": "Rain",
         "rawValues": {
-          "DAY": 1.4,
           "MONTH": 43.2,
+          "DAY": 1.4,
           "YEAR": 606.8
         },
         "convertedValues": {
-          "DAY": "1.4",
           "MONTH": "43.2",
+          "DAY": "1.4",
           "YEAR": "606.8"
         },
         "assocSensorDataTypeId": null,
@@ -737,13 +737,13 @@
       {
         "sensorDataName": "ET",
         "rawValues": {
-          "DAY": 0.0,
           "MONTH": 0.0,
+          "DAY": 0.0,
           "YEAR": 0.0
         },
         "convertedValues": {
-          "DAY": "0.0",
           "MONTH": "0.0",
+          "DAY": "0.0",
           "YEAR": "0.0"
         },
         "assocSensorDataTypeId": null,
