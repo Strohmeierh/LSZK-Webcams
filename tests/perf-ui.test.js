@@ -692,6 +692,11 @@ test('Format: QNH ohne Tausendertrenner, Druckhöhe aufgerundet, Zwischenwerte e
     ['743,664', '26,0936', "1'604,1", '0,3', '331,2', '−25', "1'420"]);
   // nicht exakt auf vier Stellen darstellbar (seit VERSION 7): «≈» und zwei Nachkommastellen
   assert.deepEqual([ui.fmtExact(1 / 3), ui.fmtExact(375.36336), ui.fmtExact(258.86245)], ['≈0,33', '≈375,36', '≈258,86'], 'nicht exakt darstellbar: mit «≈»');
+  // Grenze für Gleitkommareste 1e-10 (VERSION 9, vorher 1e-7): echte Nachkommastellen ab der achten zählen, Rechenreste nicht;
+  // 8e-10, 1,5e-10 und 3e-11 legen die Grenze eng fest
+  assert.deepEqual([ui.fmtExact(380.84800008), ui.fmtExact(380.848 + 2e-9), ui.fmtExact(380.848 + 8e-10), ui.fmtExact(380.848 + 1.5e-10),
+    ui.fmtExact(380.848 + 3e-11), ui.fmtExact(1234.5678 - 4e-11)],
+    ['≈380,85', '≈380,85', '≈380,85', '≈380,85', '380,848', "1'234,5678"]);
   // Tecnam K21: Zwischenwerte mit drei und vier Nachkommastellen exakt, nur der letzte Wert auf 0,01 aufgerundet
   const k21 = render(wxPfa({ tempC: 10.8, qnhHpa: 998.2, windDir: 247, windKt: 8.7 }), { aircraft: P2010 });
   assert.equal(afmGrids(k21)[1], " ‖ 0 °C | [10,8 °C] | 25 °C ‖ [3'000 ft]: ~251/535 | *260,936/544,936* | ~274/558", 'Landung');

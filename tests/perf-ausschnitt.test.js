@@ -128,8 +128,8 @@ test('Ausschnitt: Daten – Zeilen Druckhöhe, Spalten Temperatur, in jeder Tabe
   assert.ok(n >= 12, n + ' Tabellen');
 });
 
-test('Version: Anzeige und Kern VERSION 8, ?v=8 in index.html', () => {
-  assert.deepEqual([ui.VERSION, core.VERSION], [8, 8]);
+test('Version: Anzeige und Kern VERSION 9, ?v=9 in index.html', () => {
+  assert.deepEqual([ui.VERSION, core.VERSION], [9, 9]);
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-  assert.ok(html.includes('<script defer src="perf/perf.js?v=8"></script>') && html.includes('<script defer src="perf/perf-ui.js?v=8"></script>'));
+  assert.ok(html.includes('<script defer src="perf/perf.js?v=9"></script>') && html.includes('<script defer src="perf/perf-ui.js?v=9"></script>'));
 });

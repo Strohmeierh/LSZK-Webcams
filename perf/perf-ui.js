@@ -24,6 +24,8 @@
    Gezeigt wird nur die Piste mit Gegenwind. Nass gilt die Piste bei einer FGZO-Meldung ungleich DRY oder bei Regen.
    VERSION 8: Ablesung im Rechenweg als Tabellenausschnitt wie im AFM (Wunsch des Benutzers vom 21.11.2026, Variante A):
    die Eingabe blau als Zeile bzw. Spalte zwischen den zwei Tabellenwerten, im Schnittpunkt fett der Wert dafür.
+   VERSION 9 (Wunsch des Benutzers vom 21.11.2026): «≈» auch bei Werten, die erst ab der achten Nachkommastelle von vier
+   Stellen abweichen (Gewichtszeilen).
    Browser: window.LszkPerf = { update, version, _tick }. Node: reine Funktionen für die Tests.
    VERSION gleich dem ?v= in index.html und in perf/perf.js halten.
    Browsercode in ES2015, ohne Optional Chaining, Nullish Coalescing und Lookbehind. */
@@ -36,7 +38,7 @@
 }(typeof self !== 'undefined' ? self : this, function (core) {
   'use strict';
 
-  var VERSION = 8;
+  var VERSION = 9;
 
   var STALE_MIN = 45;          // Messwerte älter: keine Zahlen
   var FUTURE_MIN = 5;          // Messzeit weiter in der Zukunft: keine Zahlen
@@ -330,9 +332,11 @@
   // Zwischenwert im Rechenweg: exakt, höchstens vier Nachkommastellen, ohne nachgestellte Nullen; das Runden auf
   // 0,0001 entfernt nur Gleitkommareste. Ist ein Wert so nicht exakt darstellbar (Interpolation, z. B. Gewicht
   // 9/23), steht «≈» davor und er erscheint auf zwei Nachkommastellen gerundet.
+  // Als Gleitkommarest gilt höchstens 1e-10 (VERSION 9; vorher 1e-7, da galt ein Wert der Interpolation im Gewicht
+  // mit acht Nachkommastellen als exakt). Die Reste der Rechnung liegen bei diesen Grössen unter etwa 3e-11.
   function fmtExact(x) {
     var s = x * 10000, r = Math.round(s);
-    if (Math.abs(s - r) > 1e-3) return '≈' + fmtTrim(Math.round(x * 100) / 100, 2);
+    if (Math.abs(s - r) > 1e-6) return '≈' + fmtTrim(Math.round(x * 100) / 100, 2);
     return fmtTrim(r / 10000, 4);
   }
 

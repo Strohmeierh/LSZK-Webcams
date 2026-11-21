@@ -712,6 +712,13 @@ test('Anzeige (linear): Kopf, Hinweis am Gewichtsfeld und Eingaben für zwischen
   assert.ok(t.includes("Start · AFM, Section 5, Ziffer 7, Seiten APV5-8 und APV5-9 · Tabellen 1'160 und 1'060 kg"), t);
 });
 
+test("Gewichtszeile: Wert mit acht Nachkommastellen mit «≈» (P2010 1'111 kg, QNH 959, −7,3 °C; VERSION 9)", () => {
+  // Rollstrecke des Kerns 334,79459992 m (echter Wert, kein Gleitkommarest), bis VERSION 8 als exakt «334,7946» gezeigt
+  const t = text(render(wxPfa({ tempC: -7.3, qnhHpa: 959 }), { aircraft: P2010, massText: '1111' }));
+  assert.ok(t.includes("interpoliert für 1'111 kg ≈334,79 m ≈593,66 m"), t);
+  assert.ok(!t.includes('334,7946'), 'nicht als exakt');
+});
+
 test('Rechenweg (linear): Ausschnitte wie im AFM (Grenzen, Eingabe, Zellen), jede Interpolation aus den angezeigten Zahlen nachgerechnet', () => {
   let checked = 0, cells = 0;
   const val = (s) => Number(s.replace(/'/g, '').replace(',', '.').replace('−', '-').replace('≈', ''));
