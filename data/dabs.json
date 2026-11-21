@@ -2,10 +2,10 @@
   "schema_version": 1,
   "parser": 2,
   "quelle": "https://www.skybriefing.com/o/dabs?today",
-  "abgerufen_utc": "2026-11-21T11:53:53+00:00",
+  "abgerufen_utc": "2026-11-21T15:04:04+00:00",
   "datum": "2026-11-21",
-  "version": 3,
-  "stand_utc": "2026-11-21T11:45:00+00:00",
+  "version": 4,
+  "stand_utc": "2026-11-21T14:45:00+00:00",
   "leer": true,
   "fehler": null,
   "eintraege": []
