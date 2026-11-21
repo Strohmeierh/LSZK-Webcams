@@ -21,6 +21,7 @@ const clone = (o) => JSON.parse(JSON.stringify(o));
 // Tests der Anzeige mit der Ableseregel bis VERSION 6 (tests/helpers/ablesung.js); die ausgelieferte Ablesung (linear)
 // prüft tests/perf-interpolation.test.js.
 const { alteAblesung } = require('./helpers/ablesung.js');
+const { afmGrids, legend } = require('./helpers/afm.js');
 const C172D = alteAblesung(readJson('perf/aircraft/c172d.json'));
 const P2010 = alteAblesung(readJson('perf/aircraft/p2010.json'));
 const C152 = alteAblesung(readJson('perf/aircraft/c152.json'));
@@ -875,17 +876,22 @@ test('Anzeige: Kopfzeile in drei Formen, Eintrag «Eingaben», Quelle der gewäh
   assert.equal(inputs(parts(wxPfa(), { aircraft: P2010, massText: '1000' })), "Gewicht 1'000 kg, Starttabelle 1'060 kg");
   assert.equal(inputs(parts(wxPfa(), { aircraft: C152 })), 'Gewicht 758 kg (einzige Starttabelle)');
   // Quelle der gewählten Starttabelle, Landung mit dem maximalen Landegewicht; Tabellenwerte aus der Abschrift (K2: 2'000 ft / 20 °C)
+  // Unter dem Kopf der Phase zuerst die Legende (VERSION 8), dann der Ausschnitt mit der abgelesenen Zelle (alte Ableseregel:
+  // nächsthöherer Tabellenwert, also eine Zelle)
   const src = (p, ph) => text(new RegExp('<th colspan="3" scope="rowgroup">' + ph + ' <span class="perf-steps-src">(.*?)</span>').exec(p.body)[1]).trim();
   const firstRow = (p) => text(/<tr class="perf-steps-ph">.*?<\/tr>(<tr>.*?<\/tr>)/.exec(p.body)[1]).trim();
+  const cellGrid = (c) => " ‖ [20 °C] ‖ [2'000 ft]: *" + ui.fmtExact(c[0]) + '/' + ui.fmtExact(c[1]) + '*';
   let p = parts(wxPfa(), { massText: '1120' });
   assert.equal(src(p, 'Start'), "· Supplement, Figure 5-1c (Section 5b), Seite 5b-6 · Tabelle 1'134 kg");
   assert.equal(src(p, 'Landung'), "· Grundhandbuch, Figure 5-11, Seite 5-24 · maximales Landegewicht 1'157 kg");
   const c1134 = colsToCells(FX.c1134.mColumns, T7)[2][3];
-  assert.equal(firstRow(p), "Tabelle 2'000 ft / 20 °C " + c1134[0] + ' m ' + c1134[1] + ' m');
+  assert.equal(firstRow(p), legend('m'));
+  assert.equal(afmGrids(p.body)[0], cellGrid(c1134));
+  assert.ok(text(p.body).includes('Tabellenwert ' + c1134[0] + ' m ' + c1134[1] + ' m'), text(p.body));
   p = parts(wxPfa(), { massText: '700' });
   assert.equal(src(p, 'Start'), "· Supplement, Figure 5-1e (Section 5b), Seite 5b-9 · Tabelle 1'111 kg");
   const c1111 = colsToCells(FX.c1111.mColumns, T7)[2][3];
-  assert.equal(firstRow(p), "Tabelle 2'000 ft / 20 °C " + c1111[0] + ' m ' + c1111[1] + ' m');
+  assert.equal(afmGrids(p.body)[0], cellGrid(c1111));
   p = parts(wxPfa(), { aircraft: P2010, massText: '1000' });
   assert.equal(src(p, 'Start'), "· AFM, Section 5, Ziffer 7, Seite APV5-9 · Tabelle 1'060 kg");
   assert.equal(src(p, 'Landung'), "· AFM, Section 5, Ziffer 11, Seite APV5-17 · maximales Landegewicht 1'160 kg");

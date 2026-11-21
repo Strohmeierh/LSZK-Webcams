@@ -22,6 +22,8 @@
    Grundsatz: lieber kein Wert als ein falscher. Ohne gültige, frische Messwerte keine Zahlen, auch nicht in der
    Kurzzeile.
    Gezeigt wird nur die Piste mit Gegenwind. Nass gilt die Piste bei einer FGZO-Meldung ungleich DRY oder bei Regen.
+   VERSION 8: Ablesung im Rechenweg als Tabellenausschnitt wie im AFM (Wunsch des Benutzers vom 21.11.2026, Variante A):
+   die Eingabe blau als Zeile bzw. Spalte zwischen den zwei Tabellenwerten, im Schnittpunkt fett der Wert dafür.
    Browser: window.LszkPerf = { update, version, _tick }. Node: reine Funktionen für die Tests.
    VERSION gleich dem ?v= in index.html und in perf/perf.js halten.
    Browsercode in ES2015, ohne Optional Chaining, Nullish Coalescing und Lookbehind. */
@@ -34,7 +36,7 @@
 }(typeof self !== 'undefined' ? self : this, function (core) {
   'use strict';
 
-  var VERSION = 7;
+  var VERSION = 8;
 
   var STALE_MIN = 45;          // Messwerte älter: keine Zahlen
   var FUTURE_MIN = 5;          // Messzeit weiter in der Zukunft: keine Zahlen
@@ -88,6 +90,9 @@
     calcSurface: 'Graszuschlag in % der Tabellen-Rollstrecke, auf beide Strecken.',
     calcLimits: 'Nicht berücksichtigt: Pistenneigung. Kein eigener Sicherheitszuschlag.',
     calcNoWet: 'nasse Piste: kein Wert im AFM, ohne Zuschlag gerechnet',
+    // Legende über dem Tabellenausschnitt (VERSION 8), nach «AFM-Tabelle in m: »; blau ist auch eine direkt abgelesene
+    // Zeile oder Spalte (genau auf einem Tabellenwert, unter der Tabelle, nächsthöherer Wert)
+    calcAfm: 'oben Rollstrecke, unten über 15&nbsp;m, blau die Eingabe oder der abgelesene Wert',
     // Abfluggewicht: Beschriftung des Felds, Fehlertexte (reiner Text, ohne HTML; Über- und Untergrenze mit Zahlen in
     // parseMass) und Sätze der Zeile «Start möglich bis …» je Piste
     massLabel: 'Abfluggewicht in kg',
@@ -212,6 +217,24 @@
     '.perf-steps .perf-steps-res th, .perf-steps .perf-steps-res td { color: var(--text); font-weight: 700; }',
     '.perf-steps td.perf-steps-note { color: var(--text-muted); white-space: normal; }',
     '.perf-steps td.perf-nov { color: #f87171; }',
+    // Tabellenausschnitt im Rechenweg (VERSION 8, Variante A): Zeilen Druckhöhe, Spalten Temperatur. Blau die Eingabe als
+    // Zeile bzw. Spalte zwischen den zwei Tabellenwerten (bzw. die abgelesene Zeile oder Spalte), im Schnittpunkt fett der
+    // Wert; je Zelle oben die Rollstrecke, darunter über 15 m (.perf-afm-2). Die Regeln für Zellen stehen mit .perf-steps
+    // davor, damit sie die Regeln der Schritt-Tabelle (.perf-steps th/td greifen auch im Ausschnitt) sicher übersteuern.
+    // Kontrast auf --card-bg: Blau #38bdf8 auf 12 % Blau 5,4 : 1, Schnittpunkt #7dd3fc auf 26 % Blau 5,2 : 1 (AA 4,5 : 1);
+    // in blauen Zellen auch die zweite Zeile voll deckend.
+    '.perf-steps tr.perf-steps-afm > td { padding: 2px 0 6px; text-align: left; white-space: normal; }',
+    '.perf-afm { border-collapse: collapse; font-size: 0.74rem; font-variant-numeric: tabular-nums; }',
+    '.perf-afm + .perf-afm { margin-top: 6px; }',
+    '.perf-steps .perf-afm th, .perf-steps .perf-afm td { padding: 2px 6px; text-align: right; vertical-align: top; white-space: nowrap; color: var(--text); font-weight: 400; border-top: 1px solid var(--card-border); }',
+    '.perf-steps .perf-afm thead th { font-size: inherit; font-weight: 600; color: var(--text-muted); vertical-align: bottom; border-top: 0; }',
+    '.perf-steps .perf-afm th:first-child { padding-left: 4px; text-align: left; }',
+    '.perf-steps .perf-afm tbody th { color: var(--text-muted); }',
+    '.perf-steps .perf-afm th.perf-afm-cap { color: var(--text); white-space: normal; }',
+    '.perf-steps .perf-afm .perf-afm-in { color: #38bdf8; background: rgba(56, 189, 248, 0.12); }',
+    '.perf-steps .perf-afm td.perf-afm-x { color: #7dd3fc; background: rgba(56, 189, 248, 0.26); font-weight: 700; }',
+    '.perf-afm-2 { display: block; opacity: 0.75; }',
+    '.perf-steps .perf-afm .perf-afm-in .perf-afm-2, .perf-steps .perf-afm td.perf-afm-x .perf-afm-2 { opacity: 1; }',
     // Pflichthinweis: immer rot und fett (Wunsch 20.11.), gleiche Grösse wie die übrigen kleinen Zeilen der Karte;
     // #f87171 auf --card-bg hat Kontrast 5 : 1
     '.perf-foot { font-size: 0.78rem; color: #f87171; font-weight: 700; line-height: 1.5; border-top: 1px solid var(--card-border); padding-top: 8px; margin-top: 4px; }',
@@ -978,31 +1001,82 @@
     return 'table';
   }
 
-  // Werte der Achsen, «2'000 ft / 20 °C». Der Kern lässt nur Druckhöhe und Temperatur zu; eine andere Achse erschiene
+  // Wert einer Achse, «2'000 ft», «20 °C». Der Kern lässt nur Druckhöhe und Temperatur zu; eine andere Achse erschiene
   // ohne Einheit.
-  function axesText(lk, vals) {
-    return lk.axes.map(function (a, i) {
-      var unit = AXIS_UNIT[a.quantity];
-      return fmtExact(vals[i]) + (unit ? '&nbsp;' + unit : '');
-    }).join(' / ');
+  function axisValueText(a, v) {
+    var unit = AXIS_UNIT[a.quantity];
+    return fmtExact(v) + (unit ? '&nbsp;' + unit : '');
+  }
+
+  // Eingabe einer Achse: die Temperatur mit einer Nachkommastelle wie in den Eingaben («15,0 °C»), sonst wie ein Achsenwert
+  function axisInputText(a) {
+    return a.quantity === 'temperature' ? fmtDec(a.input, 1) + '&nbsp;°C' : axisValueText(a, a.input);
   }
 
   // Punkt der Interpolation: nur die interpolierten Achsen mit ihrer Eingabe, «2'002 ft / 7,9 °C» bzw. «15,0 °C»
-  // (die übrigen stehen in den Tabellenzeilen darüber). Temperatur mit einer Nachkommastelle wie in den Eingaben.
   function inputText(lk) {
-    return lk.axes.filter(function (a) { return a.interpolated; }).map(function (a) {
-      var unit = AXIS_UNIT[a.quantity];
-      return (a.quantity === 'temperature' ? fmtDec(a.input, 1) : fmtExact(a.input)) + (unit ? '&nbsp;' + unit : '');
-    }).join(' / ');
+    return lk.axes.filter(function (a) { return a.interpolated; }).map(axisInputText).join(' / ');
   }
 
-  // Ablesung einer Tabelle: die verwendeten Zellen (eine, zwei oder vier) und bei Interpolation der Wert dazwischen.
-  // pre: Gewicht der Tabelle, wenn zwischen zwei Starttabellen interpoliert wird («1'134 kg»), sonst leer.
+  /* Tabellenausschnitt wie im AFM (VERSION 8, Wunsch des Benutzers vom 21.11.2026, Variante A): Zeilen = Druckhöhe,
+     Spalten = Temperatur. Wird auf einer Achse interpoliert, steht die Eingabe als eigene Zeile bzw. Spalte zwischen den
+     zwei Tabellenwerten; sonst ist die abgelesene Zeile bzw. Spalte markiert (blau). Im Schnittpunkt steht fett der Wert
+     dafür (lookup.values), die übrigen Zellen der blauen Zeile und Spalte bleiben bei Interpolation leer. Jede Zelle:
+     oben die Rollstrecke, darunter über 15 m, ohne Einheit (die nennt die Legende). Die Tabellenzellen stammen aus
+     lookup.corners. */
+
+  // Zeilen bzw. Spalten einer Achse. x: Linie durch den Schnittpunkt (blau); input: Linie der Eingabe ohne Tabellenwerte
+  function afmLine(a) {
+    if (!a) return [{ v: null, label: '', x: true, input: false }];
+    if (!a.interpolated) return [{ v: a.value, label: axisValueText(a, a.value), x: true, input: false }];
+    return [
+      { v: a.lower, label: axisValueText(a, a.lower), x: false, input: false },
+      { v: null, label: axisInputText(a), x: true, input: true },
+      { v: a.upper, label: axisValueText(a, a.upper), x: false, input: false }
+    ];
+  }
+
+  // Werte einer Tabellenzelle aus lookup.corners: Zeilenwert rv, Spaltenwert cv; sonst null
+  function afmCell(lk, rv, cv) {
+    var want = lk.axes.length > 1 ? [rv, cv] : [rv];
+    for (var i = 0; i < lk.corners.length; i++) {
+      var av = lk.corners[i].axisValues, ok = av.length === want.length;
+      for (var k = 0; ok && k < want.length; k++) ok = av[k] === want[k];
+      if (ok) return lk.corners[i].values;
+    }
+    return null;
+  }
+
+  // Zelle: Rollstrecke, darunter über 15 m
+  function afmPair(v) {
+    return v ? fmtExact(v.groundRoll) + '<span class="perf-afm-2">' + fmtExact(v.overObstacle) + '</span>' : '';
+  }
+
+  // Der Ausschnitt einer Tabelle; cap: Kopf links oben (Gewicht der Starttabelle bei Interpolation im Gewicht, sonst leer)
+  function afmTable(lk, cap) {
+    var rows = afmLine(lk.axes[0]), cols = afmLine(lk.axes[1]);
+    var h = '<table class="perf-afm"><thead><tr><th class="perf-afm-cap" scope="col">' + cap + '</th>' +
+      cols.map(function (c) { return '<th scope="col"' + (c.x ? ' class="perf-afm-in"' : '') + '>' + c.label + '</th>'; }).join('') +
+      '</tr></thead><tbody>';
+    rows.forEach(function (r) {
+      h += '<tr><th scope="row"' + (r.x ? ' class="perf-afm-in"' : '') + '>' + r.label + '</th>';
+      cols.forEach(function (c) {
+        if (r.x && c.x) h += '<td class="perf-afm-x">' + afmPair(lk.values) + '</td>';
+        else if (r.input || c.input) h += '<td class="perf-afm-in"></td>';
+        else h += '<td' + (r.x || c.x ? ' class="perf-afm-in"' : '') + '>' + afmPair(afmCell(lk, r.v, c.v)) + '</td>';
+      });
+      h += '</tr>';
+    });
+    return h + '</tbody></table>';
+  }
+
+  // Ablesung einer Tabelle: der Ausschnitt, danach der Wert in den Spalten der Schritt-Tabelle («interpoliert für 15,0 °C»
+  // bzw. «Tabellenwert»). pre: Gewicht der Tabelle, wenn zwischen zwei Starttabellen interpoliert wird («1'134 kg»), sonst
+  // leer; dann steht der Wert nur im Ausschnitt (die Zeile «interpoliert für … kg» folgt in stepRows).
   function lookupRows(lk, u, pre, up) {
-    var tab = 'Tabelle ' + (pre ? pre + ' · ' : '');
-    if (!lk.interpolated) return stepRow(tab + axesText(lk, lk.corners[0].axisValues), lk.values, u, up);
-    return lk.corners.map(function (c) { return stepRow(tab + axesText(lk, c.axisValues), c.values, u); }).join('') +
-      stepRow((pre ? pre + ' · ' : '') + 'interpoliert für ' + inputText(lk), lk.values, u, up);
+    var h = '<tr class="perf-steps-afm"><td colspan="3">' + afmTable(lk, pre) + '</td></tr>';
+    if (pre) return h;
+    return h + stepRow(lk.interpolated ? 'interpoliert für ' + inputText(lk) : 'Tabellenwert', lk.values, u, up);
   }
 
   // Zeile eines Schritts: Beschriftung, Rollstrecke, Strecke über 15 m
@@ -1059,11 +1133,12 @@
 
   // Schritte einer Phase. Alle Werte stammen aus der Rechnung (p). Aus den Flugzeugdaten (ch) kommt nur bei der
   // Prozentregel des Winds deren Satz je kt (das Ergebnis der Rechnung enthält nur das abgerundete Prozent).
-  // Ablesung: die verwendeten Tabellenzellen und, wo interpoliert wird, der Wert dazwischen; bei Interpolation im
-  // Gewicht zuerst die schwerere, dann die leichtere Starttabelle und zuletzt der Wert für das Gewicht.
+  // Ablesung: die Legende, der Tabellenausschnitt und der Wert daraus; bei Interpolation im Gewicht zuerst der Ausschnitt
+  // der schwereren, dann der leichteren Starttabelle und zuletzt der Wert für das Gewicht.
   function stepRows(p, ch) {
     var h = '';
     var u = p.unit, lk = p.lookup, last = lastStep(p), w = p.wind;
+    h += noteRow('AFM-Tabelle in ' + u + ': ' + TEXT.calcAfm);
     if (lk.mass) {
       var mm = lk.mass;
       h += lookupRows(mm.upper, u, fmtInt(mm.upperKg) + '&nbsp;kg', false) +

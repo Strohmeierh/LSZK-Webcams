@@ -25,6 +25,7 @@ const LIST = ui.parseIndex(readJson('perf/aircraft/index.json')).list;
 const ISA = readJson('tests/fixtures/p2008_isa.json');
 const ALL = [C172D, P2010, C152, P2008];
 const { alteAblesung, clone } = require('./helpers/ablesung.js');
+const { afmTables, withoutAfm } = require('./helpers/afm.js');
 
 /* ── Tecnam P2008 JC: Tabellen, wörtlich ───────────────────────
    Supplement S9 «MTV-34 Propeller for aircraft with MTOW Increment at 650 kg», Section 5 (Seiten MT5, ersetzen den
@@ -661,9 +662,11 @@ function text(html) {
   return html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&').replace(/\s+/g, ' ');
 }
-// Zeilen der Schritt-Tabelle: [Beschriftung, Rollstrecke, über 15 m] als Text
+// Zeilen der ersten Schritt-Tabelle: [Beschriftung, Rollstrecke, über 15 m] als Text, ohne die Tabellenausschnitte
+// (VERSION 8; die prüft afmTables aus tests/helpers/afm.js)
 function stepRows(html) {
-  const t = html.slice(html.indexOf('<table class="perf-steps">'), html.indexOf('</table>', html.indexOf('<table class="perf-steps">')));
+  const h = withoutAfm(html);
+  const t = h.slice(h.indexOf('<table class="perf-steps">'), h.indexOf('</table>', h.indexOf('<table class="perf-steps">')));
   const rows = [];
   const re = /<tr(?: class="[^"]*")?><th[^>]*>([\s\S]*?)<\/th>(?:<td[^>]*>([\s\S]*?)<\/td><td[^>]*>([\s\S]*?)<\/td>)?<\/tr>/g;
   let m;
@@ -709,22 +712,24 @@ test('Anzeige (linear): Kopf, Hinweis am Gewichtsfeld und Eingaben für zwischen
   assert.ok(t.includes("Start · AFM, Section 5, Ziffer 7, Seiten APV5-8 und APV5-9 · Tabellen 1'160 und 1'060 kg"), t);
 });
 
-test('Rechenweg (linear): angezeigte Tabellenzellen wie im AFM, jede Interpolation aus den angezeigten Zahlen nachgerechnet', () => {
-  let checked = 0;
+test('Rechenweg (linear): Ausschnitte wie im AFM (Grenzen, Eingabe, Zellen), jede Interpolation aus den angezeigten Zahlen nachgerechnet', () => {
+  let checked = 0, cells = 0;
+  const val = (s) => Number(s.replace(/'/g, '').replace(',', '.').replace('−', '-').replace('≈', ''));
   [[C172D, '1120'], [C172D, null], [C172D, '1000'], [P2010, '1111'], [P2010, null], [C152, null], [P2008, '620'], [P2008, '600'], [P2008, '577']].forEach(([ac, mt]) => {
     [wxPfa(), wxPfa({ tempC: -27.4, qnhHpa: 1031.2, windDir: 300, windKt: 6 }), wxPfa({ tempC: 25, qnhHpa: 1013.25, windDir: null, windKt: 0 }), wxPfa({ tempC: 13.6, qnhHpa: 997.3 })].forEach((w) => {
       const html = render(w, { aircraft: ac, massText: mt });
       const rows = stepRows(html);
       const label = ac.id + ' ' + mt + ' ' + JSON.stringify([w.tempC, w.qnhHpa]);
       assert.ok(rows.length > 0, label);
-      // Welche Starttabelle ohne Gewichtsangabe in der Zeile gilt, sagt die Kopfzeile «· Tabelle X kg» (bzw. das
+      // Welche Starttabelle ohne Gewichtsangabe im Ausschnitt gilt, sagt die Kopfzeile «· Tabelle X kg» (bzw. das
       // Höchstgewicht bei einer einzigen Starttabelle); geprüft wird gegen die Zellen dieser Tabelle in den Daten
       const tableKgShown = (() => {
         const h = rows.find((r) => r[1] === null && r[0].startsWith('Start · '));
         const m = h && /· Tabelle ([\d']+) kg$/.exec(h[0]);
         return m ? Number(m[1].replace(/'/g, '')) : ac.mass.kg;
       })();
-      // Abschnitte je Phase: Kopfzeile «Start · …» bzw. «Landung · …» ohne Zahlen
+      // Abschnitte je Phase: Kopfzeile «Start · …» bzw. «Landung · …» ohne Zahlen; dazu die Ausschnitte derselben Phase
+      // (die ersten zwei Phasen im HTML gehören zur ersten Schritt-Tabelle)
       let ph = null, block = [];
       const blocks = [];
       rows.forEach((r) => {
@@ -732,42 +737,73 @@ test('Rechenweg (linear): angezeigte Tabellenzellen wie im AFM, jede Interpolati
         else block.push(r);
       });
       blocks.push([ph, block]);
-      blocks.forEach(([phase, rs]) => {
+      const chunks = html.split('<tbody><tr class="perf-steps-ph">').slice(1, 3);
+      assert.equal(chunks.length, 2, label);
+      blocks.forEach(([phase, rs], bi) => {
+        const tb = chunks[bi];
+        assert.ok(tb.startsWith('<th colspan="3" scope="rowgroup">' + (phase === 'takeoff' ? 'Start' : 'Landung') + ' '), label);
         const tableOf = (kg) => (phase === 'landing' ? ac.charts.landing.table : startTables(ac).find((x) => x.kg === (kg === null ? tableKgShown : kg)).table);
+        // direkt nach dem Kopf der Phase die Legende, dann der erste Ausschnitt
+        const unit = tableOf(null).outputs[0].unit;
+        assert.ok(tb.slice(tb.indexOf('</tr>') + 5).startsWith('<tr><td class="perf-steps-note" colspan="3">AFM-Tabelle in ' + unit + ': ' +
+          ui.TEXT.calcAfm + '</td></tr><tr class="perf-steps-afm">'), label + ': Legende vor dem Ausschnitt');
         const perTable = {};
-        rs.forEach((r) => {
-          let m = /^Tabelle (?:([\d']+) kg · )?(−?[\d']+) ft \/ (−?[\d,]+) °C$/.exec(r[0]);
-          if (m) {
-            const kg = m[1] ? Number(m[1].replace(/'/g, '')) : null;
-            const c = tableOf(kg);
-            const pa = Number(m[2].replace(/'/g, '').replace('−', '-')), tc = Number(m[3].replace(',', '.').replace('−', '-'));
+        let inputsText = null;
+        afmTables(tb).forEach((g) => {
+          assert.ok(g.cap === '' || /^[\d']+ kg$/.test(g.cap), label + ': Kopf «' + g.cap + '»');
+          const kg = g.cap ? val(g.cap.replace(/ kg$/, '')) : null;
+          const c = tableOf(kg);
+          const axisNum = (l, u) => { const m = new RegExp('^(−?[\\d\']+(?:,\\d+)?) ' + u + '$').exec(l); assert.ok(m, label + ': Beschriftung ' + l); return val(m[1]); };
+          // Linien einer Achse: ein blauer Tabellenwert (abgelesen) oder untere Grenze, blaue Eingabe, obere Grenze (benachbart)
+          const line = (ls, ax, u) => {
+            if (ls.length === 1) {
+              const v = axisNum(ls[0].label, u);
+              assert.ok(ls[0].blue && ax.values.includes(v), label + ': abgelesener Tabellenwert ' + ls[0].label);
+              return { read: v, vals: [v] };
+            }
+            assert.equal(ls.length, 3, label);
+            assert.deepEqual(ls.map((l) => l.blue), [false, true, false], label + ': blau nur die Eingabe');
+            const lo = axisNum(ls[0].label, u), x = axisNum(ls[1].label, u), hi = axisNum(ls[2].label, u);
+            const j = ax.values.indexOf(lo);
+            assert.ok(j >= 0 && ax.values[j + 1] === hi && lo < x && x < hi, label + ': Grenzen ' + [lo, x, hi]);
+            return { lo, x, hi, label: ls[1].label, vals: [lo, null, hi] };
+          };
+          const R = line(g.rows, c.axes[0], 'ft'), C = line(g.cols, c.axes[1], '°C');
+          const shown = {};
+          let X = null;
+          g.rows.forEach((r, ri) => r.cells.forEach((cell, ci) => {
+            const pa = R.vals[ri], tc = C.vals[ci];
+            if (r.blue && g.cols[ci].blue) { assert.equal(cell.kind, 'x', label + ': Schnittpunkt'); X = cell; return; }
+            if (pa === null || tc === null) { assert.equal(cell.kind, 'empty', label + ': leer auf der Eingabe'); return; }
+            assert.equal(cell.kind, r.blue || g.cols[ci].blue ? 'blue' : 'plain', label + ': Markierung ' + pa + '/' + tc);
             const i = c.axes[0].values.indexOf(pa), j = c.axes[1].values.indexOf(tc);
-            assert.ok(i >= 0 && j >= 0, label + ': kein Tabellenpunkt ' + r[0]);
-            assert.deepEqual([num(r[1]).v, num(r[2]).v], c.cells[i][j], label + ': Tabellenzelle ' + r.join(' | '));
-            const key = kg === null ? 'one' : kg;
-            (perTable[key] = perTable[key] || []).push({ pa, tc, gr: num(r[1]).v, ob: num(r[2]).v });
-            checked++;
-            return;
-          }
-          m = /^(?:([\d']+) kg · )?interpoliert für (?:(−?[\d']+) ft)?(?: \/ )?(?:(−?[\d,]+) °C)?$/.exec(r[0]);
-          if (m && (m[2] || m[3])) {
-            const key = m[1] ? Number(m[1].replace(/'/g, '')) : 'one';
-            const cs = perTable[key];
-            assert.ok(cs && (cs.length === 2 || cs.length === 4), label + ': Ecken vor ' + r[0]);
-            // bilinear aus den angezeigten Ecken; die interpolierten Achsen stehen in der Beschriftung
-            const pas = [...new Set(cs.map((c) => c.pa))], tcs = [...new Set(cs.map((c) => c.tc))];
-            const pa = m[2] ? Number(m[2].replace(/'/g, '').replace('−', '-')) : pas[0];
-            const tc = m[3] ? Number(m[3].replace(',', '.').replace('−', '-')) : tcs[0];
-            const f = (lo, hi, x) => (hi === lo ? 0 : (x - lo) / (hi - lo));
-            const fp_ = f(pas[0], pas[pas.length - 1], pa), ft_ = f(tcs[0], tcs[tcs.length - 1], tc);
-            const at = (p, t, o) => cs.find((c) => c.pa === p && c.tc === t)[o];
-            ['gr', 'ob'].forEach((o, k) => {
-              const p0 = pas[0], p1 = pas[pas.length - 1], t0 = tcs[0], t1 = tcs[tcs.length - 1];
-              const lo = at(p0, t0, o) + (at(p0, t1, o) - at(p0, t0, o)) * ft_;
-              const hi = at(p1, t0, o) + (at(p1, t1, o) - at(p1, t0, o)) * ft_;
-              shownEquals(r[k + 1], lo + (hi - lo) * fp_, label + ': ' + r[0]);
-            });
-            perTable[key].result = { gr: num(r[1]).v, ob: num(r[2]).v, approx: num(r[1]).approx || num(r[2]).approx };
+            assert.ok(!/≈/.test(cell.a + cell.b), label + ': Tabellenzelle gerundet');
+            assert.deepEqual([val(cell.a), val(cell.b)], c.cells[i][j], label + ': Tabellenzelle ' + pa + ' ft / ' + tc + ' °C');
+            shown[pa + '|' + tc] = [val(cell.a), val(cell.b)];
+            cells++;
+          }));
+          assert.ok(X, label + ': Schnittpunkt fehlt');
+          // Schnittpunkt aus den angezeigten Zellen (in jeder Zeile zuerst die Temperatur, dann die Druckhöhe); genau auf
+          // einem Tabellenpunkt dessen Wert aus den Daten
+          const f = (lo, hi, x) => (x - lo) / (hi - lo);
+          const cellOf = (pa, tc, o) => (pa + '|' + tc in shown ? shown[pa + '|' + tc][o] : c.cells[c.axes[0].values.indexOf(pa)][c.axes[1].values.indexOf(tc)][o]);
+          const inRow = (pa, o) => (C.read !== undefined ? cellOf(pa, C.read, o) : cellOf(pa, C.lo, o) + (cellOf(pa, C.hi, o) - cellOf(pa, C.lo, o)) * f(C.lo, C.hi, C.x));
+          [X.a, X.b].forEach((s, o) => {
+            const exp = R.read !== undefined ? inRow(R.read, o) : inRow(R.lo, o) + (inRow(R.hi, o) - inRow(R.lo, o)) * f(R.lo, R.hi, R.x);
+            shownEquals(s + ' m', exp, label + ': Schnittpunkt');
+          });
+          perTable[kg === null ? 'one' : kg] = { gr: val(X.a), ob: val(X.b), a: X.a, b: X.b };
+          inputsText = [R, C].filter((x) => x.read === undefined).map((x) => x.label).join(' / ');
+          checked++;
+        });
+        rs.forEach((r) => {
+          // Wert der Ablesung (eine Tabelle): gleich dem Schnittpunkt, Beschriftung mit den interpolierten Eingaben
+          let m = /^(interpoliert für (.+)|Tabellenwert)$/.exec(r[0]);
+          if (m && !/ kg$/.test(r[0])) {
+            const one = perTable.one;
+            assert.ok(one && Object.keys(perTable).length === 1, label + ': ein Ausschnitt vor ' + r[0]);
+            assert.equal(r[0], inputsText ? 'interpoliert für ' + inputsText : 'Tabellenwert', label + ': Beschriftung');
+            assert.deepEqual([r[1], r[2]], [one.a + ' ' + unit, one.b + ' ' + unit], label + ': Wert gleich dem Schnittpunkt');
             checked++;
             return;
           }
@@ -775,11 +811,8 @@ test('Rechenweg (linear): angezeigte Tabellenzellen wie im AFM, jede Interpolati
           if (m) {
             const kg = Number(m[1].replace(/'/g, ''));
             const keys = Object.keys(perTable).filter((k) => k !== 'one').map(Number).sort((a, b) => b - a);
-            assert.equal(keys.length, 2, label + ': zwei Starttabellen vor ' + r[0]);
-            const val = (k) => {
-              const x = perTable[k];
-              return x.result ? x.result : { gr: x[0].gr, ob: x[0].ob };
-            };
+            assert.equal(keys.length, 2, label + ': zwei Ausschnitte (Starttabellen) vor ' + r[0]);
+            assert.ok(!('one' in perTable), label + ': kein Ausschnitt ohne Gewicht');
             const hiK = keys[0], loK = keys[1];
             // aus den exakten Werten der Tabellen gerechnet (die Anzeige kann ≈ gerundet sein): gegen den Kern geprüft
             const res = core.compute(ac, AF, { tempC: w.tempC, qnhHpa: w.qnhHpa, windDirTrue: w.windDir, windKt: w.windKt, runwayWet: false, massKg: kg });
@@ -788,12 +821,17 @@ test('Rechenweg (linear): angezeigte Tabellenzellen wie im AFM, jede Interpolati
             const exp = ['groundRoll', 'overObstacle'].map((o) => lk.mass.lower.values[o] + (kg - loK) * (lk.mass.upper.values[o] - lk.mass.lower.values[o]) / (hiK - loK));
             shownEquals(r[1], exp[0], label + ': ' + r[0]);
             shownEquals(r[2], exp[1], label + ': ' + r[0]);
-            // und grob aus den angezeigten Zahlen (höchstens 0,01 m daneben, falls die Anzeige gerundet hat)
-            const a = val(loK), b = val(hiK);
+            // und grob aus den angezeigten Schnittpunkten (höchstens 0,01 m daneben, falls die Anzeige gerundet hat)
+            const a = perTable[loK], b = perTable[hiK];
             close(num(r[1]).v, a.gr + (kg - loK) * (b.gr - a.gr) / (hiK - loK), 0.011, label + ': aus der Anzeige');
+            close(num(r[2]).v, a.ob + (kg - loK) * (b.ob - a.ob) / (hiK - loK), 0.011, label + ': aus der Anzeige (15 m)');
             checked++;
           }
         });
+        // je Phase genau eine Wertzeile: für das Gewicht (zwei Ausschnitte) bzw. für die eine Tabelle
+        const kgRows = rs.filter((r) => /^interpoliert für [\d']+ kg$/.test(r[0])).length;
+        const oneRows = rs.filter((r) => /^(interpoliert für .+|Tabellenwert)$/.test(r[0]) && !/ kg$/.test(r[0])).length;
+        assert.deepEqual([kgRows, oneRows], 'one' in perTable ? [0, 1] : [1, 0], label + ': Wertzeile der Ablesung');
       });
       // Lesehilfe so, wie die ausgelieferten Daten ablesen
       const t = text(html);
@@ -803,7 +841,8 @@ test('Rechenweg (linear): angezeigte Tabellenzellen wie im AFM, jede Interpolati
       ['NaN', 'undefined', 'null', 'Infinity'].forEach((x) => assert.ok(!html.includes(x), label + ': ' + x));
     });
   });
-  assert.ok(checked > 150, checked + ' Zeilen geprüft');
+  // Abdeckung: Ausschnitte und Wertzeilen, angezeigte Tabellenzellen (ohne Schnittpunkte)
+  assert.deepEqual([checked, cells], [160, 282], 'Abdeckung');
 });
 
 test('Anzeige (linear): «möglich bis» auf ganze kg in der Karte, Text bei «unknown» mit Schwelle', () => {

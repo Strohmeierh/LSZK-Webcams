@@ -14,6 +14,7 @@
    zusätzlich der Start mit jeder Starttabelle und daraus «Start möglich bis …» (takeoffLimit; bei «linear» auf
    ganze kg genau).
    Browser: window.LszkPerfCore. Node: module.exports.
+   VERSION 8: Rechnung unverändert; nur die Anzeige (perf-ui.js, Tabellenausschnitt im Rechenweg) ist neu.
    VERSION gleich dem ?v= in index.html und in perf/perf-ui.js halten. */
 (function (root, factory) {
   var api = factory();
@@ -22,7 +23,7 @@
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  var VERSION = 7;
+  var VERSION = 8;
 
   var EPS = 1e-9;
   var FT_M = 0.3048;

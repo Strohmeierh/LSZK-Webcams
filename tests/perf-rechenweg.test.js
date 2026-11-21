@@ -17,6 +17,8 @@ const readJson = (rel) => JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8
 // Tests der Anzeige mit der Ableseregel bis VERSION 6 (tests/helpers/ablesung.js); die ausgelieferte Ablesung (linear)
 // prüft tests/perf-interpolation.test.js.
 const { alteAblesung } = require('./helpers/ablesung.js');
+// Tabellenausschnitte im Rechenweg (VERSION 8, tests/helpers/afm.js)
+const { afmTables, afmGrids, withoutAfm, legend, AFM_ROW } = require('./helpers/afm.js');
 const C172D = alteAblesung(readJson('perf/aircraft/c172d.json'));
 const P2010 = alteAblesung(readJson('perf/aircraft/p2010.json'));
 const C152 = alteAblesung(readJson('perf/aircraft/c152.json'));
@@ -84,17 +86,22 @@ function sameValue(shown, exact, last, ctx) {
 }
 
 // Zerlegt den Rechenweg in Eingaben, Blöcke (Pisten, Zusatz, je Phase die Zeilen) und Lesehilfe. Streng: Dazwischen steht nichts.
+// Die Zeilen mit Tabellenausschnitten (VERSION 8) enthalten eigene Tabellen; sie werden vor dem Zerlegen durch Platzhalter
+// ersetzt und als Zeile «afm» mit den streng zerlegten Ausschnitten zurückgegeben.
 const ROW = {
   ph: /^<tr class="perf-steps-ph"><th colspan="3" scope="rowgroup">(Start|Landung) <span class="perf-steps-src">· ([^<]*)<\/span><\/th><\/tr>$/,
   step: /^<tr><th scope="row">([^<]*)<\/th><td>([^<]*)<\/td><td>([^<]*)<\/td><\/tr>$/,
   note: /^<tr><td class="perf-steps-note" colspan="3">([^<]*)<\/td><\/tr>$/,
   stop: /^<tr><th scope="row">([^<]*)<\/th><td class="perf-nov" colspan="2">kein Wert<\/td><\/tr>$/,
-  res: /^<tr class="perf-steps-res"><th scope="row">aufgerundet<\/th><td>([^<]*)<\/td><td>([^<]*)<\/td><\/tr>$/
+  res: /^<tr class="perf-steps-res"><th scope="row">aufgerundet<\/th><td>([^<]*)<\/td><td>([^<]*)<\/td><\/tr>$/,
+  afm: /^<tr class="perf-steps-afm" data-afm="(\d+)"><\/tr>$/
 };
 function parseCalc(html, ctx) {
   const m = /<details class="perf-details"(?: open)?><summary>Rechenweg und Quellen<\/summary><div class="perf-calc">(.*?)<\/div><\/details>/.exec(html);
   assert.ok(m, ctx + ': Rechenweg fehlt');
-  let rest = m[1];
+  const afms = [];
+  let rest = m[1].replace(AFM_ROW, (row) => { afms.push(row); return '<tr class="perf-steps-afm" data-afm="' + (afms.length - 1) + '"></tr>'; });
+  assert.ok(!/perf-afm"/.test(rest.replace(/<tr class="perf-steps-afm" data-afm="\d+"><\/tr>/g, '')), ctx + ': Ausschnitt ausserhalb einer Ausschnitt-Zeile');
   const inp = /^<p><span class="perf-calc-h">Eingaben:<\/span> ([^<]*)<\/p>/.exec(rest);
   assert.ok(inp, ctx + ': Zeile Eingaben');
   rest = rest.slice(inp[0].length);
@@ -117,6 +124,7 @@ function parseCalc(html, ctx) {
         if ((x = ROW.res.exec(tr))) return { kind: 'res', label: 'aufgerundet', a: text(x[1]).trim(), b: text(x[2]).trim() };
         if ((x = ROW.note.exec(tr))) return { kind: 'note', label: text(x[1]).trim() };
         if ((x = ROW.stop.exec(tr))) return { kind: 'stop', label: text(x[1]).trim() };
+        if ((x = ROW.afm.exec(tr))) return { kind: 'afm', label: 'Ausschnitt', grids: afmGrids(afms[Number(x[1])]), tables: afmTables(afms[Number(x[1])]) };
         return assert.fail(ctx + ': unbekannte Zeile «' + tr + '»');
       }) };
     });
@@ -128,19 +136,27 @@ function parseCalc(html, ctx) {
   return { inputs: text(inp[1]), groups, rules: rules[1] };
 }
 
-// Eigene Ablesung der Tabelle aus den Flugzeugdaten (ohne den Rechenkern): Zeilen der Schritt-Tabelle und Interpolation
+// Eigene Ablesung der Tabelle aus den Flugzeugdaten (ohne den Rechenkern): die verwendeten Zellen (BigInt, Massstab 10^4) und
+// der erwartete Ausschnitt im Kurzformat von tests/helpers/afm.js. Alte Ableseregel: Druckhöhe nächsthöher (eine blaue
+// Zeile); Temperatur nächsthöher (eine blaue Spalte) oder linear (Spalten untere Grenze, Eingabe blau, obere Grenze).
+// grid(x): Ausschnitt mit dem Schnittpunkt x («401,2/706»), der aus der nachgerechneten Interpolation kommt.
 function expectTable(chart, pa, tempC) {
   const [axPa, axT] = chart.table.axes;
   assert.deepEqual([axPa.quantity, axT.quantity, axPa.read], ['pressureAltitude', 'temperature', 'nextHigher']);
   const next = (vals, v) => { let j = 0; while (vals[j] < v) j++; return j; };
   const i = next(axPa.values, pa), j = next(axT.values, tempC);
-  const lab = (t) => 'Tabelle ' + ui.fmtInt(axPa.values[i]) + ' ft / ' + ui.fmtInt(t) + ' °C';
   const cell = (jj) => chart.table.cells[i][jj].map((v) => BigInt(v) * E4);
+  const pair = (jj) => chart.table.cells[i][jj].map((v) => ui.fmtExact(v)).join('/');
+  const t = (v) => ui.fmtInt(v) + ' °C';
+  const row = '[' + ui.fmtInt(axPa.values[i]) + ' ft]: ';
   if (axT.read === 'linear' && tempC > axT.values[0] && axT.values[j] !== tempC) {
-    return { rows: [[lab(axT.values[j - 1]), cell(j - 1)], [lab(axT.values[j]), cell(j)]], t0: axT.values[j - 1], t1: axT.values[j] };
+    return { cells: [cell(j - 1), cell(j)], t0: axT.values[j - 1], t1: axT.values[j],
+      grid: (x) => ' ‖ ' + t(axT.values[j - 1]) + ' | [' + ui.fmtDec(tempC, 1) + ' °C] | ' + t(axT.values[j]) + ' ‖ ' + row + '~' + pair(j - 1) + ' | *' + x + '* | ~' + pair(j) };
   }
-  return { rows: [[lab(axT.values[j]), cell(j)]], t0: null, t1: null };
+  return { cells: [cell(j)], t0: null, t1: null, grid: () => ' ‖ [' + t(axT.values[j]) + '] ‖ ' + row + '*' + pair(j) + '*' };
 }
+// Wertepaar im Massstab 10^8 wie im Ausschnitt angezeigt (fmtExact; in den Kontrollfällen immer exakt, ohne «≈»)
+const pairText = (v8) => v8.map((v) => ui.fmtExact(Number(v) / 1e8)).join('/');
 function pairOf(r, unit, ctx) {
   return [r.a, r.b].map((s) => {
     const m = /^(\S+) (m|ft)$/.exec(s);
@@ -179,25 +195,30 @@ function checkPhase(P, ph, ac, rwy, inp, pa, kt, ctx, stats, note) {
   const add = kgs.length < 2 ? '' : (ph === 'takeoff' ? ' · Tabelle ' + ui.fmtInt(kgs[0]) + ' kg' : ' · maximales Landegewicht ' + ui.fmtInt(ac.mass.kg) + ' kg');
   assert.equal(P.src, [src.labelDe, chart.ref.figure, 'Seite ' + chart.ref.page].join(', ') + add, ctx + ': Quelle');
   const steps = [];
+  // Ablesung (VERSION 8): Legende, ein Ausschnitt mit den Zellen aus den Flugzeugdaten, dann die Wertzeile
+  assert.equal(take('note').label, legend(unit), ctx + ': Legende des Ausschnitts');
   const exp = expectTable(chart, pa, inp[0]);
-  const shownTab = exp.rows.map(([lab, cells]) => {
-    const r = take('step');
-    assert.equal(r.label, lab, ctx + ': Beschriftung der Tabellenzeile');
-    const v = pairOf(r, unit, ctx);
-    assert.deepEqual(v, cells, ctx + ': Tabellenwert aus den Flugzeugdaten');
-    return v;
-  });
+  const grids = take('afm').grids;
+  const shownTab = exp.cells;
   let table;
   if (exp.t0 !== null) {
+    stats.interp++;
     const r = take('step');
     assert.equal(r.label, 'interpoliert für ' + ui.fmtDec(inp[0], 1) + ' °C', ctx);
     table = pairOf(r, unit, ctx);
     const t0 = BigInt(exp.t0) * E4, t1 = BigInt(exp.t1) * E4, t = BigInt(Math.round(inp[0] * 10000));
     assert.equal(((t - t0) * E4) % (t1 - t0), 0n, ctx + ': Anteil der Interpolation mit höchstens vier Dezimalen');
     const w = (t - t0) * E4 / (t1 - t0);
-    steps.push({ what: 'Interpolation', shown: table, exact: () => [0, 1].map((k) => shownTab[0][k] * E4 + w * (shownTab[1][k] - shownTab[0][k])) });
+    const x8 = [0, 1].map((k) => shownTab[0][k] * E4 + w * (shownTab[1][k] - shownTab[0][k]));
+    // Schnittpunkt im Ausschnitt: der nachgerechnete Wert (exakt, auch wenn die Wertzeile als letzte aufgerundet ist)
+    assert.deepEqual(grids, [exp.grid(pairText(x8))], ctx + ': Ausschnitt');
+    steps.push({ what: 'Interpolation', shown: table, exact: () => x8 });
   } else {
-    table = shownTab[0];
+    assert.deepEqual(grids, [exp.grid()], ctx + ': Ausschnitt');
+    const r = take('step');
+    assert.equal(r.label, 'Tabellenwert', ctx + ': Wertzeile');
+    table = pairOf(r, unit, ctx);
+    assert.deepEqual(table, shownTab[0], ctx + ': Tabellenwert aus den Flugzeugdaten');
     steps.push({ what: 'Tabelle', shown: table, exact: () => table.map((v) => v * E4) });
   }
   const stop = (label) => {
@@ -273,6 +294,12 @@ const RULE_NH2 = 'Druckhöhe und Temperatur: nächsthöherer Tabellenwert.';    
 const RULE_P2010_ALT = 'Temperatur linear interpoliert. Druckhöhe und Startgewicht: nächsthöherer Tabellenwert.';
 function ruleOf(acId) { return acId === 'p2010' ? RULE_P2010_ALT : (acId === 'c152' ? RULE_NH2 : RULE_NH3); }
 
+// Legende und Ausschnitt mit genau einer abgelesenen Zelle (alte Ableseregel), als HTML wie in perf/perf-ui.js VERSION 8
+const legendRow = (u) => '<tr><td class="perf-steps-note" colspan="3">AFM-Tabelle in ' + u + ': ' + ui.TEXT.calcAfm + '</td></tr>';
+const oneCell = (pa, t, a, b) => '<tr class="perf-steps-afm"><td colspan="3"><table class="perf-afm"><thead><tr><th class="perf-afm-cap" scope="col"></th>' +
+  '<th scope="col" class="perf-afm-in">' + t + '&nbsp;°C</th></tr></thead><tbody><tr><th scope="row" class="perf-afm-in">' + pa + '&nbsp;ft</th>' +
+  '<td class="perf-afm-x">' + a + '<span class="perf-afm-2">' + b + '</span></td></tr></tbody></table></td></tr>';
+
 test('Rechenweg K2: genauer Aufbau und Wortlaut, direkt darunter der Pflichthinweis', () => {
   const html = render(wxPfa());
   const row = (label, a, b) => '<tr><th scope="row">' + label + '</th><td>' + a + '</td><td>' + b + '</td></tr>';
@@ -281,12 +308,12 @@ test('Rechenweg K2: genauer Aufbau und Wortlaut, direkt darunter der Pflichthinw
     '<p><span class="perf-calc-h">Piste 30</span> (304° rechtweisend) · Gegenwind 7,76&nbsp;kt, abgerundet 7&nbsp;kt</p>' +
     '<table class="perf-steps"><thead><tr><th></th><th scope="col">Rollstrecke</th><th scope="col">über 15 m</th></tr></thead>' +
     '<tbody><tr class="perf-steps-ph"><th colspan="3" scope="rowgroup">Start <span class="perf-steps-src">· Supplement, Figure 5-1a (Section 5b), Seite 5b-3 · Tabelle 1\'157&nbsp;kg</span></th></tr>' +
-    row('Tabelle 2\'000&nbsp;ft / 20&nbsp;°C', '306&nbsp;m', '479&nbsp;m') +
+    legendRow('m') + oneCell('2\'000', '20', '306', '479') + row('Tabellenwert', '306&nbsp;m', '479&nbsp;m') +
     row('Gegenwind 7&nbsp;kt: −10&nbsp;% je 9&nbsp;kt, abgerundet −7&nbsp;%', '284,58&nbsp;m', '445,47&nbsp;m') +
     row('Gras +15&nbsp;% von 306&nbsp;m = +45,9&nbsp;m', '330,48&nbsp;m', '491,37&nbsp;m') +
     '<tr class="perf-steps-res"><th scope="row">aufgerundet</th><td>331&nbsp;m</td><td>492&nbsp;m</td></tr></tbody>' +
     '<tbody><tr class="perf-steps-ph"><th colspan="3" scope="rowgroup">Landung <span class="perf-steps-src">· Grundhandbuch, Figure 5-11, Seite 5-24 · maximales Landegewicht 1\'157&nbsp;kg</span></th></tr>' +
-    row('Tabelle 2\'000&nbsp;ft / 20&nbsp;°C', '630&nbsp;ft', '1\'420&nbsp;ft') +
+    legendRow('ft') + oneCell('2\'000', '20', '630', '1\'420') + row('Tabellenwert', '630&nbsp;ft', '1\'420&nbsp;ft') +
     row('Gegenwind 7&nbsp;kt: −10&nbsp;% je 9&nbsp;kt, abgerundet −7&nbsp;%', '585,9&nbsp;ft', '1\'320,6&nbsp;ft') +
     row('Gras +45&nbsp;% von 630&nbsp;ft = +283,5&nbsp;ft', '869,4&nbsp;ft', '1\'604,1&nbsp;ft') +
     row('in Meter (× 0,3048)', '265&nbsp;m', '488,93&nbsp;m') +
@@ -350,7 +377,7 @@ function expectRunway(inp, rwy) {
 test('Rechenweg gleich Rechnung: alle Kontrollfälle – Eingaben, Tabellenablesung, jede Zeile nachgerechnet, Ergebnis gleich Rechenkern, Kontrollfall und Karte', () => {
   const sample = clone(C172D);
   sample.charts.takeoff.table.cells = readJson('tests/fixtures/c172d_5a_1111kg_m.json').cells;
-  const stats = { cases: 0, noResult: 0, tables: 0, merged: 0, phases: 0, rows: 0, values: 0, noValue: 0, notes: 0 };
+  const stats = { cases: 0, noResult: 0, tables: 0, merged: 0, phases: 0, rows: 0, values: 0, noValue: 0, notes: 0, interp: 0 };
   CASES.forEach(([id, acId, field, inp, want]) => {
     assert.ok(['c172d', 'p2010', 'c152', 'sample5a1111'].includes(acId), id + ': unbekanntes Muster ' + acId);
     const ac = acId === 'c172d' ? C172D : (acId === 'p2010' ? P2010 : (acId === 'c152' ? C152 : sample));
@@ -395,10 +422,10 @@ test('Rechenweg gleich Rechnung: alle Kontrollfälle – Eingaben, Tabellenables
         assert.equal(g.note, exp.note, id + ' Piste ' + rid + ': Zusatz zur Piste');
         const card = text(block(html, rid));
         [['Start', 'takeoff'], ['Landung', 'landing']].forEach(([label, ph], k) => {
-          const first = rid === g.ids[0], local = { rows: 0, values: 0 };
+          const first = rid === g.ids[0], local = { rows: 0, values: 0, interp: 0 };
           const ctx = id + ' Piste ' + rid + ' ' + label;
           const fin = checkPhase(g.phases[label], ph, ac, rwy, inp, pa, exp.kt, ctx, local, ph === 'takeoff' ? noteFor(rid) : null);
-          if (first) { stats.phases++; stats.rows += local.rows; stats.values += local.values; if (!fin) stats.noValue++; }
+          if (first) { stats.phases++; stats.rows += local.rows; stats.values += local.values; stats.interp += local.interp; if (!fin) stats.noValue++; }
           const p = res.runways.find((r) => r.id === rid)[ph];
           const fix = want[rid][k + 1];
           if (fin) {
@@ -416,8 +443,10 @@ test('Rechenweg gleich Rechnung: alle Kontrollfälle – Eingaben, Tabellenables
       });
     });
   });
-  // Zeile je Starttabelle in 24 Fällen (je eine Tabelle, darum 24 Zeilen mehr als vor der Gewichtseingabe: 556 + 24)
-  assert.deepEqual(stats, { cases: 64, noResult: 5, tables: 59, merged: 28, phases: 118, rows: 580, values: 109, noValue: 9, notes: 24 }, 'Abdeckung');
+  // Zeile je Starttabelle in 24 Fällen (je eine Tabelle, darum 24 Zeilen mehr als vor der Gewichtseingabe: 556 + 24).
+  // VERSION 8 (Tabellenausschnitt): je Phase die Legende (+118); abgelesen Ausschnitt und «Tabellenwert» statt einer
+  // Tabellenzeile (80 Phasen, +80), interpoliert Ausschnitt statt zwei Tabellenzeilen (38 Phasen, −38): 580 + 160 = 740
+  assert.deepEqual(stats, { cases: 64, noResult: 5, tables: 59, merged: 28, phases: 118, rows: 740, values: 109, noValue: 9, notes: 24, interp: 38 }, 'Abdeckung');
 });
 
 /* ── Zusammenfassen, Sonderzeilen ─────────────────────────── */
@@ -438,7 +467,8 @@ test('Rechenweg: Pisten mit gleicher Rechnung teilen sich eine Tabelle; anderer 
   html = render(CALM(), { airfield: mixed });
   assert.deepEqual([heads(html), tables(html)], [['Piste 12 · windstill, ohne Windkorrektur', 'Piste 30 · windstill, ohne Windkorrektur'], 2]);
   assert.ok(text(calcOf(html)).includes('Gras +15 % von 306 m = +45,9 m 351,9 m 524,9 m aufgerundet 352 m 525 m') &&
-    text(calcOf(html)).includes("Tabelle 2'000 ft / 20 °C 306 m 479 m aufgerundet 306 m 479 m"), 'Graspiste mit, Hartbelagpiste ohne Graszeile');
+    text(calcOf(html)).includes('Tabellenwert 306 m 479 m aufgerundet 306 m 479 m'), 'Graspiste mit, Hartbelagpiste ohne Graszeile');
+  assert.equal(afmGrids(calcOf(html)).filter((g) => g === " ‖ [20 °C] ‖ [2'000 ft]: *306/479*").length, 2, 'je Tabelle der Ausschnitt des Starts');
   html = render(CALM(), { airfield: three });
   assert.deepEqual([heads(html), tables(html)], [['Pisten 12, 30 und 06 · windstill, ohne Windkorrektur'], 1]);
   // Wind aus 94°: gleicher Gegenwind auf 12 (124°) und 06 (64°), aber andere Richtung in der Zeile; 30 hat Rückenwind
@@ -457,13 +487,14 @@ test('Rechenweg: Sonderzeilen – keine Windregel, kein Belag, über 40 kt, mehr
   const noWind = clone(C172D);
   core.PHASES.forEach((ph) => { noWind.charts[ph].corrections = noWind.charts[ph].corrections.filter((c) => c.kind !== 'headwind'); });
   let s = t(render(wxPfa(), { aircraft: noWind }));
-  assert.ok(s.includes("Tabelle 2'000 ft / 20 °C 306 m 479 m Gegenwind 7 kt: nicht angerechnet (keine Regel in den Flugzeugdaten) Gras +15 % von 306 m = +45,9 m 351,9 m 524,9 m aufgerundet 352 m 525 m"), s);
+  assert.ok(s.includes('Tabellenwert 306 m 479 m Gegenwind 7 kt: nicht angerechnet (keine Regel in den Flugzeugdaten) Gras +15 % von 306 m = +45,9 m 351,9 m 524,9 m aufgerundet 352 m 525 m'), s);
   const noGrass = clone(C172D);
   noGrass.charts.takeoff.corrections = noGrass.charts.takeoff.corrections.filter((c) => c.kind !== 'surface');
   s = t(render(wxPfa(), { aircraft: noGrass }));
   assert.ok(s.includes('Gegenwind 7 kt: −10 % je 9 kt, abgerundet −7 % 284,58 m 445,47 m keine Korrektur für den Belag kein Wert Landung'), s);
   let html = render(wxPfa({ qnhHpa: 1013.25, windDir: 304, windKt: 41 }));
-  assert.equal(t(html).split("Tabelle 2'000 ft / 20 °C").length - 1, 2);
+  assert.equal((t(html).match(/Tabellenwert [\d']+ (?:m|ft) /g) || []).length, 2, 'je Phase die Wertzeile (die Lesehilfe nennt «Tabellenwert» ohne Zahl)');
+  assert.deepEqual(afmGrids(calcOf(html)), [" ‖ [20 °C] ‖ [2'000 ft]: *306/479*", " ‖ [20 °C] ‖ [2'000 ft]: *630/1'420*"], 'Ablesung vor dem Abbruch');
   assert.equal(calcOf(html).split('<tr><th scope="row">Gegenwind 41&nbsp;kt: über 40&nbsp;kt</th><td class="perf-nov" colspan="2">kein Wert</td></tr></tbody>').length - 1, 2, calcOf(html));
   assert.ok(!calcOf(html).includes('perf-steps-res'), 'kein Ergebnis nach dem Abbruch');
   s = t(render(wxPfa({ windDir: 304, windKt: 9 })));
@@ -497,7 +528,7 @@ test('Rechenweg: Rechenfehler in einer Phase (Schlussprobe des Kerns) – Tabell
   const row = (label, a, b) => '<tr><th scope="row">' + label + '</th><td>' + a + '</td><td>' + b + '</td></tr>';
   const calc = calcOf(html);
   assert.ok(calc.includes('<tbody><tr class="perf-steps-ph"><th colspan="3" scope="rowgroup">Landung <span class="perf-steps-src">· Grundhandbuch, Figure 5-11, Seite 5-24 · maximales Landegewicht 1\'157&nbsp;kg</span></th></tr>' +
-    row('Tabelle 2\'000&nbsp;ft / 20&nbsp;°C', '630&nbsp;ft', '1\'420&nbsp;ft') +
+    legendRow('ft') + oneCell('2\'000', '20', '630', '1\'420') + row('Tabellenwert', '630&nbsp;ft', '1\'420&nbsp;ft') +
     row('Gegenwind 7&nbsp;kt: −10&nbsp;% je 9&nbsp;kt, abgerundet −7&nbsp;%', '585,9&nbsp;ft', '1\'320,6&nbsp;ft') +
     '<tr><th scope="row">Rechenfehler</th><td class="perf-nov" colspan="2">kein Wert</td></tr></tbody></table>'), calc);
   // Der Start bleibt mit Ergebnis; die Karte zeigt für die Landung keinen Wert; der Pflichthinweis steht am Schluss

@@ -13,6 +13,8 @@ const readJson = (rel) => JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8
 // Tests der Anzeige mit der Ableseregel bis VERSION 6 (tests/helpers/ablesung.js); die ausgelieferte Ablesung (linear)
 // prüft tests/perf-interpolation.test.js.
 const { alteAblesung } = require('./helpers/ablesung.js');
+// Tabellenausschnitte im Rechenweg (VERSION 8): Kurzformat und Text ohne Ausschnitte (tests/helpers/afm.js)
+const { afmGrids, withoutAfm, legend } = require('./helpers/afm.js');
 const C172D = alteAblesung(readJson('perf/aircraft/c172d.json'));
 const P2010 = alteAblesung(readJson('perf/aircraft/p2010.json'));
 const C152 = alteAblesung(readJson('perf/aircraft/c152.json'));
@@ -314,11 +316,17 @@ test('Tecnam (K8): Kopf, Zahlen, Faktorzeile, interpolierter Rechenweg, Pflichth
   // K8: über 15 m 744 m > 625 m, mit der Tabelle 1'060 kg 590 m (Sollrechnung tests/fixtures/gewicht_faelle.json): «möglich bis»
   // in der Karte, darunter im Rechenweg die Zeile je Starttabelle
   assert.ok(b30.includes("Start mit 1'160 kg laut AFM nicht möglich, möglich bis 1'060 kg."), b30);
-  assert.ok(t.includes("Start · AFM, Section 5, Ziffer 7, Seite APV5-8 · Tabelle 1'160 kg Tabelle 2'000 ft / 0 °C 352 m 622 m Tabelle 2'000 ft / 25 °C 434 m 762 m interpoliert für 15,0 °C 401,2 m 706 m " +
+  // Ausschnitte (alte Ableseregel: Druckhöhe nächsthöher, Temperatur linear): Zeile 2'000 ft, Spalten 0 / 15,0 / 25 °C
+  assert.deepEqual(afmGrids(html), [
+    " ‖ 0 °C | [15,0 °C] | 25 °C ‖ [2'000 ft]: ~352/622 | *401,2/706* | ~434/762",
+    " ‖ 0 °C | [15,0 °C] | 25 °C ‖ [2'000 ft]: ~242/526 | *255,2/539,2* | ~264/548"
+  ]);
+  const tw = text(withoutAfm(html));
+  assert.ok(tw.includes("Start · AFM, Section 5, Ziffer 7, Seite APV5-8 · Tabelle 1'160 kg " + legend('m') + ' interpoliert für 15,0 °C 401,2 m 706 m ' +
     'Gegenwind 7 kt: −10 m je kt = −70 m 331,2 m 636 m Gras +10 % von 401,2 m = +40,12 m 371,32 m 676,12 m Faktor für Abweichungen im Betrieb × 1,10 408,46 m 743,74 m aufgerundet 409 m 744 m ' +
-    "Über 15 m je Starttabelle: 1'160 kg 744 m · 1'060 kg 590 m · 960 kg 453 m Landung"), t);
-  assert.ok(t.includes("Landung · AFM, Section 5, Ziffer 11, Seite APV5-17 · maximales Landegewicht 1'160 kg Tabelle 2'000 ft / 0 °C 242 m 526 m Tabelle 2'000 ft / 25 °C 264 m 548 m interpoliert für 15,0 °C 255,2 m 539,2 m " +
-    'Gegenwind 7 kt: −4 m je kt = −28 m 227,2 m 511,2 m Gras +10 % von 255,2 m = +25,52 m 252,72 m 536,72 m Faktor für Abweichungen im Betrieb × 1,67 422,05 m 896,33 m aufgerundet 423 m 897 m'), t);
+    "Über 15 m je Starttabelle: 1'160 kg 744 m · 1'060 kg 590 m · 960 kg 453 m Landung"), tw);
+  assert.ok(tw.includes("Landung · AFM, Section 5, Ziffer 11, Seite APV5-17 · maximales Landegewicht 1'160 kg " + legend('m') + ' interpoliert für 15,0 °C 255,2 m 539,2 m ' +
+    'Gegenwind 7 kt: −4 m je kt = −28 m 227,2 m 511,2 m Gras +10 % von 255,2 m = +25,52 m 252,72 m 536,72 m Faktor für Abweichungen im Betrieb × 1,67 422,05 m 896,33 m aufgerundet 423 m 897 m'), tw);
   assert.ok(t.includes(ui.TEXT.advice) && !t.includes('Doc. No.') && !t.includes('Die Spalte ISA'), t);
 });
 
@@ -327,10 +335,13 @@ test('Tecnam nass durch Regen: Hinweis ohne Zuschlag, Zahlen unverändert, Gewic
   assert.ok(has(html, 'Piste gilt als nass: MeteoSchweiz hat in der letzten Stunde 0,4 mm Regen gemessen. Das AFM nennt für nasses Gras keinen Wert; Start- und Landestrecke können deutlich länger sein. Laut AFM (Section 4, Ziffer 5.16) verschlechtert Regen die Leistung, besonders die Startstrecke.'));
   assert.ok(text(block(html, '30')).includes('Start 409 m 744 m'));
   html = render(wxPfa({ tempC: 10.8, qnhHpa: 998.2, windDir: 247, windKt: 8.7 }), { aircraft: P2010 });   // K21
-  assert.ok(has(html, "Tabelle 3'000 ft / 0 °C 384 m 678 m Tabelle 3'000 ft / 25 °C 474 m 830 m interpoliert für 10,8 °C 422,88 m 743,664 m"), text(html));
+  assert.equal(afmGrids(html)[0], " ‖ 0 °C | [10,8 °C] | 25 °C ‖ [3'000 ft]: ~384/678 | *422,88/743,664* | ~474/830");
+  assert.ok(has(withoutAfm(html), legend('m') + ' interpoliert für 10,8 °C 422,88 m 743,664 m'), text(html));
   assert.ok(text(block(html, '30')).includes('Start 468 m 821 m') && text(block(html, '30')).includes('Landung 453 m 927 m'));
   html = render(wxPfa({ tempC: -30, windKt: 0 }), { aircraft: P2010 });                                  // T3
-  assert.ok(has(html, "Temperatur −30,0 °C · Piste trocken") && has(html, "Tabelle 2'000 ft / −25 °C 279 m 499 m Gras") && !has(html, 'interpoliert für'), text(html));
+  // unter der kleinsten Spalte (−25 °C): diese abgelesen, eine Zelle, Wertzeile «Tabellenwert»
+  assert.equal(afmGrids(html)[0], " ‖ [−25 °C] ‖ [2'000 ft]: *279/499*");
+  assert.ok(has(html, "Temperatur −30,0 °C · Piste trocken") && has(withoutAfm(html), "Tabellenwert 279 m 499 m Gras") && !has(html, 'interpoliert für'), text(html));
 });
 
 /* ── Anzeige Cessna 152 ────────────────────────────────────── */
@@ -352,10 +363,13 @@ test('Cessna 152 trocken (C2): Auswahl mit vier Mustern, Kopf, Zahlen, Rechenweg
   assert.ok(b30.includes('Piste 30 · Gegenwind 7 kt'), b30);
   assert.ok(b30.includes('Start 300 m 521 m 625 m') && b30.includes('Landung 219 m 432 m 520 m'), b30);
   assert.ok(t.includes("Eingaben: Gewicht 758 kg (einzige Starttabelle) · Druckhöhe 1'630 ft (QNH 1018,0 hPa, Platzhöhe 1'759 ft) · Temperatur 15,0 °C · Piste trocken gerechnet Piste 30 (304° rechtweisend) · Gegenwind 7,76 kt, abgerundet 7 kt"), t);
-  assert.ok(t.includes("Start · Handbuch, Figure 5-4, Seite 5-11 Tabelle 2'000 ft / 20 °C 910 ft 1'690 ft Gegenwind 7 kt: −10 % je 9 kt, abgerundet −7 % 846,3 ft 1'571,7 ft " +
-    "Gras +15 % von 910 ft = +136,5 ft 982,8 ft 1'708,2 ft in Meter (× 0,3048) 299,56 m 520,66 m aufgerundet 300 m 521 m"), t);
-  assert.ok(t.includes("Landung · Handbuch, Figure 5-10, Seite 5-19 Tabelle 2'000 ft / 20 °C 520 ft 1'270 ft Gegenwind 7 kt: −10 % je 9 kt, abgerundet −7 % 483,6 ft 1'181,1 ft " +
-    "Gras +45 % von 520 ft = +234 ft 717,6 ft 1'415,1 ft in Meter (× 0,3048) 218,73 m 431,33 m aufgerundet 219 m 432 m"), t);
+  // Ausschnitte (alte Ableseregel: nächsthöherer Tabellenwert in beiden Achsen, also je eine Zelle), Werte in ft
+  assert.deepEqual(afmGrids(html), [" ‖ [20 °C] ‖ [2'000 ft]: *910/1'690*", " ‖ [20 °C] ‖ [2'000 ft]: *520/1'270*"]);
+  const tw = text(withoutAfm(html));
+  assert.ok(tw.includes("Start · Handbuch, Figure 5-4, Seite 5-11 " + legend('ft') + " Tabellenwert 910 ft 1'690 ft Gegenwind 7 kt: −10 % je 9 kt, abgerundet −7 % 846,3 ft 1'571,7 ft " +
+    "Gras +15 % von 910 ft = +136,5 ft 982,8 ft 1'708,2 ft in Meter (× 0,3048) 299,56 m 520,66 m aufgerundet 300 m 521 m"), tw);
+  assert.ok(tw.includes("Landung · Handbuch, Figure 5-10, Seite 5-19 " + legend('ft') + " Tabellenwert 520 ft 1'270 ft Gegenwind 7 kt: −10 % je 9 kt, abgerundet −7 % 483,6 ft 1'181,1 ft " +
+    "Gras +45 % von 520 ft = +234 ft 717,6 ft 1'415,1 ft in Meter (× 0,3048) 218,73 m 431,33 m aufgerundet 219 m 432 m"), tw);
   ['KIAS', 'D1170-1-13PH', 'F1521792', 'Für nasses Gras nennt das AFM', 'keine Interpolation', '757,5 kg'].forEach((s) => assert.ok(!t.includes(s), 'nicht mehr angezeigt: ' + s));
   assert.ok(!html.includes('perf-factor'), 'keine Faktorzeile');
   assert.ok(!html.includes('perf-warn') && !html.includes('perf-note'));
@@ -378,7 +392,8 @@ test('Cessna 152 nass und über dem Tabellenbereich: Hinweis ohne Zuschlag, Zahl
   html = render(wxPfa({ tempC: 40, qnhHpa: 1013.25, windDir: null, windKt: 0 }), { aircraft: C152 });          // C5
   assert.ok(block(html, '30').includes('<span class="perf-amber">646&nbsp;m</span>') && has(block(html, '30'), 'Start: Strecke über 15 m länger als die verfügbare Länge.'));
   html = render(wxPfa({ tempC: -5, qnhHpa: 1004.5, windDir: null, windKt: 0 }), { aircraft: C152 });         // C7b
-  assert.ok(has(html, 'Temperatur −5,0 °C · Piste trocken') && has(html, "Tabelle 2'000 ft / 0 °C 775 ft 1'445 ft"), text(html));
+  assert.ok(has(html, 'Temperatur −5,0 °C · Piste trocken') && has(withoutAfm(html), "Tabellenwert 775 ft 1'445 ft"), text(html));
+  assert.equal(afmGrids(html)[0], " ‖ [0 °C] ‖ [2'000 ft]: *775/1'445*");
 });
 
 /* ── Pistenwahl, Feststellungen ────────────────────────────── */
@@ -678,8 +693,10 @@ test('Format: QNH ohne Tausendertrenner, Druckhöhe aufgerundet, Zwischenwerte e
   // nicht exakt auf vier Stellen darstellbar (seit VERSION 7): «≈» und zwei Nachkommastellen
   assert.deepEqual([ui.fmtExact(1 / 3), ui.fmtExact(375.36336), ui.fmtExact(258.86245)], ['≈0,33', '≈375,36', '≈258,86'], 'nicht exakt darstellbar: mit «≈»');
   // Tecnam K21: Zwischenwerte mit drei und vier Nachkommastellen exakt, nur der letzte Wert auf 0,01 aufgerundet
-  t = text(render(wxPfa({ tempC: 10.8, qnhHpa: 998.2, windDir: 247, windKt: 8.7 }), { aircraft: P2010 }));
-  assert.ok(t.includes("Tabelle 3'000 ft / 0 °C 251 m 535 m Tabelle 3'000 ft / 25 °C 274 m 558 m interpoliert für 10,8 °C 260,936 m 544,936 m Gegenwind 4 kt: −4 m je kt = −16 m 244,936 m 528,936 m " +
+  const k21 = render(wxPfa({ tempC: 10.8, qnhHpa: 998.2, windDir: 247, windKt: 8.7 }), { aircraft: P2010 });
+  assert.equal(afmGrids(k21)[1], " ‖ 0 °C | [10,8 °C] | 25 °C ‖ [3'000 ft]: ~251/535 | *260,936/544,936* | ~274/558", 'Landung');
+  t = text(withoutAfm(k21));
+  assert.ok(t.includes('interpoliert für 10,8 °C 260,936 m 544,936 m Gegenwind 4 kt: −4 m je kt = −16 m 244,936 m 528,936 m ' +
     'Gras +10 % von 260,936 m = +26,0936 m 271,0296 m 555,0296 m Faktor für Abweichungen im Betrieb × 1,67 452,62 m 926,9 m aufgerundet 453 m 927 m'), t);
   // Temperatur mit drei Dezimalen (kommt bei MeteoSchweiz nicht vor): nicht exakt darstellbare Werte mit «≈»
   t = text(render(wxPfa({ tempC: 7.123 }), { aircraft: P2010 }));
