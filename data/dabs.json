@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "quelle": "https://www.skybriefing.com/o/dabs?today",
-  "abgerufen_utc": "2026-11-21T04:04:06+00:00",
+  "abgerufen_utc": "2026-11-21T08:04:00+00:00",
   "datum": "2026-11-21",
-  "version": 1,
-  "stand_utc": "2026-11-20T14:31:00+00:00",
+  "version": 2,
+  "stand_utc": "2026-11-21T07:45:00+00:00",
   "fehler": null,
   "eintraege": [
     {
