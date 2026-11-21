@@ -1,99 +1,39 @@
 {
   "schema_version": 1,
   "quelle": "https://www.skybriefing.com/o/dabs?today",
-  "abgerufen_utc": "2026-11-20T15:03:46+00:00",
-  "datum": "2026-11-20",
-  "version": 4,
-  "stand_utc": "2026-11-20T14:45:00+00:00",
+  "abgerufen_utc": "2026-11-21T04:04:06+00:00",
+  "datum": "2026-11-21",
+  "version": 1,
+  "stand_utc": "2026-11-20T14:31:00+00:00",
   "fehler": null,
   "eintraege": [
     {
       "sec": 1,
-      "notam": "W0319/26",
-      "gebiet": "LSD12",
-      "fenster": [
-        [
-          "2026-11-20T12:00:00+00:00",
-          "2026-11-20T17:00:00+00:00"
-        ]
-      ],
-      "zeit_roh": "1200 - 1700",
-      "unten": "GND",
-      "oben": "3000m / 9850ft",
-      "unten_ft": 0,
-      "mitte": [
-        47.02777777777778,
-        8.857222222222221
-      ],
-      "radius_km": 3.6,
-      "text": "D-AREA LSD12 SIHLTAL ACT.",
-      "unsicher": false
+      "notam": "",
+      "gebiet": "",
+      "fenster": [],
+      "zeit_roh": "",
+      "unten": "",
+      "oben": "",
+      "unten_ft": null,
+      "mitte": null,
+      "radius_km": null,
+      "text": "",
+      "unsicher": true
     },
     {
-      "sec": 1,
-      "notam": "W3005/26",
-      "gebiet": "LSR7",
-      "fenster": [
-        [
-          "2026-11-20T06:30:00+00:00",
-          "2026-11-20T15:00:00+00:00"
-        ]
-      ],
-      "zeit_roh": "0630 - 1500",
-      "unten": "GND",
-      "oben": "4700m / 15500ft",
-      "unten_ft": 0,
-      "mitte": [
-        46.40222222222222,
-        7.029166666666667
-      ],
-      "radius_km": 6.5,
-      "text": "R-AREA LSR7 HONGRIN ACT DUE TO FRNG.",
-      "unsicher": false
-    },
-    {
-      "sec": 1,
-      "notam": "W3131/26",
-      "gebiet": "LSR39B",
-      "fenster": [
-        [
-          "2026-11-20T13:00:00+00:00",
-          "2026-11-20T15:00:00+00:00"
-        ]
-      ],
-      "zeit_roh": "1300 - 1500",
-      "unten": "2750m / 9000ft",
-      "oben": "FL130",
-      "unten_ft": 9000,
-      "mitte": [
-        46.897777777777776,
-        8.420277777777777
-      ],
-      "radius_km": 10.1,
-      "text": "R-AREA LSR39B BRISEN ACT. LOWER LIMIT 9000FT AMSL OR 2000FT GND WHICHEVER IS HIGHER.",
-      "unsicher": false
-    },
-    {
-      "sec": 1,
-      "notam": "W3132/26",
-      "gebiet": "LSR39C",
-      "fenster": [
-        [
-          "2026-11-20T13:00:00+00:00",
-          "2026-11-20T15:00:00+00:00"
-        ]
-      ],
-      "zeit_roh": "1300 - 1500",
-      "unten": "2750m / 9000ft",
-      "oben": "FL130",
-      "unten_ft": 9000,
-      "mitte": [
-        46.94777777777777,
-        8.675833333333333
-      ],
-      "radius_km": 14.2,
-      "text": "R-AREA LSR39C STOOS ACT. LOWER LIMIT 9000FT AMSL OR 2000FT GND WHICHEVER IS HIGHER.",
-      "unsicher": false
+      "sec": 2,
+      "notam": "",
+      "gebiet": "",
+      "fenster": [],
+      "zeit_roh": "",
+      "unten": "",
+      "oben": "",
+      "unten_ft": null,
+      "mitte": null,
+      "radius_km": null,
+      "text": "",
+      "unsicher": true
     }
   ]
 }
