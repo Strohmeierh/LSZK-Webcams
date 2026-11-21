@@ -1,39 +1,12 @@
 {
   "schema_version": 1,
+  "parser": 2,
   "quelle": "https://www.skybriefing.com/o/dabs?today",
-  "abgerufen_utc": "2026-11-21T08:04:00+00:00",
+  "abgerufen_utc": "2026-11-21T11:53:53+00:00",
   "datum": "2026-11-21",
-  "version": 2,
-  "stand_utc": "2026-11-21T07:45:00+00:00",
+  "version": 3,
+  "stand_utc": "2026-11-21T11:45:00+00:00",
+  "leer": true,
   "fehler": null,
-  "eintraege": [
-    {
-      "sec": 1,
-      "notam": "",
-      "gebiet": "",
-      "fenster": [],
-      "zeit_roh": "",
-      "unten": "",
-      "oben": "",
-      "unten_ft": null,
-      "mitte": null,
-      "radius_km": null,
-      "text": "",
-      "unsicher": true
-    },
-    {
-      "sec": 2,
-      "notam": "",
-      "gebiet": "",
-      "fenster": [],
-      "zeit_roh": "",
-      "unten": "",
-      "oben": "",
-      "unten_ft": null,
-      "mitte": null,
-      "radius_km": null,
-      "text": "",
-      "unsicher": true
-    }
-  ]
+  "eintraege": []
 }
