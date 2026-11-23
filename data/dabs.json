@@ -2,10 +2,10 @@
   "schema_version": 1,
   "parser": 2,
   "quelle": "https://www.skybriefing.com/o/dabs?today",
-  "abgerufen_utc": "2026-11-23T08:03:46+00:00",
+  "abgerufen_utc": "2026-11-23T12:03:58+00:00",
   "datum": "2026-11-23",
-  "version": 2,
-  "stand_utc": "2026-11-23T07:45:00+00:00",
+  "version": 3,
+  "stand_utc": "2026-11-23T11:45:00+00:00",
   "leer": false,
   "fehler": null,
   "eintraege": [
@@ -29,28 +29,6 @@
       ],
       "radius_km": 32.6,
       "text": "R-AREA LSR2 HOHGANT ACT.",
-      "unsicher": false
-    },
-    {
-      "sec": 1,
-      "notam": "W3151/26",
-      "gebiet": "LSR3",
-      "fenster": [
-        [
-          "2026-11-23T12:45:00+00:00",
-          "2026-11-23T13:25:00+00:00"
-        ]
-      ],
-      "zeit_roh": "1245 - 1325",
-      "unten": "FL100",
-      "oben": "FL130",
-      "unten_ft": 10000,
-      "mitte": [
-        47.17972222222222,
-        9.325555555555555
-      ],
-      "radius_km": 24.4,
-      "text": "R-AREA LSR3 SPEER ACT.",
       "unsicher": false
     },
     {
@@ -125,15 +103,11 @@
       "gebiet": "LSR39B",
       "fenster": [
         [
-          "2026-11-23T08:00:00+00:00",
-          "2026-11-23T10:00:00+00:00"
-        ],
-        [
           "2026-11-23T13:00:00+00:00",
           "2026-11-23T15:00:00+00:00"
         ]
       ],
-      "zeit_roh": "0800 - 1000, 1300 - 1500",
+      "zeit_roh": "1300 - 1500",
       "unten": "2750m / 9000ft",
       "oben": "FL130",
       "unten_ft": 9000,
@@ -151,15 +125,11 @@
       "gebiet": "LSR39C",
       "fenster": [
         [
-          "2026-11-23T08:00:00+00:00",
-          "2026-11-23T10:00:00+00:00"
-        ],
-        [
           "2026-11-23T13:00:00+00:00",
           "2026-11-23T15:00:00+00:00"
         ]
       ],
-      "zeit_roh": "0800 - 1000, 1300 - 1500",
+      "zeit_roh": "1300 - 1500",
       "unten": "2750m / 9000ft",
       "oben": "FL130",
       "unten_ft": 9000,
