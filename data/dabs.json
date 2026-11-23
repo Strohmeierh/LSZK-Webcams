@@ -2,10 +2,10 @@
   "schema_version": 1,
   "parser": 2,
   "quelle": "https://www.skybriefing.com/o/dabs?today",
-  "abgerufen_utc": "2026-11-23T04:08:51+00:00",
+  "abgerufen_utc": "2026-11-23T08:03:46+00:00",
   "datum": "2026-11-23",
-  "version": 1,
-  "stand_utc": "2026-11-22T14:31:00+00:00",
+  "version": 2,
+  "stand_utc": "2026-11-23T07:45:00+00:00",
   "leer": false,
   "fehler": null,
   "eintraege": [
@@ -99,50 +99,6 @@
     },
     {
       "sec": 1,
-      "notam": "W3141/26",
-      "gebiet": "LSR16",
-      "fenster": [
-        [
-          "2026-11-23T07:00:00+00:00",
-          "2026-11-23T16:30:00+00:00"
-        ]
-      ],
-      "zeit_roh": "0700 - 1630",
-      "unten": "GND",
-      "oben": "3200m / 10500ft",
-      "unten_ft": 0,
-      "mitte": [
-        46.126666666666665,
-        9.033333333333333
-      ],
-      "radius_km": 3.7,
-      "text": "R-AREA LSR16 ISONE 1 ACT DUE TO MIL UAV.",
-      "unsicher": false
-    },
-    {
-      "sec": 1,
-      "notam": "W3139/26",
-      "gebiet": "LSR17",
-      "fenster": [
-        [
-          "2026-11-23T07:00:00+00:00",
-          "2026-11-23T16:30:00+00:00"
-        ]
-      ],
-      "zeit_roh": "0700 - 1630",
-      "unten": "GND",
-      "oben": "3200m / 10500ft",
-      "unten_ft": 0,
-      "mitte": [
-        46.10777777777778,
-        8.994444444444444
-      ],
-      "radius_km": 2.6,
-      "text": "R-AREA LSR17 ISONE 2 ACT DUE TO MIL UAV.",
-      "unsicher": false
-    },
-    {
-      "sec": 1,
       "notam": "W3135/26",
       "gebiet": "LSR18",
       "fenster": [
@@ -221,15 +177,11 @@
       "gebiet": "",
       "fenster": [
         [
-          "2026-11-23T00:00:00+00:00",
-          "2026-11-23T04:00:00+00:00"
-        ],
-        [
           "2026-11-23T22:30:00+00:00",
           "2026-11-23T23:59:00+00:00"
         ]
       ],
-      "zeit_roh": "0000 - 0400, 2230 - 2359",
+      "zeit_roh": "2230 - 2359",
       "unten": "GND",
       "oben": "FL195",
       "unten_ft": 0,
