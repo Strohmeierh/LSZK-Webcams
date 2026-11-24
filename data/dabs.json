@@ -2,10 +2,10 @@
   "schema_version": 1,
   "parser": 2,
   "quelle": "https://www.skybriefing.com/o/dabs?today",
-  "abgerufen_utc": "2026-11-24T12:04:06+00:00",
+  "abgerufen_utc": "2026-11-24T15:03:59+00:00",
   "datum": "2026-11-24",
-  "version": 3,
-  "stand_utc": "2026-11-24T11:45:00+00:00",
+  "version": 4,
+  "stand_utc": "2026-11-24T14:45:00+00:00",
   "leer": false,
   "fehler": null,
   "eintraege": [
@@ -37,15 +37,11 @@
       "gebiet": "LSR3",
       "fenster": [
         [
-          "2026-11-24T12:45:00+00:00",
-          "2026-11-24T13:25:00+00:00"
-        ],
-        [
           "2026-11-24T14:45:00+00:00",
           "2026-11-24T15:25:00+00:00"
         ]
       ],
-      "zeit_roh": "1245 - 1325, 1445 - 1525",
+      "zeit_roh": "1445 - 1525",
       "unten": "FL100",
       "oben": "FL130",
       "unten_ft": 10000,
@@ -322,25 +318,47 @@
       "unsicher": false
     },
     {
-      "sec": 1,
-      "notam": "W3137/26",
+      "sec": 2,
+      "notam": "W3169/26",
       "gebiet": "",
       "fenster": [
         [
-          "2026-11-24T22:30:00+00:00",
-          "2026-11-24T23:59:00+00:00"
+          "2026-11-24T16:22:00+00:00",
+          "2026-11-24T19:30:00+00:00"
         ]
       ],
-      "zeit_roh": "2230 - 2359",
+      "zeit_roh": "1622 - 1930",
       "unten": "GND",
-      "oben": "FL195",
+      "oben": "FL130",
       "unten_ft": 0,
       "mitte": [
-        47.573888888888895,
-        9.047777777777778
+        46.75,
+        8.133333333333333
       ],
-      "radius_km": 0.3,
-      "text": "TEMPO R-AREA AMLIKON ESTABLISHED RADIUS 0.2KM (473426N0090252E RADIUS 0.2NM). WX MEASUREMENTS BY REMOTELY PILOTED AERIAL SYSTEM WILL TAKE PLACE. WHITE BLINKING PSN LGT WITH VISUAL RANGE OF AT LEAST 3KM. ENTRY PROHIBITED WHEN ACT EXC HEL EMERG MEDICAL SER (HEMS). FOR INFO ON ACT AND HEMS CTC TEL +41 79 772 93 32 AND REFER TO WWW.MAP.GEO.ADMIN.CH TOPIC AVIATION UAS AWARENESS MAP.",
+      "radius_km": 181.5,
+      "text": "MIL NGT FLT WITH HEL AND PROPELLER ACFT WILL TAKE PLACE WI FLW TRG AREAS: CHAUX- DE-FONDS WOLHUSEN UZWIL ZUGERSEE ALPSTEIN DIABLERETS BURGDORF MOUDON SCHANGNAU TICINO. REF VFR MANUAL RAC 3-2-3 (MIL NGT FLT CHART). UPPER LIMIT: AIRSPACE CLASS E OR MAX ACCORDING TO ITEM G.",
+      "unsicher": false
+    },
+    {
+      "sec": 2,
+      "notam": "W3170/26",
+      "gebiet": "",
+      "fenster": [
+        [
+          "2026-11-24T17:30:00+00:00",
+          "2026-11-24T20:55:00+00:00"
+        ]
+      ],
+      "zeit_roh": "1730 - 2055",
+      "unten": "FL130",
+      "oben": "FL660",
+      "unten_ft": 13000,
+      "mitte": [
+        46.75,
+        8.133333333333333
+      ],
+      "radius_km": 181.5,
+      "text": "MIL NGT FLT WITH JET ACFT WILL TAKE PLACE. AIRSPACE C LOWERED TO FL130 OVER ALPS.",
       "unsicher": false
     }
   ]
