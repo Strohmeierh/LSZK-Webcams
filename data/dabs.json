@@ -2,10 +2,10 @@
   "schema_version": 1,
   "parser": 2,
   "quelle": "https://www.skybriefing.com/o/dabs?today",
-  "abgerufen_utc": "2026-11-24T04:03:56+00:00",
+  "abgerufen_utc": "2026-11-24T08:03:55+00:00",
   "datum": "2026-11-24",
-  "version": 1,
-  "stand_utc": "2026-11-23T14:26:00+00:00",
+  "version": 2,
+  "stand_utc": "2026-11-24T07:45:00+00:00",
   "leer": false,
   "fehler": null,
   "eintraege": [
@@ -89,29 +89,7 @@
     },
     {
       "sec": 1,
-      "notam": "W3149/26",
-      "gebiet": "LSR7",
-      "fenster": [
-        [
-          "2026-11-24T03:00:00+00:00",
-          "2026-11-24T21:00:00+00:00"
-        ]
-      ],
-      "zeit_roh": "0300 - 2100",
-      "unten": "GND",
-      "oben": "4700m / 15500ft",
-      "unten_ft": 0,
-      "mitte": [
-        46.40222222222222,
-        7.029166666666667
-      ],
-      "radius_km": 6.5,
-      "text": "R-AREA LSR7 HONGRIN ACT DUE TO FRNG.",
-      "unsicher": false
-    },
-    {
-      "sec": 1,
-      "notam": "W3106/26",
+      "notam": "W3163/26",
       "gebiet": "LSR10",
       "fenster": [
         [
@@ -247,15 +225,15 @@
     },
     {
       "sec": 1,
-      "notam": "W3135/26",
+      "notam": "W3166/26",
       "gebiet": "LSR18",
       "fenster": [
         [
-          "2026-11-24T05:00:00+00:00",
+          "2026-11-24T07:00:00+00:00",
           "2026-11-24T22:00:00+00:00"
         ]
       ],
-      "zeit_roh": "0500 - 2200",
+      "zeit_roh": "0700 - 2200",
       "unten": "GND",
       "oben": "1350m / 4500ft",
       "unten_ft": 0,
@@ -403,15 +381,11 @@
       "gebiet": "",
       "fenster": [
         [
-          "2026-11-24T00:00:00+00:00",
-          "2026-11-24T04:00:00+00:00"
-        ],
-        [
           "2026-11-24T22:30:00+00:00",
           "2026-11-24T23:59:00+00:00"
         ]
       ],
-      "zeit_roh": "0000 - 0400, 2230 - 2359",
+      "zeit_roh": "2230 - 2359",
       "unten": "GND",
       "oben": "FL195",
       "unten_ft": 0,
