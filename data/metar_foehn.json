@@ -2,17 +2,17 @@
  "schema_version": 1,
  "sued": {
   "icao": "LSZA",
-  "obs_utc": "2026-11-25T08:50:00+00:00",
+  "obs_utc": "2026-11-25T09:20:00+00:00",
   "qnh": 1017,
-  "raw": "METAR LSZA 250850Z 36002KT 6000 -DZ FEW008 SCT039 OVC048 06/05 Q1017",
+  "raw": "METAR LSZA 250920Z 36002KT 7000 -RA FEW008 SCT039 OVC055 06/05 Q1017",
   "source": "aviationweather.gov"
  },
  "nord": {
   "icao": "LSZH",
-  "obs_utc": "2026-11-25T08:50:00+00:00",
-  "qnh": 1012,
-  "raw": "METAR LSZH 250850Z 35004KT 310V040 9000 BKN009 01/M01 Q1012 TEMPO SCT010",
+  "obs_utc": "2026-11-25T09:20:00+00:00",
+  "qnh": 1013,
+  "raw": "METAR LSZH 250920Z VRB02KT 9000 BKN009 01/M00 Q1013 TEMPO SCT010",
   "source": "aviationweather.gov"
  },
- "index_hpa": 5
+ "index_hpa": 4
 }
