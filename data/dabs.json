@@ -2,10 +2,10 @@
   "schema_version": 1,
   "parser": 2,
   "quelle": "https://www.skybriefing.com/o/dabs?today",
-  "abgerufen_utc": "2026-11-25T12:04:01+00:00",
+  "abgerufen_utc": "2026-11-25T15:03:50+00:00",
   "datum": "2026-11-25",
-  "version": 3,
-  "stand_utc": "2026-11-25T11:45:00+00:00",
+  "version": 4,
+  "stand_utc": "2026-11-25T14:45:00+00:00",
   "leer": false,
   "fehler": null,
   "eintraege": [
@@ -37,15 +37,11 @@
       "gebiet": "LSR3",
       "fenster": [
         [
-          "2026-11-25T12:45:00+00:00",
-          "2026-11-25T13:25:00+00:00"
-        ],
-        [
           "2026-11-25T14:45:00+00:00",
           "2026-11-25T15:25:00+00:00"
         ]
       ],
-      "zeit_roh": "1245 - 1325, 1445 - 1525",
+      "zeit_roh": "1445 - 1525",
       "unten": "FL100",
       "oben": "FL130",
       "unten_ft": 10000,
@@ -297,6 +293,28 @@
       ],
       "radius_km": 4.7,
       "text": "SION TEMPO MIL TMA SECT 1 ACT.",
+      "unsicher": false
+    },
+    {
+      "sec": 2,
+      "notam": "W3182/26",
+      "gebiet": "",
+      "fenster": [
+        [
+          "2026-11-25T16:30:00+00:00",
+          "2026-11-25T19:15:00+00:00"
+        ]
+      ],
+      "zeit_roh": "1630 - 1915",
+      "unten": "GND",
+      "oben": "FL120",
+      "unten_ft": 0,
+      "mitte": [
+        46.75,
+        8.133333333333333
+      ],
+      "radius_km": 181.5,
+      "text": "MIL NGT FLT WITH HEL WI FLW TRG AREAS: WOLHUSEN OLTEN ZUGERSEE TRIENGEN SUSTEN KLAUSEN SCHANGNAU REF VFR MANUAL RAC 3-2-3 (MIL NGT FLT CHART). UPPER LIMIT: AIRSPACE CLASS E OR MAX ACCORDING TO ITEM G.",
       "unsicher": false
     }
   ]
