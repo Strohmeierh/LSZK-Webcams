@@ -1,6 +1,6 @@
 {
-  "fetched_at_utc": "2026-11-26T04:31:10+00:00",
-  "station_last_received_utc": "2026-11-26T04:30:10+00:00",
+  "fetched_at_utc": "2026-11-26T04:41:10+00:00",
+  "station_last_received_utc": "2026-11-26T04:40:13+00:00",
   "device_token": "411b7945460c42848a14d053bb7c03c0",
   "current": {
     "windDirection": null,
@@ -52,18 +52,18 @@
     "temperatureFeelLike": null,
     "temperature": "0",
     "hiTemp": "2",
-    "hiTempDate": 1795647610370,
+    "hiTempDate": 1795647610383,
     "loTemp": "-68",
-    "loTempDate": 1795657210370,
+    "loTempDate": 1795657210383,
     "wind": "0",
     "gust": "10",
-    "gustAt": 1795651450370,
+    "gustAt": 1795651450383,
     "humidity": "0",
     "rain": "0.0",
     "seasonalRain": "642.2",
     "barometer": "1008.9",
     "barometerTrend": "Falling Slowly",
-    "lastReceived": 1795667410000,
+    "lastReceived": 1795668013000,
     "systemLocation": "Fehraltorf, ZH, CHE",
     "aqsLocation": null,
     "aqsLastReceived": null,
@@ -76,7 +76,7 @@
   },
   "summary": {
     "ownerName": null,
-    "lastReceived": 1795667410000,
+    "lastReceived": 1795668013000,
     "currConditionValues": [
       {
         "sensorDataTypeId": 7,
@@ -722,13 +722,13 @@
       {
         "sensorDataName": "Rain",
         "rawValues": {
-          "MONTH": 78.6,
           "DAY": 0.0,
+          "MONTH": 78.6,
           "YEAR": 642.2
         },
         "convertedValues": {
-          "MONTH": "78.6",
           "DAY": "0.0",
+          "MONTH": "78.6",
           "YEAR": "642.2"
         },
         "assocSensorDataTypeId": null,
@@ -737,13 +737,13 @@
       {
         "sensorDataName": "ET",
         "rawValues": {
-          "MONTH": 0.0,
           "DAY": 0.0,
+          "MONTH": 0.0,
           "YEAR": 0.0
         },
         "convertedValues": {
-          "MONTH": "0.0",
           "DAY": "0.0",
+          "MONTH": "0.0",
           "YEAR": "0.0"
         },
         "assocSensorDataTypeId": null,
