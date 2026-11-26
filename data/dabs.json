@@ -2,10 +2,10 @@
   "schema_version": 1,
   "parser": 2,
   "quelle": "https://www.skybriefing.com/o/dabs?today",
-  "abgerufen_utc": "2026-11-26T04:08:56+00:00",
+  "abgerufen_utc": "2026-11-26T08:09:07+00:00",
   "datum": "2026-11-26",
-  "version": 1,
-  "stand_utc": "2026-11-25T14:32:00+00:00",
+  "version": 2,
+  "stand_utc": "2026-11-26T07:45:00+00:00",
   "leer": false,
   "fehler": null,
   "eintraege": [
@@ -37,19 +37,15 @@
     },
     {
       "sec": 1,
-      "notam": "W3184/26",
+      "notam": "W3198/26",
       "gebiet": "LSR3",
       "fenster": [
-        [
-          "2026-11-26T07:45:00+00:00",
-          "2026-11-26T08:25:00+00:00"
-        ],
         [
           "2026-11-26T09:40:00+00:00",
           "2026-11-26T10:20:00+00:00"
         ]
       ],
-      "zeit_roh": "0745 - 0825, 0940 - 1020",
+      "zeit_roh": "0940 - 1020",
       "unten": "FL100",
       "oben": "FL130",
       "unten_ft": 10000,
@@ -63,7 +59,7 @@
     },
     {
       "sec": 1,
-      "notam": "W3179/26",
+      "notam": "W3192/26",
       "gebiet": "LSR10",
       "fenster": [
         [
@@ -89,7 +85,7 @@
     },
     {
       "sec": 1,
-      "notam": "W3177/26",
+      "notam": "W3186/26",
       "gebiet": "LSR11",
       "fenster": [
         [
@@ -111,7 +107,7 @@
     },
     {
       "sec": 1,
-      "notam": "W3175/26",
+      "notam": "W3188/26",
       "gebiet": "LSR11A",
       "fenster": [
         [
@@ -133,7 +129,7 @@
     },
     {
       "sec": 1,
-      "notam": "W2527/26",
+      "notam": "W3190/26",
       "gebiet": "LSR12",
       "fenster": [
         [
@@ -151,50 +147,6 @@
       ],
       "radius_km": 8.7,
       "text": "R-AREA LSR12 SIMPLON ACT DUE TO FRNG.",
-      "unsicher": false
-    },
-    {
-      "sec": 1,
-      "notam": "W3155/26",
-      "gebiet": "LSR16",
-      "fenster": [
-        [
-          "2026-11-26T07:00:00+00:00",
-          "2026-11-26T16:30:00+00:00"
-        ]
-      ],
-      "zeit_roh": "0700 - 1630",
-      "unten": "GND",
-      "oben": "3200m / 10500ft",
-      "unten_ft": 0,
-      "mitte": [
-        46.126666666666665,
-        9.033333333333333
-      ],
-      "radius_km": 3.7,
-      "text": "R-AREA LSR16 ISONE 1 ACT DUE TO MIL UAV.",
-      "unsicher": false
-    },
-    {
-      "sec": 1,
-      "notam": "W3153/26",
-      "gebiet": "LSR17",
-      "fenster": [
-        [
-          "2026-11-26T07:00:00+00:00",
-          "2026-11-26T16:30:00+00:00"
-        ]
-      ],
-      "zeit_roh": "0700 - 1630",
-      "unten": "GND",
-      "oben": "3200m / 10500ft",
-      "unten_ft": 0,
-      "mitte": [
-        46.10777777777778,
-        8.994444444444444
-      ],
-      "radius_km": 2.6,
-      "text": "R-AREA LSR17 ISONE 2 ACT DUE TO MIL UAV.",
       "unsicher": false
     },
     {
