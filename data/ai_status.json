@@ -1,21 +1,21 @@
 {
   "stats": {
     "month": "2026-11",
-    "cost_month_usd": 9.2951,
+    "cost_month_usd": 9.1769,
     "attempts_month": 35,
     "date": "2026-11-26",
-    "cost_today_usd": 0.6619,
+    "cost_today_usd": 0.5437,
     "attempts_today": 2,
     "budget_month_usd": 80.0,
-    "reserved_usd": 0.4
+    "reserved_usd": 0.0
   },
   "schema_version": 1,
-  "ok": false,
+  "ok": true,
   "attempted_at_utc": "2026-11-26T09:03:53+00:00",
   "slot": "10:00",
   "reserved_run": "45788416004.1",
-  "fail_streak": 1,
-  "error": "Versuch läuft oder wurde abgebrochen (kein Ergebnis gespeichert)",
+  "fail_streak": 0,
+  "error": null,
   "sun": {
     "rise": "07:44",
     "set": "16:40"
@@ -40,41 +40,41 @@
     "fehlend": [],
     "fehler": []
   },
-  "generated_at_utc": "2026-11-26T07:19:13+00:00",
+  "generated_at_utc": "2026-11-26T09:03:57+00:00",
   "model": "claude-opus-5-5",
   "served_by": "claude-opus-5-5",
   "effort": "medium",
-  "request_id": "req_011ChR8gxdhvBjjqEYs6mbdS",
+  "request_id": "req_011ChRGgU8swhN18YcUaeaYF",
   "usage": {
-    "input_tokens": 37889,
-    "output_tokens": 5517,
+    "input_tokens": 37874,
+    "output_tokens": 6515,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 0,
     "attempts": 1,
-    "cost_usd": 0.2619
+    "cost_usd": 0.2818
   },
   "briefing": {
-    "headline": "Bedeckt, Basis 750–950 m MSL, Niederschlag wahrscheinlich",
-    "fgzo_hinweis": "FGZO-Hinweis: Auf Piste 12 und 30 je 1 Start und 1 Landung pro Pilot, Rollweg gesperrt mit Backtrack auf der Piste, keine Wasserlachen überrollen und nur am Pistenende wenden.",
-    "text": "Am Platz Wind aus Nord mit 3 kt, Böen bis 9 kt, bei −0,3 °C und Taupunkt −0,5 °C. Geschlossene Bewölkung mit Basis um 750–950 m MSL, Sicht 7 km (Höchi), über der Linthebene Niederschlag und im Glarnerland Schnee bis in die Talböden. Voralpen und Alpen stecken in Wolken, Nordstau bei Föhn-Index −8 hPa. Prognose: Regen bzw. Schneeregen wahrscheinlich (83 % in den nächsten 3 h), ab 14 Uhr nur noch möglich und ab 15 Uhr trocken mit Sicht über 25 km, aber bis zum Abend bedeckt mit tiefer Basis. DABS für Do 26.11. (Version 1, herausgegeben am Vortag, 25.11. 15:32 LT): D-Area Sihltal 08:00–12:00 und 13:00–22:00 LT GND bis 3'000 m MSL, R-Area Speer 08:45–09:25 und 10:40–11:20 LT FL100 bis FL130, R-Areas Brisen und Stoos 14:00–16:00 LT ab 2'750 m MSL bis FL130.",
+    "headline": "Bedeckt, Basis um 750 m MSL, Alpen in Wolken",
+    "fgzo_hinweis": "FGZO-Hinweis: Pro Pilot je 1 Start und 1 Landung auf Piste 12 und 30, Rollweg gesperrt (Backtrack auf der Piste, keine Wasserlachen überrollen), Wenden nur am Pistenende.",
+    "text": "Am Platz bedeckt und trocken bei -0,3 °C (Taupunkt -1,2 °C), Wind aus Nordnordost mit 3 kt, Böen bis 8 kt; Föhn-Index -9 hPa, also Nordlage mit Stau an den Alpen. Basis um 750 m MSL, darüber geschlossen um 1'000 m MSL, Sicht 7 km (Höchi), am Obersee Schneefall und schlechte Sicht. Voralpen, Glarner Alpen und Hauptkamm stecken in den Wolken. Prognose: Regenwahrscheinlichkeit 75 % in den nächsten 3 Stunden, Regen bzw. Schnee wahrscheinlich, ab 14 Uhr abklingend, tiefe Bedeckung bleibt bis in den Abend. DABS für Do 26.11. (Version 2, herausgegeben 08:45 LT): D-Area Sihltal 08:00–12:00 und 13:00–22:00 LT GND bis 3'000 m MSL, R-Area Speer 10:40–11:20 LT FL100 bis FL130, Brisen und Stoos 14:00–16:00 LT 2'750 m MSL bis FL130.",
     "lage": "schlecht"
   },
   "himmel": {
     "bedeckung_achtel": 8,
-    "wolkenbasis_m": 850,
+    "wolkenbasis_m": 750,
     "basis_quelle": "kombiniert",
     "sicht": "maessig",
     "sicht_km": 7,
     "nebel": "dunst",
     "nebel_obergrenze_m": null,
     "alpen": "verhangen",
-    "schneegrenze_m": 560,
+    "schneegrenze_m": 600,
     "niederschlag": "in_der_ferne",
     "zusammenfassung": "",
     "regionen": [
       {
         "region": "platz",
-        "zustand": "Raureif auf dem Gras, Vorfeld nass, schwache Bise am Windsack."
+        "zustand": "Graspiste grün mit leichtem Reif, Vorfeld nass, kein Niederschlag."
       },
       {
         "region": "zuercher_oberland",
@@ -82,23 +82,23 @@
       },
       {
         "region": "voralpen",
-        "zustand": "Rapperswil auf 2,5 km erkennbar, Berge dahinter verdeckt; Linthebene diesig mit Niederschlag, Säntis in Wolken."
+        "zustand": "Linthebene in Schneefall mit Sicht um 1 km, Rapperswil nur dunstig, Säntis in Wolken; Neuschnee bis an den See."
       },
       {
         "region": "glarner_alpen",
-        "zustand": "Schneefall im Grosstal bis 565 m MSL, Talflanken in Wolken, Elm-Schabell auf 2'015 m MSL in der Wolke."
+        "zustand": "Glarnerland bis in den Talboden auf 565 m MSL verschneit, Schneefall, Flanken in Wolken, Schabell auf 2'015 m MSL in der Wolke."
       },
       {
         "region": "zentralalpen",
-        "zustand": "Klausenpass und Oberalp in Wolken mit Neuschnee, Basis unter 1'850 m MSL."
+        "zustand": "Klausenpass und Oberalp in Wolken mit Schneefall, Basis unter 1'850 m MSL."
       },
       {
         "region": "graubuenden",
-        "zustand": "Rothorn und Jakobshorn in Wolken mit Schneefall, Basis unter 2'550 m MSL."
+        "zustand": "Jakobshorn und Parpaner Rothorn in Wolken mit Schneefall, Basis unter 2'550 m MSL."
       },
       {
         "region": "alpensuedseite",
-        "zustand": "Leventina mit Nordföhn-Zeichen: Gipfel um 2'900 m MSL teils sichtbar, darüber geschlossene Bewölkung, Neuschnee an den Hängen."
+        "zustand": "Leventina bedeckt, Pizzo Forno knapp frei, Campo-Tencia-Gruppe teils in Wolken, Neuschnee an den Hängen."
       }
     ]
   },
@@ -107,22 +107,19 @@
       "titel": "Speck – Runway 30",
       "key": "https://wsrv.nl/?url=fgzo.ch/webcam/images/fgzo.jpg",
       "bildalter_min": 1,
-      "satz": "Bedeckt mit tiefer, grauer Decke, Waldrand auf 1,3 km klar, Raureif auf dem Gras, Piste feucht.",
+      "satz": "Bedeckt, Graspiste grün mit leichtem Reif, Wald am Horizont gut erkennbar, kein Niederschlag.",
       "tags": [
-        "bedeckt",
-        "tiefe_wolken",
-        "nasse_piste"
+        "bedeckt"
       ],
       "problem": "keins"
     },
     {
       "titel": "Speck – Tankstelle",
       "key": "https://wsrv.nl/?url=fgzo.ch/webcam/images/fgzo2.jpg",
-      "bildalter_min": 1,
-      "satz": "Bedeckt, Oberland-Hügel um 7 km nur schwach erkennbar, Vorfeld nass, Windsack zeigt leichte Bise.",
+      "bildalter_min": 0,
+      "satz": "Bedeckt, Oberländer Hügel dunstig erkennbar, Windsack nur leicht angehoben, Vorfeld nass.",
       "tags": [
         "bedeckt",
-        "tiefe_wolken",
         "dunst",
         "nasse_piste"
       ],
@@ -131,11 +128,10 @@
     {
       "titel": "Bachtel",
       "key": "https://wsrv.nl/?url=bachtel.it-wms.com/panorama1_raw.jpg",
-      "bildalter_min": 14,
-      "satz": "Turm in der Wolke, Basis unter 1'150 m MSL.",
+      "bildalter_min": 29,
+      "satz": "Turm auf 1'180 m MSL in der Wolke, keine Sicht.",
       "tags": [
-        "in_wolke",
-        "tiefe_wolken"
+        "in_wolke"
       ],
       "problem": "keins"
     },
@@ -143,11 +139,11 @@
       "titel": "Wangen-Lachen – Cam 1",
       "key": "cam1",
       "bildalter_min": 4,
-      "satz": "Tiefe Wolken und Niederschlag, Berge verdeckt, Sicht nur wenige km, Vorfeld nass.",
+      "satz": "Schneefall, Sicht kaum über das Pistenende hinaus, Dächer angezuckert, Vorfeld nass.",
       "tags": [
         "tiefe_wolken",
         "niederschlag",
-        "dunst",
+        "schnee",
         "nasse_piste"
       ],
       "problem": "keins"
@@ -155,20 +151,20 @@
     {
       "titel": "Rapperswil",
       "key": "https://wsrv.nl/?url=images-webcams.windy.com/91/1614073791/current/original/1614073791.jpg",
-      "bildalter_min": 3,
-      "satz": "Rapperswil auf 2,5 km erkennbar, Berge dahinter in Wolken, Raureif auf den Feldern.",
+      "bildalter_min": 6,
+      "satz": "Rapperswil in 2,5 km nur dunstig, Berge dahinter nicht sichtbar, Felder angezuckert.",
       "tags": [
-        "bedeckt",
+        "dunst",
         "tiefe_wolken",
-        "dunst"
+        "schnee"
       ],
       "problem": "keins"
     },
     {
       "titel": "Säntis",
       "key": "https://wsrv.nl/?url=saentis.roundshot.com/cams/156/medium",
-      "bildalter_min": 6,
-      "satz": "Gipfel in der Wolke, Basis unter 2'500 m MSL.",
+      "bildalter_min": 11,
+      "satz": "Gipfel auf 2'505 m MSL in der Wolke, keine Fernsicht.",
       "tags": [
         "in_wolke"
       ],
@@ -178,19 +174,19 @@
       "titel": "Richtung Tödi",
       "key": "https://wsrv.nl/?url=decoral.ch/Kameratoedi.jpg",
       "bildalter_min": 4,
-      "satz": "Schneefall im Talboden, alles weiss, Talflanken und Tödi in Wolken.",
+      "satz": "Schneefall, Tal geschlossen verschneit, Flanken und Tödi in Wolken.",
       "tags": [
-        "schnee",
+        "tiefe_wolken",
         "niederschlag",
-        "tiefe_wolken"
+        "schnee"
       ],
       "problem": "keins"
     },
     {
       "titel": "Elm – Schabell",
       "key": "https://wsrv.nl/?url=sportbahnenelm.roundshot.com/cams/1721/medium",
-      "bildalter_min": 23,
-      "satz": "Kamera auf 2'015 m MSL in der Wolke, Neuschnee auf der Piste.",
+      "bildalter_min": 11,
+      "satz": "Schabell auf 2'015 m MSL in der Wolke, Neuschnee, Glarner Hauptkette nicht sichtbar.",
       "tags": [
         "in_wolke",
         "schnee"
@@ -200,20 +196,20 @@
     {
       "titel": "Klausenpass",
       "key": "https://wsrv.nl/?url=webcam.hotel-klausenpass.ch/panorama.jpg",
-      "bildalter_min": 19,
-      "satz": "In der Wolke mit Schneefall, Basis unter 1'850 m MSL, tief verschneit.",
+      "bildalter_min": 4,
+      "satz": "In der Wolke mit Schneefall, Basis unter 1'850 m MSL, Gipfel nicht sichtbar.",
       "tags": [
         "in_wolke",
-        "schnee",
-        "niederschlag"
+        "niederschlag",
+        "schnee"
       ],
       "problem": "keins"
     },
     {
       "titel": "Schneehüenerstock",
       "key": "https://wsrv.nl/?url=andermatt-sedrun-disentis.roundshot.com/cams/1768/medium",
-      "bildalter_min": 6,
-      "satz": "Kamera auf 2'600 m MSL in der Wolke, Neuschnee, Hauptkamm verdeckt.",
+      "bildalter_min": 10,
+      "satz": "In der Wolke auf 2'600 m MSL, Neuschnee, Hauptkamm nicht sichtbar.",
       "tags": [
         "in_wolke",
         "schnee"
@@ -224,15 +220,15 @@
       "titel": "Gotthardpass",
       "key": "https://wsrv.nl/?url=webcam.afbn.ch/H_OSG_017,200_S_KAM_001_Sued.jpg",
       "bildalter_min": 4,
-      "satz": "Keine verlässliche Aussage zum Pass möglich.",
+      "satz": "Nicht beurteilbar, nur Schnee und Nebelreste am Pass erahnbar.",
       "tags": [],
-      "problem": "linse_nass"
+      "problem": "eingefroren"
     },
     {
       "titel": "Parpaner Rothorn",
       "key": "https://wsrv.nl/?url=lenzerheide.roundshot.com/cams/52/medium",
-      "bildalter_min": 6,
-      "satz": "In der Wolke, Basis unter 2'850 m MSL, Neuschnee am Gipfel.",
+      "bildalter_min": 12,
+      "satz": "In Wolken, nur nahe verschneite Felsen sichtbar, Hauptkamm verdeckt.",
       "tags": [
         "in_wolke",
         "schnee"
@@ -242,12 +238,12 @@
     {
       "titel": "Jakobshorn",
       "key": "https://wsrv.nl/?url=images-webcams.windy.com/30/1678358730/current/original/1678358730.jpg",
-      "bildalter_min": 1,
-      "satz": "In der Wolke mit Schneefall, Basis unter 2'550 m MSL.",
+      "bildalter_min": 5,
+      "satz": "Gipfel auf 2'590 m MSL in der Wolke, Schneefall.",
       "tags": [
         "in_wolke",
-        "schnee",
-        "niederschlag"
+        "niederschlag",
+        "schnee"
       ],
       "problem": "keins"
     },
@@ -255,7 +251,7 @@
       "titel": "Ambri Tarnolgio",
       "key": "https://wsrv.nl/?url=www.tarnolgio.ch/webcam00.jpg",
       "bildalter_min": 4,
-      "satz": "Gipfel um 2'900 m MSL teils sichtbar, darüber geschlossene Bewölkung, Neuschnee an den Hängen.",
+      "satz": "Bedeckt, Pizzo Forno knapp frei, Campo Tencia teils in Wolken, Neuschnee an den Hängen.",
       "tags": [
         "bedeckt",
         "schnee"
@@ -266,12 +262,12 @@
   "dabs": {
     "ok": true,
     "datum": "2026-11-26",
-    "version": 1,
-    "stand_utc": "2026-11-25T14:32:00+00:00",
-    "abgerufen_utc": "2026-11-26T04:08:56+00:00",
+    "version": 2,
+    "stand_utc": "2026-11-26T07:45:00+00:00",
+    "abgerufen_utc": "2026-11-26T08:09:07+00:00",
     "quelle": "https://www.skybriefing.com/o/dabs?today",
     "filter": "Fluggebiet LSZK–Säntis–Flüela–Julier–Gotthard–Mythen mit 15 km Marge, Untergrenze unter FL150, bis 30 min nach Sonnenuntergang",
-    "eintraege_total": 13,
+    "eintraege_total": 11,
     "leer": false,
     "treffer": [
       {
@@ -287,7 +283,7 @@
       },
       {
         "gebiet": "LSR11",
-        "notam": "W3177/26",
+        "notam": "W3186/26",
         "zeit": "08:00–21:30 LT",
         "unten": "GND",
         "oben": "9600m / 31500ft",
@@ -298,7 +294,7 @@
       },
       {
         "gebiet": "LSR11A",
-        "notam": "W3175/26",
+        "notam": "W3188/26",
         "zeit": "08:00–21:30 LT",
         "unten": "2150m / 7000ft",
         "oben": "9600m / 31500ft",
@@ -309,8 +305,8 @@
       },
       {
         "gebiet": "LSR3",
-        "notam": "W3184/26",
-        "zeit": "08:45–09:25, 10:40–11:20 LT",
+        "notam": "W3198/26",
+        "zeit": "10:40–11:20 LT",
         "unten": "FL100",
         "oben": "FL130",
         "text": "R-AREA LSR3 SPEER ACT.",
@@ -346,7 +342,7 @@
     "aktuell": true,
     "abruf_fehler": null
   },
-  "slot_planned_utc": "2026-11-26T07:14:41+00:00",
+  "slot_planned_utc": "2026-11-26T09:00:00+00:00",
   "korrekturen": [],
   "thermik": null,
   "platz": {
@@ -357,14 +353,14 @@
   "open_meteo": {
     "prognose": {
       "ok": true,
-      "abgerufen_utc": "2026-11-26T07:13:50+00:00",
+      "abgerufen_utc": "2026-11-26T08:59:03+00:00",
       "alter_min": 5,
       "zwischenspeicher": true,
       "abruf_fehler": null
     },
     "thermik": {
       "ok": true,
-      "abgerufen_utc": "2026-11-26T07:13:50+00:00",
+      "abgerufen_utc": "2026-11-26T08:59:03+00:00",
       "alter_min": 5,
       "zwischenspeicher": true,
       "abruf_fehler": null
