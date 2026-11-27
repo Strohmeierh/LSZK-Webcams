@@ -25,34 +25,34 @@
     "source": "origin"
   },
   "https://wsrv.nl/?url=decoral.ch/Kameratoedi.jpg": {
-    "hash": "963a74b4f96d31e158b2131250b275f81dcb6f50",
-    "lastChange": 1795803903000,
+    "hash": "6605b80cf9c3bf1d57df662e3be7ae850d356e3c",
+    "lastChange": 1795804202000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=eichi.ch%2F%3Feichi_webcam_image%3Deichi": {
-    "hash": "2f6d19941c949607dada6a2a767c1bd184f97bf7",
-    "lastChange": 1795804079000,
+    "hash": "b3e071981fc499a43d81d5cf72bf439f9bd7a8d2",
+    "lastChange": 1795804352000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=eichi.ch%2F%3Feichi_webcam_image%3Deichi2": {
-    "hash": "1312adbfbe1634995c2f6275163fa6ff6a107bc0",
-    "lastChange": 1795804048000,
+    "hash": "33c71dea03f5f1c37e3592bc41abd14a83b61353",
+    "lastChange": 1795804350000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=fgzo.ch/webcam/images/fgzo.jpg": {
-    "hash": "72cb8662fd8f8fd137c0ba275c8e4137b578cf26",
-    "lastChange": 1795804103000,
-    "source": "origin"
+    "hash": "43f767b18a547a445edf229f1ce26d7edb5b04ef",
+    "lastChange": 1795804400319,
+    "source": "bot"
   },
   "https://wsrv.nl/?url=fgzo.ch/webcam/images/fgzo2.jpg": {
-    "hash": "078696ba39d83ca655e81cca3cf0db1efc8f8862",
-    "lastChange": 1795804103000,
-    "source": "origin"
+    "hash": "7110768573fb47d283df6371a3427683f832cb60",
+    "lastChange": 1795804400319,
+    "source": "bot"
   },
   "https://wsrv.nl/?url=flugplatz-schaenis.ch/images/webcam/cam_schaenis_high.jpg": {
-    "hash": "03036570e90345d1ba0ba95cb0b309dad4abe7bf",
-    "lastChange": 1795803910000,
-    "source": "origin"
+    "hash": "5fa7f87d1ffa40a371333038ed4922fdd386fc38",
+    "lastChange": 1795804400319,
+    "source": "bot"
   },
   "https://wsrv.nl/?url=images-webcams.windy.com/30/1678358730/current/original/1678358730.jpg": {
     "hash": "e881235463c5198ee7a5c49b56952b0c03fc861a",
@@ -75,8 +75,8 @@
     "source": "origin"
   },
   "https://wsrv.nl/?url=mollisairport.roundshot.com/cams/1641/medium": {
-    "hash": "d130b755d9748dab986666b30eb205f291f269b6",
-    "lastChange": 1795803687000,
+    "hash": "64872ed8d3f12c2082bba2f7d311cfae9ce27218",
+    "lastChange": 1795804309000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=rotenfluebahn.roundshot.com/cams/1598/medium": {
@@ -85,8 +85,8 @@
     "source": "origin"
   },
   "https://wsrv.nl/?url=saentis.roundshot.com/cams/156/medium": {
-    "hash": "8f3ab09538f48ddd078b932eddd9a537ce4b9eef",
-    "lastChange": 1795803895000,
+    "hash": "0294d1956beb23f0f076bd10948111a5e5945b1a",
+    "lastChange": 1795804352000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=sportbahnenelm.roundshot.com/cams/1721/medium": {
@@ -95,28 +95,28 @@
     "source": "origin"
   },
   "https://wsrv.nl/?url=webcam.afbn.ch/H_OSG_017,200_S_KAM_001_Sued.jpg": {
-    "hash": "8a0e5b7809a4a980bb74b6803e489bd43aeefe29",
-    "lastChange": 1795803902000,
+    "hash": "54797ada24ca44d0272d7446af164ad7886c815a",
+    "lastChange": 1795804202000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=webcam.hotel-klausenpass.ch/panorama.jpg": {
-    "hash": "16a56c8f4294721088cf82a96a0c03e559072678",
-    "lastChange": 1795802404000,
+    "hash": "f64beb43a9ad5547a069cc26b58bf529ff816f20",
+    "lastChange": 1795804203000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=www.hotel-grimselpass.ch/webcams/grimsel.jpg": {
-    "hash": "b4c39cdb1bbfcaad96b2e011a4026887d9daa5a5",
-    "lastChange": 1795803989000,
-    "source": "origin"
+    "hash": "d22f6faa697756c262362552bfd6f7414ca59e1f",
+    "lastChange": 1795804400319,
+    "source": "bot"
   },
   "https://wsrv.nl/?url=www.sky-cam.ch/skiarena/gurschen_N/gurschen_N.jpg": {
-    "hash": "ae3c9cd98f08e4d119380886ad5ce2966184a9c8",
-    "lastChange": 1795804119000,
+    "hash": "298584f26f765428c0c3884d2dd55f339e0164ba",
+    "lastChange": 1795804419000,
     "source": "origin"
   },
   "https://wsrv.nl/?url=www.tarnolgio.ch/webcam00.jpg": {
-    "hash": "3fbc3f3bf8642eec786590cc0deb84db79124e7a",
-    "lastChange": 1795803307000,
+    "hash": "23a67766dea71542e9677d520c9be23b536ad100",
+    "lastChange": 1795804207000,
     "source": "origin"
   }
 }
