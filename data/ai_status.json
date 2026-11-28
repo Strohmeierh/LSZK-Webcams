@@ -1,21 +1,21 @@
 {
   "stats": {
     "month": "2026-11",
-    "cost_month_usd": 10.9031,
+    "cost_month_usd": 10.745,
     "attempts_month": 41,
     "date": "2026-11-28",
-    "cost_today_usd": 0.6381,
+    "cost_today_usd": 0.48,
     "attempts_today": 2,
     "budget_month_usd": 80.0,
-    "reserved_usd": 0.4
+    "reserved_usd": 0.0
   },
   "schema_version": 1,
-  "ok": false,
+  "ok": true,
   "attempted_at_utc": "2026-11-28T09:04:10+00:00",
   "slot": "10:00",
   "reserved_run": "46128638823.1",
-  "fail_streak": 1,
-  "error": "Versuch läuft oder wurde abgebrochen (kein Ergebnis gespeichert)",
+  "fail_streak": 0,
+  "error": null,
   "sun": {
     "rise": "07:47",
     "set": "16:38"
@@ -39,70 +39,70 @@
     "fehlend": [
       {
         "titel": "Rapperswil",
-        "grund": "Bild seit 19 h 50 min unverändert (Kamera eingefroren?)"
+        "grund": "Bild seit 21 h 35 min unverändert (Kamera eingefroren?)"
       }
     ],
     "fehler": []
   },
-  "generated_at_utc": "2026-11-28T07:19:03+00:00",
+  "generated_at_utc": "2026-11-28T09:04:15+00:00",
   "model": "claude-opus-5-5",
   "served_by": "claude-opus-5-5",
   "effort": "medium",
-  "request_id": "req_011ChUvHzEfqU1Z5ipph62WF",
+  "request_id": "req_011ChV4KURHk5euLw8zS1BwX",
   "usage": {
-    "input_tokens": 35653,
-    "output_tokens": 4775,
+    "input_tokens": 35639,
+    "output_tokens": 4965,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 0,
     "attempts": 1,
-    "cost_usd": 0.2381
+    "cost_usd": 0.2419
   },
   "briefing": {
-    "headline": "Stratus mit Basis um 1'000 m MSL, Alpen frei",
+    "headline": "Restwolken um 1'000 m MSL, Alpen frei",
     "fgzo_hinweis": "FGZO-Hinweis: Rollweg gesperrt, Backtrack auf der Piste erforderlich.",
-    "text": "Am Platz leichte Bise aus Nordost mit 7 kt, Böen bis 11 kt, bei −0,3 °C und Taupunkt −2,2 °C. Teilweise bis stark bewölkt mit Stratus, Basis um 1'000 m MSL; der Bachtel steckt zeitweise in Wolkenfetzen, Sicht 35 km (Säntis). Darüber sonnig: Glarner Alpen und Hauptkamm vom Gotthard bis Graubünden frei, Föhn-Index −2 hPa. Prognose: bis in den frühen Nachmittag teilweise bewölkt, ab etwa 16 Uhr fast wolkenlos, um 18 Uhr vorübergehend wieder teilweise bewölkt; Regenwahrscheinlichkeit der nächsten 3 h 0 %, Bise um 7 kt mit Böen bis 15 kt. DABS für Sa 28.11. (Version 1, herausgegeben am Vortag, 27.11. 15:47 LT): keine Einträge.",
+    "text": "Am Platz weht Wind aus Nordost mit 8 kt, Böen bis 12 kt, bei 0 °C und Taupunkt −3 °C, QNH 1026 hPa. Über dem Zürcher Oberland liegen nur noch Fetzen der Hochnebeldecke mit Basis um 1'000 m MSL (Dübendorf meldet noch bedeckt, Kloten BKN019), sonst ist es sonnig, im Flachland leicht dunstig; Sicht 58 km (Tödi). Glarner Alpen und Hauptkamm von Gotthard bis Graubünden sind frei, der Föhn-Index liegt bei −2 hPa. Prognose: bis 14 Uhr wechselnd teilweise bis stark bewölkt durch tiefe Wolken, um 15 Uhr aufgelockert, ab 16 Uhr wolkenlos, Regenwahrscheinlichkeit der nächsten 3 Stunden 0 %. DABS für Sa 28.11. (Version 2, herausgegeben 08:45 LT): keine Einträge.",
     "lage": "maessig"
   },
   "himmel": {
-    "bedeckung_achtel": 6,
+    "bedeckung_achtel": 3,
     "wolkenbasis_m": 1000,
     "basis_quelle": "kombiniert",
     "sicht": "gut",
-    "sicht_km": 35,
-    "nebel": "kein",
+    "sicht_km": 58,
+    "nebel": "dunst",
     "nebel_obergrenze_m": null,
     "alpen": "frei",
-    "schneegrenze_m": 700,
+    "schneegrenze_m": null,
     "niederschlag": "kein",
     "zusammenfassung": "",
     "regionen": [
       {
         "region": "platz",
-        "zustand": "Piste und Umgebung schneefrei, keine Nässe erkennbar."
+        "zustand": "Grasfläche schneefrei, Windsack zeigt mässige Bise."
       },
       {
         "region": "zuercher_oberland",
-        "zustand": "Hügel ab etwa 700 m MSL verschneit, Wolkenfetzen bis an die Bachtel-Kuppe."
+        "zustand": "Bachtel über den Restwolken, Raureif an den Hügeln, Wolkenfetzen an den Hängen um 1'000 m MSL."
       },
       {
         "region": "voralpen",
-        "zustand": "Linthebene schneefrei, Speer klar erkennbar; Säntis und Churfirsten über den Wolken in der Sonne."
+        "zustand": "Speer und Churfirsten frei, Rheintal leicht dunstig."
       },
       {
         "region": "glarner_alpen",
-        "zustand": "Talnebel im Grosstal, Talboden auf 565 m MSL verschneit; Kette Sardona–Vorab–Hausstock und Tödi frei."
+        "zustand": "Talboden im Grosstal verschneit mit Bodendunst, Hausstock und Vorab frei."
       },
       {
         "region": "zentralalpen",
-        "zustand": "Klausen, Oberalp und Gotthard wolkenfrei, viel Neuschnee."
+        "zustand": "Oberalp und Gotthard wolkenlos und tief verschneit."
       },
       {
         "region": "graubuenden",
-        "zustand": "Wolkenlos von der Bernina bis zum Rätikon, Täler ohne Nebel."
+        "zustand": "Kesch, Ela und Bernina frei, kein Talnebel über Lenzerheide und Davos."
       },
       {
         "region": "alpensuedseite",
-        "zustand": "Leventina wolkenlos, Campo Tencia frei, Talboden ohne Nebel."
+        "zustand": "Leventina wolkenlos, Campo Tencia frei."
       }
     ]
   },
@@ -111,9 +111,10 @@
       "titel": "Speck – Runway 30",
       "key": "https://wsrv.nl/?url=fgzo.ch/webcam/images/fgzo.jpg",
       "bildalter_min": 1,
-      "satz": "Graspiste trocken und schneefrei, darüber aufgelockerte Bewölkung im Westsektor.",
+      "satz": "Lockere flache Wolken im Westen, sonst sonnig; Graspiste trocken und schneefrei.",
       "tags": [
-        "bedeckt"
+        "sonnig",
+        "quellwolken"
       ],
       "problem": "keins"
     },
@@ -121,19 +122,21 @@
       "titel": "Speck – Tankstelle",
       "key": "https://wsrv.nl/?url=fgzo.ch/webcam/images/fgzo2.jpg",
       "bildalter_min": 1,
-      "satz": "Vorfeld trocken, Windsack leicht gefüllt, Stratocumulus mit Lücken über dem Oberland.",
+      "satz": "Windsack zeigt Bise, Bachtel erkennbar, einzelne Wolken, Vorfeld trocken.",
       "tags": [
-        "bedeckt"
+        "sonnig",
+        "quellwolken"
       ],
       "problem": "keins"
     },
     {
       "titel": "Bachtel",
       "key": "https://wsrv.nl/?url=bachtel.it-wms.com/panorama1_raw.jpg",
-      "bildalter_min": 13,
-      "satz": "Wolkenfetzen an der Kuppe um 1'100 m MSL, Hügel verschneit, Alpenkette am Horizont erkennbar.",
+      "bildalter_min": 29,
+      "satz": "Turm über Wolkenfetzen um 1'000 m MSL, Raureif, Mittelland dunstig, Alpenkette sichtbar.",
       "tags": [
-        "tiefe_wolken",
+        "sonnig",
+        "dunst",
         "schnee"
       ],
       "problem": "keins"
@@ -142,7 +145,7 @@
       "titel": "Wangen-Lachen – Cam 1",
       "key": "cam1",
       "bildalter_min": 4,
-      "satz": "Klarer Osthimmel, Speer erkennbar, Linthebene schneefrei und trocken.",
+      "satz": "Wolkenlos, Speer und Mürtschenstock klar erkennbar, Piste trocken.",
       "tags": [
         "sonnig"
       ],
@@ -151,8 +154,8 @@
     {
       "titel": "Säntis",
       "key": "https://wsrv.nl/?url=saentis.roundshot.com/cams/156/medium",
-      "bildalter_min": 6,
-      "satz": "Wolkenlos, Churfirsten und Glarner Alpen frei, viel Schnee, Fernsicht bis Tödi.",
+      "bildalter_min": 1,
+      "satz": "Wolkenlos, Glarner Alpen bis Tödi klar, Rheintal leicht dunstig, alles verschneit.",
       "tags": [
         "sonnig",
         "schnee"
@@ -163,18 +166,19 @@
       "titel": "Richtung Tödi",
       "key": "https://wsrv.nl/?url=decoral.ch/Kameratoedi.jpg",
       "bildalter_min": 4,
-      "satz": "Talnebel im Grosstal, Talboden verschneit, Tödi frei.",
+      "satz": "Tödi frei, Talboden verschneit mit Bodendunst über dem Fluss.",
       "tags": [
-        "nebel",
-        "schnee"
+        "sonnig",
+        "schnee",
+        "dunst"
       ],
       "problem": "keins"
     },
     {
       "titel": "Elm – Schabell",
       "key": "https://wsrv.nl/?url=sportbahnenelm.roundshot.com/cams/1721/medium",
-      "bildalter_min": 8,
-      "satz": "Glarner Hauptkette von Sardona bis Hausstock wolkenfrei, viel Schnee.",
+      "bildalter_min": 18,
+      "satz": "Hauptkette Sardona bis Hausstock wolkenlos, verschneit bis ins Tal.",
       "tags": [
         "sonnig",
         "schnee"
@@ -184,9 +188,10 @@
     {
       "titel": "Klausenpass",
       "key": "https://wsrv.nl/?url=webcam.hotel-klausenpass.ch/panorama.jpg",
-      "bildalter_min": 19,
-      "satz": "Gipfel frei, Schächental ohne Nebel, alles verschneit.",
+      "bildalter_min": 4,
+      "satz": "Wolkenlos, Gipfel frei, Schächental verschneit.",
       "tags": [
+        "sonnig",
         "schnee"
       ],
       "problem": "keins"
@@ -194,8 +199,8 @@
     {
       "titel": "Schneehüenerstock",
       "key": "https://wsrv.nl/?url=andermatt-sedrun-disentis.roundshot.com/cams/1768/medium",
-      "bildalter_min": 8,
-      "satz": "Oberalp und Gotthardgruppe wolkenlos, Furka und Dammastock frei.",
+      "bildalter_min": 3,
+      "satz": "Wolkenlos, Gotthardgruppe und Oberalp frei, kein Talnebel im Urserental.",
       "tags": [
         "sonnig",
         "schnee"
@@ -206,8 +211,9 @@
       "titel": "Gotthardpass",
       "key": "https://wsrv.nl/?url=webcam.afbn.ch/H_OSG_017,200_S_KAM_001_Sued.jpg",
       "bildalter_min": 4,
-      "satz": "Passhöhe wolkenfrei, tief verschneit, Kämme südlich Airolo frei.",
+      "satz": "Wolkenlos, Pass tief verschneit, Kämme frei.",
       "tags": [
+        "sonnig",
         "schnee"
       ],
       "problem": "keins"
@@ -215,8 +221,8 @@
     {
       "titel": "Parpaner Rothorn",
       "key": "https://wsrv.nl/?url=lenzerheide.roundshot.com/cams/52/medium",
-      "bildalter_min": 7,
-      "satz": "Wolkenlos, Bernina, Kesch und Tödi frei, Täler ohne Nebel.",
+      "bildalter_min": 2,
+      "satz": "Wolkenlos, Hauptkamm Graubünden bis Bernina frei, kein Nebel in den Tälern.",
       "tags": [
         "sonnig",
         "schnee"
@@ -226,8 +232,8 @@
     {
       "titel": "Jakobshorn",
       "key": "https://wsrv.nl/?url=images-webcams.windy.com/30/1678358730/current/original/1678358730.jpg",
-      "bildalter_min": 1,
-      "satz": "Wolkenlos über Davos, Kesch und Rätikon frei.",
+      "bildalter_min": 6,
+      "satz": "Wolkenlos, Kesch und Rätikon frei, Davos ohne Talnebel.",
       "tags": [
         "sonnig",
         "schnee"
@@ -238,7 +244,7 @@
       "titel": "Ambri Tarnolgio",
       "key": "https://wsrv.nl/?url=www.tarnolgio.ch/webcam00.jpg",
       "bildalter_min": 4,
-      "satz": "Wolkenlos, Pizzo Forno und Campo Tencia frei, Leventina ohne Nebel.",
+      "satz": "Wolkenlos, Pizzo Forno und Campo Tencia frei, Leventina ohne Talnebel.",
       "tags": [
         "sonnig",
         "schnee"
@@ -249,9 +255,9 @@
   "dabs": {
     "ok": true,
     "datum": "2026-11-28",
-    "version": 1,
-    "stand_utc": "2026-11-27T14:47:00+00:00",
-    "abgerufen_utc": "2026-11-28T04:03:46+00:00",
+    "version": 2,
+    "stand_utc": "2026-11-28T07:45:00+00:00",
+    "abgerufen_utc": "2026-11-28T08:09:05+00:00",
     "quelle": "https://www.skybriefing.com/o/dabs?today",
     "filter": "Fluggebiet LSZK–Säntis–Flüela–Julier–Gotthard–Mythen mit 15 km Marge, Untergrenze unter FL150, bis 30 min nach Sonnenuntergang",
     "eintraege_total": 0,
@@ -262,26 +268,26 @@
     "aktuell": true,
     "abruf_fehler": null
   },
-  "slot_planned_utc": "2026-11-28T07:17:19+00:00",
+  "slot_planned_utc": "2026-11-28T09:00:00+00:00",
   "korrekturen": [],
   "thermik": null,
   "platz": {
     "flaeche": "eingeschraenkt",
     "grund": "offen mit Einschränkungen",
-    "text": "Platz offen mit Einschränkungen, LOW TRAFFIC, Betriebsschluss 16:42, Piste DRY (FGZO-Stand 28.11.2026, 06:30, letzter Abruf fehlgeschlagen)"
+    "text": "Platz offen mit Einschränkungen, LOW TRAFFIC, Betriebsschluss 16:42, Piste DRY (FGZO-Stand 28.11.2026, 09:39, letzter Abruf fehlgeschlagen)"
   },
   "open_meteo": {
     "prognose": {
       "ok": true,
-      "abgerufen_utc": "2026-11-28T06:58:53+00:00",
-      "alter_min": 20,
+      "abgerufen_utc": "2026-11-28T08:58:56+00:00",
+      "alter_min": 5,
       "zwischenspeicher": true,
       "abruf_fehler": null
     },
     "thermik": {
       "ok": true,
-      "abgerufen_utc": "2026-11-28T06:58:53+00:00",
-      "alter_min": 20,
+      "abgerufen_utc": "2026-11-28T08:58:56+00:00",
+      "alter_min": 5,
       "zwischenspeicher": true,
       "abruf_fehler": null
     }
