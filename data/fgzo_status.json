@@ -1,8 +1,8 @@
 {
-  "ok": false,
-  "fetched_at_utc": "2026-11-28T08:31:11+00:00",
-  "failed_at_utc": "2026-11-28T08:41:19+00:00",
-  "error": "ValueError: bot challenge page received",
+  "ok": true,
+  "fetched_at_utc": "2026-11-28T08:51:11+00:00",
+  "failed_at_utc": null,
+  "error": null,
   "source": "https://fgzo.ch/status/",
   "ampel": "gelb",
   "status": "OPEN",
@@ -11,8 +11,8 @@
   "notice": "Taxiway closed: Backtrack on Runway!\n\nRunway condition LSZK / 28.11.2026 / 0630 LT / DRY",
   "runway_line": "Runway condition LSZK / 28.11.2026 / 0630 LT / DRY",
   "runway_condition": "DRY",
-  "contact": "Kontakt: +41 79 928 66 44 / L. Marchetti, allenfalls +41 44 954 12 52 / C-Büro",
-  "updated": "28.11.2026, 06:30",
+  "contact": "Kontakt: +41 79 265 14 38 / J. Grossmann, allenfalls +41 44 954 12 52 / C-Büro",
+  "updated": "28.11.2026, 09:39",
   "flaeche": "eingeschraenkt",
   "flaeche_grund": "offen mit Einschränkungen"
 }
